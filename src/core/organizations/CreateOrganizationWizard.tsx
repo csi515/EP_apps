@@ -1,4 +1,4 @@
-﻿import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useOrganization } from './OrganizationProvider';
 import {
   Building2,
@@ -206,6 +206,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
               <input
                 type="text"
                 required
+                data-testid="input-org-name"
                 placeholder={getPlaceNamePlaceholder(formData.industryType)}
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -236,6 +237,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
               </button>
               <button
                 type="submit"
+                data-testid="btn-wizard-next"
                 className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl min-h-[44px]"
               >
                 다음
@@ -322,6 +324,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
                 <button
                   type="button"
                   disabled={isSaving}
+                  data-testid="btn-wizard-submit"
                   onClick={() =>
                     void handleFinish(attendanceChoice === 'later' ? 'manual' : attendanceChoice)
                   }
@@ -366,6 +369,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
             <button
               type="button"
               disabled={isEntering || !createdOrgId}
+              data-testid="btn-wizard-enter"
               onClick={() => void handleEnterOrganization()}
               className="w-full px-5 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl flex items-center justify-center gap-2 min-h-[44px] disabled:opacity-50"
             >

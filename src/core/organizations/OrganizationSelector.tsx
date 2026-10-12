@@ -190,6 +190,7 @@ export const OrganizationSelector: React.FC = () => {
 
           <button
             type="button"
+            data-testid="btn-open-create-org-wizard"
             onClick={() => setShowWizard(true)}
             className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-indigo-200 rounded-2xl text-indigo-700 font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-colors min-h-[44px]"
           >

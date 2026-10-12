@@ -35,6 +35,19 @@ function ensureClient() {
 }
 
 export const customerPurchaseService = {
+  async listCustomerPurchases(
+    organizationId: string,
+    customerId: string,
+    options?: { limit?: number }
+  ): Promise<{ data: SaleListItem[] }> {
+    const list = await this.listSalesByCustomer({
+      organizationId,
+      customerId,
+      limit: options?.limit,
+    });
+    return { data: list };
+  },
+
   async listSalesByCustomer(params: {
     organizationId: string;
     customerId: string;

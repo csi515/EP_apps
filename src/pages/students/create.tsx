@@ -1,11 +1,13 @@
 import React from "react";
 import { useForm } from "@refinedev/react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCan, useNavigation } from "@refinedev/core";
 import { ArrowLeft, Save, AlertCircle, ShieldAlert } from "lucide-react";
 import { useTerminology } from "@/core/terminology";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { applyFormErrors } from "@/core/utils/formErrorAdapter";
 import type { CustomerRecord } from "./list";
+import { customerSchema, type CustomerFormValues } from "./customerSchema";
 
 export const StudentCreatePage: React.FC = () => {
   const { list } = useNavigation();
@@ -27,7 +29,7 @@ export const StudentCreatePage: React.FC = () => {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<CustomerRecord>({
+  } = useForm<CustomerRecord, any, CustomerFormValues>({
     refineCoreProps: {
       resource: "customers",
       action: "create",
@@ -43,8 +45,13 @@ export const StudentCreatePage: React.FC = () => {
         );
       },
     },
+    resolver: zodResolver(customerSchema) as any,
     defaultValues: {
       status: "active",
+      name: "",
+      phone: "",
+      email: "",
+      memo: "",
     },
   });
 

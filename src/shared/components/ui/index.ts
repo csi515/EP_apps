@@ -12,3 +12,4 @@ export { FormField, FORM_CONTROL_CLASS, FORM_CONTROL_ERROR_CLASS } from './FormF
 export { Skeleton, PageListSkeleton, InlineBusy } from './Skeleton';
 export { BirthDateInput, formatBirthDateDigits } from './BirthDateInput';
 export { SegmentedControl } from './SegmentedControl';
+export { Section, type SectionProps } from './Section';

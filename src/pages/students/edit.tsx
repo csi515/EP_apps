@@ -1,10 +1,12 @@
 import React from "react";
 import { useForm } from "@refinedev/react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useCan, useNavigation } from "@refinedev/core";
 import { ArrowLeft, Save, AlertCircle, ShieldAlert } from "lucide-react";
 import { useTerminology } from "@/core/terminology";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import type { CustomerRecord } from "./list";
+import { customerSchema, type CustomerFormValues } from "./customerSchema";
 
 export const StudentEditPage: React.FC = () => {
   const { list, show } = useNavigation();
@@ -25,12 +27,13 @@ export const StudentEditPage: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CustomerRecord>({
+  } = useForm<CustomerRecord, any, CustomerFormValues>({
     refineCoreProps: {
       resource: "customers",
       action: "edit",
       redirect: "show",
     },
+    resolver: zodResolver(customerSchema) as any,
   });
 
   const student = query?.data?.data;

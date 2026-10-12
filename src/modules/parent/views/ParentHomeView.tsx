@@ -2,7 +2,9 @@ import React from 'react';
 import type { IndustryType } from '@/core/industry/types';
 import type { ParentPortalTab } from '@/types/education';
 import type { Student } from '@/types';
+import { normalizeIndustryType } from '@/core/industry/types';
 import { UnifiedPortalHome } from './UnifiedPortalHome';
+import { RetailCustomerHome } from './RetailCustomerHome';
 import './industryHomeWidgets';
 
 export function ParentHomeView({
@@ -18,6 +20,15 @@ export function ParentHomeView({
   onNavigate: (t: ParentPortalTab) => void;
   industryType?: IndustryType | string;
 }) {
+  const norm = normalizeIndustryType(industryType);
+  if (norm === 'retail') {
+    return (
+      <RetailCustomerHome
+        onNavigate={onNavigate as any}
+      />
+    );
+  }
+
   return (
     <UnifiedPortalHome
       student={student}
@@ -28,4 +39,3 @@ export function ParentHomeView({
     />
   );
 }
-

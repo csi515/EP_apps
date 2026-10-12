@@ -205,3 +205,23 @@ export const pointEarnService = {
     };
   },
 };
+
+export async function applyPointManualAdjust(params: {
+  organizationId: string;
+  customerId: string;
+  amount: number;
+  description?: string;
+}) {
+  const client = getCoreClient();
+  const { data, error } = await (client.rpc as any)('apply_point_manual_adjust', {
+    p_organization_id: params.organizationId,
+    p_customer_id: params.customerId,
+    p_amount: params.amount,
+    p_description: params.description || null,
+  });
+
+  if (error) {
+    throw new Error(error.message || '포인트 수동 조정에 실패했습니다.');
+  }
+  return data;
+}

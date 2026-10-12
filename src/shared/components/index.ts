@@ -15,5 +15,7 @@ export { CurrencyInput } from './CurrencyInput';
 export { StatCard } from './StatCard';
 export { OnboardingWizard } from './OnboardingWizard';
 export { OnboardingResumeCard } from './onboarding/OnboardingResumeCard';
+export { PrintReceipt, type ReceiptProps, type ReceiptItem } from './receipt/PrintReceipt';
+export { VirtualList, type VirtualListProps } from './virtual/VirtualList';
 export * from './ui';
 export * from './calendar';

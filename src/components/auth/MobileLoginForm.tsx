@@ -1,5 +1,5 @@
 import React from "react";
-import { Mail, Lock, ArrowRight, RefreshCw, MessageSquare, ShieldCheck, Globe } from "lucide-react";
+import { Mail, Lock, ArrowRight, RefreshCw, MessageSquare, ShieldCheck, Globe, Loader2 } from "lucide-react";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 
 export interface MobileLoginFormProps {
@@ -45,7 +45,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   // =========================================================================
   if (inToss) {
     return (
-      <div className="w-full space-y-6">
+      <div data-testid="login-container" className="w-full space-y-6">
         {/* 토스 환경 브랜드 배지 */}
         <div className="flex items-center justify-center space-x-2 py-1 px-3 bg-blue-50 border border-blue-100 rounded-full mx-auto w-fit">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
@@ -101,7 +101,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   // [Google] -> [Apple] -> [Kakao & Naver 2열 컴팩트] -> [이메일/비밀번호]
   // =========================================================================
   return (
-    <div className="w-full space-y-5">
+    <div data-testid="login-container" className="w-full space-y-5">
       {/* 상단 다국어 선택 토글 (국내 외국인/학부모 배려) */}
       {onLanguageChange && (
         <div className="flex justify-end items-center">
@@ -132,6 +132,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
       {/* 1. Google 로그인 (외국인·글로벌 사용자 최우선 접근성) */}
       <button
         type="button"
+        data-testid="btn-google-login"
         onClick={onGoogleLogin}
         disabled={isLoading}
         className="w-full h-12 flex items-center justify-center space-x-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-sm font-semibold transition-all shadow-xs disabled:opacity-50"
@@ -160,6 +161,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
       {/* 2. Apple 로그인 (iOS App Store 심사 필수) */}
       <button
         type="button"
+        data-testid="btn-apple-login"
         onClick={onAppleLogin}
         disabled={isLoading}
         className="w-full h-12 flex items-center justify-center space-x-2.5 rounded-xl bg-black hover:bg-neutral-900 active:bg-neutral-800 text-white text-sm font-semibold transition-all shadow-xs disabled:opacity-50"
@@ -174,6 +176,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
       <div className="grid grid-cols-2 gap-2.5">
         <button
           type="button"
+          data-testid="btn-kakao-login"
           onClick={onKakaoLogin}
           disabled={isLoading}
           className="h-11 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
@@ -184,6 +187,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
 
         <button
           type="button"
+          data-testid="btn-naver-login"
           onClick={onNaverLogin}
           disabled={isLoading}
           className="h-11 flex items-center justify-center space-x-1.5 rounded-xl bg-[#03C75A] hover:bg-[#02B150] text-white text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
@@ -220,6 +224,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
             </div>
             <input
               id="login-email"
+              data-testid="input-email"
               type="email"
               autoComplete="email"
               required
@@ -249,6 +254,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
             </div>
             <input
               id="login-password"
+              data-testid="input-password"
               type="password"
               autoComplete="current-password"
               required
@@ -268,26 +274,20 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
 
         <button
           type="submit"
+          data-testid="btn-email-submit"
           disabled={isLoading}
-          className="w-full h-12 flex items-center justify-center space-x-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-100 disabled:opacity-50"
+          className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 transition-all active:scale-[0.99]"
         >
           {isLoading ? (
-            <RefreshCw className="w-4 h-4 animate-spin" />
-          ) : (
             <>
-              <span>{isEn ? "Sign in" : "로그인"}</span>
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>로그인 중...</span>
             </>
+          ) : (
+            <span>로그인</span>
           )}
         </button>
       </form>
-
-      <p className="text-center text-xs text-slate-400 pt-1">
-        {isEn ? "Don't have an account? " : "계정이 없으신가요? "}
-        <span className="font-semibold text-indigo-600 hover:underline cursor-pointer">
-          {isEn ? "Sign up" : "사업장 개설 및 무료 회원가입"}
-        </span>
-      </p>
     </div>
   );
 };

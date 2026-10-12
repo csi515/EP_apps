@@ -18,6 +18,7 @@ import { AppBootstrapGate } from "@/core/application/AppBootstrapGate";
 import { IndustryAppRouter } from "@/app/industry/IndustryAppRouter";
 import { provisionIndustryResources } from "@/app/industry/resourceProvisioner";
 import { registerQueryClientClear } from "@/core/auth/services/signOutCoordinator";
+import { setTenantQueryClient } from "@/core/query/tenantQueryKeys";
 
 import { authProvider } from "./providers/authProvider";
 import { accessControlProvider } from "./providers/accessControlProvider";
@@ -56,6 +57,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+setTenantQueryClient(queryClient);
 
 registerQueryClientClear(() => {
   queryClient.clear();

@@ -20,47 +20,48 @@ import { PilatesParentBookingsView } from './views/PilatesParentBookingsView';
 import { ParentShuttleView } from './views/ParentShuttleView';
 import { ParentMoreView } from './views/ParentMoreView';
 import { normalizeIndustryType } from '@/core/industry/types';
-import { isAppointmentIndustry } from '@/core/industry/industryUi';
 import { useParentPortal } from '@/core/parent/context/ParentPortalContext';
 import { ParentIndustryAdapter } from '@/capabilities/parent/ParentIndustryAdapter';
 import { getParentStudentStampViewSlot, getParentPortalTabSlot } from './slots/parentPortalSlots';
 import './slots/initParentPortalSlots';
+import { RetailCustomerPointsView } from './views/RetailCustomerPointsView';
+import { RetailCustomerPurchasesView } from './views/RetailCustomerPurchasesView';
 
 export function ParentPortalTabs({
   tab,
   student,
   organizationId,
+  industryTypeProp,
+  industryType: rawIndustryType,
   readOnly = false,
-  showToast,
-  onRefresh,
+  showToast = () => {},
   onNavigate,
-  industryType = 'piano',
+  onRefresh,
   onSwitchChild,
 }: {
   tab: ParentPortalTab;
   student: Student;
   organizationId: string;
+  industryTypeProp?: IndustryType | string | null;
+  industryType?: IndustryType | string | null;
   readOnly?: boolean;
-  showToast: (msg: string, type?: 'success' | 'error' | 'info' | 'warning') => void;
-  onRefresh: () => void;
+  showToast?: (message: string, type?: 'success' | 'error' | 'info' | 'warning', title?: string) => void;
   onNavigate: (t: ParentPortalTab) => void;
-  industryType?: IndustryType | string;
+  onRefresh: () => void;
   onSwitchChild?: () => void;
 }) {
-  const industry = normalizeIndustryType(industryType);
   const { portalTree } = useParentPortal();
+  const industryType = (rawIndustryType || industryTypeProp || 'piano') as string;
+  const isRetail = normalizeIndustryType(industryType) === 'retail';
 
   const stampChildren = useMemo(() => {
-    const fromTree = (portalTree?.children ?? [])
-      .map((child) => {
-        const enr = child.enrollments.find((e) => e.organizationId === organizationId);
-        if (!enr) return null;
-        return { id: enr.customerId || child.studentId, name: child.displayName };
-      })
-      .filter((c): c is { id: string; name: string } => Boolean(c));
-    if (fromTree.length > 0) return fromTree;
-    return [{ id: student.id, name: student.name }];
-  }, [portalTree?.children, organizationId, student.id, student.name]);
+    return (portalTree?.children || [])
+      .filter((c) => c.enrollments?.some((e) => e.organizationId === organizationId))
+      .map((c) => ({
+        id: c.studentId,
+        name: c.displayName,
+      }));
+  }, [portalTree?.children, organizationId]);
 
   // 커스텀 탭 슬롯 검사
   const CustomTabSlot = getParentPortalTabSlot(tab);
@@ -98,21 +99,37 @@ export function ParentPortalTabs({
         />
       );
     case 'tuition':
-      return <ParentTuitionView student={student} industryType={industryType} />;
-    case 'assignments':
-      return <ParentAssignmentsView student={student} readOnly={readOnly} showToast={showToast} onRefresh={onRefresh} />;
-    case 'progress':
       return (
-        <ParentProgressView
+        <ParentTuitionView
           student={student}
-          organizationId={organizationId}
           industryType={industryType}
+        />
+      );
+    case 'assignments':
+      return (
+        <ParentAssignmentsView
+          student={student}
           readOnly={readOnly}
           showToast={showToast}
           onRefresh={onRefresh}
         />
       );
+    case 'progress':
+      return <ParentProgressView student={student} />;
+    case 'events':
+      return <ParentEventsView student={student} industryType={industryType} />;
+    case 'notices':
+      return (
+        <ParentNoticesView
+          student={student}
+          organizationId={organizationId}
+          industryType={industryType}
+        />
+      );
     case 'stamps': {
+      if (isRetail) {
+        return <RetailCustomerPointsView student={student} />;
+      }
       const StampView = getParentStudentStampViewSlot();
       if (!StampView) return null;
       return (
@@ -126,17 +143,10 @@ export function ParentPortalTabs({
       );
     }
     case 'reports':
+      if (isRetail) {
+        return <RetailCustomerPurchasesView student={student} />;
+      }
       return <ParentReportsView student={student} />;
-    case 'events':
-      return <ParentEventsView student={student} industryType={industryType} />;
-    case 'notices':
-      return (
-        <ParentNoticesView
-          student={student}
-          organizationId={organizationId}
-          industryType={industryType}
-        />
-      );
     case 'journals':
       return <ParentCareJournalView student={student} />;
     case 'medications':
@@ -162,12 +172,17 @@ export function ParentPortalTabs({
     case 'schedule':
       return <ParentScheduleView student={student} organizationId={organizationId} />;
     case 'bookings':
-      if (isAppointmentIndustry(industry)) {
-        const policy = ParentIndustryAdapter.getPolicy(industryType);
+      if (
+        ParentIndustryAdapter.getPolicy(industryType).bookingVariant === 'pilates' ||
+        ParentIndustryAdapter.getPolicy(industryType).bookingVariant === 'skin'
+      ) {
         return (
           <PilatesParentBookingsView
             student={student}
-            variant={policy.bookingVariant === 'skin' ? 'skin' : 'pilates'}
+            variant={
+              (ParentIndustryAdapter.getPolicy(industryType).bookingVariant as 'pilates' | 'skin') ||
+              'pilates'
+            }
           />
         );
       }

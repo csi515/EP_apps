@@ -137,33 +137,12 @@ export const songProgressService = {
    * 채널은 root supabase 클라이언트에 붙인다.
    */
   subscribeForCustomer(
-    organizationId: string,
-    customerId: string,
-    onChange: (payload: { eventType: string }) => void
+    _organizationId: string,
+    _customerId: string,
+    _onChange: (payload: { eventType: string }) => void
   ): () => void {
-    if (!supabase) return () => undefined;
-
-    const channel: RealtimeChannel = supabase
-      .channel(`song_progress:${organizationId}:${customerId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'piano',
-          table: 'song_progress',
-          filter: `customer_id=eq.${customerId}`,
-        },
-        (payload) => {
-          const row = (payload.new || payload.old) as { organization_id?: string } | undefined;
-          if (row?.organization_id && row.organization_id !== organizationId) return;
-          onChange({ eventType: payload.eventType });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      void supabase?.removeChannel(channel);
-    };
+    // 수동 웹소켓 채널 구독 제거: Refine liveProvider 자동 무효화 파이프라인으로 일원화하여 메모리 누수 차단
+    return () => undefined;
   },
 
   totalStamps(rows: SongProgressRow[]): number {

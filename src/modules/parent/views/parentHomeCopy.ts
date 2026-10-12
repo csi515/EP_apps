@@ -16,7 +16,7 @@ import {
  * 업종 id 문자열이 아니라 이미 있는 플래그로만 고른다.
  * 플래그 조합이 같으면 기존과 같은 컴포넌트(같은 데이터·같은 이동 탭)다.
  */
-export type ParentHomeLayout = 'daycare' | 'gym' | 'skin' | 'pilates' | 'piano' | 'fallback';
+export type ParentHomeLayout = 'daycare' | 'gym' | 'skin' | 'pilates' | 'piano' | 'retail' | 'fallback';
 
 export function parentHomeLayout(
   industryType: IndustryType | string | null | undefined,
@@ -27,6 +27,7 @@ export function parentHomeLayout(
   if (isSkinClinicIndustry(industry)) return 'skin';
   if (isAppointmentIndustry(industry)) return 'pilates';
   if (showsTextbooksLink(industry)) return 'piano';
+  if (industry === 'retail') return 'retail';
   return 'fallback';
 }
 

@@ -54,11 +54,13 @@ export const OrganizationAddressFields: FC<OrganizationAddressFieldsProps> = ({
             value={value.roadAddress}
             onChange={(e) => handleRoadChange(e.target.value)}
             placeholder="주소 입력 또는 검색"
+            data-testid="input-address-road"
             className={`${FORM_CONTROL_CLASS} flex-1`}
             aria-label="소재지 주소"
           />
           <button
             type="button"
+            data-testid="btn-address-search"
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-xl min-h-[44px] min-w-[44px] shrink-0"
           >
@@ -80,6 +82,7 @@ export const OrganizationAddressFields: FC<OrganizationAddressFieldsProps> = ({
           value={value.addressDetail}
           onChange={(e) => onChange({ ...value, addressDetail: e.target.value })}
           disabled={!hasAddress}
+          data-testid="input-address-detail"
           placeholder={hasAddress ? '예: 3층 301호' : '주소를 먼저 입력해 주세요'}
           className={`${FORM_CONTROL_CLASS} disabled:opacity-50 disabled:cursor-not-allowed`}
           aria-label="상세주소"

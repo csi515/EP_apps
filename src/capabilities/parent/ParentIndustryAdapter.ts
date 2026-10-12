@@ -9,6 +9,8 @@ import {
   CalendarDays,
   Bus,
   Menu,
+  Coins,
+  History,
 } from 'lucide-react';
 import { normalizeIndustryType, type IndustryType } from '@/core/industry/types';
 import {
@@ -74,8 +76,15 @@ const PILATES_PARENT_NAV: ParentPortalNavItem[] = [
 const SKIN_PARENT_NAV: ParentPortalNavItem[] = [
   { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
   { id: 'bookings', label: '예약', icon: icon(React.createElement(CalendarClock, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '이용료', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
+  { id: 'tuition', label: '이용권', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
   { id: 'attendance', label: '출입', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
+  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
+];
+
+const RETAIL_CUSTOMER_NAV: ParentPortalNavItem[] = [
+  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
+  { id: 'stamps', label: '포인트', icon: icon(React.createElement(Coins, { className: 'w-5 h-5' })) },
+  { id: 'reports', label: '구매내역', icon: icon(React.createElement(History, { className: 'w-5 h-5' })) },
   { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
 ];
 
@@ -108,6 +117,7 @@ export class ParentIndustryAdapter {
     if (resolved === 'skin_clinic') return SKIN_PARENT_NAV;
     if (resolved === 'pilates') return PILATES_PARENT_NAV;
     if (resolved === 'piano') return PIANO_PARENT_NAV;
+    if (resolved === 'retail') return RETAIL_CUSTOMER_NAV;
 
     const adapter = getIndustryPluginAdapter(industryType);
     const fee = adapter.getLabel('fee', '이용료');
@@ -140,6 +150,7 @@ export class ParentIndustryAdapter {
     const type = normalizeIndustryType(industryType);
     if (type === 'daycare') return '보호자 포털';
     if (type === 'skin_clinic') return '고객 포털';
+    if (type === 'retail') return '고객 멤버십';
     return '학부모 포털';
   }
 
@@ -151,6 +162,7 @@ export class ParentIndustryAdapter {
     if (type === 'gym') return ['notices', 'events', 'more'];
     if (type === 'daycare') return ['notices', 'incidents', 'pickups', 'more'];
     if (type === 'pilates' || type === 'skin_clinic') return ['notices', 'more'];
+    if (type === 'retail') return ['notices', 'more'];
     return ['notices', 'more'];
   }
 

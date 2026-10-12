@@ -19,6 +19,7 @@ import { setParentPortalModeActive } from '@/core/parent/services/appModeService
 import { usePublicOrganization } from './usePublicOrganization';
 import { ConsultationForm } from './ConsultationForm';
 import { PublicBookingSection } from './PublicBookingSection';
+import { AdSlotPlaceholder } from '@/components/ads/AdSlotPlaceholder';
 
 interface PublicOrgLandingProps {
   code: string;
@@ -304,6 +305,8 @@ export function PublicOrgLanding({ code, mode = 'default' }: PublicOrgLandingPro
             </button>
           </section>
         )}
+
+        <AdSlotPlaceholder slotId="landing-bottom-slot" />
 
         <footer className="text-center text-xs text-slate-500 py-4 space-y-1">
           <p>Powered by {appBrand.fullName}</p>

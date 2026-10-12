@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
-import { Users } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import {
   customerLinkService,
@@ -8,21 +7,18 @@ import {
 import { pointQueryService, type PointTransaction } from '@/capabilities/commerce';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { EmptyState } from '@/shared/components';
 import { saleHistoryService } from '../../services/saleHistoryService';
 import { customerPurchaseService } from '../../services/customerPurchaseService';
 import { saleReturnService } from '../../services/saleReturnService';
 import { SaleDetailModal, type SaleDetailData } from '../sales/SaleDetailModal';
-import {
-  RETAIL_CUSTOMER_COPY as COPY,
-  type CustomerPointsTypeFilter,
-} from './customerCopy';
+import type { CustomerPointsTypeFilter } from './customerCopy';
 import {
   RetailCustomerDetailPanel,
   type RetailCustomerDetailData,
 } from './RetailCustomerDetailPanel';
 import { RetailCustomerListPanel } from './RetailCustomerListPanel';
 import { RetailCustomerPointsPanel } from './RetailCustomerPointsPanel';
+import { ManualPointModal } from './ManualPointModal';
 
 type Panel = 'list' | 'detail' | 'points';
 
@@ -30,107 +26,91 @@ const DETAIL_RECENT_SALES = 5;
 const DETAIL_RECENT_TXS = 5;
 
 export const RetailCustomerHubView: FC = () => {
-  const { showToast } = useApp();
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id;
+  const { showToast } = useApp();
 
   const [panel, setPanel] = useState<Panel>('list');
+  const [loading, setLoading] = useState(true);
+
+  // --- List State ---
+  const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState<CustomerSearchResult[]>([]);
   const [balances, setBalances] = useState<Map<string, number>>(new Map());
-  const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
+  const [manualPointOpen, setManualPointOpen] = useState(false);
 
-  const [selected, setSelected] = useState<CustomerSearchResult | null>(null);
-  const [detailData, setDetailData] = useState<RetailCustomerDetailData | null>(
-    null
-  );
+  // --- Detail State ---
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerSearchResult | null>(null);
+  const [detailData, setDetailData] = useState<RetailCustomerDetailData | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const [typeFilter, setTypeFilter] = useState<CustomerPointsTypeFilter>('ALL');
-  const [transactions, setTransactions] = useState<PointTransaction[]>([]);
-  const [pointsLoading, setPointsLoading] = useState(false);
-  const [pointsBalance, setPointsBalance] = useState(0);
+  // --- Point List State ---
+  const [pointTxs, setPointTxs] = useState<PointTransaction[]>([]);
+  const [pointTypeFilter, setPointTypeFilter] = useState<CustomerPointsTypeFilter>('ALL');
+  const [pointLoading, setPointLoading] = useState(false);
 
-  const [saleDetailOpen, setSaleDetailOpen] = useState(false);
-  const [saleDetailLoading, setSaleDetailLoading] = useState(false);
-  const [saleDetail, setSaleDetail] = useState<SaleDetailData | null>(null);
+  // --- Sale Detail Modal ---
+  const [saleModalOpen, setSaleModalOpen] = useState(false);
+  const [saleModalData, setSaleModalData] = useState<SaleDetailData | null>(null);
 
   const loadList = useCallback(async () => {
-    if (!orgId || !isSupabaseConfigured()) {
-      setCustomers([]);
-      setBalances(new Map());
-      return;
-    }
+    if (!orgId || !isSupabaseConfigured()) return;
     setLoading(true);
     try {
-      const list = await customerLinkService.listCustomers(orgId);
-      setCustomers(list);
-      const map = await pointQueryService.getBalancesByCustomerIds(
-        orgId,
-        list.map((c) => c.id)
-      );
-      setBalances(map);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : COPY.loadError, 'error');
-      setCustomers([]);
-      setBalances(new Map());
+      const res = await customerLinkService.searchCustomers(orgId, '', 300);
+      setCustomers(res);
+
+      if (res.length > 0) {
+        const cids = res.map((c) => c.id);
+        const map = await pointQueryService.getPointBalances(orgId, cids);
+        setBalances(map);
+      }
+    } catch (err: any) {
+      showToast(err.message, 'error');
     } finally {
       setLoading(false);
     }
   }, [orgId, showToast]);
 
   useEffect(() => {
-    if (panel === 'list') void loadList();
-  }, [panel, loadList]);
+    void loadList();
+  }, [loadList]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return customers;
-    return customers.filter((c) => {
-      const hay = `${c.name} ${c.phone ?? ''}`.toLowerCase();
-      return hay.includes(q);
-    });
+    return customers.filter(
+      (c) => c.name.toLowerCase().includes(q) || (c.phone && c.phone.includes(q))
+    );
   }, [customers, search]);
 
   const loadDetail = useCallback(
-    async (customer: CustomerSearchResult) => {
+    async (customerId: string) => {
       if (!orgId) return;
       setDetailLoading(true);
-      setDetailData(null);
       try {
-        const [profile, purchase, balance, recentTxs] = await Promise.all([
-          customerLinkService.getCustomerProfile(orgId, customer.id),
-          customerPurchaseService.getCustomerPurchaseSummary({
-            organizationId: orgId,
-            customerId: customer.id,
-            recentLimit: DETAIL_RECENT_SALES,
-          }),
-          pointQueryService.getBalance(orgId, customer.id),
-          pointQueryService.listTransactions({
-            organizationId: orgId,
-            customerId: customer.id,
-            type: 'ALL',
+        const [profile, txs, balMap, salesRes] = await Promise.all([
+          customerLinkService.getCustomerProfile(orgId, customerId),
+          pointQueryService.listPointTransactions(orgId, customerId, {
             limit: DETAIL_RECENT_TXS,
           }),
+          pointQueryService.getPointBalances(orgId, [customerId]),
+          customerPurchaseService.listCustomerPurchases(orgId, customerId, {
+            limit: DETAIL_RECENT_SALES,
+          }),
         ]);
-        if (!profile) {
-          throw new Error(COPY.detailLoadError);
-        }
+        if (!profile) throw new Error('고객을 찾을 수 없습니다.');
         setDetailData({
           profile,
-          balance,
-          purchaseCount: purchase.totalCount,
-          latestAmount: purchase.latestAmount,
-          recentSales: purchase.recentSales,
-          recentTransactions: recentTxs,
+          recentTransactions: txs,
+          recentSales: salesRes.data,
+          balance: balMap.get(customerId) ?? 0,
+          purchaseCount: salesRes.data.length,
+          latestAmount: salesRes.data[0]?.totalAmount || 0,
         });
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : COPY.detailLoadError,
-          'error'
-        );
+      } catch (err: any) {
+        showToast(err.message, 'error');
         setPanel('list');
-        setSelected(null);
       } finally {
         setDetailLoading(false);
       }
@@ -138,139 +118,137 @@ export const RetailCustomerHubView: FC = () => {
     [orgId, showToast]
   );
 
-  const openDetail = (customer: CustomerSearchResult) => {
-    setSelected(customer);
-    setPanel('detail');
-    void loadDetail(customer);
-  };
+  const handleSelectCustomer = useCallback(
+    (c: CustomerSearchResult) => {
+      setSelectedCustomer(c);
+      setPanel('detail');
+      void loadDetail(c.id);
+    },
+    [loadDetail]
+  );
 
-  const loadPoints = useCallback(async () => {
-    if (!orgId || !selected) return;
-    setPointsLoading(true);
-    try {
-      const [balance, txs] = await Promise.all([
-        pointQueryService.getBalance(orgId, selected.id),
-        pointQueryService.listTransactions({
-          organizationId: orgId,
-          customerId: selected.id,
-          type: typeFilter === 'ALL' ? 'ALL' : typeFilter,
-        }),
-      ]);
-      setPointsBalance(balance);
-      setTransactions(txs);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : COPY.pointsLoadError, 'error');
-      setTransactions([]);
-    } finally {
-      setPointsLoading(false);
+  const loadPoints = useCallback(
+    async (customerId: string, _type: CustomerPointsTypeFilter) => {
+      if (!orgId) return;
+      setPointLoading(true);
+      try {
+        const txs = await pointQueryService.listPointTransactions(orgId, customerId, {
+          limit: 100,
+        });
+        setPointTxs(txs);
+      } catch (err: any) {
+        showToast(err.message, 'error');
+      } finally {
+        setPointLoading(false);
+      }
+    },
+    [orgId, showToast]
+  );
+
+  const handleOpenPoints = useCallback(() => {
+    if (!selectedCustomer) return;
+    setPanel('points');
+    setPointTypeFilter('ALL');
+    void loadPoints(selectedCustomer.id, 'ALL');
+  }, [selectedCustomer, loadPoints]);
+
+  const handleOpenSale = useCallback(
+    async (saleId: string) => {
+      if (!orgId) return;
+      try {
+        const detail = await saleHistoryService.getSaleDetail(orgId, saleId);
+        const returns = await saleReturnService.listReturnsForSale(orgId, saleId);
+        setSaleModalData({
+          ...detail,
+          totalAmount: (detail as any).totalAmount ?? 0,
+          paymentMethod: (detail as any).paymentMethod ?? 'card',
+          status: (detail as any).status ?? 'completed',
+          customerName: detail.customerName ?? null,
+          items: detail.items,
+          returnedQtyByItemId: detail.returnedQtyByItemId,
+          returns,
+        });
+        setSaleModalOpen(true);
+      } catch (err: any) {
+        showToast(err.message, 'error');
+      }
+    },
+    [orgId, showToast]
+  );
+
+  const renderPanel = () => {
+    if (panel === 'list') {
+      return (
+        <RetailCustomerListPanel
+          search={search}
+          onSearchChange={setSearch}
+          loading={loading}
+          customers={customers}
+          filtered={filtered}
+          balances={balances}
+          onSelect={handleSelectCustomer}
+          onOpenManualPoint={() => setManualPointOpen(true)}
+        />
+      );
     }
-  }, [orgId, selected, typeFilter, showToast]);
 
-  useEffect(() => {
-    if (panel === 'points') void loadPoints();
-  }, [panel, loadPoints]);
-
-  const openSaleDetail = async (saleId: string) => {
-    if (!orgId) return;
-    setSaleDetailOpen(true);
-    setSaleDetail(null);
-    setSaleDetailLoading(true);
-    try {
-      const data = await saleHistoryService.getSaleDetail(orgId, saleId);
-      const returns = await saleReturnService.listReturnsForSale(orgId, saleId);
-      setSaleDetail({
-        id: data.id,
-        createdAt: data.createdAt,
-        totalAmount: data.totalAmount,
-        paymentMethod: data.paymentMethod,
-        status: data.status,
-        customerName: data.customerName,
-        items: data.items,
-        returnedQtyByItemId: data.returnedQtyByItemId,
-        returns,
-      });
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : COPY.pointsLoadError, 'error');
-      setSaleDetailOpen(false);
-    } finally {
-      setSaleDetailLoading(false);
-    }
-  };
-
-  if (!orgId) {
-    return (
-      <div className="p-4 sm:p-6">
-        <EmptyState
-          icon={<Users className="w-10 h-10" />}
-          title={COPY.noOrg}
-          description="조직 선택 후 고객을 확인할 수 있습니다"
-        />
-      </div>
-    );
-  }
-
-  if (panel === 'points' && selected) {
-    return (
-      <>
-        <RetailCustomerPointsPanel
-          customerName={selected.name}
-          balance={pointsBalance}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          loading={pointsLoading}
-          transactions={transactions}
-          onBack={() => {
-            setPanel('detail');
-            void loadDetail(selected);
-          }}
-          onOpenSale={(saleId) => void openSaleDetail(saleId)}
-        />
-        <SaleDetailModal
-          isOpen={saleDetailOpen}
-          detail={saleDetail}
-          loading={saleDetailLoading}
-          onClose={() => setSaleDetailOpen(false)}
-        />
-      </>
-    );
-  }
-
-  if (panel === 'detail' && selected) {
-    return (
-      <>
+    if (panel === 'detail' && selectedCustomer) {
+      return (
         <RetailCustomerDetailPanel
-          data={detailData}
           loading={detailLoading}
-          onBack={() => {
-            setPanel('list');
-            setSelected(null);
-            setDetailData(null);
-          }}
-          onOpenPoints={() => {
-            setTypeFilter('ALL');
-            setPanel('points');
-          }}
-          onOpenSale={(saleId) => void openSaleDetail(saleId)}
+          data={detailData}
+          onBack={() => setPanel('list')}
+          onOpenPoints={handleOpenPoints}
+          onOpenSale={handleOpenSale}
         />
-        <SaleDetailModal
-          isOpen={saleDetailOpen}
-          detail={saleDetail}
-          loading={saleDetailLoading}
-          onClose={() => setSaleDetailOpen(false)}
+      );
+    }
+
+    if (panel === 'points' && selectedCustomer && detailData) {
+      return (
+        <RetailCustomerPointsPanel
+          customerName={selectedCustomer.name}
+          balance={detailData.balance}
+          typeFilter={pointTypeFilter}
+          onTypeFilterChange={(filter) => {
+            setPointTypeFilter(filter);
+            void loadPoints(selectedCustomer.id, filter);
+          }}
+          loading={pointLoading}
+          transactions={pointTxs}
+          onBack={() => setPanel('detail')}
+          onOpenSale={handleOpenSale}
         />
-      </>
-    );
-  }
+      );
+    }
+
+    return null;
+  };
 
   return (
-    <RetailCustomerListPanel
-      search={search}
-      onSearchChange={setSearch}
-      loading={loading}
-      customers={customers}
-      filtered={filtered}
-      balances={balances}
-      onSelect={openDetail}
-    />
+    <div className="min-h-screen bg-slate-50/50 pb-20">
+      {renderPanel()}
+
+      {saleModalOpen && saleModalData && (
+        <SaleDetailModal
+          isOpen={saleModalOpen}
+          detail={saleModalData}
+          onClose={() => setSaleModalOpen(false)}
+        />
+      )}
+
+      {manualPointOpen && (
+        <ManualPointModal
+          isOpen={manualPointOpen}
+          organizationId={orgId!}
+          onClose={() => setManualPointOpen(false)}
+          onCompleted={() => {
+            showToast('수동 포인트 지급/차감이 완료되었습니다.', 'success');
+            void loadList();
+          }}
+          onError={(msg) => showToast(msg, 'error')}
+        />
+      )}
+    </div>
   );
 };

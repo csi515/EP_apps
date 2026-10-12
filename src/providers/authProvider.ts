@@ -37,6 +37,14 @@ export const authProvider: AuthProvider = {
             redirectTo: targetPath,
           };
         }
+        if (provider === "google") {
+          await authService.signInWithGoogle();
+          return { success: true };
+        }
+        if (provider === "apple") {
+          await authService.signInWithApple();
+          return { success: true };
+        }
         if (provider === "kakao") {
           await authService.signInWithKakao();
           return { success: true };

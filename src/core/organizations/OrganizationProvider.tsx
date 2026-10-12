@@ -44,6 +44,7 @@ import { useOrganizationLocationState } from '@/core/locations/useOrganizationLo
 import type { Location } from '@/core/locations/types';
 import { isNativeApp } from '@/core/platform/capacitorPlatform';
 import { registerForegroundStep } from '@/core/platform/foregroundCoordinator';
+import { evictTenantMemoryCache } from '@/core/query/tenantQueryKeys';
 
 /**
  * OrganizationProvider 책임 (단일 Context 유지):
@@ -314,6 +315,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         'clear'
       ) {
         StorageService.clearOrganization();
+        evictTenantMemoryCache();
       }
       if (STAFF_ROLES.has(membership.role)) {
         commitPortalMode('none');
@@ -345,6 +347,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         'clear'
       ) {
         StorageService.clearOrganization();
+        evictTenantMemoryCache();
       }
       if (STAFF_ROLES.has(resolved.membership.role)) {
         commitPortalMode('none');

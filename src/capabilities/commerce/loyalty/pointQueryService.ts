@@ -81,6 +81,25 @@ export type PointTransactionListQuery = {
  * 모든 조회에 organization_id + customer_id 필수.
  */
 export const pointQueryService = {
+  async getPointBalances(
+    organizationId: string,
+    customerIds: string[]
+  ): Promise<Map<string, number>> {
+    return this.getBalancesByCustomerIds(organizationId, customerIds);
+  },
+
+  async listPointTransactions(
+    organizationId: string,
+    customerId: string,
+    options?: { limit?: number }
+  ): Promise<PointTransaction[]> {
+    return this.listTransactions({
+      organizationId,
+      customerId,
+      limit: options?.limit,
+    });
+  },
+
   /**
    * 사업장×고객 잔액. 계정이 없으면 null(잔액 0으로 표시해도 됨).
    */

@@ -64,6 +64,7 @@ export const TimetableDayTimeline: FC<TimetableDayTimelineProps> = ({
             />
             <button
               type="button"
+              data-testid="today-schedule-item"
               onClick={() => onSelect(cls)}
               className={`w-full text-left rounded-2xl p-3.5 border shadow-2xs transition-all min-h-[72px] cursor-pointer ${highlightClass}`}
             >

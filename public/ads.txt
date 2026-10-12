@@ -1,3 +1,12 @@
-# Google AdSense Publisher Verification File
-# Format: google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
-# TODO: Replace with actual Publisher ID upon AdSense approval
+# ==============================================================================
+# Google AdSense ads.txt - Authorized Digital Sellers
+# ==============================================================================
+# 구글 애드센스 심사용 표준 템플릿
+# 규격: <도메인>, <게시자 ID>, <계정 유형>, <인증 기관 ID>
+#
+# 1. 도메인: google.com
+# 2. 게시자 ID: 실제 애드센스 승인 후 발급받는 pub-0000000000000000 형태로 교체
+# 3. 계정 유형: DIRECT (게시자가 직접 관리)
+# 4. 인증 기관 ID: f08c47fec0942fa0 (구글 고유 태그 ID)
+# ==============================================================================
+google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0

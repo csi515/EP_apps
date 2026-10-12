@@ -19,6 +19,7 @@ import type { IndustryType } from '@/core/industry/types';
 import { getPlaceLabel } from '@/core/industry/industryUi';
 import { normalizeIndustryType } from '@/core/industry/types';
 import { ParentAccountSection } from '../ParentAccountSection';
+import { AdSlotPlaceholder } from '@/components/ads/AdSlotPlaceholder';
 import { useParentPortal } from '@/core/parent/context/ParentPortalContext';
 import { ACTIVE_ENROLLMENT_STATUSES } from '@/core/parent/types/globalParent';
 import { unlinkParentEnrollment } from '@/core/parent/services/enrollmentUnlinkService';
@@ -211,6 +212,8 @@ export function ParentMoreView({
         </p>
         <ParentAccountSection industryType={industry} />
       </div>
+
+      <AdSlotPlaceholder slotId="parent-mypage-bottom-slot" />
     </div>
   );
 }
