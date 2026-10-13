@@ -19,8 +19,10 @@ import {
 } from '../src/app/presets/presetAssembler';
 import {
   TAB_REQUIRED_CAPABILITIES,
+  TAB_METADATA,
+  getTabMetadata,
   isTabAllowedForCapabilities,
-} from '../src/app/industry/GenericIndustryShell';
+} from '../src/app/industry/genericIndustryTabs';
 import {
   getIndustryCapabilities,
   INDUSTRY_CAPABILITY_MAP,
@@ -188,7 +190,23 @@ function run(): void {
   assert.equal(isTabAllowedForCapabilities('students', []), true);
   assert.equal(isTabAllowedForCapabilities('settings', []), true);
   assert.equal(isTabAllowedForCapabilities('account', []), true);
-  console.log('  -> URL 직접 접근 가드 및 비활성 기능 차단 로직 검증 완료');
+
+  // 4-8. 탭 메타데이터 및 Tier 3 연기 탭 안내 계약 검증 (UI-001)
+  assert.ok(TAB_METADATA.rentals, 'rentals 탭 메타데이터 등록');
+  assert.equal(TAB_METADATA.rentals.tier, 'tier3_deferred');
+  assert.equal(TAB_METADATA.rentals.label, '장비·물품 대여');
+
+  assert.ok(TAB_METADATA.maintenance, 'maintenance 탭 메타데이터 등록');
+  assert.equal(TAB_METADATA.maintenance.tier, 'tier3_deferred');
+
+  assert.ok(TAB_METADATA.consultations, 'consultations 탭 메타데이터 등록');
+  assert.equal(TAB_METADATA.consultations.tier, 'tier1_ready');
+
+  const shiftMeta = getTabMetadata('shifts');
+  assert.ok(shiftMeta);
+  assert.equal(shiftMeta?.tier, 'tier3_deferred');
+  assert.equal(shiftMeta?.primaryCapability, 'shift_schedule');
+  console.log('  -> URL 직접 접근 가드 및 비활성 기능 차단, 연기 탭 메타데이터 검증 완료');
 
   console.log('=== [5] Industry Capability Map Runtime Resolution ===');
   // 5-1. 7대 전용 모듈 업종 매핑 검증

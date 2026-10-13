@@ -8,7 +8,7 @@
  * 프레임워크 리소스(resources)를 독립 소유하고, 프리셋 엔진이 이를 조합한다.
  */
 
-export type PresetCapabilityId =
+export type BundledPresetCapabilityId =
   // 기존 5대 기능
   | 'attendance'
   | 'passes'
@@ -31,6 +31,33 @@ export type PresetCapabilityId =
   | 'consultation_crm'
   | 'treatment_chart'
   | 'safety_consent';
+
+export type PresetCapabilityId =
+  | BundledPresetCapabilityId
+  // 코어/공통 기반 기능 식별자 (Alias 및 코어 매핑용)
+  | 'billing'
+  | 'consultation'
+  | 'commerce'
+  | 'scheduling'
+  | 'resources'
+  | 'roster'
+  | 'enrollment'
+  | 'parent'
+  | 'transport';
+
+/**
+ * 중복 Capability 단일화 및 하위 호환 Alias 매핑 테이블
+ * AGENTS.md 원칙: 같은 본질의 업무는 하나의 Capability 번들을 재사용한다.
+ */
+export const CAPABILITY_ALIASES: Partial<Record<PresetCapabilityId, BundledPresetCapabilityId>> = {
+  billing: 'billing_invoicing',
+  consultation: 'consultation_crm',
+  commerce: 'inventory',
+  scheduling: 'booking',
+  resources: 'seat_room',
+  enrollment: 'attendance',
+  roster: 'attendance',
+};
 
 export type SetupFieldType =
   | 'text'

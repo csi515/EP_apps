@@ -135,6 +135,7 @@ export const INVENTORY_META_SCRIPTS = new Set([
   'test:business-invariants:catalog',
   'test:finance:list',
   'test:commerce-unit',
+  'check:all',
 ]);
 
 /**
@@ -219,6 +220,19 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:student-exit-label': 'student detail exit label plugin flag unit',
   'test:preset-assembler': 'preset assembler composition unit',
   'test:capability-packs-finance-isolation': 'capability pack grouping & finance isolation invariant',
+  'test:ads-cloudflare': 'Cloudflare & AdSlot UI component unit',
+  'test:atomic-booking': 'atomic schedule slot booking DB/RPC contract',
+  'test:attendance-offline': 'attendance offline IndexedDB queue unit',
+  'test:audit-export': 'audit export interceptor unit',
+  'test:booking-logic': 'booking available time slot calculation unit',
+  'test:jwt-revocation': 'JWT revocation token_version RLS contract',
+  'test:login-form': 'mobile responsive social login form UI unit',
+  'test:safe-transfer': 'customer identity safe transfer RPC contract',
+  'test:stamp-resizer': 'canvas stamp resizer util unit',
+  'test:tenant-query': 'tenant query keys factory unit',
+  'test:vite-preload': 'Vite preload error recovery handler unit',
+  'test:session-pass-mappers': 'session pass & core.passes adapter mapper unit',
+  'test:cross-cache-bridge': 'Refine QueryClient & StorageService cross-cache bridge unit',
 };
 
 /**

@@ -68,3 +68,30 @@ Moa-v2의 최종 아키텍처는 다음 3개 계층으로 단일화된다.
    - `docs/MOA_DEPENDENCY_RULES.md` (계층 간 의존성 및 Import 규칙)
    - `docs/MOA_DATA_CACHE_BOUNDARY.md` (Refine vs StorageService 데이터 경계)
    - `docs/MOA_REFINE_RUNTIME.md` (Refine v5 런타임 통합 원칙)
+
+---
+
+## 5. 44개 업종 프리셋 및 26개 Capability 규격
+
+1. **Preset 카탈로그 (`src/app/presets/presetRegistry.ts`)**:
+   - 44개 업종 프리셋이 선언적으로 등록되어 있으며, `assemblePreset(presetId)` 엔진을 통해 동적 조립된다.
+   - 각 프리셋은 신규 애플리케이션 코드를 복제하지 않고, 결합된 Capability 번들의 리소스와 온보딩 스키마를 병합한다.
+2. **Capability 번들 및 Alias 체계 (`src/core/presets/types.ts`)**:
+   - 17개 원자적 번들(`BundledPresetCapabilityId`): `attendance`, `passes`, `locker`, `booking`, `inventory`, `seat_room`, `rental_equipment`, `maintenance_checklist`, `instructor_match`, `shift_schedule`, `task_pipeline`, `billing_invoicing`, `ledger_simple`, `credit_wallet`, `consultation_crm`, `treatment_chart`, `safety_consent`.
+   - 9개 코어/기반 식별자: `billing`, `consultation`, `commerce`, `scheduling`, `resources`, `roster`, `enrollment`, `parent`, `transport`.
+   - `CAPABILITY_ALIASES`: 코어 식별자는 대응하는 원자적 번들로 자동 매핑되어 코드 중복을 방지한다 (`billing` $\rightarrow$ `billing_invoicing`, `consultation` $\rightarrow$ `consultation_crm`, `commerce` $\rightarrow$ `inventory` 등).
+3. **포털 경계 엄격 격리**:
+   - 학부모 포털(`src/modules/parent`)은 사업장 관리자(Director/Staff) 전용 뷰나 리테일 내부 뷰를 직접 import하지 않는다 (`test:architecture`로 자동 차단).
+
+---
+
+## 6. 사전 검증 및 원스톱 커밋 규칙
+
+모든 코드 수정 후 커밋/푸시 전에는 반드시 단일 원스톱 통합 명령을 실행하여 회귀가 없음을 증명해야 한다.
+
+```bash
+npm run check:all
+```
+
+- 위 명령은 `lint` $\rightarrow$ `check:ci-structure` $\rightarrow$ `test:architecture` $\rightarrow$ `check:db-types` $\rightarrow$ `test:business-invariants:catalog` $\rightarrow$ `npm test` (57개 전체 테스트 체인)를 일괄 실행한다.
+- 모든 검사가 exit code 0으로 통과해야만 정상 완료로 인정한다.

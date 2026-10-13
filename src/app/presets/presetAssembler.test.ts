@@ -133,6 +133,23 @@ function run() {
     assemblePreset('unknown_preset_123');
   }, /미등록된 업종 프리셋 ID/);
 
+  // 8. Core Capability Alias 자동 해석 조립 검증 (CAP-001)
+  const aliasAssembly = assembleAdHocCapabilities([
+    'billing',
+    'consultation',
+    'commerce',
+    'scheduling',
+    'resources',
+  ]);
+  assert.equal(aliasAssembly.setupSchemas.length, 5);
+  const schemaCapIds = aliasAssembly.setupSchemas.map((s) => s.capabilityId);
+  assert.ok(schemaCapIds.includes('billing_invoicing'), 'billing -> billing_invoicing 번들 조립 실패');
+  assert.ok(schemaCapIds.includes('consultation_crm'), 'consultation -> consultation_crm 번들 조립 실패');
+  assert.ok(schemaCapIds.includes('inventory'), 'commerce -> inventory 번들 조립 실패');
+  assert.ok(schemaCapIds.includes('booking'), 'scheduling -> booking 번들 조립 실패');
+  assert.ok(schemaCapIds.includes('seat_room'), 'resources -> seat_room 번들 조립 실패');
+  assert.ok(aliasAssembly.resources.length >= 5, '리소스 병합 실패');
+
   console.log(`presetAssembler.test.ts: ok (${presets.length} industry presets verified successfully)`);
 }
 

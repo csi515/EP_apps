@@ -91,6 +91,7 @@ async function testDataProviderGuard() {
       "services",
       "reservations",
       "events",
+      "tenant_operating_hours",
     ]
   );
 
@@ -266,6 +267,27 @@ async function testDataProviderGuard() {
           (err: any) => err.message.includes("do not belong to active organization")
         );
       }
+    }
+
+    // 7. Cross-tenant column fallback rejection (e.g. passes with organization_id, session_passes with tenant_id)
+    {
+      const crossPassesBase: any = {
+        getOne: async () => ({ data: { id: "cross-pass", organization_id: FOREIGN_ORG } }),
+      };
+      const guardedPasses = guardTenantDataProvider(crossPassesBase, () => ACTIVE_ORG);
+      await assert.rejects(
+        () => guardedPasses.getOne({ resource: "passes", id: "cross-pass" }),
+        (err: any) => err.message.includes("does not belong to active organization")
+      );
+
+      const crossSessionBase: any = {
+        getOne: async () => ({ data: { id: "cross-sp", tenant_id: FOREIGN_ORG } }),
+      };
+      const guardedSession = guardTenantDataProvider(crossSessionBase, () => ACTIVE_ORG);
+      await assert.rejects(
+        () => guardedSession.getOne({ resource: "session_passes", id: "cross-sp" }),
+        (err: any) => err.message.includes("does not belong to active organization")
+      );
     }
   }
 

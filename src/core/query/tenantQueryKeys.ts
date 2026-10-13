@@ -58,11 +58,34 @@ export function evictTenantMemoryCache(): void {
     console.error('[TenantQuery] Failed to clear queryClient cache:', err);
   }
 
-  for (const handler of clearHandlers) {
-    try {
-      handler();
-    } catch (err) {
-      console.error('[TenantQuery] Error in clear handler:', err);
+    for (const handler of clearHandlers) {
+      try {
+        handler();
+      } catch (err) {
+        console.error('[TenantQuery] Error in clear handler:', err);
+      }
     }
+}
+
+/**
+ * 특정 도메인(리소스)에 해당하는 테넌트 쿼리 캐시 무효화
+ */
+export function invalidateTenantQueries(domain: string, organizationId?: string): void {
+  if (!registeredQueryClient) return;
+  try {
+    if (organizationId && organizationId.trim().length > 0) {
+      registeredQueryClient.invalidateQueries({
+        queryKey: ['tenant', `org:${organizationId.trim()}`, domain],
+      });
+    } else {
+      registeredQueryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          return Array.isArray(key) && key.length >= 3 && key[0] === 'tenant' && key[2] === domain;
+        },
+      });
+    }
+  } catch (err) {
+    console.error('[TenantQuery] Failed to invalidate queries for domain:', domain, err);
   }
 }

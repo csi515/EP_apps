@@ -3,8 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Coins, History, MapPin, Store } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useCustomerLink } from '@/core/customer/hooks/useCustomerLink';
-import { pointQueryService } from '@/capabilities/commerce';
-import { customerPurchaseService } from '@/industries/retail/services/customerPurchaseService';
+import { pointQueryService, customerPurchaseService } from '@/capabilities/commerce';
 import { EmptyState, Section } from '@/shared/components';
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 

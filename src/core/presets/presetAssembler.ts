@@ -6,14 +6,15 @@
  * setupSchema와 resources를 순수하게 병합(Merge)한다.
  */
 
-import type {
-  AssembledPresetResult,
-  CapabilityModuleBundle,
-  CapabilityResourceItem,
-  CapabilitySetupSchema,
-  IndustryPresetDefinition,
-  PresetCapabilityId,
-  SetupFieldDefinition,
+import {
+  type AssembledPresetResult,
+  type CapabilityModuleBundle,
+  type CapabilityResourceItem,
+  type CapabilitySetupSchema,
+  type IndustryPresetDefinition,
+  type PresetCapabilityId,
+  type SetupFieldDefinition,
+  CAPABILITY_ALIASES,
 } from './types';
 
 // Core 차원의 동적 번들 레지스트리 (선택적 런타임 주입용)
@@ -80,10 +81,22 @@ export function assembleCapabilities(
   const skippedOptionalCapabilities: PresetCapabilityId[] = [];
 
   const getBundle = (id: string): CapabilityModuleBundle | undefined => {
-    if (bundleRegistry instanceof Map) {
-      return bundleRegistry.get(id as PresetCapabilityId);
+    // 1. 직접 번들 조회
+    const direct =
+      bundleRegistry instanceof Map
+        ? bundleRegistry.get(id as PresetCapabilityId)
+        : bundleRegistry[id as PresetCapabilityId];
+    if (direct) return direct;
+
+    // 2. Alias 매핑 번들 조회 (예: billing -> billing_invoicing, consultation -> consultation_crm)
+    const aliasTarget = CAPABILITY_ALIASES[id as PresetCapabilityId];
+    if (aliasTarget) {
+      return bundleRegistry instanceof Map
+        ? bundleRegistry.get(aliasTarget)
+        : bundleRegistry[aliasTarget];
     }
-    return bundleRegistry[id as PresetCapabilityId];
+
+    return undefined;
   };
 
   const requiredSet = new Set<string>(

@@ -375,6 +375,11 @@ export function collectCiStructureErrors(workflows = loadRepoWorkflows()) {
     errors.push(`npm run build must run only in build-e2e (found: ${buildJobs.join(', ') || 'none'})`);
   }
 
+  const e2eJobs = [...new Set(runs.filter((row) => row.script === 'test:e2e').map((row) => `${row.file}:${row.job}`))];
+  if (e2eJobs.length !== 1 || e2eJobs[0] !== 'ci-cd.yml:build-e2e') {
+    errors.push(`npm run test:e2e must run only in build-e2e (found: ${e2eJobs.join(', ') || 'none'})`);
+  }
+
   if (quality) {
     const qSteps = walkSteps(quality);
     if (!hasCommand(qSteps, /npm run lint\b/)) errors.push('quality must run npm run lint');
@@ -397,6 +402,7 @@ export function collectCiStructureErrors(workflows = loadRepoWorkflows()) {
   if (buildE2e) {
     const steps = walkSteps(buildE2e);
     if (!hasCommand(steps, /npm run build\b/)) errors.push('build-e2e must run npm run build');
+    if (!hasCommand(steps, /npm run test:e2e\b/)) errors.push('build-e2e must run npm run test:e2e');
   }
 
   return errors;
@@ -441,6 +447,12 @@ function runSelfTest() {
     (step) => !String(step.name || '').includes('Require secrets on main')
   );
   expectFail(stripped, 'fail on main when DB audit secrets');
+
+  const buildNoE2e = clone(base);
+  buildNoE2e['ci-cd.yml'].jobs['build-e2e'].steps = walkSteps(buildNoE2e['ci-cd.yml'].jobs['build-e2e']).filter(
+    (step) => !String(step.run || '').includes('npm run test:e2e')
+  );
+  expectFail(buildNoE2e, 'build-e2e must run npm run test:e2e');
 
   console.log('check-ci-workflow-structure self-test: ok');
 }

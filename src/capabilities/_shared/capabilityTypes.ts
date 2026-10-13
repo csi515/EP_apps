@@ -81,3 +81,46 @@ export function assertCapabilityDefinition(definition: CapabilityDefinition): vo
     }
   }
 }
+
+/**
+ * 26대 Capability의 도메인 업무 영역 및 모듈 위계 관계.
+ * AGENTS.md 원칙: 중복 구현 방지 및 단일 업무 본질 재사용 규격.
+ */
+export const CAPABILITY_DOMAIN_RELATIONS = {
+  // 재무/결제/원장 도메인
+  finance: {
+    parent: 'billing',
+    children: ['billing_invoicing', 'ledger_simple', 'credit_wallet'],
+    description: '청구, 단순 원장, 적립 지갑은 billing 도메인의 특화 하위 기능',
+  },
+  // 고객 상담 및 신뢰 관리 도메인
+  crm: {
+    parent: 'consultation',
+    children: ['consultation_crm', 'treatment_chart', 'safety_consent'],
+    description: '상담 CRM, 시술 차트, 안전 동의서는 consultation 도메인의 특화 하위 기능',
+  },
+  // 원생 및 회원 명부 도메인
+  roster_lifecycle: {
+    parent: 'roster',
+    children: ['enrollment'],
+    description: '수강 등록은 roster 회원 라이프사이클의 진입 단계',
+  },
+  // 재고 및 커머스 도메인
+  commerce_stock: {
+    parent: 'commerce',
+    children: ['inventory'],
+    description: '단순 재고 관리는 commerce/stock 도메인의 하위 모듈',
+  },
+  // 공간 및 자원 점유 도메인
+  spatial_resources: {
+    parent: 'resources',
+    children: ['seat_room', 'rental_equipment', 'locker', 'maintenance_checklist'],
+    description: '좌석, 대여 장비, 라커, 점검표는 공간/자원 관리의 세부 모듈',
+  },
+  // 일정 및 예약 도메인
+  scheduling_booking: {
+    parent: 'scheduling',
+    children: ['booking', 'shift_schedule'],
+    description: '예약 및 교대 근무는 scheduling 도메인의 하위 실행 단위',
+  },
+} as const;

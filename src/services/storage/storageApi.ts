@@ -1,6 +1,6 @@
 import { getStorageAdapter } from '../adapters';
 import { setIndustryType } from '../adapters/storageContext';
-import type { StorageListener } from '../adapters/types';
+import type { StorageListener, StorageChangeKey } from '../adapters/types';
 import type { StorageApi } from './helpers';
 
 /**
@@ -53,6 +53,13 @@ export const storageCore = {
 
   subscribe(listener: StorageListener): () => void {
     return getStorageAdapter().subscribe(listener);
+  },
+
+  notify(changedKey: StorageChangeKey): void {
+    const adapter = getStorageAdapter();
+    if (typeof adapter.notify === 'function') {
+      adapter.notify(changedKey);
+    }
   },
 };
 

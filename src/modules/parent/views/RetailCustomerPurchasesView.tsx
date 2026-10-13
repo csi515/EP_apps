@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useState, type FC } from 'react';
 import { History } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
-import { customerPurchaseService } from '@/industries/retail/services/customerPurchaseService';
+import { customerPurchaseService } from '@/capabilities/commerce';
 import { EmptyState, Section } from '@/shared/components';
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
-import type { Student } from '@/types';
 
-export const RetailCustomerPurchasesView: FC<{ student: Student }> = ({ student }) => {
+interface Props {
+  student: { id: string; name?: string };
+}
+
+export const RetailCustomerPurchasesView: FC<Props> = ({ student }) => {
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id;
   const [loading, setLoading] = useState(true);

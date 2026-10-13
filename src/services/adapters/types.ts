@@ -22,6 +22,7 @@ export interface IStorageAdapter {
   removeItem(key: StorageKey): void;
 
   subscribe(listener: StorageListener): () => void;
+  notify?(key: StorageChangeKey): void;
 
   /** org 선택 시 원격 → 메모리 cache (+ local mirror 갱신 경로는 구현체) */
   hydrate(organizationId: string, industryType?: string | null): Promise<void>;

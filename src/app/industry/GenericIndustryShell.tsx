@@ -14,6 +14,12 @@ import {
   Ticket,
   Lock,
   Wallet,
+  MessageSquare,
+  Package,
+  Clock,
+  ClipboardList,
+  Workflow,
+  FileText,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -51,8 +57,20 @@ import { filterNavSections } from '@/core/auth/navUtils';
 import { useTerminology } from '@/core/terminology';
 import { StudentListView, StudentFormModal } from '@/capabilities/roster';
 import { StorageService } from '@/services/storage';
+import {
+  TAB_REQUIRED_CAPABILITIES,
+  TAB_METADATA,
+  getTabMetadata,
+  isTabAllowedForCapabilities,
+} from './genericIndustryTabs';
 
-export { shouldUseGenericShell };
+export {
+  shouldUseGenericShell,
+  TAB_REQUIRED_CAPABILITIES,
+  TAB_METADATA,
+  getTabMetadata,
+  isTabAllowedForCapabilities,
+};
 
 interface GenericDashboardViewProps {
   onNavigate: (tab: any) => void;
@@ -192,39 +210,6 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
   );
 }
 
-export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
-  // 기본 5대 기능 및 재무 허브
-  bookings: ['booking', 'seat_room'],
-  attendance: ['attendance'],
-  passes: ['passes'],
-  lockers: ['locker'],
-  inventory: ['inventory'],
-  finance: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  tuition: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  income: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  expenses: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  payroll: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-
-  // 확장 12종 Capability 슬러그 라우트 (URL 슬러그와 1:1 매핑)
-  'seat-rooms': ['seat_room', 'booking'],
-  rentals: ['rental_equipment'],
-  maintenance: ['maintenance_checklist'],
-  instructors: ['instructor_match'],
-  shifts: ['shift_schedule'],
-  pipelines: ['task_pipeline'],
-  'billing-invoices': ['billing_invoicing', 'billing'],
-  ledger: ['ledger_simple', 'billing'],
-  wallets: ['credit_wallet', 'billing'],
-  consultations: ['consultation_crm'],
-  charts: ['treatment_chart'],
-  consents: ['safety_consent'],
-};
-
-export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
-  const required = TAB_REQUIRED_CAPABILITIES[tab];
-  if (!required) return true;
-  return required.some((cap) => enabledCaps.includes(cap));
-}
 
 /** 모듈 미개발 업종 및 신규 업종용 확장형 공통 셸 */
 export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode>; Overlays?: React.ComponentType | null }> = ({ viewMap: externalViewMap, Overlays }) => {
@@ -263,25 +248,67 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('locker')) {
       items.push({ tab: 'lockers', label: '사물함·락커', icon: <Lock className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('consultation_crm') || enabledCaps.includes('consultation')) {
+      items.push({ tab: 'consultations', label: '상담 내역', icon: <MessageSquare className="w-4 h-4" /> });
+    }
     if (
       enabledCaps.includes('billing_invoicing') ||
       enabledCaps.includes('ledger_simple') ||
-      enabledCaps.includes('credit_wallet')
+      enabledCaps.includes('credit_wallet') ||
+      enabledCaps.includes('billing')
     ) {
       items.push({ tab: 'finance', label: '수납·정산', icon: <Wallet className="w-4 h-4" /> });
     }
 
-    items.push(
-      { tab: 'settings', label: '설정', icon: <Settings className="w-4 h-4" /> },
-      { tab: 'account', label: '내 계정', icon: <User className="w-4 h-4" /> }
-    );
+    const extendedItems: NavMenuItem[] = [];
+    if (enabledCaps.includes('rental_equipment')) {
+      extendedItems.push({ tab: 'rentals', label: '장비 대여', icon: <Clock className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('maintenance_checklist')) {
+      extendedItems.push({ tab: 'maintenance', label: '시설 점검', icon: <ClipboardList className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('instructor_match')) {
+      extendedItems.push({ tab: 'instructors', label: '강사 매칭', icon: <Users className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('shift_schedule')) {
+      extendedItems.push({ tab: 'shifts', label: '근무 시프트', icon: <Clock className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('task_pipeline')) {
+      extendedItems.push({ tab: 'pipelines', label: '파이프라인', icon: <Workflow className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('treatment_chart')) {
+      extendedItems.push({ tab: 'charts', label: '시술 차트', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('safety_consent')) {
+      extendedItems.push({ tab: 'consents', label: '안전 동의서', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('inventory') || enabledCaps.includes('commerce')) {
+      extendedItems.push({ tab: 'inventory', label: '재고·상품', icon: <Package className="w-4 h-4" /> });
+    }
 
-    return [
+    const sections: NavMenuSection[] = [
       {
-        title: '메뉴',
+        title: '주요 업무',
         items,
       },
     ];
+
+    if (extendedItems.length > 0) {
+      sections.push({
+        title: '확장 업무 (준비 중)',
+        items: extendedItems,
+      });
+    }
+
+    sections.push({
+      title: '관리',
+      items: [
+        { tab: 'settings', label: '설정', icon: <Settings className="w-4 h-4" /> },
+        { tab: 'account', label: '내 계정', icon: <User className="w-4 h-4" /> },
+      ],
+    });
+
+    return sections;
   }, [customerWord, enabledCaps]);
 
   const mainTabs = useMemo(() => navSections[0].items, [navSections]);
@@ -361,23 +388,39 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const isCurrentTabAllowed = isTabAllowedForCapabilities(activeTab, enabledCaps);
 
   const renderViewContent = () => {
+    const tabMeta = getTabMetadata(activeTab);
+
     if (!isCurrentTabAllowed) {
       return (
-        <div className="max-w-xl mx-auto mt-12 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="disabled-feature-notice">
-          <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+        <div className="max-w-xl mx-auto mt-10 p-6 sm:p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="disabled-feature-notice">
+          <div className="w-12 h-12 mx-auto mb-3.5 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
             <Lock className="w-6 h-6" />
           </div>
-          <h2 className="text-lg font-bold text-slate-800">현재 업종에서는 제공되지 않는 기능입니다</h2>
-          <p className="text-xs text-slate-500 mt-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-700 rounded-full text-xs font-semibold mb-2">
+            <span>미활성화 기능</span>
+          </div>
+          <h2 className="text-xl font-extrabold text-slate-800">
+            {tabMeta?.label || '현재 업종에서는 제공되지 않는 기능입니다'}
+          </h2>
+          <p className="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
             해당 기능이 활성화되지 않은 업종 프리셋입니다. 필요 시 워크스페이스 설정에서 기능을 추가하세요.
           </p>
-          <button
-            type="button"
-            onClick={() => setActiveTab('dashboard')}
-            className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
-          >
-            대시보드로 돌아가기
-          </button>
+          <div className="mt-6 flex items-center justify-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('dashboard')}
+              className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs"
+            >
+              대시보드로 돌아가기
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('settings')}
+              className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition-colors"
+            >
+              워크스페이스 설정
+            </button>
+          </div>
         </div>
       );
     }
@@ -387,21 +430,36 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       // Capability는 활성화되어 있으나 화면 구현이 Tier 3(화면 연기)인 경우
       if (TAB_REQUIRED_CAPABILITIES[activeTab]) {
         return (
-          <div className="max-w-xl mx-auto mt-12 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="deferred-feature-notice">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+          <div className="max-w-xl mx-auto mt-10 p-6 sm:p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="deferred-feature-notice">
+            <div className="w-12 h-12 mx-auto mb-3.5 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
               <Building2 className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">화면 준비 중인 기능입니다</h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/80 text-indigo-700 rounded-full text-xs font-semibold mb-2">
+              <span>Tier 3 · 화면 준비 중</span>
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-800">
+              {tabMeta?.label || '화면 준비 중인 기능입니다'}
+            </h2>
+            <p className="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
+              {tabMeta?.description ? `${tabMeta.description} — ` : ''}
               해당 기능({activeTab})의 백엔드 도메인 엔진 및 설정 스키마가 정상 활성화되어 있습니다. 전용 화면은 다음 릴리스에서 제공될 예정입니다.
             </p>
-            <button
-              type="button"
-              onClick={() => setActiveTab('dashboard')}
-              className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
-            >
-              대시보드로 돌아가기
-            </button>
+            <div className="mt-6 flex items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs"
+              >
+                대시보드로 돌아가기
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('settings')}
+                className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition-colors"
+              >
+                워크스페이스 설정
+              </button>
+            </div>
           </div>
         );
       }
@@ -409,21 +467,26 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       // 정의되지 않은 미등록 탭
       if (activeTab !== 'dashboard') {
         return (
-          <div className="max-w-xl mx-auto mt-12 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="not-found-notice">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
+          <div className="max-w-xl mx-auto mt-10 p-6 sm:p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="not-found-notice">
+            <div className="w-12 h-12 mx-auto mb-3.5 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
               <Lock className="w-6 h-6" />
             </div>
-            <h2 className="text-lg font-bold text-slate-800">페이지를 찾을 수 없습니다</h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-rose-700 rounded-full text-xs font-semibold mb-2">
+              <span>미등록 경로</span>
+            </div>
+            <h2 className="text-xl font-extrabold text-slate-800">페이지를 찾을 수 없습니다</h2>
+            <p className="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
               요청하신 경로({activeTab})는 존재하지 않거나 유효하지 않은 기능입니다.
             </p>
-            <button
-              type="button"
-              onClick={() => setActiveTab('dashboard')}
-              className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors"
-            >
-              대시보드로 돌아가기
-            </button>
+            <div className="mt-6 flex items-center justify-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setActiveTab('dashboard')}
+                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs"
+              >
+                대시보드로 돌아가기
+              </button>
+            </div>
           </div>
         );
       }

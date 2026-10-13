@@ -448,7 +448,7 @@ export class SupabaseAdapter implements IStorageAdapter {
     if (ok) clearSyncOutboxKeys(list);
   }
 
-  private notify(changedKey: StorageChangeKey): void {
+  notify(changedKey: StorageChangeKey): void {
     this.listeners.forEach((listener) => {
       try {
         listener(changedKey);

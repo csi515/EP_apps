@@ -4,13 +4,28 @@ import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { pointQueryService, type PointTransaction } from "@/capabilities/commerce";
 import { EmptyState, Section } from "@/shared/components";
 import { PageListSkeleton } from "@/shared/components/ui/Skeleton";
-import type { Student } from "@/types";
-import {
-  formatPointAmount,
-  formatPointDateTime,
-} from "@/industries/retail/components/customers/customerPointsFormat";
+import { formatKoreanDate } from "@/utils/formatters";
 
-export const RetailCustomerPointsView: FC<{ student: Student }> = ({ student }) => {
+function formatPointAmount(amount: number): string {
+  const abs = Math.abs(amount).toLocaleString("ko-KR");
+  if (amount > 0) return `+${abs}P`;
+  if (amount < 0) return `-${abs}P`;
+  return "0P";
+}
+
+function formatPointDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "-";
+  const date = formatKoreanDate(iso);
+  const time = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  return `${date} ${time}`;
+}
+
+interface Props {
+  student: { id: string; name?: string };
+}
+
+export const RetailCustomerPointsView: FC<Props> = ({ student }) => {
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id;
   const [loading, setLoading] = useState(true);

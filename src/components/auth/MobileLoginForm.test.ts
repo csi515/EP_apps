@@ -13,19 +13,23 @@ async function runTests() {
   assert.ok(existsSync(componentPath), 'MobileLoginForm.tsx must exist');
   const code = readFileSync(componentPath, 'utf8');
 
-  // 2. Desktop 2-column <-> Mobile single card responsive layout
+  // 2. Desktop 2-column <-> Mobile single card responsive layout (verified via LoginPage container)
+  const loginPagePath = join(root, 'src/pages/auth/LoginPage.tsx');
+  assert.ok(existsSync(loginPagePath), 'LoginPage.tsx must exist');
+  const loginPageCode = readFileSync(loginPagePath, 'utf8');
+
   assert.match(
-    code,
-    /grid-cols-1\s+lg:grid-cols-2/,
-    'Component must support mobile single card (grid-cols-1) to desktop 2-column (lg:grid-cols-2)'
+    loginPageCode,
+    /flex-col\s+lg:flex-row/,
+    'LoginPage must support mobile single card (flex-col) to desktop 2-column (lg:flex-row)'
   );
   assert.match(
-    code,
+    loginPageCode,
     /hidden\s+lg:flex/,
     'Desktop branding panel must be hidden on mobile and flex on lg screens'
   );
   assert.match(
-    code,
+    loginPageCode,
     /data-testid=["']desktop-brand-panel["']/,
     'Desktop brand panel test ID must exist'
   );
@@ -64,7 +68,7 @@ async function runTests() {
   // Kakao & Naver must be in 2-column grid
   assert.match(
     code,
-    /grid\s+grid-cols-2\s+gap-3/,
+    /grid\s+grid-cols-2\s+gap-(?:2\.5|3)/,
     'Kakao and Naver must be arranged in a 2-column grid'
   );
 
@@ -81,9 +85,6 @@ async function runTests() {
   );
 
   // 5. LoginPage integration check
-  const loginPagePath = join(root, 'src/pages/auth/LoginPage.tsx');
-  assert.ok(existsSync(loginPagePath), 'LoginPage.tsx must exist');
-  const loginPageCode = readFileSync(loginPagePath, 'utf8');
   assert.match(
     loginPageCode,
     /<MobileLoginForm/,

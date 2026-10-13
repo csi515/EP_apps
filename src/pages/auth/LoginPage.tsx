@@ -119,7 +119,10 @@ export const LoginPage: React.FC = () => {
       {/* =========================================================================
           데스크톱 좌측 영역 (lg:flex, w-1/2): 슬레이트 다크톤 전문 SaaS 연출
           ========================================================================= */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden">
+      <div
+        data-testid="desktop-brand-panel"
+        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden"
+      >
         {/* 장식용 글로우 효과 */}
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />

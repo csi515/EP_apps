@@ -11,6 +11,7 @@
  */
 
 import type {
+  BundledPresetCapabilityId,
   CapabilityModuleBundle,
   IndustryPresetDefinition,
   PresetCapabilityId,
@@ -58,7 +59,7 @@ import { safetyConsentResources } from '@/capabilities/safety_consent/resources'
 /**
  * 전방위 17대 원자적 Capability 번들 레지스트리
  */
-export const CAPABILITY_BUNDLES: Record<PresetCapabilityId, CapabilityModuleBundle> = {
+export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityModuleBundle> = {
   // 기존 5대 기능
   attendance: {
     capabilityId: 'attendance',

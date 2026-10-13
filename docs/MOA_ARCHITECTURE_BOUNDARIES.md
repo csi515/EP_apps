@@ -253,21 +253,24 @@ Preset은 **필요한 Capability와 설정을 조합해 업종별 사업장 관�
 
 ---
 
-## 6. 현재 코드베이스 상태 및 충돌 정리
+## 6. 현재 코드베이스 상태 및 격리 영역
 
 ### ✅ 확립된 격리 영역
 1. **Industry 카탈로그 단일화**: `definitions.ts`가 단일 원천이며, capability 조합이 분리됨.
 2. **권한 엔진 캡슐화**: `authorizationApi`를 통해서만 인가 판정 수행.
 3. **스토리지 어댑터 정규화**: StorageService가 개별 업종 이름 분기 없이 capability 단위로 동작.
 4. **`src/core/academy` 영구 금지**: 과거 역사적 이유로 존재했던 academy 코드는 완전히 제거되었으며, CI 규칙(`CORE_ACADEMY_FORBIDDEN_MESSAGE`)으로 영구 차단됨.
+5. **Core–Capability 정적 참조 완전 분리 (`CAP-001`)**: 프리셋 번들 레지스트리를 Composition 계층(`src/app/presets/presetRegistry.ts`)으로 이전하고, `src/core/presets/presetAssembler.ts`는 Capability를 알지 않는 순수 조립 엔진으로 단일화.
+6. **학부모 포털 격리 (`ARCH-001`)**: 학부모 포털(`src/modules/parent`)이 원장/관리자 전용 뷰나 리테일 내부 뷰를 직접 참조하지 않도록 `check-architecture-dependencies.mjs`로 영구 차단.
+7. **Refine vs StorageService 양방향 캐시 브리지 (`DATA-001`)**: `crossCacheBridge.ts`를 통해 Refine 데이터 변이 시 StorageService 알림 발행 및 StorageService 변경 시 Refine QueryClient 자동 무효화 양방향 동기화 구축.
 
-### ⚠️ 아직 자동화/격리되지 않은 규칙 (향후 과제 및 코드 리뷰 필수 기준)
+### ⚠️ 코드 리뷰 및 커밋 전 필수 점검 기준
 
-| 항목 | 현황 및 영향 | 향후 과제 및 대응 |
-|------|-------------|-------------------|
-| **Core의 Capability 정적 참조** | `src/core/presets/presetRegistry.ts`가 17개 Capability의 setupSchema/resources를 정적으로 import 중임 | Core가 개별 Capability를 직접 아는 구조적 위반 상태. 향후 프리셋 조립 엔진을 Core 외부(Composition 계층)로 분리하거나 동적 런타임 등록 방식으로 개선 필요. |
-| **새 Capability 승인 6단계 게이트** | 새 Capability 디렉터리 생성 시 6단계 검토 자동 린터 부재 | PR 제출 및 코드 리뷰 시 6단계 질문 체크리스트를 필수 작성하도록 수동 리뷰 강제. |
-| **업종별 앱 복제 차단** | `src/industries/<new>` 복제를 차단하는 자동 검사 부재 | 신규 업종 요구 시 Preset 정의만 추가하도록 코드 리뷰에서 엄격히 제한. |
+| 항목 | 현황 및 규칙 | 검증 방안 |
+|------|-------------|-----------|
+| **새 Capability 승인 6단계 게이트** | 새 Capability 디렉터리 생성 전 6단계 질문 검토 필수 | PR 제출 및 코드 리뷰 시 6단계 질문 체크리스트 필수 작성 |
+| **업종별 앱 복제 차단** | `src/industries/<new>` 복제 금지, 오직 Preset 조합으로만 확장 | Preset 정의(`src/app/presets/presetRegistry.ts`)에만 추가 |
+| **원스톱 무결성 검증** | 린트, CI 구조, 아키텍처, DB 타입, 57개 테스트 일괄 확인 | 커밋 전 `npm run check:all` 전수 통과 필수 |
 
 ---
 

@@ -2314,6 +2314,88 @@ export interface Database {
         Update: Partial<Database['core']['Tables']['web_push_subscriptions']['Insert']>;
         Relationships: [];
       };
+      customer_notifications: {
+        Row: {
+          id: string;
+          organization_id: string;
+          customer_id: string;
+          title: string;
+          body: string;
+          category: string;
+          is_read: boolean;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          customer_id: string;
+          title: string;
+          body: string;
+          category?: string;
+          is_read?: boolean;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['customer_notifications']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'customer_notifications_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_notifications_customer_id_fkey';
+            columns: ['customer_id'];
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      customer_transfer_tokens: {
+        Row: {
+          id: string;
+          organization_id: string;
+          token_hash: string;
+          target_phone: string;
+          target_customer_name: string;
+          target_customer_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          expires_at: string;
+          used_at: string | null;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          token_hash: string;
+          target_phone: string;
+          target_customer_name: string;
+          target_customer_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          expires_at?: string;
+          used_at?: string | null;
+          metadata?: Json;
+        };
+        Update: Partial<Database['core']['Tables']['customer_transfer_tokens']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'customer_transfer_tokens_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'customer_transfer_tokens_target_customer_id_fkey';
+            columns: ['target_customer_id'];
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -28,6 +28,7 @@ import { safety_consentCapability } from './safety_consent/manifest';
 
 export {
   CAPABILITY_IDS,
+  CAPABILITY_DOMAIN_RELATIONS,
   assertCapabilityDefinition,
   defineCapability,
   type CapabilityDefinition,

@@ -3,6 +3,7 @@ import type { BaseRecord, CrudFilter, DataProvider, GetManyParams, GetOneParams 
 import { supabase } from "@/lib/supabase/client";
 import * as orgService from "@/core/organizations/services/organizationService";
 import { StorageService } from "@/services/storage";
+import { notifyStorageFromRefineResource } from "@/core/query/crossCacheBridge";
 
 /**
  * Thrown when a DataProvider operation is executed without valid Supabase configuration.
@@ -68,6 +69,7 @@ export const TENANT_SCOPED_RESOURCES = [
   "services",
   "reservations",
   "events",
+  "tenant_operating_hours",
 ] as const;
 
 export const TENANT_COLUMN_MAP: Record<string, string> = {
@@ -89,6 +91,21 @@ export function getTenantColumnForResource(resource: string): string {
 
 export function isTenantScopedResource(resource: string): boolean {
   return (TENANT_SCOPED_RESOURCES as readonly string[]).includes(resource);
+}
+
+/**
+ * Record에서 테넌트 식별자 추출.
+ * preferredColumn(예: tenant_id)을 우선 읽고, 없으면 상호 호환 컬럼(organization_id)을 fallback으로 해석.
+ */
+export function extractTenantId(data: unknown, preferredColumn: string): string | null {
+  if (!data || typeof data !== "object") return null;
+  const record = data as Record<string, unknown>;
+  const val = record[preferredColumn];
+  if (typeof val === "string" && val.trim().length > 0) return val;
+  const fallbackCol = preferredColumn === "tenant_id" ? "organization_id" : "tenant_id";
+  const fallbackVal = record[fallbackCol];
+  if (typeof fallbackVal === "string" && fallbackVal.trim().length > 0) return fallbackVal;
+  return null;
 }
 
 /**
@@ -185,11 +202,8 @@ export function guardTenantDataProvider(
       const activeOrgId = requireActiveOrgId();
       const res = await baseProvider.getOne<TData>(params);
       const tenantColumn = getTenantColumnForResource(params.resource);
-      if (
-        res?.data &&
-        (res.data as any)[tenantColumn] &&
-        (res.data as any)[tenantColumn] !== activeOrgId
-      ) {
+      const recordTenantId = extractTenantId(res?.data, tenantColumn);
+      if (res?.data && recordTenantId && recordTenantId !== activeOrgId) {
         throw new Error(`Record ${params.id} does not belong to active organization.`);
       }
       return res;
@@ -206,9 +220,10 @@ export function guardTenantDataProvider(
       const res = await baseProvider.getMany<TData>(params);
       const tenantColumn = getTenantColumnForResource(params.resource);
       if (res?.data && Array.isArray(res.data)) {
-        const foreign = res.data.some(
-          (row: any) => row && row[tenantColumn] && row[tenantColumn] !== activeOrgId
-        );
+        const foreign = res.data.some((row: any) => {
+          const rowTenantId = extractTenantId(row, tenantColumn);
+          return row && rowTenantId && rowTenantId !== activeOrgId;
+        });
         if (foreign) {
           throw new Error(`One or more requested records do not belong to active organization.`);
         }
@@ -216,9 +231,9 @@ export function guardTenantDataProvider(
       return res;
     },
 
-    create: async (params) => {
+    create: async <TData extends BaseRecord = BaseRecord, TVariables = {}>(params: any) => {
       if (!isTenantScopedResource(params.resource)) {
-        return baseProvider.create(params);
+        return baseProvider.create<TData, TVariables>(params);
       }
 
       const activeOrgId = requireActiveOrgId();
@@ -228,15 +243,17 @@ export function guardTenantDataProvider(
         [tenantColumn]: activeOrgId,
       };
 
-      return baseProvider.create({
+      const res = await baseProvider.create<TData, TVariables>({
         ...params,
         variables: variables as typeof params.variables,
       });
+      notifyStorageFromRefineResource(params.resource);
+      return res;
     },
 
-    update: async (params) => {
+    update: async <TData extends BaseRecord = BaseRecord, TVariables = {}>(params: any) => {
       if (!isTenantScopedResource(params.resource)) {
-        return baseProvider.update(params);
+        return baseProvider.update<TData, TVariables>(params);
       }
 
       const activeOrgId = requireActiveOrgId();
@@ -250,11 +267,8 @@ export function guardTenantDataProvider(
             id: params.id,
             meta: params.meta,
           });
-          if (
-            existing?.data &&
-            (existing.data as any)[tenantColumn] &&
-            (existing.data as any)[tenantColumn] !== activeOrgId
-          ) {
+          const existingTenantId = extractTenantId(existing?.data, tenantColumn);
+          if (existing?.data && existingTenantId && existingTenantId !== activeOrgId) {
             throw new Error(`Record ${params.id} does not belong to active organization.`);
           }
         } catch (err: unknown) {
@@ -264,18 +278,20 @@ export function guardTenantDataProvider(
         }
       }
 
-      return baseProvider.update({
+      const res = await baseProvider.update<TData, TVariables>({
         ...params,
         variables: withoutTenantId(params.variables),
       });
+      notifyStorageFromRefineResource(params.resource);
+      return res;
     },
 
-    updateMany: async (params) => {
+    updateMany: async <TData extends BaseRecord = BaseRecord, TVariables = {}>(params: any) => {
       if (!baseProvider.updateMany) {
         throw new Error("updateMany is not implemented");
       }
       if (!isTenantScopedResource(params.resource)) {
-        return baseProvider.updateMany(params);
+        return baseProvider.updateMany<TData, TVariables>(params);
       }
 
       const activeOrgId = requireActiveOrgId();
@@ -289,9 +305,10 @@ export function guardTenantDataProvider(
             meta: params.meta,
           });
           if (existing?.data && Array.isArray(existing.data)) {
-            const foreign = existing.data.some(
-              (row: any) => row && row[tenantColumn] && row[tenantColumn] !== activeOrgId
-            );
+            const foreign = existing.data.some((row: any) => {
+              const rowTenantId = extractTenantId(row, tenantColumn);
+              return row && rowTenantId && rowTenantId !== activeOrgId;
+            });
             if (foreign) {
               throw new Error(`One or more requested records do not belong to active organization.`);
             }
@@ -303,18 +320,20 @@ export function guardTenantDataProvider(
         }
       }
 
-      return baseProvider.updateMany({
+      const res = await baseProvider.updateMany<TData, TVariables>({
         ...params,
         variables: withoutTenantId(params.variables),
       });
+      notifyStorageFromRefineResource(params.resource);
+      return res;
     },
 
-    deleteOne: async (params) => {
+    deleteOne: async <TData extends BaseRecord = BaseRecord, TVariables = {}>(params: any) => {
       if (!baseProvider.deleteOne) {
         throw new Error("deleteOne is not implemented");
       }
       if (!isTenantScopedResource(params.resource)) {
-        return baseProvider.deleteOne(params);
+        return baseProvider.deleteOne<TData, TVariables>(params);
       }
 
       const activeOrgId = requireActiveOrgId();
@@ -328,11 +347,8 @@ export function guardTenantDataProvider(
             id: params.id,
             meta: params.meta,
           });
-          if (
-            existing?.data &&
-            (existing.data as any)[tenantColumn] &&
-            (existing.data as any)[tenantColumn] !== activeOrgId
-          ) {
+          const existingTenantId = extractTenantId(existing?.data, tenantColumn);
+          if (existing?.data && existingTenantId && existingTenantId !== activeOrgId) {
             throw new Error(`Record ${params.id} does not belong to active organization.`);
           }
         } catch (err: unknown) {
@@ -342,15 +358,17 @@ export function guardTenantDataProvider(
         }
       }
 
-      return baseProvider.deleteOne(params);
+      const res = await baseProvider.deleteOne<TData, TVariables>(params);
+      notifyStorageFromRefineResource(params.resource);
+      return res;
     },
 
-    deleteMany: async (params) => {
+    deleteMany: async <TData extends BaseRecord = BaseRecord, TVariables = {}>(params: any) => {
       if (!baseProvider.deleteMany) {
         throw new Error("deleteMany is not implemented");
       }
       if (!isTenantScopedResource(params.resource)) {
-        return baseProvider.deleteMany(params);
+        return baseProvider.deleteMany<TData, TVariables>(params);
       }
 
       const activeOrgId = requireActiveOrgId();
@@ -364,9 +382,10 @@ export function guardTenantDataProvider(
             meta: params.meta,
           });
           if (existing?.data && Array.isArray(existing.data)) {
-            const foreign = existing.data.some(
-              (row: any) => row && row[tenantColumn] && row[tenantColumn] !== activeOrgId
-            );
+            const foreign = existing.data.some((row: any) => {
+              const rowTenantId = extractTenantId(row, tenantColumn);
+              return row && rowTenantId && rowTenantId !== activeOrgId;
+            });
             if (foreign) {
               throw new Error(`One or more requested records do not belong to active organization.`);
             }
@@ -378,7 +397,9 @@ export function guardTenantDataProvider(
         }
       }
 
-      return baseProvider.deleteMany(params);
+      const res = await baseProvider.deleteMany<TData, TVariables>(params);
+      notifyStorageFromRefineResource(params.resource);
+      return res;
     },
   };
 }
