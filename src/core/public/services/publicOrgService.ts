@@ -117,4 +117,50 @@ export const publicOrgService = {
 
     return data as string;
   },
+
+  /**
+   * Get organization operating hours (public read)
+   */
+  async getOrganizationOperatingHours(
+    orgId: string,
+    signal?: AbortSignal
+  ): Promise<PublicOperatingHour[]> {
+    if (!isSupabaseConfigured()) {
+      return [];
+    }
+    const cleanId = orgId.trim();
+    if (!cleanId) return [];
+
+    try {
+      const client = getCoreClient();
+      const query = (client as any)
+        .from('tenant_operating_hours')
+        .select('*')
+        .eq('tenant_id', cleanId);
+
+      if (signal) {
+        query.abortSignal(signal);
+      }
+
+      const { data, error } = await query;
+      if (error || !data) return [];
+
+      return (data as any[]).map((row) => ({
+        day_of_week: Number(row.day_of_week ?? 0),
+        open_time: String(row.open_time || row.start_time || '09:00'),
+        close_time: String(row.close_time || row.end_time || '22:00'),
+        is_closed: Boolean(row.is_closed || !row.is_active),
+      }));
+    } catch {
+      return [];
+    }
+  },
 };
+
+export interface PublicOperatingHour {
+  day_of_week: number;
+  open_time: string;
+  close_time: string;
+  is_closed: boolean;
+}
+

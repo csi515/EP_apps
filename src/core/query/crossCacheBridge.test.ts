@@ -29,6 +29,7 @@ async function runCrossCacheBridgeTests() {
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['schedules'], STORAGE_KEYS.SCHEDULES);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['passes'], STORAGE_KEYS.SESSION_PASSES);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['session_passes'], STORAGE_KEYS.SESSION_PASSES);
+  assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['lockers'], STORAGE_KEYS.LOCKERS);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['tuition_invoices'], STORAGE_KEYS.INVOICES);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['staff'], STORAGE_KEYS.TEACHERS);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['classes'], STORAGE_KEYS.CLASSES);
@@ -43,11 +44,16 @@ async function runCrossCacheBridgeTests() {
 
   notifyStorageFromRefineResource('customers');
   notifyStorageFromRefineResource('passes');
+  notifyStorageFromRefineResource('lockers');
   notifyStorageFromRefineResource('unknown_resource'); // should safely ignore
 
   unsubscribeSpy();
 
-  assert.deepEqual(notifiedKeys, [STORAGE_KEYS.STUDENTS, STORAGE_KEYS.SESSION_PASSES]);
+  assert.deepEqual(notifiedKeys, [
+    STORAGE_KEYS.STUDENTS,
+    STORAGE_KEYS.SESSION_PASSES,
+    STORAGE_KEYS.LOCKERS,
+  ]);
 
   // 3. StorageService change -> TanStack Query invalidation bridge
   const client = mockQueryClient();
@@ -64,6 +70,17 @@ async function runCrossCacheBridgeTests() {
       (inv: any) => inv.queryKey && inv.queryKey[0] === 'customers'
     ),
     'queryClient must invalidate customers query on STUDENTS change'
+  );
+
+  // Trigger StorageService notify for LOCKERS
+  client.invalidations.length = 0;
+  (StorageService as any).notify(STORAGE_KEYS.LOCKERS);
+
+  assert.ok(
+    client.invalidations.some(
+      (inv: any) => inv.queryKey && inv.queryKey[0] === 'lockers'
+    ),
+    'queryClient must invalidate lockers query on LOCKERS change'
   );
 
   // Trigger StorageService notify for SCHEDULES

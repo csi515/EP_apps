@@ -18,6 +18,11 @@ async function testPublicOrgService() {
   assert.equal(typeof publicOrgService.getOrganizationBySlugOrCode, 'function');
   assert.equal(typeof publicOrgService.searchOrganizations, 'function');
   assert.equal(typeof publicOrgService.submitConsultation, 'function');
+  assert.equal(typeof publicOrgService.getOrganizationOperatingHours, 'function');
+
+  // 3. 운영 시간 빈 ID 조회 시 빈 배열 반환
+  const emptyHours = await publicOrgService.getOrganizationOperatingHours('');
+  assert.deepEqual(emptyHours, []);
 
   console.log('publicOrgService.test.ts OK');
 }

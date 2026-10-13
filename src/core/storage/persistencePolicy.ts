@@ -51,6 +51,7 @@ export const DECLARED_STORAGE_KEY_POLICIES = {
   piano_app_tuition_payments: 'server-authoritative',
   piano_app_invoices: 'server-authoritative',
   core_session_passes: 'server-authoritative',
+  core_lockers: 'server-authoritative',
   core_schedules: 'server-authoritative',
   piano_app_textbook_sales: 'server-authoritative',
   piano_app_textbook_payments: 'server-authoritative',

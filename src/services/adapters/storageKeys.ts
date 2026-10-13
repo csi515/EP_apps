@@ -55,6 +55,7 @@ export const STORAGE_KEYS = {
   SCHEDULES: 'core_schedules',
   SERVICE_OFFERINGS: 'core_service_offerings',
   SESSION_PASSES: 'core_session_passes',
+  LOCKERS: 'core_lockers',
   SLOT_RECRUITMENTS: 'core_slot_recruitments',
   /** 체육관 등 — 차량 운행 신청 (remote 테이블 없음 → device-local) */
   SHUTTLE_RIDE_REQUESTS: 'core_shuttle_ride_requests',
@@ -144,6 +145,7 @@ export const CORE_SYNC_KEYS: ReadonlySet<StorageKey> = new Set([
   STORAGE_KEYS.CUSTOMER_PINS,
   STORAGE_KEYS.PRACTICE_ROOM_BOOKINGS,
   STORAGE_KEYS.SESSION_PASSES,
+  STORAGE_KEYS.LOCKERS,
 ]);
 
 /**

@@ -19,7 +19,7 @@
     "test:persistence-policy": "tsx src/core/storage/persistencePolicy.test.ts",
     "test:reservation-machine": "tsx src/core/domain/stateMachine.test.ts",
     "test:nav-utils": "tsx src/core/auth/navUtils.test.ts",
-    "test:architecture": "node scripts/check-architecture-dependencies.mjs --self-test",
+    "test:architecture": "node scripts/check-architecture-dependencies.mjs --self-test && node scripts/check-ui-data-boundary.mjs --self-test",
     "test:capability-contract": "tsx src/capabilities/capabilityContract.test.ts",
     "test:capability-public-api": "tsx src/capabilities/publicApi.test.ts",
     "test:preset-assembler": "tsx src/app/presets/presetAssembler.test.ts",

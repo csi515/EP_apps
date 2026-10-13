@@ -13,7 +13,7 @@ import {
   AlertCircle,
   ExternalLink,
 } from "lucide-react";
-import { getCoreClient, isSupabaseConfigured } from "@/lib/supabase";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { shareLink } from "@/core/utils/shareLink";
 import { publicOrgService } from "@/core/public/services/publicOrgService";
 import { AdSlotPlaceholder } from "@/components/ads/AdSlotPlaceholder";
@@ -123,19 +123,8 @@ export const PublicStoreLandingPage: React.FC = () => {
 
         // 2. 운영 시간 조회
         try {
-          const client = getCoreClient();
-          const { data: hoursData } = await (client as any)
-            .from("tenant_operating_hours")
-            .select("*")
-            .eq("tenant_id", orgInfo.id);
-
-          if (hoursData && (hoursData as any[]).length > 0) {
-            const parsedHours: OperatingHour[] = (hoursData as any[]).map((row) => ({
-              day_of_week: Number(row.day_of_week ?? 0),
-              open_time: String(row.open_time || row.start_time || "09:00"),
-              close_time: String(row.close_time || row.end_time || "22:00"),
-              is_closed: Boolean(row.is_closed || !row.is_active),
-            }));
+          const parsedHours = await publicOrgService.getOrganizationOperatingHours(orgInfo.id);
+          if (parsedHours.length > 0) {
             setHours(parsedHours);
           }
         } catch {
