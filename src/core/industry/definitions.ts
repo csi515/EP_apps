@@ -266,6 +266,7 @@ export const INDUSTRY_DEFINITIONS = Object.fromEntries(
 /** 구 값 → 현재 IndustryType 호환 별칭 */
 export const INDUSTRY_ALIASES: Record<string, IndustryType> = {
   taekwondo: 'gym',
+  gym_fitness: 'gym',
   preschool: 'daycare',
   kindergarten: 'daycare',
   sauna: 'sauna_jjimjilbang',

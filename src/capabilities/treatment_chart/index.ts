@@ -3,3 +3,4 @@ export { treatment_chartCapability as treatmentChartCapability } from './manifes
 export * from './domain/treatmentChartEngine';
 export { treatmentChartSetupSchema } from './setupSchema';
 export { treatmentChartResources } from './resources';
+export { TreatmentChartManagementView } from './ui/TreatmentChartManagementView';

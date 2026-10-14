@@ -1,0 +1,433 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  ClipboardList,
+  Plus,
+  Search,
+  CheckCircle2,
+  AlertTriangle,
+  RotateCcw,
+  Clock,
+  ShieldAlert,
+  X,
+  Sliders,
+} from 'lucide-react';
+import { showToast } from '@/shared/feedback/uiFeedback';
+import {
+  calculateChecklistProgress,
+  evaluateChecklistUrgency,
+  type ChecklistItem,
+} from '../domain/maintenanceChecklistEngine';
+
+const STORAGE_KEY_CHECKLISTS = 'moa_maintenance_checklist_items';
+
+const SAMPLE_ITEMS: ChecklistItem[] = [
+  {
+    id: 'chk-001',
+    title: '사우나 온탕 수온 측정 (기준 40℃ ~ 43℃)',
+    isRequired: true,
+    isCompleted: true,
+    completedAt: new Date(Date.now() - 3600 * 1000).toISOString(),
+    completedBy: '오전 관리자',
+    numericValue: 41.5,
+    minThreshold: 40.0,
+    maxThreshold: 43.0,
+  },
+  {
+    id: 'chk-002',
+    title: '헬스장 프리웨이트존 덤벨·바벨 알코올 소독',
+    isRequired: true,
+    isCompleted: true,
+    completedAt: new Date(Date.now() - 7200 * 1000).toISOString(),
+    completedBy: '트레이너 민호',
+  },
+  {
+    id: 'chk-003',
+    title: '무인 스터디카페 키오스크 영수증 용지 및 카드 리더기 점검',
+    isRequired: true,
+    isCompleted: false,
+  },
+  {
+    id: 'chk-004',
+    title: '남/여 탈의실 공용 드라이기 및 빗 청결 상태 확인',
+    isRequired: false,
+    isCompleted: false,
+  },
+  {
+    id: 'chk-005',
+    title: '비상구 유도등 점등 및 소화기 압력 게이지 확인',
+    isRequired: true,
+    isCompleted: false,
+  },
+];
+
+export const MaintenanceChecklistManagementView: React.FC = () => {
+  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_CHECKLISTS);
+      if (saved) {
+        setItems(JSON.parse(saved));
+      } else {
+        setItems(SAMPLE_ITEMS);
+        localStorage.setItem(STORAGE_KEY_CHECKLISTS, JSON.stringify(SAMPLE_ITEMS));
+      }
+    } catch {
+      setItems(SAMPLE_ITEMS);
+    }
+  }, []);
+
+  const saveItems = (next: ChecklistItem[]) => {
+    setItems(next);
+    try {
+      localStorage.setItem(STORAGE_KEY_CHECKLISTS, JSON.stringify(next));
+    } catch {
+      // 무시
+    }
+  };
+
+  const toggleComplete = (item: ChecklistItem) => {
+    const nextCompleted = !item.isCompleted;
+    const next = items.map((i) => {
+      if (i.id !== item.id) return i;
+      return {
+        ...i,
+        isCompleted: nextCompleted,
+        completedAt: nextCompleted ? new Date().toISOString() : undefined,
+        completedBy: nextCompleted ? '현재 사용자' : undefined,
+      };
+    });
+    saveItems(next);
+  };
+
+  const updateNumericValue = (item: ChecklistItem, value: number) => {
+    const next = items.map((i) => (i.id === item.id ? { ...i, numericValue: value, isCompleted: true } : i));
+    saveItems(next);
+  };
+
+  // 진행률 산출
+  const progress = useMemo(() => calculateChecklistProgress(items), [items]);
+
+  // 긴급도 평가 (마감 시각: 당일 22:00 기준)
+  const urgency = useMemo(() => {
+    const currentHHMM = new Date().toTimeString().slice(0, 5);
+    return evaluateChecklistUrgency({
+      items,
+      deadlineTime: '22:00',
+      currentTime: currentHHMM,
+    });
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    return items.filter((i) => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [items, searchTerm]);
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6 pt-2 pb-12">
+      {/* 상단 헤더 */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-semibold mb-1.5">
+            <ClipboardList className="w-3.5 h-3.5" />
+            <span>시설 안전 및 일일 루틴</span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">시설 점검 체크리스트</h1>
+          <p className="text-xs text-slate-500 mt-1">
+            사우나 수온, 헬스장 방역, 무인 키오스크, 위생·안전 점검 루틴을 실시간 확인합니다.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsNewModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+        >
+          <Plus className="w-4 h-4" />
+          <span>점검 항목 추가</span>
+        </button>
+      </div>
+
+      {/* 진행률 & 긴급도 지표 카드 */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 진행률 바 */}
+        <div className="sm:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase text-slate-400">오늘의 점검 완료율</p>
+              <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-2xl font-black text-slate-900">{progress.ratePercent}%</span>
+                <span className="text-xs text-slate-500 font-semibold">
+                  ({progress.completedCount}/{progress.totalCount}건 완료)
+                </span>
+              </div>
+            </div>
+
+            <span
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold ${
+                progress.isRequiredFulfilled
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-amber-50 text-amber-700'
+              }`}
+            >
+              {progress.isRequiredFulfilled ? '필수 점검 완료' : '필수 점검 미완료'}
+            </span>
+          </div>
+
+          {/* 프로그레스 바 */}
+          <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                progress.ratePercent === 100
+                  ? 'bg-emerald-500'
+                  : progress.ratePercent >= 50
+                  ? 'bg-teal-500'
+                  : 'bg-amber-500'
+              }`}
+              style={{ width: `${progress.ratePercent}%` }}
+            />
+          </div>
+        </div>
+
+        {/* 상태 경고 레벨 */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between">
+          <p className="text-xs font-bold uppercase text-slate-400">점검 상태 알림</p>
+          <div className="flex items-center gap-2 mt-2">
+            {urgency.alertLevel === 'CRITICAL' ? (
+              <ShieldAlert className="w-6 h-6 text-rose-500" />
+            ) : urgency.alertLevel === 'WARNING' ? (
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            ) : (
+              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+            )}
+            <span
+              className={`text-base font-extrabold ${
+                urgency.alertLevel === 'CRITICAL'
+                  ? 'text-rose-600'
+                  : urgency.alertLevel === 'WARNING'
+                  ? 'text-amber-600'
+                  : 'text-emerald-600'
+              }`}
+            >
+              {urgency.alertLevel === 'CRITICAL'
+                ? '긴급 조치 필요'
+                : urgency.alertLevel === 'WARNING'
+                ? '주의 (마감 임박/미완료)'
+                : '정상 운영 중'}
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">일일 마감 기준: 매일 22:00</p>
+        </div>
+      </div>
+
+      {/* 점검 항목 리스트 */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="점검 항목명 검색"
+              className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+            />
+          </div>
+        </div>
+
+        <div className="divide-y divide-slate-100">
+          {filteredItems.map((item) => (
+            <div
+              key={item.id}
+              className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition-colors ${
+                item.isCompleted ? 'bg-slate-50/30' : ''
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleComplete(item)}
+                  className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-colors ${
+                    item.isCompleted
+                      ? 'bg-teal-600 border-teal-600 text-white'
+                      : 'border-slate-300 hover:border-teal-500 bg-white'
+                  }`}
+                >
+                  {item.isCompleted && <CheckCircle2 className="w-4 h-4" />}
+                </button>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-bold ${
+                        item.isCompleted ? 'text-slate-400 line-through' : 'text-slate-900'
+                      }`}
+                    >
+                      {item.title}
+                    </span>
+                    {item.isRequired && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600">
+                        필수
+                      </span>
+                    )}
+                  </div>
+
+                  {item.isCompleted && item.completedAt && (
+                    <p className="text-[11px] text-slate-400">
+                      점검 완료: {new Date(item.completedAt).toLocaleTimeString('ko-KR')} ({item.completedBy})
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* 수치 입력형 점검 (있을 경우) */}
+              {item.minThreshold !== undefined && item.maxThreshold !== undefined && (
+                <div className="flex items-center gap-2 pl-8 sm:pl-0">
+                  <span className="text-[11px] text-slate-500 font-medium">측정값:</span>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={item.numericValue ?? ''}
+                    onChange={(e) => updateNumericValue(item, parseFloat(e.target.value) || 0)}
+                    placeholder="수치"
+                    className="w-20 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-800 font-bold focus:ring-2 focus:ring-teal-500"
+                  />
+                  <span
+                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                      item.numericValue !== undefined &&
+                      (item.numericValue < item.minThreshold || item.numericValue > item.maxThreshold)
+                        ? 'bg-rose-50 text-rose-600'
+                        : 'bg-emerald-50 text-emerald-700'
+                    }`}
+                  >
+                    {item.numericValue !== undefined &&
+                    (item.numericValue < item.minThreshold || item.numericValue > item.maxThreshold)
+                      ? '기준치 벗어남'
+                      : '정상 범위'}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 신규 항목 등록 모달 */}
+      {isNewModalOpen && (
+        <NewChecklistItemModal
+          onClose={() => setIsNewModalOpen(false)}
+          onCreated={(newItem) => {
+            saveItems([...items, newItem]);
+            setIsNewModalOpen(false);
+            showToast('신규 점검 항목이 등록되었습니다.', 'success');
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const NewChecklistItemModal: React.FC<{
+  onClose: () => void;
+  onCreated: (item: ChecklistItem) => void;
+}> = ({ onClose, onCreated }) => {
+  const [title, setTitle] = useState('');
+  const [isRequired, setIsRequired] = useState(true);
+  const [isNumeric, setIsNumeric] = useState(false);
+  const [minThreshold, setMinThreshold] = useState('');
+  const [maxThreshold, setMaxThreshold] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) return;
+
+    const newItem: ChecklistItem = {
+      id: `chk-${Date.now()}`,
+      title: title.trim(),
+      isRequired,
+      isCompleted: false,
+      minThreshold: isNumeric && minThreshold ? parseFloat(minThreshold) : undefined,
+      maxThreshold: isNumeric && maxThreshold ? parseFloat(maxThreshold) : undefined,
+    };
+    onCreated(newItem);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+      <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+        <h3 className="text-base font-extrabold text-slate-900">신규 점검 항목 추가</h3>
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">점검 항목명</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="예: 공기청정기 필터 먼지 상태 점검"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800"
+              required
+            />
+          </div>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRequired}
+              onChange={(e) => setIsRequired(e.target.checked)}
+              className="w-4 h-4 text-teal-600 rounded"
+            />
+            <span className="text-xs font-bold text-slate-700">매일 필수 점검 여부</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isNumeric}
+              onChange={(e) => setIsNumeric(e.target.checked)}
+              className="w-4 h-4 text-teal-600 rounded"
+            />
+            <span className="text-xs font-bold text-slate-700">수치 측정값 임계치 설정 (온도/수질 등)</span>
+          </label>
+
+          {isNumeric && (
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-1">최소 허용치</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={minThreshold}
+                  onChange={(e) => setMinThreshold(e.target.value)}
+                  placeholder="예: 40.0"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] text-slate-500 mb-1">최대 허용치</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={maxThreshold}
+                  onChange={(e) => setMaxThreshold(e.target.value)}
+                  placeholder="예: 43.0"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onClose} className="px-3 py-2 text-xs font-semibold text-slate-500">
+              취소
+            </button>
+            <button type="submit" className="px-4 py-2 bg-teal-600 text-white font-bold rounded-xl text-xs hover:bg-teal-700">
+              항목 추가
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};

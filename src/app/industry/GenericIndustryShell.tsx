@@ -43,6 +43,27 @@ const LockersView = lazy(() =>
 const ConsultationView = lazy(() =>
   import('@/capabilities/consultation').then((m) => ({ default: m.ConsultationRecordsView }))
 );
+const InventoryView = lazy(() =>
+  import('@/industries/retail/components/inventory/InventoryListView').then((m) => ({ default: m.InventoryListView }))
+);
+const SafetyConsentView = lazy(() =>
+  import('@/capabilities/safety_consent').then((m) => ({ default: m.SafetyConsentManagementView }))
+);
+const TaskPipelineView = lazy(() =>
+  import('@/capabilities/task_pipeline').then((m) => ({ default: m.TaskPipelineKanbanView }))
+);
+const TreatmentChartView = lazy(() =>
+  import('@/capabilities/treatment_chart').then((m) => ({ default: m.TreatmentChartManagementView }))
+);
+const RentalEquipmentView = lazy(() =>
+  import('@/capabilities/rental_equipment').then((m) => ({ default: m.RentalEquipmentManagementView }))
+);
+const MaintenanceChecklistView = lazy(() =>
+  import('@/capabilities/maintenance_checklist').then((m) => ({ default: m.MaintenanceChecklistManagementView }))
+);
+const ShiftScheduleView = lazy(() =>
+  import('@/capabilities/shift_schedule').then((m) => ({ default: m.ShiftScheduleManagementView }))
+);
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
@@ -369,6 +390,41 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     wallets: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">크레딧 지갑을 불러오는 중...</div>}>
         {financeViewEntries.finance()}
+      </Suspense>
+    ),
+    inventory: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">재고 화면을 불러오는 중...</div>}>
+        <InventoryView />
+      </Suspense>
+    ),
+    consents: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전 동의서 화면을 불러오는 중...</div>}>
+        <SafetyConsentView />
+      </Suspense>
+    ),
+    pipelines: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업 파이프라인 화면을 불러오는 중...</div>}>
+        <TaskPipelineView />
+      </Suspense>
+    ),
+    charts: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">시술 차트 화면을 불러오는 중...</div>}>
+        <TreatmentChartView />
+      </Suspense>
+    ),
+    rentals: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 대여 화면을 불러오는 중...</div>}>
+        <RentalEquipmentView />
+      </Suspense>
+    ),
+    maintenance: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">시설 점검 화면을 불러오는 중...</div>}>
+        <MaintenanceChecklistView />
+      </Suspense>
+    ),
+    shifts: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">근무 시프트 화면을 불러오는 중...</div>}>
+        <ShiftScheduleView />
       </Suspense>
     ),
     ...financeViewEntries,

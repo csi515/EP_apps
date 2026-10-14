@@ -3,3 +3,4 @@ export { safety_consentCapability as safetyConsentCapability } from './manifest'
 export * from './domain/safetyConsentEngine';
 export { safetyConsentSetupSchema } from './setupSchema';
 export { safetyConsentResources } from './resources';
+export { SafetyConsentManagementView } from './ui/SafetyConsentManagementView';

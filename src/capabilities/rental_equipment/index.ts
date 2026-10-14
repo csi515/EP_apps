@@ -3,3 +3,4 @@ export { rental_equipmentCapability as rentalEquipmentCapability } from './manif
 export * from './domain/rentalEquipmentEngine';
 export { rentalEquipmentSetupSchema } from './setupSchema';
 export { rentalEquipmentResources } from './resources';
+export { RentalEquipmentManagementView } from './ui/RentalEquipmentManagementView';

@@ -3,3 +3,4 @@ export { maintenance_checklistCapability as maintenanceChecklistCapability } fro
 export * from './domain/maintenanceChecklistEngine';
 export { maintenanceChecklistSetupSchema } from './setupSchema';
 export { maintenanceChecklistResources } from './resources';
+export { MaintenanceChecklistManagementView } from './ui/MaintenanceChecklistManagementView';

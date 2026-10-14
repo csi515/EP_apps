@@ -59,16 +59,19 @@ function run(): void {
   }
 
   assert.equal(getIndustryDefinition('taekwondo')?.id, 'gym');
+  assert.equal(getIndustryDefinition('gym_fitness')?.id, 'gym');
   assert.equal(getIndustryDefinition('preschool')?.id, 'daycare');
   assert.equal(getIndustryDefinition('kindergarten')?.id, 'daycare');
   assert.equal(getIndustryDefinition('sauna_jjimjbang')?.id, 'sauna_jjimjilbang');
   assert.equal(INDUSTRY_ALIASES.taekwondo, 'gym');
+  assert.equal(INDUSTRY_ALIASES.gym_fitness, 'gym');
   assert.equal(INDUSTRY_ALIASES.preschool, 'daycare');
   assert.equal(INDUSTRY_ALIASES.kindergarten, 'daycare');
   assert.equal(INDUSTRY_ALIASES.sauna_jjimjbang, 'sauna_jjimjilbang');
 
   const gymAliases = snap.pluginRecords.find((r) => r.id === 'gym')?.aliases ?? [];
   assert.ok(gymAliases.includes('taekwondo'));
+  assert.ok(gymAliases.includes('gym_fitness'));
 
   const piano = defineIndustry('piano', '피아노학원', 'test', 'education', 'piano');
   assert.equal(piano.id, 'piano');

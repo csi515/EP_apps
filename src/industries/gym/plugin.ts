@@ -13,7 +13,7 @@ export const gymPluginManifest: IndustryPluginManifest = {
     label: '체육관',
     description: '태권도·체육 회원, 수업반, 차량 운행, 출결·수강료',
   },
-  aliases: ['taekwondo'],
+  aliases: ['taekwondo', 'gym_fitness'],
   theme: 'orange',
   accent: {
     btn: 'bg-orange-600',
