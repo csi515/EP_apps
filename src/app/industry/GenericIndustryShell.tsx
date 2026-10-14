@@ -64,6 +64,66 @@ const MaintenanceChecklistView = lazy(() =>
 const ShiftScheduleView = lazy(() =>
   import('@/capabilities/shift_schedule').then((m) => ({ default: m.ShiftScheduleManagementView }))
 );
+const CurriculumProgressView = lazy(() =>
+  import('@/capabilities/curriculum_progress').then((m) => ({ default: m.CurriculumProgressManagementView }))
+);
+const RetentionMarketingView = lazy(() =>
+  import('@/capabilities/retention_marketing').then((m) => ({ default: m.RetentionMarketingView }))
+);
+const KitchenDisplaySystemView = lazy(() =>
+  import('@/capabilities/table_order_kds').then((m) => ({ default: m.KitchenDisplaySystemView }))
+);
+const DietBodyLogView = lazy(() =>
+  import('@/capabilities/diet_body_log').then((m) => ({ default: m.DietBodyLogManagementView }))
+);
+const VehicleShuttleView = lazy(() =>
+  import('@/capabilities/vehicle_shuttle').then((m) => ({ default: m.VehicleShuttleManagementView }))
+);
+const CommissionPayrollView = lazy(() =>
+  import('@/capabilities/commission_payroll').then((m) => ({ default: m.CommissionPayrollManagementView }))
+);
+const LostFoundView = lazy(() =>
+  import('@/capabilities/lost_found').then((m) => ({ default: m.LostFoundManagementView }))
+);
+const RecipeBomView = lazy(() =>
+  import('@/capabilities/recipe_bom').then((m) => ({ default: m.RecipeBomManagementView }))
+);
+const DigitalContractView = lazy(() =>
+  import('@/capabilities/digital_contract').then((m) => ({ default: m.DigitalContractManagementView }))
+);
+const SeatTimerBillingView = lazy(() =>
+  import('@/capabilities/seat_timer_billing').then((m) => ({ default: m.SeatTimerBillingView }))
+);
+const TreatmentPortfolioView = lazy(() =>
+  import('@/capabilities/treatment_portfolio').then((m) => ({ default: m.TreatmentPortfolioView }))
+);
+const WorkOrderKanbanView = lazy(() =>
+  import('@/capabilities/work_order_kanban').then((m) => ({ default: m.WorkOrderKanbanView }))
+);
+const WaitlistTurnQueueView = lazy(() =>
+  import('@/capabilities/waitlist_turn_queue').then((m) => ({ default: m.WaitlistTurnQueueView }))
+);
+const DepositEscrowView = lazy(() =>
+  import('@/capabilities/deposit_escrow').then((m) => ({ default: m.DepositEscrowManagementView }))
+);
+const EquipmentLifecycleView = lazy(() =>
+  import('@/capabilities/equipment_lifecycle').then((m) => ({ default: m.EquipmentLifecycleManagementView }))
+);
+const PackageSplitBillingView = lazy(() =>
+  import('@/capabilities/package_split_billing').then((m) => ({ default: m.PackageSplitBillingManagementView }))
+);
+const ExamGradeAnalyticsView = lazy(() =>
+  import('@/capabilities/exam_grade_analytics').then((m) => ({ default: m.ExamGradeAnalyticsManagementView }))
+);
+const KioskStaffCallView = lazy(() =>
+  import('@/capabilities/kiosk_staff_call').then((m) => ({ default: m.KioskStaffCallView }))
+);
+const MembershipReferralTreeView = lazy(() =>
+  import('@/capabilities/membership_referral_tree').then((m) => ({ default: m.MembershipReferralTreeView }))
+);
+const HygieneHaccpLogView = lazy(() =>
+  import('@/capabilities/hygiene_haccp_log').then((m) => ({ default: m.HygieneHaccpLogView }))
+);
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
@@ -425,6 +485,106 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     shifts: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">근무 시프트 화면을 불러오는 중...</div>}>
         <ShiftScheduleView />
+      </Suspense>
+    ),
+    curriculum: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">학습 진도 화면을 불러오는 중...</div>}>
+        <CurriculumProgressView />
+      </Suspense>
+    ),
+    retention: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">리텐션 마케팅 화면을 불러오는 중...</div>}>
+        <RetentionMarketingView />
+      </Suspense>
+    ),
+    kds: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">주방 디스플레이를 불러오는 중...</div>}>
+        <KitchenDisplaySystemView />
+      </Suspense>
+    ),
+    'diet-body-log': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">식단·체성분 다이어리를 불러오는 중...</div>}>
+        <DietBodyLogView />
+      </Suspense>
+    ),
+    shuttle: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안심통학·셔틀 화면을 불러오는 중...</div>}>
+        <VehicleShuttleView />
+      </Suspense>
+    ),
+    'commission-payroll': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">인센티브·정산 화면을 불러오는 중...</div>}>
+        <CommissionPayrollView />
+      </Suspense>
+    ),
+    'lost-found': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">분실물 관리 화면을 불러오는 중...</div>}>
+        <LostFoundView />
+      </Suspense>
+    ),
+    'recipe-bom': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">레시피 BOM 화면을 불러오는 중...</div>}>
+        <RecipeBomView />
+      </Suspense>
+    ),
+    contracts: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자계약 관리 화면을 불러오는 중...</div>}>
+        <DigitalContractView />
+      </Suspense>
+    ),
+    'seat-timers': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">시간제 타이머 화면을 불러오는 중...</div>}>
+        <SeatTimerBillingView />
+      </Suspense>
+    ),
+    portfolio: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">시술 포트폴리오 화면을 불러오는 중...</div>}>
+        <TreatmentPortfolioView />
+      </Suspense>
+    ),
+    'work-orders': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">정비 작업지시서 화면을 불러오는 중...</div>}>
+        <WorkOrderKanbanView />
+      </Suspense>
+    ),
+    'turn-queue': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">순번 대기 화면을 불러오는 중...</div>}>
+        <WaitlistTurnQueueView />
+      </Suspense>
+    ),
+    'deposit-escrow': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 보증금 화면을 불러오는 중...</div>}>
+        <DepositEscrowView />
+      </Suspense>
+    ),
+    'equipment-lifecycle': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 수명 주기 화면을 불러오는 중...</div>}>
+        <EquipmentLifecycleView />
+      </Suspense>
+    ),
+    'package-billing': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">복합 패키지 화면을 불러오는 중...</div>}>
+        <PackageSplitBillingView />
+      </Suspense>
+    ),
+    'grade-analytics': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">단원평가 분석 화면을 불러오는 중...</div>}>
+        <ExamGradeAnalyticsView />
+      </Suspense>
+    ),
+    'staff-call': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">직원 호출 화면을 불러오는 중...</div>}>
+        <KioskStaffCallView />
+      </Suspense>
+    ),
+    'family-tree': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">패밀리 그룹 화면을 불러오는 중...</div>}>
+        <MembershipReferralTreeView />
+      </Suspense>
+    ),
+    'hygiene-log': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">위생 점검 화면을 불러오는 중...</div>}>
+        <HygieneHaccpLogView />
       </Suspense>
     ),
     ...financeViewEntries,

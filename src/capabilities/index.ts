@@ -25,6 +25,26 @@ import { credit_walletCapability } from './credit_wallet/manifest';
 import { consultation_crmCapability } from './consultation_crm/manifest';
 import { treatment_chartCapability } from './treatment_chart/manifest';
 import { safety_consentCapability } from './safety_consent/manifest';
+import { curriculum_progressCapability } from './curriculum_progress/manifest';
+import { retention_marketingCapability } from './retention_marketing/manifest';
+import { table_order_kdsCapability } from './table_order_kds/manifest';
+import { diet_body_logCapability } from './diet_body_log/manifest';
+import { vehicle_shuttleCapability } from './vehicle_shuttle/manifest';
+import { commission_payrollCapability } from './commission_payroll/manifest';
+import { lost_foundCapability } from './lost_found/manifest';
+import { recipe_bomCapability } from './recipe_bom/manifest';
+import { digital_contractCapability } from './digital_contract/manifest';
+import { seat_timer_billingCapability } from './seat_timer_billing/manifest';
+import { treatment_portfolioCapability } from './treatment_portfolio/manifest';
+import { work_order_kanbanCapability } from './work_order_kanban/manifest';
+import { waitlist_turn_queueCapability } from './waitlist_turn_queue/manifest';
+import { deposit_escrowCapability } from './deposit_escrow/manifest';
+import { equipment_lifecycleCapability } from './equipment_lifecycle/manifest';
+import { package_split_billingCapability } from './package_split_billing/manifest';
+import { exam_grade_analyticsCapability } from './exam_grade_analytics/manifest';
+import { kiosk_staff_callCapability } from './kiosk_staff_call/manifest';
+import { membership_referral_treeCapability } from './membership_referral_tree/manifest';
+import { hygiene_haccp_logCapability } from './hygiene_haccp_log/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -63,6 +83,26 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   consultation_crmCapability,
   treatment_chartCapability,
   safety_consentCapability,
+  curriculum_progressCapability,
+  retention_marketingCapability,
+  table_order_kdsCapability,
+  diet_body_logCapability,
+  vehicle_shuttleCapability,
+  commission_payrollCapability,
+  lost_foundCapability,
+  recipe_bomCapability,
+  digital_contractCapability,
+  seat_timer_billingCapability,
+  treatment_portfolioCapability,
+  work_order_kanbanCapability,
+  waitlist_turn_queueCapability,
+  deposit_escrowCapability,
+  equipment_lifecycleCapability,
+  package_split_billingCapability,
+  exam_grade_analyticsCapability,
+  kiosk_staff_callCapability,
+  membership_referral_treeCapability,
+  hygiene_haccp_logCapability,
 ];
 
 

@@ -55,6 +55,46 @@ import { treatmentChartSetupSchema } from '@/capabilities/treatment_chart/setupS
 import { treatmentChartResources } from '@/capabilities/treatment_chart/resources';
 import { safetyConsentSetupSchema } from '@/capabilities/safety_consent/setupSchema';
 import { safetyConsentResources } from '@/capabilities/safety_consent/resources';
+import { curriculumProgressSetupSchema } from '@/capabilities/curriculum_progress/setupSchema';
+import { curriculumProgressResources } from '@/capabilities/curriculum_progress/resources';
+import { retentionMarketingSetupSchema } from '@/capabilities/retention_marketing/setupSchema';
+import { retentionMarketingResources } from '@/capabilities/retention_marketing/resources';
+import { tableOrderKdsSetupSchema } from '@/capabilities/table_order_kds/setupSchema';
+import { tableOrderKdsResources } from '@/capabilities/table_order_kds/resources';
+import { dietBodyLogSetupSchema } from '@/capabilities/diet_body_log/setupSchema';
+import { dietBodyLogResources } from '@/capabilities/diet_body_log/resources';
+import { vehicleShuttleSetupSchema } from '@/capabilities/vehicle_shuttle/setupSchema';
+import { vehicleShuttleResources } from '@/capabilities/vehicle_shuttle/resources';
+import { commissionPayrollSetupSchema } from '@/capabilities/commission_payroll/setupSchema';
+import { commissionPayrollResources } from '@/capabilities/commission_payroll/resources';
+import { lostFoundSetupSchema } from '@/capabilities/lost_found/setupSchema';
+import { lostFoundResources } from '@/capabilities/lost_found/resources';
+import { recipeBomSetupSchema } from '@/capabilities/recipe_bom/setupSchema';
+import { recipeBomResources } from '@/capabilities/recipe_bom/resources';
+import { digitalContractSetupSchema } from '@/capabilities/digital_contract/setupSchema';
+import { digitalContractResources } from '@/capabilities/digital_contract/resources';
+import { seatTimerBillingSetupSchema } from '@/capabilities/seat_timer_billing/setupSchema';
+import { seatTimerBillingResources } from '@/capabilities/seat_timer_billing/resources';
+import { treatmentPortfolioSetupSchema } from '@/capabilities/treatment_portfolio/setupSchema';
+import { treatmentPortfolioResources } from '@/capabilities/treatment_portfolio/resources';
+import { workOrderKanbanSetupSchema } from '@/capabilities/work_order_kanban/setupSchema';
+import { workOrderKanbanResources } from '@/capabilities/work_order_kanban/resources';
+import { waitlistTurnQueueSetupSchema } from '@/capabilities/waitlist_turn_queue/setupSchema';
+import { waitlistTurnQueueResources } from '@/capabilities/waitlist_turn_queue/resources';
+import { depositEscrowSetupSchema } from '@/capabilities/deposit_escrow/setupSchema';
+import { depositEscrowResources } from '@/capabilities/deposit_escrow/resources';
+import { equipmentLifecycleSetupSchema } from '@/capabilities/equipment_lifecycle/setupSchema';
+import { equipmentLifecycleResources } from '@/capabilities/equipment_lifecycle/resources';
+import { packageSplitBillingSetupSchema } from '@/capabilities/package_split_billing/setupSchema';
+import { packageSplitBillingResources } from '@/capabilities/package_split_billing/resources';
+import { examGradeAnalyticsSetupSchema } from '@/capabilities/exam_grade_analytics/setupSchema';
+import { examGradeAnalyticsResources } from '@/capabilities/exam_grade_analytics/resources';
+import { kioskStaffCallSetupSchema } from '@/capabilities/kiosk_staff_call/setupSchema';
+import { kioskStaffCallResources } from '@/capabilities/kiosk_staff_call/resources';
+import { membershipReferralTreeSetupSchema } from '@/capabilities/membership_referral_tree/setupSchema';
+import { membershipReferralTreeResources } from '@/capabilities/membership_referral_tree/resources';
+import { hygieneHaccpLogSetupSchema } from '@/capabilities/hygiene_haccp_log/setupSchema';
+import { hygieneHaccpLogResources } from '@/capabilities/hygiene_haccp_log/resources';
 
 /**
  * 전방위 17대 원자적 Capability 번들 레지스트리
@@ -154,6 +194,146 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: safetyConsentSetupSchema,
     resources: safetyConsentResources,
   },
+
+  // 범주 E: 맞춤 학습 & 성장 관리
+  curriculum_progress: {
+    capabilityId: 'curriculum_progress',
+    setupSchema: curriculumProgressSetupSchema,
+    resources: curriculumProgressResources,
+  },
+
+  // 범주 F: 자동화 CRM & 고객 리텐션
+  retention_marketing: {
+    capabilityId: 'retention_marketing',
+    setupSchema: retentionMarketingSetupSchema,
+    resources: retentionMarketingResources,
+  },
+
+  // 범주 G: 비대면 주문 & 주방 공정 관리
+  table_order_kds: {
+    capabilityId: 'table_order_kds',
+    setupSchema: tableOrderKdsSetupSchema,
+    resources: tableOrderKdsResources,
+  },
+
+  // 범주 H: 피트니스 체형 & 운동 케어
+  diet_body_log: {
+    capabilityId: 'diet_body_log',
+    setupSchema: dietBodyLogSetupSchema,
+    resources: dietBodyLogResources,
+  },
+
+  // 범주 I: 통학 & 모빌리티 관제
+  vehicle_shuttle: {
+    capabilityId: 'vehicle_shuttle',
+    setupSchema: vehicleShuttleSetupSchema,
+    resources: vehicleShuttleResources,
+  },
+
+  // 범주 J: 프리랜서 & 인센티브 정산
+  commission_payroll: {
+    capabilityId: 'commission_payroll',
+    setupSchema: commissionPayrollSetupSchema,
+    resources: commissionPayrollResources,
+  },
+
+  // 범주 K: 시설 분실물·습득물 보관
+  lost_found: {
+    capabilityId: 'lost_found',
+    setupSchema: lostFoundSetupSchema,
+    resources: lostFoundResources,
+  },
+
+  // 범주 L: 레시피 BOM & 원가 소모
+  recipe_bom: {
+    capabilityId: 'recipe_bom',
+    setupSchema: recipeBomSetupSchema,
+    resources: recipeBomResources,
+  },
+
+  // 범주 M: 전자계약 & 환불 위약금
+  digital_contract: {
+    capabilityId: 'digital_contract',
+    setupSchema: digitalContractSetupSchema,
+    resources: digitalContractResources,
+  },
+
+  // 범주 N: 시간제 공간 타이머 & 초과과금
+  seat_timer_billing: {
+    capabilityId: 'seat_timer_billing',
+    setupSchema: seatTimerBillingSetupSchema,
+    resources: seatTimerBillingResources,
+  },
+
+  // 범주 O: 시술 스타일북 & 업셀링
+  treatment_portfolio: {
+    capabilityId: 'treatment_portfolio',
+    setupSchema: treatmentPortfolioSetupSchema,
+    resources: treatmentPortfolioResources,
+  },
+
+  // 범주 P: 정비 수리 공정 칸반 & 견적
+  work_order_kanban: {
+    capabilityId: 'work_order_kanban',
+    setupSchema: workOrderKanbanSetupSchema,
+    resources: workOrderKanbanResources,
+  },
+
+  // 범주 Q: 현장 순번 대기 & DID 호출
+  waitlist_turn_queue: {
+    capabilityId: 'waitlist_turn_queue',
+    setupSchema: waitlistTurnQueueSetupSchema,
+    resources: waitlistTurnQueueResources,
+  },
+
+  // 범주 R: 노쇼 방지 보증금 에스크로
+  deposit_escrow: {
+    capabilityId: 'deposit_escrow',
+    setupSchema: depositEscrowSetupSchema,
+    resources: depositEscrowResources,
+  },
+
+  // 범주 S: 장비 수명 주기 & 감가상각
+  equipment_lifecycle: {
+    capabilityId: 'equipment_lifecycle',
+    setupSchema: equipmentLifecycleSetupSchema,
+    resources: equipmentLifecycleResources,
+  },
+
+  // 범주 T: 복합 패키지 분할 선수금
+  package_split_billing: {
+    capabilityId: 'package_split_billing',
+    setupSchema: packageSplitBillingSetupSchema,
+    resources: packageSplitBillingResources,
+  },
+
+  // 범주 U: 단원평가 성적 채점 & 취약점 분석
+  exam_grade_analytics: {
+    capabilityId: 'exam_grade_analytics',
+    setupSchema: examGradeAnalyticsSetupSchema,
+    resources: examGradeAnalyticsResources,
+  },
+
+  // 범주 V: 좌석/룸 스마트 호출 & 디지털 벨보드
+  kiosk_staff_call: {
+    capabilityId: 'kiosk_staff_call',
+    setupSchema: kioskStaffCallSetupSchema,
+    resources: kioskStaffCallResources,
+  },
+
+  // 범주 W: 패밀리 연동 & 추천인 리워드
+  membership_referral_tree: {
+    capabilityId: 'membership_referral_tree',
+    setupSchema: membershipReferralTreeSetupSchema,
+    resources: membershipReferralTreeResources,
+  },
+
+  // 범주 X: 주방 위생 HACCP & 보건증 만료
+  hygiene_haccp_log: {
+    capabilityId: 'hygiene_haccp_log',
+    setupSchema: hygieneHaccpLogSetupSchema,
+    resources: hygieneHaccpLogResources,
+  },
 };
 
 // Core 런타임 동적 레지스트리에 번들 등록
@@ -176,9 +356,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '피아노·음악학원',
     description: '원생 출결, 1:1 레슨 피아노 연습실 배정, 교습비 정기 청구, 교재 및 진도 관리',
     category: 'education',
-    capabilities: ['seat_room', 'attendance', 'passes', 'billing_invoicing', 'consultation_crm'] as const,
+    capabilities: ['seat_room', 'attendance', 'passes', 'billing_invoicing', 'consultation_crm', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'membership_referral_tree'] as const,
     requiredCapabilities: ['seat_room', 'attendance', 'passes', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'inventory'] as const,
+    optionalCapabilities: ['consultation_crm', 'inventory', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'membership_referral_tree'] as const,
     businessRules: {
       lessonDurationMinutes: 30,
       autoCheckInDeduct: true,
@@ -203,9 +383,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '일반 보습학원',
     description: 'PIN/QR 등하원 출결, 월 교습비 정기 청구서, 학부모 상담일지 및 수강권 관리',
     category: 'education',
-    capabilities: ['attendance', 'billing_invoicing', 'consultation_crm', 'passes'] as const,
+    capabilities: ['attendance', 'billing_invoicing', 'consultation_crm', 'passes', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'exam_grade_analytics', 'membership_referral_tree'] as const,
     requiredCapabilities: ['attendance', 'billing_invoicing', 'passes'] as const,
-    optionalCapabilities: ['consultation_crm', 'shift_schedule'] as const,
+    optionalCapabilities: ['consultation_crm', 'shift_schedule', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'exam_grade_analytics', 'membership_referral_tree'] as const,
     businessRules: {
       attendanceGraceMinutes: 10,
       tuitionBillingCycle: 'monthly',
@@ -224,9 +404,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '어학원',
     description: '레벨별 수업 예약, 수강권 차감, 어학 실습실 및 원어민 강사 일정 관리',
     category: 'education',
-    capabilities: ['attendance', 'booking', 'passes', 'billing_invoicing', 'consultation_crm'] as const,
+    capabilities: ['attendance', 'booking', 'passes', 'billing_invoicing', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle', 'exam_grade_analytics'] as const,
     requiredCapabilities: ['attendance', 'passes', 'billing_invoicing'] as const,
-    optionalCapabilities: ['booking', 'consultation_crm'] as const,
+    optionalCapabilities: ['booking', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle', 'exam_grade_analytics'] as const,
     businessRules: { allowLevelReservation: true, maxStudentsPerClass: 12 },
     resourceTypes: [{ name: '어학랩실', type: 'room', capacity: 15 }],
     roles: [
@@ -241,9 +421,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '미술학원',
     description: '회차별 실기 출결, 미술 재료 소모품 재고, 수강료 청구 및 포트폴리오 관리',
     category: 'education',
-    capabilities: ['attendance', 'billing_invoicing', 'inventory', 'passes'] as const,
+    capabilities: ['attendance', 'billing_invoicing', 'inventory', 'passes', 'curriculum_progress', 'vehicle_shuttle'] as const,
     requiredCapabilities: ['attendance', 'billing_invoicing', 'passes'] as const,
-    optionalCapabilities: ['inventory', 'consultation_crm'] as const,
+    optionalCapabilities: ['inventory', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle'] as const,
     businessRules: { materialFeeIncluded: true },
     resourceTypes: [{ name: '실기실', type: 'room', capacity: 12 }],
     roles: [
@@ -258,9 +438,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '태권도장',
     description: '수련부 출결, 정기 수련권, 도복/띠 재고, 차량 탑승 및 안전 서약서',
     category: 'education',
-    capabilities: ['attendance', 'passes', 'billing_invoicing', 'safety_consent'] as const,
+    capabilities: ['attendance', 'passes', 'billing_invoicing', 'safety_consent', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree'] as const,
     requiredCapabilities: ['attendance', 'passes', 'billing_invoicing'] as const,
-    optionalCapabilities: ['safety_consent', 'consultation_crm'] as const,
+    optionalCapabilities: ['safety_consent', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree'] as const,
     businessRules: { promotionBeltLevels: 9, attendancePinDigits: 4 },
     resourceTypes: [{ name: '수련장', type: 'court', capacity: 40 }],
     roles: [
@@ -275,9 +455,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '무용·댄스학원',
     description: '클래스별 정원 예약, 무용홀 대관, 쿠폰제 수강권 차감 및 발표회 일정',
     category: 'education',
-    capabilities: ['attendance', 'booking', 'passes', 'seat_room', 'billing_invoicing'] as const,
+    capabilities: ['attendance', 'booking', 'passes', 'seat_room', 'billing_invoicing', 'curriculum_progress'] as const,
     requiredCapabilities: ['attendance', 'passes', 'seat_room'] as const,
-    optionalCapabilities: ['booking', 'billing_invoicing'] as const,
+    optionalCapabilities: ['booking', 'billing_invoicing', 'curriculum_progress'] as const,
     businessRules: { classCapacityLimit: 20 },
     resourceTypes: [{ name: 'A홀', type: 'room', capacity: 25 }],
     roles: [
@@ -292,9 +472,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '코딩·IT 학원',
     description: 'PC 실습 좌석 배정, 프로젝트 과제 파이프라인, 출결 및 월 교습비 관리',
     category: 'education',
-    capabilities: ['attendance', 'seat_room', 'billing_invoicing', 'task_pipeline'] as const,
+    capabilities: ['attendance', 'seat_room', 'billing_invoicing', 'task_pipeline', 'curriculum_progress', 'exam_grade_analytics'] as const,
     requiredCapabilities: ['attendance', 'seat_room', 'billing_invoicing'] as const,
-    optionalCapabilities: ['task_pipeline', 'consultation_crm'] as const,
+    optionalCapabilities: ['task_pipeline', 'consultation_crm', 'curriculum_progress', 'exam_grade_analytics'] as const,
     businessRules: { pcSeatAssignment: true },
     resourceTypes: [{ name: 'PC실습실', type: 'room', capacity: 20 }],
     roles: [
@@ -309,9 +489,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '입시·과외 학원',
     description: '1:1 개별지도 스케줄, 학습 플래너 상담 일지, 시급/수강료 정산 관리',
     category: 'education',
-    capabilities: ['attendance', 'consultation_crm', 'billing_invoicing', 'shift_schedule'] as const,
+    capabilities: ['attendance', 'consultation_crm', 'billing_invoicing', 'shift_schedule', 'curriculum_progress', 'exam_grade_analytics'] as const,
     requiredCapabilities: ['attendance', 'consultation_crm', 'billing_invoicing'] as const,
-    optionalCapabilities: ['shift_schedule', 'passes'] as const,
+    optionalCapabilities: ['shift_schedule', 'passes', 'curriculum_progress', 'exam_grade_analytics'] as const,
     businessRules: { oneOnOneSchedule: true },
     resourceTypes: [{ name: '상담지도실', type: 'room', capacity: 4 }],
     roles: [
@@ -329,9 +509,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '필라테스 스튜디오',
     description: '리포머/체어 그룹 및 개인레슨 예약, 횟수권 차감, 강사 배정 및 락커 관리',
     category: 'fitness',
-    capabilities: ['booking', 'passes', 'instructor_match', 'seat_room', 'locker'] as const,
+    capabilities: ['booking', 'passes', 'instructor_match', 'seat_room', 'locker', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree'] as const,
     requiredCapabilities: ['booking', 'passes', 'instructor_match'] as const,
-    optionalCapabilities: ['seat_room', 'locker', 'treatment_chart'] as const,
+    optionalCapabilities: ['seat_room', 'locker', 'treatment_chart', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree'] as const,
     businessRules: { cancelCutoffHours: 6, maxGroupCapacity: 6 },
     resourceTypes: [
       { name: '리포머룸', type: 'room', capacity: 6 },
@@ -352,9 +532,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '요가 스튜디오',
     description: '수련 타임테이블 예약, 기간제/횟수제 이용권, 출결 체크인 및 락커 관리',
     category: 'fitness',
-    capabilities: ['booking', 'passes', 'attendance', 'locker', 'seat_room'] as const,
+    capabilities: ['booking', 'passes', 'attendance', 'locker', 'seat_room', 'diet_body_log'] as const,
     requiredCapabilities: ['booking', 'passes', 'attendance'] as const,
-    optionalCapabilities: ['locker', 'seat_room'] as const,
+    optionalCapabilities: ['locker', 'seat_room', 'diet_body_log'] as const,
     businessRules: { allowWalkInCheckIn: true },
     resourceTypes: [{ name: '메인 수련실', type: 'room', capacity: 18 }],
     roles: [
@@ -369,9 +549,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '헬스장 / 피트니스 센터',
     description: '회원권 기간 관리, 입장 바코드/PIN 출결, 개인 락커 배정, 운동복 대여',
     category: 'fitness',
-    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple'] as const,
+    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing'] as const,
     requiredCapabilities: ['passes', 'attendance', 'locker'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing'] as const,
     businessRules: { membershipHoldMaxDays: 30 },
     resourceTypes: [
       { name: '헬스존', type: 'room', capacity: 100 },
@@ -390,9 +570,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '1:1 피트니스 / PT 샵',
     description: 'PT 세션 차감권, 트레이너 배정, 고객 체형 상담 일지 및 락커 관리',
     category: 'fitness',
-    capabilities: ['passes', 'booking', 'instructor_match', 'consultation_crm', 'locker'] as const,
+    capabilities: ['passes', 'booking', 'instructor_match', 'consultation_crm', 'locker', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree'] as const,
     requiredCapabilities: ['passes', 'booking', 'instructor_match'] as const,
-    optionalCapabilities: ['consultation_crm', 'locker', 'treatment_chart'] as const,
+    optionalCapabilities: ['consultation_crm', 'locker', 'treatment_chart', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree'] as const,
     businessRules: { ptSessionDurationMinutes: 50 },
     resourceTypes: [{ name: 'PT 세션존', type: 'room', capacity: 3 }],
     roles: [
@@ -407,9 +587,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '실내 골프연습장',
     description: '타석/레슨 예약, 정기 회원권, 골프백 락커, 대여채 및 간이 시재 관리',
     category: 'fitness',
-    capabilities: ['passes', 'booking', 'locker', 'rental_equipment', 'ledger_simple'] as const,
+    capabilities: ['passes', 'booking', 'locker', 'rental_equipment', 'ledger_simple', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call'] as const,
     requiredCapabilities: ['passes', 'booking', 'locker'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'instructor_match'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'instructor_match', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call'] as const,
     businessRules: { bayReservationMinutes: 60 },
     resourceTypes: [
       { name: '타석 1~12번', type: 'bay', capacity: 1 },
@@ -428,9 +608,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '수영장·수영교실',
     description: '레인별 강습 예약, 정기 회원권, 탈의실 락커 배정 및 안전 서약서',
     category: 'fitness',
-    capabilities: ['attendance', 'passes', 'booking', 'locker', 'safety_consent'] as const,
+    capabilities: ['attendance', 'passes', 'booking', 'locker', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found'] as const,
     requiredCapabilities: ['attendance', 'passes', 'locker'] as const,
-    optionalCapabilities: ['booking', 'safety_consent'] as const,
+    optionalCapabilities: ['booking', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found'] as const,
     businessRules: { laneCapacityLimit: 15 },
     resourceTypes: [
       { name: '25m 레인 1~6', type: 'court', capacity: 15 },
@@ -448,9 +628,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '클라이밍 & 액티비티 짐',
     description: '일일/정기 이용권, 암벽화/장비 대여, 전자 면책 동의서 및 출결/락커 관리',
     category: 'fitness',
-    capabilities: ['passes', 'attendance', 'rental_equipment', 'safety_consent', 'locker'] as const,
+    capabilities: ['passes', 'attendance', 'rental_equipment', 'safety_consent', 'locker', 'diet_body_log', 'lost_found', 'waitlist_turn_queue'] as const,
     requiredCapabilities: ['passes', 'attendance', 'safety_consent'] as const,
-    optionalCapabilities: ['rental_equipment', 'locker'] as const,
+    optionalCapabilities: ['rental_equipment', 'locker', 'diet_body_log', 'lost_found', 'waitlist_turn_queue'] as const,
     businessRules: { mandatorySafetyWaiver: true },
     resourceTypes: [
       { name: '볼더링 벽 A~D', type: 'court', capacity: 25 },
@@ -468,9 +648,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '복싱·격투기 체육관',
     description: '수련 출결 체크, 정기 이용권, 글러브/보호구 대여, 안전 서약 및 락커',
     category: 'fitness',
-    capabilities: ['passes', 'attendance', 'locker', 'safety_consent', 'rental_equipment'] as const,
+    capabilities: ['passes', 'attendance', 'locker', 'safety_consent', 'rental_equipment', 'diet_body_log'] as const,
     requiredCapabilities: ['passes', 'attendance', 'safety_consent'] as const,
-    optionalCapabilities: ['locker', 'rental_equipment'] as const,
+    optionalCapabilities: ['locker', 'rental_equipment', 'diet_body_log'] as const,
     businessRules: { mandatorySafetyWaiver: true },
     resourceTypes: [
       { name: '링 & 샌드백존', type: 'court', capacity: 30 },
@@ -491,9 +671,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '헤어샵 / 뷰티 살롱',
     description: '디자이너 예약, 염색약/시술 차트, 스태프 근무표 및 일일 매출 마감',
     category: 'beauty',
-    capabilities: ['booking', 'treatment_chart', 'shift_schedule', 'ledger_simple', 'inventory'] as const,
+    capabilities: ['booking', 'treatment_chart', 'shift_schedule', 'ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree'] as const,
     requiredCapabilities: ['booking', 'treatment_chart', 'shift_schedule'] as const,
-    optionalCapabilities: ['ledger_simple', 'inventory'] as const,
+    optionalCapabilities: ['ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree'] as const,
     businessRules: { doubleBookingAllowed: false, slotMinutes: 30 },
     resourceTypes: [
       { name: '경대 1~6', type: 'seat', capacity: 1 },
@@ -511,9 +691,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '바버숍',
     description: '바버별 1:1 예약, 면도/커트 시술 이력, 근무표 및 일일 시재 마감',
     category: 'beauty',
-    capabilities: ['booking', 'shift_schedule', 'ledger_simple', 'inventory'] as const,
+    capabilities: ['booking', 'shift_schedule', 'ledger_simple', 'inventory', 'treatment_portfolio'] as const,
     requiredCapabilities: ['booking', 'shift_schedule'] as const,
-    optionalCapabilities: ['ledger_simple', 'inventory'] as const,
+    optionalCapabilities: ['ledger_simple', 'inventory', 'treatment_portfolio'] as const,
     businessRules: { slotMinutes: 45 },
     resourceTypes: [{ name: '바버체어 1~3', type: 'seat', capacity: 1 }],
     roles: [
@@ -528,9 +708,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '네일숍',
     description: '아트/젤네일 예약, 선불 회원권 잔액 차감, 젤네일 컬러 차트 및 재고',
     category: 'beauty',
-    capabilities: ['booking', 'passes', 'treatment_chart', 'inventory', 'ledger_simple'] as const,
+    capabilities: ['booking', 'passes', 'treatment_chart', 'inventory', 'ledger_simple', 'commission_payroll', 'treatment_portfolio'] as const,
     requiredCapabilities: ['booking', 'passes'] as const,
-    optionalCapabilities: ['treatment_chart', 'inventory', 'ledger_simple'] as const,
+    optionalCapabilities: ['treatment_chart', 'inventory', 'ledger_simple', 'commission_payroll', 'treatment_portfolio'] as const,
     businessRules: { prepaidPassBalanceDeduct: true },
     resourceTypes: [
       { name: '네일 테이블 1~3', type: 'table', capacity: 1 },
@@ -548,9 +728,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '피부관리실·에스테틱',
     description: '스킨케어 룸 예약, 코스 티켓팅 차감, 피부 진단 차트 및 에스테틱 화장품 재고',
     category: 'beauty',
-    capabilities: ['booking', 'passes', 'treatment_chart', 'consultation_crm', 'inventory'] as const,
+    capabilities: ['booking', 'passes', 'treatment_chart', 'consultation_crm', 'inventory', 'commission_payroll', 'package_split_billing'] as const,
     requiredCapabilities: ['booking', 'passes', 'treatment_chart'] as const,
-    optionalCapabilities: ['consultation_crm', 'inventory'] as const,
+    optionalCapabilities: ['consultation_crm', 'inventory', 'commission_payroll', 'package_split_billing'] as const,
     businessRules: { skinAnalysisBeforeTreatment: true },
     resourceTypes: [
       { name: '관리실 1~3', type: 'room', capacity: 2 },
@@ -601,9 +781,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '사진 스튜디오',
     description: '컨셉 촬영실 예약, 장비 대여, 보정/인화 작업 파이프라인 및 정산',
     category: 'beauty',
-    capabilities: ['booking', 'rental_equipment', 'seat_room', 'task_pipeline', 'ledger_simple'] as const,
+    capabilities: ['booking', 'rental_equipment', 'seat_room', 'task_pipeline', 'ledger_simple', 'deposit_escrow'] as const,
     requiredCapabilities: ['booking', 'seat_room', 'task_pipeline'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'deposit_escrow'] as const,
     businessRules: { proofingPipelineSteps: 3 },
     resourceTypes: [
       { name: '호리존 스튜디오', type: 'room', capacity: 10 },
@@ -643,9 +823,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '스터디카페 / 공간대여',
     description: '좌석 점유 타이머, 시간제 이용권, 사물함 및 일일 청소 점검 루틴 중심',
     category: 'studio',
-    capabilities: ['seat_room', 'passes', 'locker', 'maintenance_checklist'] as const,
+    capabilities: ['seat_room', 'passes', 'locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call'] as const,
     requiredCapabilities: ['seat_room', 'passes'] as const,
-    optionalCapabilities: ['locker', 'maintenance_checklist'] as const,
+    optionalCapabilities: ['locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call'] as const,
     businessRules: { timePassAutoExpire: true },
     resourceTypes: [
       { name: '자유석 1~50', type: 'seat', capacity: 1 },
@@ -679,9 +859,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '공간대여·대관업',
     description: '파티룸/스튜디오 시간 단위 대관, 보증금/시재 관리 및 퇴실 청소 점검',
     category: 'studio',
-    capabilities: ['booking', 'seat_room', 'ledger_simple', 'maintenance_checklist'] as const,
+    capabilities: ['booking', 'seat_room', 'ledger_simple', 'maintenance_checklist', 'seat_timer_billing', 'deposit_escrow'] as const,
     requiredCapabilities: ['booking', 'seat_room'] as const,
-    optionalCapabilities: ['ledger_simple', 'maintenance_checklist'] as const,
+    optionalCapabilities: ['ledger_simple', 'maintenance_checklist', 'seat_timer_billing', 'deposit_escrow'] as const,
     businessRules: { securityDepositRequired: true },
     resourceTypes: [{ name: '파티룸 루프탑', type: 'room', capacity: 15 }],
     roles: [{ name: '호스트', rank_order: 1, permissions: ['*'] }],
@@ -812,9 +992,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '카페 / 디저트전문점',
     description: '원두/부자재 재고, 테이블 홀 좌석, 바리스타 시프트 근무 및 선불 충전금',
     category: 'food',
-    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet'] as const,
+    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
     requiredCapabilities: ['inventory', 'ledger_simple', 'shift_schedule'] as const,
-    optionalCapabilities: ['seat_room', 'credit_wallet'] as const,
+    optionalCapabilities: ['seat_room', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
     businessRules: { prepaidCardDiscount: 5 },
     resourceTypes: [
       { name: '에스프레소 머신', type: 'equipment' },
@@ -832,9 +1012,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '소형 음식점 / 식당',
     description: '테이블 좌석 예약, 식자재 식별 재고, 주방/홀 근무 교대 및 일일 결산',
     category: 'food',
-    capabilities: ['booking', 'seat_room', 'inventory', 'ledger_simple', 'shift_schedule'] as const,
+    capabilities: ['booking', 'seat_room', 'inventory', 'ledger_simple', 'shift_schedule', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
     requiredCapabilities: ['seat_room', 'ledger_simple', 'shift_schedule'] as const,
-    optionalCapabilities: ['booking', 'inventory'] as const,
+    optionalCapabilities: ['booking', 'inventory', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
     businessRules: { reservationDepositPolicy: false },
     resourceTypes: [{ name: '식탁 테이블 1~10', type: 'table', capacity: 4 }],
     roles: [
@@ -852,9 +1032,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '자동차 정비소',
     description: '정비 리프트 배정, 부품 재고, 작업지시서 파이프라인, 차량 수리 이력 및 청구',
     category: 'automotive',
-    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'booking'] as const,
+    optionalCapabilities: ['consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle'] as const,
     businessRules: { vinRequired: true, workOrderStages: 4 },
     resourceTypes: [
       { name: '리프트 베이 1~3', type: 'bay', capacity: 1 },
@@ -958,9 +1138,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '어린이집·유치원',
     description: '원아 등하원 출결, 보육료 결제, 학부모 상담 및 안전 동의서 관리',
     category: 'childcare',
-    capabilities: ['attendance', 'billing_invoicing', 'consultation_crm', 'safety_consent'] as const,
+    capabilities: ['attendance', 'billing_invoicing', 'consultation_crm', 'safety_consent', 'vehicle_shuttle', 'hygiene_haccp_log'] as const,
     requiredCapabilities: ['attendance', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'safety_consent'] as const,
+    optionalCapabilities: ['consultation_crm', 'safety_consent', 'vehicle_shuttle', 'hygiene_haccp_log'] as const,
     resourceTypes: [{ name: '보육실 (반)', type: 'room', capacity: 15 }],
     roles: [
       { name: '원장', rank_order: 1, permissions: ['*'] },
@@ -974,9 +1154,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '사우나·찜질방',
     description: '남녀 락커 배정, 이용권/회원권, 선불 크레딧 및 시설 점검 루틴 관리',
     category: 'wellness',
-    capabilities: ['locker', 'passes', 'maintenance_checklist', 'credit_wallet'] as const,
+    capabilities: ['locker', 'passes', 'maintenance_checklist', 'credit_wallet', 'lost_found'] as const,
     requiredCapabilities: ['locker', 'passes'] as const,
-    optionalCapabilities: ['maintenance_checklist', 'credit_wallet'] as const,
+    optionalCapabilities: ['maintenance_checklist', 'credit_wallet', 'lost_found'] as const,
     resourceTypes: [{ name: '사물함/락커', type: 'locker', capacity: 100 }],
     roles: [
       { name: '사장', rank_order: 1, permissions: ['*'] },

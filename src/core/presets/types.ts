@@ -30,7 +30,47 @@ export type BundledPresetCapabilityId =
   // 범주 D: 고객 맞춤 이력 & 신뢰 관리
   | 'consultation_crm'
   | 'treatment_chart'
-  | 'safety_consent';
+  | 'safety_consent'
+  // 범주 E: 맞춤 학습 & 성장 관리
+  | 'curriculum_progress'
+  // 범주 F: 자동화 CRM & 고객 리텐션
+  | 'retention_marketing'
+  // 범주 G: 비대면 주문 & 주방 공정 관리
+  | 'table_order_kds'
+  // 범주 H: 피트니스 체형 & 운동 케어
+  | 'diet_body_log'
+  // 범주 I: 통학 & 모빌리티 관제
+  | 'vehicle_shuttle'
+  // 범주 J: 프리랜서 & 인센티브 정산
+  | 'commission_payroll'
+  // 범주 K: 시설 분실물·습득물 보관
+  | 'lost_found'
+  // 범주 L: 레시피 BOM & 원가 소모
+  | 'recipe_bom'
+  // 범주 M: 전자계약 & 환불 위약금
+  | 'digital_contract'
+  // 범주 N: 시간제 공간 타이머 & 초과과금
+  | 'seat_timer_billing'
+  // 범주 O: 시술 스타일북 & 업셀링
+  | 'treatment_portfolio'
+  // 범주 P: 정비 수리 공정 칸반 & 견적
+  | 'work_order_kanban'
+  // 범주 Q: 현장 순번 대기 & DID 호출
+  | 'waitlist_turn_queue'
+  // 범주 R: 노쇼 방지 보증금 에스크로
+  | 'deposit_escrow'
+  // 범주 S: 장비 수명 주기 & 감가상각
+  | 'equipment_lifecycle'
+  // 범주 T: 복합 패키지 분할 선수금
+  | 'package_split_billing'
+  // 범주 U: 단원평가 성적 채점 & 취약점 분석
+  | 'exam_grade_analytics'
+  // 범주 V: 좌석/룸 스마트 호출 & 디지털 벨보드
+  | 'kiosk_staff_call'
+  // 범주 W: 패밀리 연동 & 추천인 리워드
+  | 'membership_referral_tree'
+  // 범주 X: 주방 위생 HACCP & 보건증 만료
+  | 'hygiene_haccp_log';
 
 export type PresetCapabilityId =
   | BundledPresetCapabilityId
@@ -57,6 +97,7 @@ export const CAPABILITY_ALIASES: Partial<Record<PresetCapabilityId, BundledPrese
   resources: 'seat_room',
   enrollment: 'attendance',
   roster: 'attendance',
+  transport: 'vehicle_shuttle',
 };
 
 export type SetupFieldType =
