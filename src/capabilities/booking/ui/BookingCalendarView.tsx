@@ -21,6 +21,7 @@ import {
 } from '@/capabilities/booking/domain/bookingRooms';
 import { rescheduleBooking } from '@/capabilities/booking/domain/rescheduleBooking';
 import { notifyBookingChange } from '@/capabilities/booking';
+import { validateScheduleConstraints } from '@/capabilities/scheduling/domain/calendarConstraintEngine';
 import { EmptyState, FilterTabs, Modal, PageHeader, UnifiedScheduleCalendar, type CalendarEventItem, type CalendarResourceColumn, type CalendarSlotTarget } from '@/shared/components';
 import { Calendar, List } from 'lucide-react';
 import { executeBookingCreate } from './executeBookingCreate';
@@ -205,6 +206,38 @@ export const BookingCalendarView: React.FC = () => {
     )
       .toISOString()
       .slice(0, 19);
+
+    // 3중 제약조건 사전 검증 (직원 근무표, 룸 중복, 고객 수강권)
+    const constraintCheck = validateScheduleConstraints(
+      {
+        bookingId: event.id,
+        memberId: event.raw.customerId,
+        staffId: target.staffId ?? event.staffId,
+        roomId: target.roomId ?? event.roomId,
+        date: target.date,
+        startTime: target.startTime,
+        endTime: endsAt.slice(11, 16),
+      },
+      {
+        existingBookings: allBookingsRaw.map((b) => ({
+          id: b.id,
+          memberId: b.customerId,
+          staffId: b.staffId,
+          roomId: b.roomId,
+          date: b.startsAt.slice(0, 10),
+          startTime: b.startsAt.slice(11, 16),
+          endTime: b.endsAt.slice(11, 16),
+          status: b.status as any,
+        })),
+        allowWarningPass: true,
+      }
+    );
+
+    if (!constraintCheck.isValid && constraintCheck.violations.length > 0) {
+      const topViolation = constraintCheck.violations[0];
+      showToast(`[일정 변경 불가] ${topViolation.message}`, 'warning');
+      return false;
+    }
 
     const result = rescheduleBooking({
       bookingId: event.id,
@@ -756,6 +789,7 @@ export const BookingCalendarView: React.FC = () => {
       {displayMode === 'calendar' ? (
         <UnifiedScheduleCalendar<Booking>
           mode="appointment_timeline"
+          availableViews={['month', 'week', 'day', 'timeline']}
           events={calendarEvents}
           resources={resourceColumns}
           onEventMove={handleCalendarEventMove}

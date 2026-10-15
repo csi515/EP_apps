@@ -5,3 +5,6 @@ export * from './calendar';
 export * from './components';
 export * from './utils/scheduleConflicts';
 export * from './notifications';
+export * from './domain/calendarConstraintEngine';
+export * from './domain/calendarRecurringEngine';
+export * from './domain/timelineGridEngine';

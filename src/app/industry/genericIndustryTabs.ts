@@ -49,6 +49,9 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'staff-call': ['kiosk_staff_call'],
   'family-tree': ['membership_referral_tree'],
   'hygiene-log': ['hygiene_haccp_log'],
+  'sop-risk': ['sop_risk_assessment'],
+  'vendor-ap': ['vendor_ap_invoice'],
+  'work-payroll': ['work_attendance_payroll'],
 };
 
 export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
@@ -350,6 +353,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '냉장/냉동 실측 온도 기록, 식약처 위생 체크리스트 및 직원 보건증 만료 관리',
     tier: 'tier2_basic',
     primaryCapability: 'hygiene_haccp_log',
+  },
+  'sop-risk': {
+    tab: 'sop-risk',
+    label: '작업표준·위험성평가',
+    description: '공정별 작업표준(SOP), 5x5 빈도·강도 위험성평가 및 개선대책 관리',
+    tier: 'tier2_basic',
+    primaryCapability: 'sop_risk_assessment',
+  },
+  'vendor-ap': {
+    tab: 'vendor-ap',
+    label: '공급처·매입세무',
+    description: 'B2B 거래처 원장, 외상 매입 전표(AP), 원가 변동 모니터링 및 부가세 매입세액 합계표',
+    tier: 'tier2_basic',
+    primaryCapability: 'vendor_ap_invoice',
+  },
+  'work-payroll': {
+    tab: 'work-payroll',
+    label: '직원근태·급여명세',
+    description: '매장 Wi-Fi/GPS 출퇴근 인증, 주 15시간 주휴수당, 연장·야간가산 및 법정 임금명세서',
+    tier: 'tier2_basic',
+    primaryCapability: 'work_attendance_payroll',
   },
   settings: {
     tab: 'settings',

@@ -124,6 +124,15 @@ const MembershipReferralTreeView = lazy(() =>
 const HygieneHaccpLogView = lazy(() =>
   import('@/capabilities/hygiene_haccp_log').then((m) => ({ default: m.HygieneHaccpLogView }))
 );
+const SopRiskAssessmentView = lazy(() =>
+  import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.SopRiskAssessmentView }))
+);
+const VendorApInvoiceView = lazy(() =>
+  import('@/capabilities/vendor_ap_invoice').then((m) => ({ default: m.VendorApInvoiceView }))
+);
+const WorkAttendancePayrollView = lazy(() =>
+  import('@/capabilities/work_attendance_payroll').then((m) => ({ default: m.WorkAttendancePayrollView }))
+);
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
@@ -585,6 +594,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'hygiene-log': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">위생 점검 화면을 불러오는 중...</div>}>
         <HygieneHaccpLogView />
+      </Suspense>
+    ),
+    'sop-risk': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업표준 화면을 불러오는 중...</div>}>
+        <SopRiskAssessmentView />
+      </Suspense>
+    ),
+    'vendor-ap': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공급처 및 매입 전표 화면을 불러오는 중...</div>}>
+        <VendorApInvoiceView />
+      </Suspense>
+    ),
+    'work-payroll': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">직원 근태 및 급여 화면을 불러오는 중...</div>}>
+        <WorkAttendancePayrollView />
       </Suspense>
     ),
     ...financeViewEntries,

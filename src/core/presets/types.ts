@@ -70,7 +70,13 @@ export type BundledPresetCapabilityId =
   // 범주 W: 패밀리 연동 & 추천인 리워드
   | 'membership_referral_tree'
   // 범주 X: 주방 위생 HACCP & 보건증 만료
-  | 'hygiene_haccp_log';
+  | 'hygiene_haccp_log'
+  // 범주 Y: 사업장 작업표준 & 위험성평가
+  | 'sop_risk_assessment'
+  // 범주 Z: 공급처 원장 & 매입 세무 전표
+  | 'vendor_ap_invoice'
+  // 범주 AA: 직원 근태 & 법정 급여명세서
+  | 'work_attendance_payroll';
 
 export type PresetCapabilityId =
   | BundledPresetCapabilityId

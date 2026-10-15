@@ -64,3 +64,18 @@ export {
   policyForNewDomain,
   resolveWriteLocationId,
 } from './locationAwareRules';
+export {
+  aggregateHqBranchKpis,
+  createInterBranchTransferOrder,
+  confirmInterBranchTransferReceipt,
+  verifyAndProcessCrossBranchPassCheckIn,
+  type LocationKpiInput,
+  type LocationKpiItem,
+  type HqConsolidationSummary,
+  type InterBranchTransferItem,
+  type InterBranchTransferOrder,
+  type MemberPassScope,
+  type CrossBranchCheckInResult,
+} from './domain/branchConsolidationEngine';
+export { BranchConsolidationHqView } from './components/BranchConsolidationHqView';
+

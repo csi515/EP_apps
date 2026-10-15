@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, Search, Users } from 'lucide-react';
+import { CreditCard, Search, Users, AlertTriangle } from 'lucide-react';
 import { FilterBar } from '@/shared/components';
 import { ViewMode } from './tuitionViewTypes';
 
@@ -43,7 +43,7 @@ export const TuitionFilterBar: React.FC<TuitionFilterBarProps> = ({
         onClick={() => onViewModeChange('invoices')}
         title="수강료 청구 목록"
         className={`px-3 sm:px-4 py-2 min-h-[44px] text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer ${
-          viewMode === 'invoices'
+          viewMode === 'invoices' && statusFilter !== 'unpaid'
             ? 'bg-indigo-600 text-white shadow-xs'
             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
         }`}
@@ -64,6 +64,24 @@ export const TuitionFilterBar: React.FC<TuitionFilterBarProps> = ({
         <Users className="w-4 h-4 shrink-0" />
         <span className="hidden lg:inline">통합 청구 ({studentsCount})</span>
         <span className="lg:hidden">통합 ({studentsCount})</span>
+      </button>
+
+      {/* ⚠️ 미납/연체만 보기 1초 퀵 필터 버튼 */}
+      <button
+        type="button"
+        onClick={() => {
+          onViewModeChange('invoices');
+          onStatusFilterChange(statusFilter === 'unpaid' ? 'ALL' : 'unpaid');
+        }}
+        title="미납/연체 청구만 1초만에 필터링합니다"
+        className={`px-3 sm:px-4 py-2 min-h-[44px] text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer border ${
+          statusFilter === 'unpaid'
+            ? 'bg-rose-600 text-white border-rose-600 shadow-xs'
+            : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+        }`}
+      >
+        <AlertTriangle className={`w-4 h-4 shrink-0 ${statusFilter === 'unpaid' ? 'text-white' : 'text-rose-500'}`} />
+        <span>⚠️ 미납/연체만 보기</span>
       </button>
     </FilterBar>
 

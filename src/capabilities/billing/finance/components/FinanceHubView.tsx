@@ -1,5 +1,5 @@
 import { useMemo, type FC, type ReactNode } from 'react';
-import { BarChart3, ChevronRight, CreditCard, Landmark } from 'lucide-react';
+import { BarChart3, ChevronRight, CreditCard, Landmark, ShieldAlert } from 'lucide-react';
 import type { NavTab } from '@/shared/navigation/navigationTypes';
 import { useAppNavigation } from '@/shared/navigation/useAppNavigation';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -59,7 +59,8 @@ function areaIcon(id: FinanceHubAreaId): ReactNode {
 /** 재무 업무 영역 허브. 제목과 영역 탭은 플러그인 financeHubNav */
 export const FinanceHubView: FC<{ showBilling?: boolean }> = ({ showBilling = true }) => {
   const { activeTab, setActiveTab } = useAppNavigation();
-  const { industry } = usePermissions();
+  const { industry, isOwner, isAdmin, canPermission } = usePermissions();
+  const hasFinanceAccess = isOwner || isAdmin || canPermission('finance.read');
   const billingEnabled = showBilling && !isAppointmentIndustry(industry);
   const feeLabel = getFeeLabel(industry);
   // 탭 기본 이름은 영역명 '수납'. 매니페스트 요금명이 기본값(수강료)과 다를 때만 그 단어를 쓴다.
@@ -116,6 +117,29 @@ export const FinanceHubView: FC<{ showBilling?: boolean }> = ({ showBilling = tr
     hubNav.areas.length > 0
       ? `${areaLabel} › ${segmentLabel} · ${financeSegmentDescription(hubNav, segment)}`
       : undefined;
+
+  if (!hasFinanceAccess) {
+    return (
+      <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center max-w-md mx-auto my-12 shadow-sm space-y-4">
+        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-base font-black text-slate-900">재무 장부 열람 권한 제한</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            수납 내역 및 매출 장부는 관리자(원장) 또는 재무(finance.read) 권한이 부여된 사용자만 접근할 수 있습니다.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('dashboard')}
+          className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors"
+        >
+          대시보드로 돌아가기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 sm:space-y-4 pb-4">

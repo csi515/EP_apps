@@ -14,11 +14,13 @@ import {
   CalendarCheck,
   Phone,
   Mail,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useTerminology } from "@/core/terminology";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { StoreClaimModal, CounterClaimScanner } from "@/core/auth";
+import { CustomerTransferModal } from "@/core/customer/components/CustomerTransferModal";
 import {
   ResponsiveTable,
   type ResponsiveColumn,
@@ -58,6 +60,7 @@ export const StudentListPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [claimTarget, setClaimTarget] = useState<{ id: string; name: string } | null>(null);
+  const [transferTarget, setTransferTarget] = useState<{ id: string; name: string } | null>(null);
   const [showScanner, setShowScanner] = useState<boolean>(false);
 
   // Refine 선언형 useTable: URL 쿼리와 자동 동기화 (syncWithLocation: true)
@@ -245,6 +248,14 @@ export const StudentListPage: React.FC = () => {
             title="스마트폰 1회용 QR 연결"
           >
             <QrCode className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setTransferTarget({ id: student.id, name: student.name })}
+            className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+            title="신원 안전 인계 (전화번호 변경·데드락 방어)"
+          >
+            <ShieldCheck className="h-4 w-4" />
           </button>
           <button
             type="button"
@@ -502,6 +513,17 @@ export const StudentListPage: React.FC = () => {
         customerId={claimTarget?.id || ""}
         customerName={claimTarget?.name}
       />
+
+      {/* 회원 신원 안전 인계 (번호 변경/데드락 방어) 모달 */}
+      {transferTarget && (
+        <CustomerTransferModal
+          isOpen={!!transferTarget}
+          onClose={() => setTransferTarget(null)}
+          initialCustomerId={transferTarget.id}
+          initialCustomerName={transferTarget.name}
+          onSuccess={() => tableQuery.refetch()}
+        />
+      )}
     </div>
   );
 };

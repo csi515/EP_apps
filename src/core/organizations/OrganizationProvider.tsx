@@ -160,6 +160,16 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const { parentPortalActive, customerPortalActive } = portalModeToFlags(portalMode);
 
+  // 테넌트 변경(매장 전환) 시 TanStack Query 캐시 원자적 소멸 (Tenant Leaking 원천 차단)
+  const prevOrgIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const currentOrgId = currentOrganization?.id ?? null;
+    if (prevOrgIdRef.current !== null && prevOrgIdRef.current !== currentOrgId) {
+      evictTenantMemoryCache();
+    }
+    prevOrgIdRef.current = currentOrgId;
+  }, [currentOrganization?.id]);
+
   /** 선택 결과 1곳 커밋 (상태 + localStorage 부작용) */
   const commitMembershipSelection = useCallback((result: MembershipSelectionResult) => {
     setSelectedMembership(result.membership);

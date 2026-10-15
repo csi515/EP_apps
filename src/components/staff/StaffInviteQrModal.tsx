@@ -140,6 +140,7 @@ export const StaffInviteQrModal: React.FC<StaffInviteQrModalProps> = ({
   useEffect(() => {
     if (!tokenRecord || isUsed || !supabase) return;
 
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel(`staff-invite-${tokenRecord.id}`)
       .on(
@@ -154,7 +155,7 @@ export const StaffInviteQrModal: React.FC<StaffInviteQrModalProps> = ({
           if (payload.new && payload.new.is_used) {
             setIsUsed(true);
             showToast("직원 초대가 완료되었습니다!");
-            setTimeout(() => {
+            closeTimer = setTimeout(() => {
               onClose();
             }, 2500);
           }
@@ -163,6 +164,7 @@ export const StaffInviteQrModal: React.FC<StaffInviteQrModalProps> = ({
       .subscribe();
 
     return () => {
+      if (closeTimer) clearTimeout(closeTimer);
       supabase.removeChannel(channel);
     };
   }, [tokenRecord, isUsed, onClose]);

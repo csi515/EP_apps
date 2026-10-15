@@ -95,6 +95,12 @@ import { membershipReferralTreeSetupSchema } from '@/capabilities/membership_ref
 import { membershipReferralTreeResources } from '@/capabilities/membership_referral_tree/resources';
 import { hygieneHaccpLogSetupSchema } from '@/capabilities/hygiene_haccp_log/setupSchema';
 import { hygieneHaccpLogResources } from '@/capabilities/hygiene_haccp_log/resources';
+import { sopRiskAssessmentSetupSchema } from '@/capabilities/sop_risk_assessment/setupSchema';
+import { sopRiskAssessmentResources } from '@/capabilities/sop_risk_assessment/resources';
+import { vendorApInvoiceSetupSchema } from '@/capabilities/vendor_ap_invoice/setupSchema';
+import { vendorApInvoiceResources } from '@/capabilities/vendor_ap_invoice/resources';
+import { workAttendancePayrollSetupSchema } from '@/capabilities/work_attendance_payroll/setupSchema';
+import { workAttendancePayrollResources } from '@/capabilities/work_attendance_payroll/resources';
 
 /**
  * 전방위 17대 원자적 Capability 번들 레지스트리
@@ -334,6 +340,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: hygieneHaccpLogSetupSchema,
     resources: hygieneHaccpLogResources,
   },
+
+  // 범주 Y: 사업장 작업표준 & 위험성평가
+  sop_risk_assessment: {
+    capabilityId: 'sop_risk_assessment',
+    setupSchema: sopRiskAssessmentSetupSchema,
+    resources: sopRiskAssessmentResources,
+  },
+
+  // 범주 Z: 공급처 원장 & 매입 세무 전표
+  vendor_ap_invoice: {
+    capabilityId: 'vendor_ap_invoice',
+    setupSchema: vendorApInvoiceSetupSchema,
+    resources: vendorApInvoiceResources,
+  },
+
+  // 범주 AA: 직원 근태 & 법정 급여명세서
+  work_attendance_payroll: {
+    capabilityId: 'work_attendance_payroll',
+    setupSchema: workAttendancePayrollSetupSchema,
+    resources: workAttendancePayrollResources,
+  },
 };
 
 // Core 런타임 동적 레지스트리에 번들 등록
@@ -549,9 +576,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '헬스장 / 피트니스 센터',
     description: '회원권 기간 관리, 입장 바코드/PIN 출결, 개인 락커 배정, 운동복 대여',
     category: 'fitness',
-    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing'] as const,
+    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll'] as const,
     requiredCapabilities: ['passes', 'attendance', 'locker'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll'] as const,
     businessRules: { membershipHoldMaxDays: 30 },
     resourceTypes: [
       { name: '헬스존', type: 'room', capacity: 100 },
@@ -587,9 +614,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '실내 골프연습장',
     description: '타석/레슨 예약, 정기 회원권, 골프백 락커, 대여채 및 간이 시재 관리',
     category: 'fitness',
-    capabilities: ['passes', 'booking', 'locker', 'rental_equipment', 'ledger_simple', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call'] as const,
+    capabilities: ['passes', 'booking', 'locker', 'rental_equipment', 'ledger_simple', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call', 'sop_risk_assessment'] as const,
     requiredCapabilities: ['passes', 'booking', 'locker'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'instructor_match', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'instructor_match', 'curriculum_progress', 'diet_body_log', 'commission_payroll', 'lost_found', 'seat_timer_billing', 'package_split_billing', 'kiosk_staff_call', 'sop_risk_assessment'] as const,
     businessRules: { bayReservationMinutes: 60 },
     resourceTypes: [
       { name: '타석 1~12번', type: 'bay', capacity: 1 },
@@ -608,9 +635,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '수영장·수영교실',
     description: '레인별 강습 예약, 정기 회원권, 탈의실 락커 배정 및 안전 서약서',
     category: 'fitness',
-    capabilities: ['attendance', 'passes', 'booking', 'locker', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found'] as const,
+    capabilities: ['attendance', 'passes', 'booking', 'locker', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found', 'sop_risk_assessment'] as const,
     requiredCapabilities: ['attendance', 'passes', 'locker'] as const,
-    optionalCapabilities: ['booking', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found'] as const,
+    optionalCapabilities: ['booking', 'safety_consent', 'curriculum_progress', 'diet_body_log', 'vehicle_shuttle', 'lost_found', 'sop_risk_assessment'] as const,
     businessRules: { laneCapacityLimit: 15 },
     resourceTypes: [
       { name: '25m 레인 1~6', type: 'court', capacity: 15 },
@@ -671,9 +698,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '헤어샵 / 뷰티 살롱',
     description: '디자이너 예약, 염색약/시술 차트, 스태프 근무표 및 일일 매출 마감',
     category: 'beauty',
-    capabilities: ['booking', 'treatment_chart', 'shift_schedule', 'ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree'] as const,
+    capabilities: ['booking', 'treatment_chart', 'shift_schedule', 'ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     requiredCapabilities: ['booking', 'treatment_chart', 'shift_schedule'] as const,
-    optionalCapabilities: ['ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree'] as const,
+    optionalCapabilities: ['ledger_simple', 'inventory', 'commission_payroll', 'treatment_portfolio', 'waitlist_turn_queue', 'membership_referral_tree', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     businessRules: { doubleBookingAllowed: false, slotMinutes: 30 },
     resourceTypes: [
       { name: '경대 1~6', type: 'seat', capacity: 1 },
@@ -823,9 +850,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '스터디카페 / 공간대여',
     description: '좌석 점유 타이머, 시간제 이용권, 사물함 및 일일 청소 점검 루틴 중심',
     category: 'studio',
-    capabilities: ['seat_room', 'passes', 'locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call'] as const,
+    capabilities: ['seat_room', 'passes', 'locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call', 'work_attendance_payroll'] as const,
     requiredCapabilities: ['seat_room', 'passes'] as const,
-    optionalCapabilities: ['locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call'] as const,
+    optionalCapabilities: ['locker', 'maintenance_checklist', 'lost_found', 'seat_timer_billing', 'kiosk_staff_call', 'work_attendance_payroll'] as const,
     businessRules: { timePassAutoExpire: true },
     resourceTypes: [
       { name: '자유석 1~50', type: 'seat', capacity: 1 },
@@ -992,9 +1019,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '카페 / 디저트전문점',
     description: '원두/부자재 재고, 테이블 홀 좌석, 바리스타 시프트 근무 및 선불 충전금',
     category: 'food',
-    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
+    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     requiredCapabilities: ['inventory', 'ledger_simple', 'shift_schedule'] as const,
-    optionalCapabilities: ['seat_room', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
+    optionalCapabilities: ['seat_room', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     businessRules: { prepaidCardDiscount: 5 },
     resourceTypes: [
       { name: '에스프레소 머신', type: 'equipment' },
@@ -1012,9 +1039,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '소형 음식점 / 식당',
     description: '테이블 좌석 예약, 식자재 식별 재고, 주방/홀 근무 교대 및 일일 결산',
     category: 'food',
-    capabilities: ['booking', 'seat_room', 'inventory', 'ledger_simple', 'shift_schedule', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
+    capabilities: ['booking', 'seat_room', 'inventory', 'ledger_simple', 'shift_schedule', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     requiredCapabilities: ['seat_room', 'ledger_simple', 'shift_schedule'] as const,
-    optionalCapabilities: ['booking', 'inventory', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log'] as const,
+    optionalCapabilities: ['booking', 'inventory', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
     businessRules: { reservationDepositPolicy: false },
     resourceTypes: [{ name: '식탁 테이블 1~10', type: 'table', capacity: 4 }],
     roles: [
@@ -1032,9 +1059,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '자동차 정비소',
     description: '정비 리프트 배정, 부품 재고, 작업지시서 파이프라인, 차량 수리 이력 및 청구',
     category: 'automotive',
-    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle'] as const,
+    optionalCapabilities: ['consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice'] as const,
     businessRules: { vinRequired: true, workOrderStages: 4 },
     resourceTypes: [
       { name: '리프트 베이 1~3', type: 'bay', capacity: 1 },
@@ -1112,9 +1139,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '맞춤 제작 공방 & 수리점',
     description: '단계별 제작/수리 칸반 파이프라인, 원자재 재고 관리 및 픽업 예약',
     category: 'studio',
-    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple', 'sop_risk_assessment'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory'] as const,
-    optionalCapabilities: ['booking', 'ledger_simple'] as const,
+    optionalCapabilities: ['booking', 'ledger_simple', 'sop_risk_assessment'] as const,
     resourceTypes: [{ name: '작업대', type: 'table' }],
     roles: [{ name: '공방장', rank_order: 1, permissions: ['*'] }],
     readinessLevel: 'basic_ui',

@@ -18,6 +18,7 @@ const VIEW_LABELS: Record<CalendarViewMode, string> = {
   month: '월간',
   week: '주간',
   day: '일간',
+  timeline: '타임라인(자원별)',
 };
 
 export const CalendarHeader: FC<CalendarHeaderProps> = ({
@@ -38,7 +39,7 @@ export const CalendarHeader: FC<CalendarHeaderProps> = ({
 
   let titleLabel = `${year}년 ${month}월`;
   if (!isTimetable) {
-    if (currentView === 'day') {
+    if (currentView === 'day' || currentView === 'timeline') {
       const dayOfWeekKo = ['일', '월', '화', '수', '목', '금', '토'][currentDate.getDay()];
       titleLabel = `${year}년 ${month}월 ${day}일 (${dayOfWeekKo})`;
     } else if (currentView === 'week') {

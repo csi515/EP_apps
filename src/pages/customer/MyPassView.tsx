@@ -10,16 +10,20 @@ import {
   ShieldCheck,
   Building2,
   RefreshCw,
+  Bell,
+  CheckCircle,
 } from 'lucide-react';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { CustomerQrDrawer } from '@/core/auth/components/CustomerQrDrawer';
+import { NotificationDrawer } from '@/core/notifications';
 import { AdSlotPlaceholder } from '@/components/ads/AdSlotPlaceholder';
 
 export const MyPassView: React.FC = () => {
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
   const [isQrDrawerOpen, setIsQrDrawerOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   // Declarative Refine useList hook for session passes
   const { query: passQuery, result: passResult } = useList({
@@ -101,8 +105,18 @@ export const MyPassView: React.FC = () => {
                   {currentOrganization?.name || 'MOA'}
                 </h2>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                <Ticket className="w-5 h-5" />
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsNotificationOpen(true)}
+                  aria-label="알림함 열기"
+                  className="w-10 h-10 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+                >
+                  <Bell className="w-5 h-5" />
+                </button>
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Ticket className="w-5 h-5" />
+                </div>
               </div>
             </div>
 
@@ -192,15 +206,25 @@ export const MyPassView: React.FC = () => {
           </div>
 
           {/* Action Button: Mobile-first 48px touch target */}
-          <div className="pt-6 mt-6 border-t border-slate-100">
+          <div className="pt-6 mt-6 border-t border-slate-100 space-y-2.5">
             <button
               type="button"
               onClick={() => setIsQrDrawerOpen(true)}
-              className="w-full h-12 flex items-center justify-center space-x-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition shadow-md shadow-indigo-100"
+              className="w-full h-12 min-h-[48px] flex items-center justify-center space-x-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition shadow-md shadow-indigo-100 cursor-pointer"
             >
               <QrCode className="w-5 h-5" />
               <span>내 정보 등록 / 체크인 QR</span>
               <ChevronRight className="w-4 h-4 ml-auto" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsNotificationOpen(true)}
+              className="w-full h-12 min-h-[48px] flex items-center justify-center space-x-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-sm font-semibold transition cursor-pointer"
+            >
+              <Bell className="w-5 h-5 text-indigo-600" />
+              <span>수신된 인앱 알림 확인</span>
+              <ChevronRight className="w-4 h-4 ml-auto text-slate-400" />
             </button>
           </div>
         </div>
@@ -216,6 +240,13 @@ export const MyPassView: React.FC = () => {
         isOpen={isQrDrawerOpen}
         onClose={() => setIsQrDrawerOpen(false)}
         tenantId={currentOrganization?.id || ''}
+      />
+
+      {/* In-App Notification Drawer Component */}
+      <NotificationDrawer
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        customerId={user?.id}
       />
     </div>
   );

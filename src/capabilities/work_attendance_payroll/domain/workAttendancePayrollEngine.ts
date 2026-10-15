@@ -1,0 +1,338 @@
+/**
+ * 직원 근태(Wi-Fi/GPS 인증) & 주휴수당·야간연장 가산·4대보험 법정 급여명세서 도메인 엔진 (Pure Functions)
+ *
+ * 적용 법령: 근로기준법 제48조(임금명세서 교부), 제55조(휴일/주휴수당), 제56조(연장·야간근로 가산)
+ */
+
+export interface GeoLocation {
+  latitude: number;
+  longitude: number;
+}
+
+export interface AttendanceAuthCheckResult {
+  isAuthenticated: boolean;
+  method: 'wifi' | 'gps' | 'manual';
+  distanceMeters?: number;
+  failureReason?: string;
+}
+
+export interface DailyTimecard {
+  date: string; // YYYY-MM-DD
+  clockInTime: string; // HH:mm:ss
+  clockOutTime: string; // HH:mm:ss
+  breakMinutes: number; // 법정 휴게시간 (분)
+  regularHours: number; // 기본 근로 시간 (최대 8시간)
+  overtimeHours: number; // 8시간 초과 연장 시간
+  nightHours: number; // 22:00~06:00 야간 근로 시간
+  totalWorkedHours: number; // 실근무 시간 (휴게 제외)
+}
+
+export interface StaffEmploymentProfile {
+  staffId: string;
+  staffName: string;
+  employmentType: 'hourly_part_time' | 'salaried_regular'; // 시급제 알바 vs 정규직 월급제
+  hourlyRate: number; // 통상 시급 (예: 10,500원)
+  baseSalaryMonthly?: number; // 정규직 기본급
+  contractWeeklyHours: number; // 주당 소정 근로시간 (예: 20시간)
+  enrollSocialInsurance: boolean; // 4대 보험 적용 여부 (주 15시간 이상)
+}
+
+export interface StatutoryPaySummary {
+  totalWorkedHours: number; // 총 실근로시간
+  regularPay: number; // 기본급 (기본시간 * 시급)
+  overtimeHours: number; // 총 연장근로 시간
+  overtimePay: number; // 연장가산수당 (연장시간 * 시급 * 1.5)
+  nightHours: number; // 총 야간근로 시간
+  nightPay: number; // 야간가산수당 (야간시간 * 시급 * 0.5 추가)
+  weeklyHolidayHours: number; // 주휴시간 합계
+  weeklyHolidayPay: number; // 주휴수당
+  totalGrossPay: number; // 세전 총급여
+}
+
+export interface InsuranceDeduction {
+  nationalPension: number; // 국민연금 4.5%
+  healthInsurance: number; // 건강보험 3.545%
+  longTermCare: number; // 장기요양보험 (건보의 12.95%)
+  employmentInsurance: number; // 고용보험 0.9%
+  incomeTax: number; // 근로소득세 (간이)
+  localIncomeTax: number; // 지방소득세 (소득세의 10%)
+  totalDeductions: number; // 공제 총액
+}
+
+export interface PayrollSlip {
+  slipId: string;
+  staffId: string;
+  staffName: string;
+  payrollPeriod: string; // YYYY-MM
+  employmentType: 'hourly_part_time' | 'salaried_regular';
+  hourlyRate: number;
+  statutoryPay: StatutoryPaySummary;
+  deductions: InsuranceDeduction;
+  netPay: number; // 실수령액 (세전총액 - 공제총액)
+  issuedAt: string; // 교부 일시
+}
+
+/**
+ * 1. Haversine 공식을 이용한 GPS 좌표 간 거리(미터) 계산
+ */
+export function calculateGpsDistanceMeters(loc1: GeoLocation, loc2: GeoLocation): number {
+  const R = 6371000; // 지구 반지름 (m)
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(loc2.latitude - loc1.latitude);
+  const dLon = toRad(loc2.longitude - loc1.longitude);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(loc1.latitude)) *
+      Math.cos(toRad(loc2.latitude)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
+/**
+ * 2. 매장 Wi-Fi BSSID 또는 GPS 반경 기반 출퇴근 인증 판정
+ */
+export function verifyAttendanceCheckIn(input: {
+  storeWifiBssid?: string;
+  staffWifiBssid?: string;
+  storeLocation?: GeoLocation;
+  staffLocation?: GeoLocation;
+  maxRadiusMeters?: number;
+}): AttendanceAuthCheckResult {
+  const { storeWifiBssid, staffWifiBssid, storeLocation, staffLocation, maxRadiusMeters = 50 } = input;
+
+  // 1순위: 매장 Wi-Fi BSSID 일치 검증
+  if (storeWifiBssid && staffWifiBssid) {
+    if (storeWifiBssid.toLowerCase() === staffWifiBssid.toLowerCase()) {
+      return {
+        isAuthenticated: true,
+        method: 'wifi',
+      };
+    }
+  }
+
+  // 2순위: GPS 지오펜싱 반경 검증
+  if (storeLocation && staffLocation) {
+    const distance = calculateGpsDistanceMeters(storeLocation, staffLocation);
+    if (distance <= maxRadiusMeters) {
+      return {
+        isAuthenticated: true,
+        method: 'gps',
+        distanceMeters: distance,
+      };
+    } else {
+      return {
+        isAuthenticated: false,
+        method: 'gps',
+        distanceMeters: distance,
+        failureReason: `매장 반경(${maxRadiusMeters}m)을 벗어났습니다. (현재 거리: ${distance}m)`,
+      };
+    }
+  }
+
+  return {
+    isAuthenticated: false,
+    method: 'manual',
+    failureReason: '매장 Wi-Fi에 연결되어 있지 않거나 GPS 위치를 확인할 수 없습니다.',
+  };
+}
+
+/**
+ * 3. 일일 출퇴근 타임카드 근로시간, 연장시간(>8h), 야간시간(22~06) 계산
+ */
+export function calculateDailyTimecardHours(
+  clockInIso: string,
+  clockOutIso: string,
+  breakMinutes: number = 0
+): {
+  totalWorkedHours: number;
+  regularHours: number;
+  overtimeHours: number;
+  nightHours: number;
+} {
+  const inDate = new Date(clockInIso);
+  const outDate = new Date(clockOutIso);
+
+  const diffMs = Math.max(0, outDate.getTime() - inDate.getTime());
+  const rawMinutes = Math.floor(diffMs / (1000 * 60));
+  const workedMinutes = Math.max(0, rawMinutes - breakMinutes);
+  const totalWorkedHours = Math.round((workedMinutes / 60) * 10) / 10;
+
+  // 기본 8시간, 초과는 연장근로
+  const regularHours = Math.min(8, totalWorkedHours);
+  const overtimeHours = Math.round(Math.max(0, totalWorkedHours - 8) * 10) / 10;
+
+  // 야간근로(22:00 ~ 06:00) 시간 계산
+  let nightMinutes = 0;
+  const cursor = new Date(inDate);
+
+  // 15분 단위로 순회하며 야간 시간대 판정
+  while (cursor < outDate) {
+    const hour = cursor.getHours();
+    if (hour >= 22 || hour < 6) {
+      nightMinutes += 15;
+    }
+    cursor.setMinutes(cursor.getMinutes() + 15);
+  }
+
+  // 야간시간도 휴게 비율만큼 감액
+  const nightHours = Math.round(Math.min(totalWorkedHours, nightMinutes / 60) * 10) / 10;
+
+  return {
+    totalWorkedHours,
+    regularHours,
+    overtimeHours,
+    nightHours,
+  };
+}
+
+/**
+ * 4. 주간 근무시간에 따른 주휴시간 계산 (근로기준법 제55조)
+ *  - 주 15시간 이상 근무 시: min(1, 주간시간 / 40) * 8시간
+ *  - 주 15시간 미만(초단시간): 0시간
+ */
+export function calculateWeeklyHolidayHours(weeklyWorkedHours: number): number {
+  if (weeklyWorkedHours < 15) {
+    return 0;
+  }
+  const factor = Math.min(1, weeklyWorkedHours / 40);
+  return Math.round(factor * 8 * 10) / 10;
+}
+
+/**
+ * 5. 월간 근태 기록 및 통상시급 기준 법정 수당 총액 계산
+ */
+export function calculateStatutoryPay(
+  profile: StaffEmploymentProfile,
+  weeklyWorkedHoursList: number[], // 주차별 총 근무시간 (예: [20, 22, 18, 25])
+  totalOvertimeHours: number,
+  totalNightHours: number
+): StatutoryPaySummary {
+  const totalWorkedHours = weeklyWorkedHoursList.reduce((sum, h) => sum + h, 0);
+  const rate = profile.hourlyRate;
+
+  // 기본급: 시급제는 실근무시간 * 시급, 정규직은 고정 월급이 있으면 우선 적용
+  const regularPay = profile.employmentType === 'salaried_regular' && profile.baseSalaryMonthly
+    ? profile.baseSalaryMonthly
+    : Math.round(totalWorkedHours * rate);
+
+  // 연장가산수당 (1.5배)
+  const overtimePay = Math.round(totalOvertimeHours * rate * 1.5);
+
+  // 야간가산수당 (통상 0.5배 가산)
+  const nightPay = Math.round(totalNightHours * rate * 0.5);
+
+  // 주휴수당: 주차별 주휴시간 합계 * 시급 (시급제 알바 대상)
+  let totalWeeklyHolidayHours = 0;
+  if (profile.employmentType === 'hourly_part_time') {
+    for (const weekHours of weeklyWorkedHoursList) {
+      totalWeeklyHolidayHours += calculateWeeklyHolidayHours(weekHours);
+    }
+  }
+  const weeklyHolidayPay = Math.round(totalWeeklyHolidayHours * rate);
+
+  const totalGrossPay = regularPay + overtimePay + nightPay + weeklyHolidayPay;
+
+  return {
+    totalWorkedHours,
+    regularPay,
+    overtimeHours: totalOvertimeHours,
+    overtimePay,
+    nightHours: totalNightHours,
+    nightPay,
+    weeklyHolidayHours: totalWeeklyHolidayHours,
+    weeklyHolidayPay,
+    totalGrossPay,
+  };
+}
+
+/**
+ * 6. 4대 보험 및 간이소득세 공제액 계산
+ */
+export function calculateInsuranceDeductions(
+  grossPay: number,
+  enrollSocialInsurance: boolean
+): InsuranceDeduction {
+  if (!enrollSocialInsurance || grossPay <= 0) {
+    return {
+      nationalPension: 0,
+      healthInsurance: 0,
+      longTermCare: 0,
+      employmentInsurance: 0,
+      incomeTax: 0,
+      localIncomeTax: 0,
+      totalDeductions: 0,
+    };
+  }
+
+  // 국민연금: 4.5% (비과세 제외 단순화)
+  const nationalPension = Math.round(grossPay * 0.045);
+  // 건강보험: 3.545%
+  const healthInsurance = Math.round(grossPay * 0.03545);
+  // 노인장기요양보험: 건강보험료의 12.95%
+  const longTermCare = Math.round(healthInsurance * 0.1295);
+  // 고용보험: 0.9%
+  const employmentInsurance = Math.round(grossPay * 0.009);
+
+  // 소득세 (월 106만원 초과 시 간이세액 약 1.5~2% 단순화 적용)
+  let incomeTax = 0;
+  if (grossPay >= 1060000) {
+    incomeTax = Math.round(grossPay * 0.015);
+  }
+  const localIncomeTax = Math.round(incomeTax * 0.1);
+
+  const totalDeductions =
+    nationalPension + healthInsurance + longTermCare + employmentInsurance + incomeTax + localIncomeTax;
+
+  return {
+    nationalPension,
+    healthInsurance,
+    longTermCare,
+    employmentInsurance,
+    incomeTax,
+    localIncomeTax,
+    totalDeductions,
+  };
+}
+
+/**
+ * 7. 근로기준법 제48조 준수 전자 급여명세서(Payroll Slip) 발급
+ */
+export function generatePayrollSlip(
+  profile: StaffEmploymentProfile,
+  periodYearMonth: string,
+  weeklyWorkedHoursList: number[],
+  overtimeHours: number,
+  nightHours: number
+): PayrollSlip {
+  const statutoryPay = calculateStatutoryPay(
+    profile,
+    weeklyWorkedHoursList,
+    overtimeHours,
+    nightHours
+  );
+
+  const deductions = calculateInsuranceDeductions(
+    statutoryPay.totalGrossPay,
+    profile.enrollSocialInsurance
+  );
+
+  const netPay = Math.max(0, statutoryPay.totalGrossPay - deductions.totalDeductions);
+
+  return {
+    slipId: `SLIP-${periodYearMonth}-${profile.staffId}`,
+    staffId: profile.staffId,
+    staffName: profile.staffName,
+    payrollPeriod: periodYearMonth,
+    employmentType: profile.employmentType,
+    hourlyRate: profile.hourlyRate,
+    statutoryPay,
+    deductions,
+    netPay,
+    issuedAt: new Date().toISOString(),
+  };
+}

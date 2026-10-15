@@ -4,9 +4,11 @@ import type {
   UnifiedScheduleCalendarProps,
 } from './types';
 import { CalendarHeader } from './components/CalendarHeader';
+import { CalendarWeekStrip } from './components/CalendarWeekStrip';
 import { CalendarMonthView } from './views/CalendarMonthView';
 import { CalendarWeekView } from './views/CalendarWeekView';
 import { CalendarDayView } from './views/CalendarDayView';
+import { CalendarResourceTimelineView } from './views/CalendarResourceTimelineView';
 
 /**
  * MOA v2 단일 통합 캘린더 엔진 (UnifiedScheduleCalendar)
@@ -49,7 +51,7 @@ export function UnifiedScheduleCalendar<T = any>({
   // 가용 뷰 모드 결정
   const availableViews =
     externalAvailableViews ??
-    (isTimetable ? (['week', 'day'] as CalendarViewMode[]) : (['month', 'week', 'day'] as CalendarViewMode[]));
+    (isTimetable ? (['week', 'day'] as CalendarViewMode[]) : (['month', 'week', 'day', 'timeline'] as CalendarViewMode[]));
 
   // 현재 날짜 관리 (controlled or uncontrolled)
   const [internalDate, setInternalDate] = useState<Date>(() => new Date());
@@ -137,6 +139,16 @@ export function UnifiedScheduleCalendar<T = any>({
         onToday={handleToday}
       />
 
+      {/* 가로 주간 스트립 캘린더 (일간 및 타임라인 모드에서 요일별 정원/일정 퀵 전환 바) */}
+      {(currentView === 'day' || currentView === 'timeline') && (
+        <CalendarWeekStrip
+          currentDate={currentDate}
+          onDateSelect={handleDateChange}
+          events={events}
+          className="mb-3"
+        />
+      )}
+
       {/* 뷰 본문 */}
       {currentView === 'month' && (
         <CalendarMonthView
@@ -185,6 +197,24 @@ export function UnifiedScheduleCalendar<T = any>({
           onEventClick={onEventClick}
           renderEventCard={renderEventCard}
           renderEmptySlot={renderEmptySlot}
+        />
+      )}
+
+      {currentView === 'timeline' && (
+        <CalendarResourceTimelineView
+          mode={mode}
+          currentDate={currentDate}
+          events={events}
+          resources={resources}
+          startHour={timeConfig?.startHour ?? 8}
+          endHour={timeConfig?.endHour ?? 22}
+          slotInterval={timeConfig?.slotInterval ?? 30}
+          readOnly={readOnly}
+          onEventMove={onEventMove}
+          onEventResize={onEventResize}
+          onSlotClick={onSlotClick}
+          onEventClick={onEventClick}
+          renderEventCard={renderEventCard ? (ev) => renderEventCard(ev, 'timeline') : undefined}
         />
       )}
     </div>

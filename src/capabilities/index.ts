@@ -45,6 +45,9 @@ import { exam_grade_analyticsCapability } from './exam_grade_analytics/manifest'
 import { kiosk_staff_callCapability } from './kiosk_staff_call/manifest';
 import { membership_referral_treeCapability } from './membership_referral_tree/manifest';
 import { hygiene_haccp_logCapability } from './hygiene_haccp_log/manifest';
+import { sop_risk_assessmentCapability } from './sop_risk_assessment/manifest';
+import { vendor_ap_invoiceCapability } from './vendor_ap_invoice/manifest';
+import { work_attendance_payrollCapability } from './work_attendance_payroll/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -103,6 +106,9 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   kiosk_staff_callCapability,
   membership_referral_treeCapability,
   hygiene_haccp_logCapability,
+  sop_risk_assessmentCapability,
+  vendor_ap_invoiceCapability,
+  work_attendance_payrollCapability,
 ];
 
 

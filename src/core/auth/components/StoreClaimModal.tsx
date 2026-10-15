@@ -100,6 +100,7 @@ export const StoreClaimModal: React.FC<StoreClaimModalProps> = ({
   useEffect(() => {
     if (!isOpen || !tokenRecord || !supabase) return;
 
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
     const channelName = `store-claim-${tokenRecord.id}`;
     const channel = supabase
       .channel(channelName)
@@ -115,7 +116,7 @@ export const StoreClaimModal: React.FC<StoreClaimModalProps> = ({
           if (payload.new && payload.new.is_used) {
             setIsClaimed(true);
             showToast('고객 스마트폰과 즉시 연결되었습니다!');
-            setTimeout(() => {
+            closeTimer = setTimeout(() => {
               onClose();
             }, 2000);
           }
@@ -124,6 +125,7 @@ export const StoreClaimModal: React.FC<StoreClaimModalProps> = ({
       .subscribe();
 
     return () => {
+      if (closeTimer) clearTimeout(closeTimer);
       supabase.removeChannel(channel);
     };
   }, [isOpen, tokenRecord, onClose]);

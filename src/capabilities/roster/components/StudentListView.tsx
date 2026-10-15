@@ -32,7 +32,11 @@ import {
   Bus,
   SlidersHorizontal,
   FileSpreadsheet,
+  Download,
 } from 'lucide-react';
+import { showToast } from '@/shared/feedback/uiFeedback';
+import { getOrganizationId } from '@/services/adapters';
+import { interceptExportWithAudit } from '@/core/audit/auditExportInterceptor';
 import { StudentBulkImportModal } from './StudentBulkImportModal';
 import {
   WEEKDAY_FILTER_OPTIONS,
@@ -243,6 +247,41 @@ export const StudentListView: React.FC = () => {
     { value: 'ALL', label: '전체', count: students.length },
   ];
 
+  const handleExportAudited = async () => {
+    const orgId = getOrganizationId() || 'local-org';
+    try {
+      await interceptExportWithAudit(
+        {
+          organizationId: orgId,
+          entityType: 'customer',
+          action: 'customer_roster_excel_export',
+        },
+        () => {
+          const headers = ['이름', '연락처', '상태', '등록일자'];
+          const rows = filteredStudents.map((s) => [
+            `"${s.name}"`,
+            `"${s.phone || ''}"`,
+            `"${s.status || ''}"`,
+            `"${s.createdAt || ''}"`,
+          ]);
+          const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `회원명부_${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('보안 감사 로그가 기록되었으며 회원 명부가 다운로드되었습니다.', 'success');
+        }
+      );
+    } catch (err: unknown) {
+      showToast(err instanceof Error ? err.message : '엑셀 내보내기에 실패했습니다.', 'error');
+    }
+  };
+
   const isTrulyEmpty = students.length === 0;
   const isFilterEmpty = !isTrulyEmpty && filteredStudents.length === 0;
 
@@ -250,6 +289,15 @@ export const StudentListView: React.FC = () => {
     <div className={DENSITY.pageStack}>
       {!isScoped && (
         <div className="flex justify-end gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleExportAudited}
+            className="px-4 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold rounded-xl transition-all border border-slate-200 flex items-center justify-center gap-2 cursor-pointer"
+            title="대량 개인정보 반출 시 불변 감사 로그(Audit Log)가 자동 기록됩니다."
+          >
+            <Download className="w-4 h-4 text-slate-500" />
+            명부 다운로드 (감사 기록)
+          </button>
           <button
             type="button"
             onClick={() => setIsBulkImportOpen(true)}

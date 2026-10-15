@@ -40,6 +40,7 @@ function run() {
   const mutationAllowlist = new Set([
     'services/storage/scheduleStorage.ts',
     'core/schedules/bookingPassAtomic.ts',
+    'core/schedules/bookScheduleSlotAtomic.ts',
     'core/services/scheduleService.ts',
     'core/schedules/parentBookingCancel.ts',
   ]);

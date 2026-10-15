@@ -108,6 +108,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   kiosk_staff_call: ['staff-call', 'calls', 'bellboard'],
   membership_referral_tree: ['family-tree', 'families', 'referrals'],
   hygiene_haccp_log: ['hygiene-log', 'hygiene', 'temperatures'],
+  sop_risk_assessment: ['sop-risk', 'safety', 'hazards', 'sops'],
+  vendor_ap_invoice: ['vendor-ap', 'vendors', 'ap-invoices', 'purchase-invoices'],
+  work_attendance_payroll: ['work-payroll', 'timecards', 'payroll-slips', 'staff-payroll'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

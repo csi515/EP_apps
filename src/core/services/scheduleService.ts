@@ -16,6 +16,7 @@ import {
 import { sumRemainingSessions } from '@/core/schedules/sessionPassUtils';
 import { sessionPassService } from '@/core/schedules/sessionPassService';
 import { updateBookingStatusAtomic } from '@/core/schedules/bookingPassAtomic';
+import { bookScheduleSlotAtomic, type BookScheduleSlotParams, type BookScheduleSlotResult } from '@/core/schedules/bookScheduleSlotAtomic';
 import { cancelBookingAsParent } from '@/core/schedules/parentBookingCancel';
 
 /**
@@ -61,6 +62,16 @@ export const ScheduleService = {
     options?: { consumeOnNoShow?: boolean }
   ): Promise<Booking | null> {
     return updateBookingStatusAtomic(id, status, options);
+  },
+
+  /**
+   * 타임슬롯 잔여석 행 잠금(FOR UPDATE) 기반 원자적 예약 생성.
+   * 운영: core.book_schedule_slot
+   */
+  async bookScheduleSlot(
+    params: BookScheduleSlotParams
+  ): Promise<BookScheduleSlotResult> {
+    return bookScheduleSlotAtomic(params);
   },
 
   /**

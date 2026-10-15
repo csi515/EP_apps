@@ -171,12 +171,9 @@ export function createMoaLiveProvider(
   };
 }
 
-import { liveProvider as createSupabaseLiveProvider } from "@refinedev/supabase";
-
 /**
- * 기본 싱글톤 liveProvider 인스턴스 (@refinedev/supabase 공식 연동).
+ * 기본 싱글톤 liveProvider 인스턴스 (core 스키마 및 테넌트 격리 지원).
  * Supabase가 설정되어 있지 않으면 no-op 안전 모드로 자동 동작합니다.
  */
-export const liveProvider: LiveProvider = supabase
-  ? createSupabaseLiveProvider(supabase)
-  : createMoaLiveProvider(null);
+export const liveProvider: LiveProvider = createMoaLiveProvider(supabase);
+

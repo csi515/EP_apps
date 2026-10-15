@@ -18,6 +18,8 @@ export interface MobileLoginFormProps {
   isTossLoading?: boolean;
   language?: 'ko' | 'en';
   onLanguageChange?: (lang: 'ko' | 'en') => void;
+  rememberMe?: boolean;
+  onRememberMeChange?: (remember: boolean) => void;
 }
 
 export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
@@ -36,7 +38,12 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   isTossLoading = false,
   language = 'ko',
   onLanguageChange,
+  rememberMe: externalRememberMe,
+  onRememberMeChange,
 }) => {
+  const [internalRememberMe, setInternalRememberMe] = React.useState(true);
+  const isRemember = externalRememberMe ?? internalRememberMe;
+  const setRemember = onRememberMeChange ?? setInternalRememberMe;
   const inToss = isAppsInToss();
   const isEn = language === 'en';
 
@@ -266,6 +273,24 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           </div>
         </div>
 
+        {/* 로그인 유지 체크박스 (공용 패드/키오스크 보안 분기) */}
+        <div className="flex items-center justify-between py-1">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isRemember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
+            />
+            <span className="text-xs text-slate-600 font-medium">
+              {isEn ? "Keep me signed in" : "로그인 상태 유지"}
+            </span>
+          </label>
+          <span className="text-[11px] text-slate-400">
+            {isEn ? "Uncheck on shared tablets" : "공용 패드에서는 해제 권장"}
+          </span>
+        </div>
+
         {errorMessage && (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium animate-in fade-in">
             {errorMessage}
@@ -276,7 +301,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           type="submit"
           data-testid="btn-email-submit"
           disabled={isLoading}
-          className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 transition-all active:scale-[0.99]"
+          className="w-full mt-2 h-12 min-h-[48px] flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-md shadow-indigo-600/20 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 transition-all active:scale-[0.99] cursor-pointer"
         >
           {isLoading ? (
             <>

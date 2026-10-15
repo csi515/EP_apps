@@ -22,6 +22,10 @@ import {
   kioskRepeatHint,
 } from '../attendanceIndustryCopy';
 import { runPinCheckInSideEffects } from '../application/pinCheckInSideEffects';
+import {
+  enqueueAttendance,
+  initOfflineAttendanceSync,
+} from '../offline/attendanceOfflineQueue';
 
 const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'enter'] as const;
 const ADMIN_EXIT_HOLD_MS = 2000;
@@ -88,6 +92,23 @@ export const PinCheckInKioskView: React.FC<PinCheckInKioskViewProps> = ({
     navigate('/', { replace: true });
   };
 
+  // 오프라인 출결 큐 자동 복구 리스너 (네트워크 복구 시 백그라운드 FIFO 전송)
+  useEffect(() => {
+    return initOfflineAttendanceSync(async (record) => {
+      try {
+        if (!record.pin) return false;
+        const res = await attendanceStorage.toggleCheckInByPin(
+          record.pin,
+          method as CheckInMethod,
+          record.organizationId
+        );
+        return Boolean(res.success);
+      } catch {
+        return false;
+      }
+    });
+  }, [method]);
+
   const handleKey = useCallback(
     async (key: (typeof KEYPAD)[number]) => {
       if (processing) return;
@@ -109,6 +130,21 @@ export const PinCheckInKioskView: React.FC<PinCheckInKioskViewProps> = ({
         }
         setProcessing(true);
         try {
+          // 네트워크 단절 감지 시 IndexedDB 로컬 큐 선반영
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            await enqueueAttendance({
+              organizationId: organizationId || 'org-offline',
+              customerId: 'pending_pin_customer',
+              pin,
+              timestamp: new Date().toISOString(),
+              status: 'present',
+            });
+            const offlineText = '📡 오프라인 임시 저장: 인터넷 복구 시 자동 전송됩니다.';
+            setFeedback({ text: offlineText, tone: 'success' });
+            showToast(offlineText, 'info');
+            return;
+          }
+
           const result = await attendanceStorage.toggleCheckInByPin(
             pin,
             method as CheckInMethod,
@@ -139,6 +175,22 @@ export const PinCheckInKioskView: React.FC<PinCheckInKioskViewProps> = ({
               text: messages[err] || '처리할 수 없습니다.',
               tone: 'error',
             });
+          }
+        } catch {
+          // 네트워크 통신 에러 발생 시 IndexedDB 큐로 안전하게 Fallback
+          try {
+            await enqueueAttendance({
+              organizationId: organizationId || 'org-offline',
+              customerId: 'pending_pin_customer',
+              pin,
+              timestamp: new Date().toISOString(),
+              status: 'present',
+            });
+            const offlineText = '📡 오프라인 임시 저장: 인터넷 복구 시 자동 전송됩니다.';
+            setFeedback({ text: offlineText, tone: 'success' });
+            showToast(offlineText, 'info');
+          } catch {
+            setFeedback({ text: '일시적인 오류가 발생했습니다. 다시 시도해 주세요.', tone: 'error' });
           }
         } finally {
           setPin('');

@@ -20,6 +20,8 @@ import {
   type LockerRecord,
   type LockerGridStatus,
 } from '../services/lockerService';
+import { invalidateTenantQueries } from '@/core/query/tenantQueryKeys';
+import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
 
 export interface LockerManagementViewProps {
   title?: string;
@@ -122,6 +124,8 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
         monthlyFee,
       });
 
+      invalidateTenantQueries('lockers', currentOrganization.id);
+      notifyStorageFromRefineResource('lockers');
       showToast(`사물함 ${assignTargetLocker.locker_number}번이 ${customerName} 회원에게 배정되었습니다.`);
       setAssignTargetLocker(null);
       void loadLockers();
@@ -137,10 +141,13 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
   const handleExtend = async () => {
     if (!manageTargetLocker) return;
     if (isManagingRef.current) return;
+    if (!currentOrganization) return;
     isManagingRef.current = true;
     setIsManaging(true);
     try {
       await extendLockerRecord(manageTargetLocker.id, manageTargetLocker.expires_at, extendDays);
+      invalidateTenantQueries('lockers', currentOrganization.id);
+      notifyStorageFromRefineResource('lockers');
       showToast(`사물함 ${manageTargetLocker.locker_number}번이 ${extendDays}일 연장되었습니다.`);
       setManageTargetLocker(null);
       void loadLockers();
@@ -156,10 +163,13 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
   const handleRelease = async () => {
     if (!manageTargetLocker) return;
     if (isManagingRef.current) return;
+    if (!currentOrganization) return;
     isManagingRef.current = true;
     setIsManaging(true);
     try {
       await releaseLockerRecord(manageTargetLocker.id);
+      invalidateTenantQueries('lockers', currentOrganization.id);
+      notifyStorageFromRefineResource('lockers');
       showToast(`사물함 ${manageTargetLocker.locker_number}번이 정상 반납되었습니다.`);
       setManageTargetLocker(null);
       void loadLockers();
@@ -181,6 +191,8 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
 
     try {
       await addLockerRecord(currentOrganization.id, newLockerNumber, newSection);
+      invalidateTenantQueries('lockers', currentOrganization.id);
+      notifyStorageFromRefineResource('lockers');
       showToast(`사물함 ${newLockerNumber}번이 추가되었습니다.`);
       setIsAddModalOpen(false);
       setNewLockerNumber('');

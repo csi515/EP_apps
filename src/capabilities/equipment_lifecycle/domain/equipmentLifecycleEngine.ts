@@ -22,6 +22,24 @@ export interface RepairVsReplaceDecision {
   recommendationReason: string;
 }
 
+export interface MonthlyAssetDepreciationItem {
+  assetId: string;
+  name: string;
+  purchaseCost: number;
+  usefulLifeMonths: number;
+  monthsElapsed: number;
+  monthlyDepreciation: number;
+  bookValueAfterMonth: number;
+  isFullyDepreciated: boolean;
+}
+
+export interface MonthlyDepreciationReport {
+  periodYearMonth: string; // YYYY-MM
+  totalDepreciationExpense: number; // 당월 총 감가상각비
+  activeAssetsCount: number; // 상각 대상 활성 자산 수
+  items: MonthlyAssetDepreciationItem[];
+}
+
 /**
  * 정액법 감가상각 및 누적 수리비 비율을 계산하여 수리 vs 신규 교체 판정을 내립니다.
  */
@@ -101,5 +119,95 @@ export function reportEquipmentBreakdown(
     ...asset,
     status: 'breakdown',
     breakdownNotes: notes.trim(),
+  };
+}
+
+/**
+ * 사업장에 등록된 모든 활성 장비의 당월 정액법 감가상각비를 계산하고 보고서를 집계합니다.
+ */
+export function calculateMonthlyDepreciationReport(
+  assets: EquipmentAsset[],
+  targetYearMonth: string // YYYY-MM
+): MonthlyDepreciationReport {
+  const [yearStr, monthStr] = targetYearMonth.split('-');
+  const targetYear = parseInt(yearStr, 10);
+  const targetMonth = parseInt(monthStr, 10);
+
+  let totalExpense = 0;
+  let activeCount = 0;
+  const items: MonthlyAssetDepreciationItem[] = [];
+
+  for (const asset of assets) {
+    const installDate = new Date(asset.installedDate);
+    const installYear = installDate.getFullYear();
+    const installMonth = installDate.getMonth() + 1; // 1-12
+
+    // 취득 이전 월인 경우 스킵
+    const monthsSinceInstall = (targetYear - installYear) * 12 + (targetMonth - installMonth);
+    if (monthsSinceInstall < 0) continue;
+
+    // 정액법 감가상각 (잔존가치 10% 가정)
+    const salvageValue = Math.round(asset.purchaseCost * 0.1);
+    const depreciableAmount = asset.purchaseCost - salvageValue;
+    const monthlyDepreciation = Math.round(depreciableAmount / Math.max(1, asset.usefulLifeMonths));
+
+    // 상각 경과 개월
+    const isFullyDepreciated = monthsSinceInstall >= asset.usefulLifeMonths;
+    const effectiveMonthlyAmount = isFullyDepreciated ? 0 : monthlyDepreciation;
+
+    const accumulated = Math.min(
+      depreciableAmount,
+      monthlyDepreciation * (monthsSinceInstall + 1)
+    );
+    const bookValueAfterMonth = Math.max(salvageValue, asset.purchaseCost - accumulated);
+
+    if (!isFullyDepreciated) {
+      activeCount++;
+      totalExpense += effectiveMonthlyAmount;
+    }
+
+    items.push({
+      assetId: asset.id,
+      name: asset.name,
+      purchaseCost: asset.purchaseCost,
+      usefulLifeMonths: asset.usefulLifeMonths,
+      monthsElapsed: monthsSinceInstall + 1,
+      monthlyDepreciation: effectiveMonthlyAmount,
+      bookValueAfterMonth,
+      isFullyDepreciated,
+    });
+  }
+
+  return {
+    periodYearMonth: targetYearMonth,
+    totalDepreciationExpense: totalExpense,
+    activeAssetsCount: activeCount,
+    items,
+  };
+}
+
+/**
+ * 감가상각 보고서를 바탕으로 `ledger_simple` 손익계산서에 자동 반영할 비용(Expense) 분개 전표를 생성합니다.
+ */
+export function createDepreciationLedgerEntryPayload(
+  report: MonthlyDepreciationReport
+): {
+  type: 'EXPENSE';
+  method: 'OTHER';
+  amount: number;
+  description: string;
+  timestamp: string;
+} {
+  const [year, month] = report.periodYearMonth.split('-');
+  // 해당 월 말일로 타임스탬프 설정
+  const lastDay = new Date(parseInt(year, 10), parseInt(month, 10), 0).getDate();
+  const dateStr = `${report.periodYearMonth}-${String(lastDay).padStart(2, '0')}T23:59:59.000Z`;
+
+  return {
+    type: 'EXPENSE',
+    method: 'OTHER',
+    amount: report.totalDepreciationExpense,
+    description: `[감가상각비] ${report.periodYearMonth} 고정자산 감가상각 분개 (${report.activeAssetsCount}개 자산)`,
+    timestamp: dateStr,
   };
 }

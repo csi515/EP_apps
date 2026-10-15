@@ -137,3 +137,25 @@ export function onAuthStateChange(
 
   return () => subscription.unsubscribe();
 }
+
+/**
+ * 관리자 전용: 직원/멤버 권한 박탈 및 세션 즉시 만료 (JWT 시차 무력화)
+ * DB: core.revoke_member_token RPC 호출로 token_version 증가 -> RLS 서브쿼리 즉시 403 차단
+ */
+export async function revokeMemberSession(
+  organizationId: string,
+  userId: string
+): Promise<number> {
+  const client = getCoreClient();
+  const { data, error } = await client.rpc('revoke_member_token' as never, {
+    p_organization_id: organizationId,
+    p_user_id: userId,
+  } as never);
+
+  if (error) {
+    throw new Error(error.message || '세션 무효화 처리에 실패했습니다.');
+  }
+
+  return Number(data) || 1;
+}
+

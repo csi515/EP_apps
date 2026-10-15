@@ -41,19 +41,27 @@ export interface SessionPassItem {
   status: 'active' | 'suspended' | 'expired';
 }
 
+function toNormalizedTimestamp(input?: string | Date | number): number {
+  if (input === undefined || input === null) return Date.now();
+  if (typeof input === 'number') return Number.isFinite(input) ? input : NaN;
+  if (input instanceof Date) return input.getTime();
+  const parsed = Date.parse(input);
+  return Number.isNaN(parsed) ? NaN : parsed;
+}
+
 /**
  * 분 단위 취소 마감 시한 계산
- * @param scheduledStartsAt 예약 시작 일시
+ * @param scheduledStartsAt 예약 시작 일시 (ISO 8601 UTC 또는 Date)
  * @param cutoffMinutes 예약 시작 전 취소 마감 시한(분) (예: 60분 전)
- * @param currentAt 기준 일시 (기본값: 현재 시각)
+ * @param currentAt 기준 일시 (기본값: 현재 시각, 타임존 불변 밀리초 정밀도)
  */
 export function calculateCancellationDeadline(
   scheduledStartsAt: string | Date,
   cutoffMinutes: number,
   currentAt: string | Date = new Date()
 ): CancellationWindowResult {
-  const startTime = new Date(scheduledStartsAt).getTime();
-  const nowTime = new Date(currentAt).getTime();
+  const startTime = toNormalizedTimestamp(scheduledStartsAt);
+  const nowTime = toNormalizedTimestamp(currentAt);
 
   if (Number.isNaN(startTime) || Number.isNaN(nowTime)) {
     return {
@@ -194,7 +202,8 @@ export function prioritizeSessionPassConsumption(
   passes: SessionPassItem[],
   currentAt: string | Date = new Date()
 ): SessionPassItem[] {
-  const nowIso = new Date(currentAt).toISOString();
+  const nowTs = toNormalizedTimestamp(currentAt);
+  const nowIso = Number.isNaN(nowTs) ? new Date().toISOString() : new Date(nowTs).toISOString();
 
   const validPasses = passes.filter((p) => {
     if (p.status !== 'active') return false;
@@ -205,8 +214,8 @@ export function prioritizeSessionPassConsumption(
 
   return validPasses.sort((a, b) => {
     // 1. 만료일 임박순 (오름차순)
-    const expA = a.expiresAt ? new Date(a.expiresAt).getTime() : Infinity;
-    const expB = b.expiresAt ? new Date(b.expiresAt).getTime() : Infinity;
+    const expA = a.expiresAt ? toNormalizedTimestamp(a.expiresAt) : Infinity;
+    const expB = b.expiresAt ? toNormalizedTimestamp(b.expiresAt) : Infinity;
     if (expA !== expB) {
       return expA - expB;
     }

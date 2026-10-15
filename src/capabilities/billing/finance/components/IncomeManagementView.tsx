@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { showToast, openConfirmDialog } from '@/shared/feedback/uiFeedback';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useStorageRefresh } from '@/hooks';
@@ -10,12 +10,13 @@ import {
   getCategoryLabel,
   buildYearMonthOptions,
 } from '@/capabilities/billing/finance/categories';
-import { TrendingUp, Plus, Trash2, Edit, X, Save } from 'lucide-react';
+import { TrendingUp, Plus, Trash2, Edit, X, Save, ShieldAlert } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/CurrencyInput';
 import type { IncomeEntry } from '@/capabilities/billing/finance/types';
 
 export const IncomeManagementView: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
-  const { industry } = usePermissions();
+  const { industry, isOwner, isAdmin, canPermission } = usePermissions();
+  const hasFinanceAccess = isOwner || isAdmin || canPermission('finance.read');
   const refreshKey = useStorageRefresh('finance');
   const categoryOptions = getIncomeCategories(industry);
 
@@ -130,6 +131,22 @@ export const IncomeManagementView: React.FC<{ embedded?: boolean }> = ({ embedde
     );
     setIsModalOpen(false);
   };
+
+  if (!hasFinanceAccess) {
+    return (
+      <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center max-w-md mx-auto my-6 shadow-sm space-y-4">
+        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-base font-black text-slate-900">수입 장부 열람 권한 제한</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            수입 내역 등록 및 열람은 관리자(원장) 또는 재무(finance.read) 권한자 전용입니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={embedded ? 'space-y-4 pb-2' : 'space-y-4 pb-4'}>

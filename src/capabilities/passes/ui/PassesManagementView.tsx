@@ -21,6 +21,8 @@ import {
   type PassRecord,
 } from '../services/passesService';
 import type { PassType } from '../domain/passesEngine';
+import { invalidateTenantQueries } from '@/core/query/tenantQueryKeys';
+import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 상태 배지
@@ -264,6 +266,10 @@ export const PassesManagementView: React.FC = () => {
 
       try {
         await deductPassAtomic(pass.id);
+        if (currentOrganization?.id) {
+          invalidateTenantQueries('passes', currentOrganization.id);
+        }
+        notifyStorageFromRefineResource('passes');
         showToast(`[${pass.customer_name || '회원'}] 입장 완료! (잔여 ${nextCount}회)`);
       } catch (err) {
         // 서버 실패 시 롤백
@@ -445,7 +451,13 @@ export const PassesManagementView: React.FC = () => {
         <IssuePassModal
           tenantId={tenantId}
           onClose={() => setIsIssueModalOpen(false)}
-          onSuccess={() => void loadPasses()}
+          onSuccess={() => {
+            if (currentOrganization?.id) {
+              invalidateTenantQueries('passes', currentOrganization.id);
+            }
+            notifyStorageFromRefineResource('passes');
+            void loadPasses();
+          }}
           showToast={showToast}
         />
       )}

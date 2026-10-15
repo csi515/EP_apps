@@ -12,6 +12,7 @@ import {
   TrendingDown,
   DollarSign,
   BarChart3,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -26,7 +27,8 @@ import {
 
 export const FinanceOverviewView: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
   const { setActiveTab } = useAppNavigation();
-  const { industry } = usePermissions();
+  const { industry, isOwner, isAdmin, canPermission } = usePermissions();
+  const hasFinanceAccess = isOwner || isAdmin || canPermission('finance.read');
   const refreshKey = useStorageRefresh('finance');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
@@ -63,6 +65,22 @@ export const FinanceOverviewView: React.FC<{ embedded?: boolean }> = ({ embedded
   }, [selectedMonth, summary.monthlyTrend, refreshKey]);
 
   const showLinkedBillingIncome = resolveFinanceHubNav(industry).showLinkedBillingIncome;
+
+  if (!hasFinanceAccess) {
+    return (
+      <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center max-w-md mx-auto my-6 shadow-sm space-y-4">
+        <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto">
+          <ShieldAlert className="w-6 h-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="text-base font-black text-slate-900">재무 요약 열람 권한 제한</h3>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            매출 및 수입/지출 장부 요약은 관리자(원장) 전용 정보입니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={embedded ? 'space-y-4 pb-2' : 'space-y-4 pb-4'}>

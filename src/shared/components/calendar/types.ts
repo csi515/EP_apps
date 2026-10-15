@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { DayOfWeek } from '@/types';
 
-export type CalendarViewMode = 'month' | 'week' | 'day';
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'timeline';
 export type CalendarEngineMode = 'recurring_timetable' | 'appointment_timeline';
 
 export interface CalendarEventItem<T = any> {

@@ -136,6 +136,7 @@ export const CustomerQrDrawer: React.FC<CustomerQrDrawerProps> = ({
   useEffect(() => {
     if (step !== 'QR' || !tokenRecord || !supabase) return;
 
+    let closeTimer: ReturnType<typeof setTimeout> | null = null;
     const channel = supabase
       .channel(`cust-qr-${tokenRecord.id}`)
       .on(
@@ -149,7 +150,7 @@ export const CustomerQrDrawer: React.FC<CustomerQrDrawerProps> = ({
         (payload: any) => {
           if (payload.new && payload.new.is_used) {
             setIsUsed(true);
-            setTimeout(() => {
+            closeTimer = setTimeout(() => {
               onClose();
             }, 2500);
           }
@@ -158,6 +159,7 @@ export const CustomerQrDrawer: React.FC<CustomerQrDrawerProps> = ({
       .subscribe();
 
     return () => {
+      if (closeTimer) clearTimeout(closeTimer);
       supabase.removeChannel(channel);
     };
   }, [step, tokenRecord, onClose]);
