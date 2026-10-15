@@ -1,0 +1,167 @@
+import React, { useState, useEffect } from 'react';
+import { BookOpen, RotateCcw, Save, CheckCircle2, Sparkles } from 'lucide-react';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import {
+  STANDARD_TERM_KEYS,
+  DEFAULT_TERMS,
+  PRESET_DEFAULT_TERMS,
+  getResolvedTerm,
+  type StandardTermKey,
+} from '@/core/i18n/termEngine';
+
+const TERM_META: Record<StandardTermKey, { label: string; placeholder: string; helper: string }> = {
+  'term.customer': {
+    label: '고객 호칭',
+    placeholder: '예: 원생, 회원, 수강생, 고객/차주',
+    helper: '매장을 이용하는 대상을 부르는 공식 명칭입니다.',
+  },
+  'term.space': {
+    label: '공간·좌석 호칭',
+    placeholder: '예: 연습실, 타석, 시술대, 룸/좌석',
+    helper: '예약이나 입실 대상이 되는 시설/공간 명칭입니다.',
+  },
+  'term.pass': {
+    label: '이용권·수강권 호칭',
+    placeholder: '예: 수강권, 회원권, 회수권, 선불권',
+    helper: '고객이 구매하고 차감하는 권종 명칭입니다.',
+  },
+  'term.instructor': {
+    label: '담당자·강사 호칭',
+    placeholder: '예: 선생님, 사범님, 트레이너, 디자이너',
+    helper: '수업이나 시술을 지도하는 전문가 호칭입니다.',
+  },
+  'term.lesson': {
+    label: '수업·서비스 호칭',
+    placeholder: '예: 레슨, 수련, PT, 시술, 클래스',
+    helper: '제공되는 핵심 교육/서비스의 명칭입니다.',
+  },
+};
+
+export const CustomTermsSettingCard: React.FC = () => {
+  const { currentOrganization, customTerms, updateCustomTerms } = useOrganization();
+  const industryType = currentOrganization?.industry_type ?? 'piano';
+
+  const [formTerms, setFormTerms] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    setFormTerms(customTerms || {});
+  }, [customTerms]);
+
+  const handleChange = (key: StandardTermKey, value: string) => {
+    setFormTerms((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleResetToPreset = () => {
+    const presetDefaults = PRESET_DEFAULT_TERMS[industryType] || {};
+    setFormTerms(presetDefaults as Record<string, string>);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateCustomTerms(formTerms);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // 실시간 미리보기용 단어 추출
+  const sampleCustomer = getResolvedTerm('term.customer', formTerms, industryType);
+  const sampleSpace = getResolvedTerm('term.space', formTerms, industryType);
+  const samplePass = getResolvedTerm('term.pass', formTerms, industryType);
+  const sampleInstructor = getResolvedTerm('term.instructor', formTerms, industryType);
+  const sampleLesson = getResolvedTerm('term.lesson', formTerms, industryType);
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-lg font-bold text-slate-900">매장 맞춤 용어 사전 (Terminology)</h3>
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            사업주 매장 성격에 맞게 고객, 공간, 이용권 등의 화면 레이블을 실시간 치환합니다.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleResetToPreset}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 flex items-center gap-1.5 transition-colors"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>업종 기본값 복원</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded-lg shadow-xs flex items-center gap-1.5 transition-colors"
+          >
+            {saveSuccess ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>저장 완료!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-3.5 h-3.5" />
+                <span>용어 설정 저장</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* 실시간 문장 미리보기 */}
+      <div className="bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-pink-50/40 rounded-xl p-4 border border-indigo-100/80">
+        <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 mb-1.5">
+          <Sparkles className="w-4 h-4 text-indigo-600" />
+          <span>실시간 화면 문구 미리보기</span>
+        </div>
+        <p className="text-sm text-slate-700 leading-relaxed font-medium">
+          &quot;<span className="text-indigo-700 font-bold underline underline-offset-2">{sampleCustomer}</span>님이{' '}
+          <span className="text-purple-700 font-bold underline underline-offset-2">{sampleSpace}</span>에서{' '}
+          <span className="text-blue-700 font-bold underline underline-offset-2">{samplePass}</span>(으)로{' '}
+          <span className="text-emerald-700 font-bold underline underline-offset-2">{sampleInstructor}</span>의{' '}
+          <span className="text-pink-700 font-bold underline underline-offset-2">{sampleLesson}</span>을(를) 예약했습니다.&quot;
+        </p>
+      </div>
+
+      {/* 5대 용어 인풋 필드 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {STANDARD_TERM_KEYS.map((key) => {
+          const meta = TERM_META[key];
+          const currentVal = formTerms[key] ?? '';
+          const placeholderVal = getResolvedTerm(key, undefined, industryType);
+
+          return (
+            <div key={key} className="space-y-1.5 p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>{meta.label}</span>
+                <span className="text-[10px] text-slate-400 font-mono">기본: {placeholderVal}</span>
+              </label>
+              <input
+                type="text"
+                value={currentVal}
+                onChange={(e) => handleChange(key, e.target.value)}
+                placeholder={placeholderVal}
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-300"
+              />
+              <p className="text-[11px] text-slate-400">{meta.helper}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};

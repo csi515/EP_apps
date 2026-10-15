@@ -101,3 +101,64 @@ export function evaluateReEnrollmentDDay(params: {
     urgencyLevel,
   };
 }
+
+export type SmartTagCategory =
+  | 'HEALTH_ALERT' // 건강/부상/알레르기 (예: "손목 건초염", "라텍스 알레르기")
+  | 'PREFERENCE' // 취향/선호도 (예: "물주기 쉬운 식물 선호", "클래식 음악 선호")
+  | 'INTERACTION_TIP' // 접객/응대 팁 (예: "왼손잡이", "조용한 시술 선호", "상담 시 칭찬 위주")
+  | 'PET_HOME' // 반려/가족 환경 (예: "고양이 있음", "다자녀 가정")
+  | 'SKILL_LEVEL'; // 수준/경력 (예: "완전 초보", "전공자", "10년 경력");
+
+export interface SmartCustomerTag {
+  id: string;
+  label: string;
+  category: SmartTagCategory;
+  colorHex: string;
+  isUrgentAlert?: boolean;
+  counterTip?: string; // 데스크 직원을 위한 한 줄 안내 가이드
+}
+
+export interface CustomerPreferenceProfile {
+  customerId: string;
+  tags: SmartCustomerTag[];
+  specialNotes?: string;
+}
+
+/**
+ * 데스크 접수 및 카운터 체크인 시 실시간 주의사항 및 응대 가이드 산출 (순수 함수)
+ */
+export function evaluateDeskGreetingTip(profile: CustomerPreferenceProfile): {
+  hasUrgentAlert: boolean;
+  urgentAlerts: string[];
+  tipsForDesk: string[];
+  displayTags: Array<{ label: string; color: string; isAlert: boolean }>;
+} {
+  const urgentAlerts: string[] = [];
+  const tipsForDesk: string[] = [];
+  const displayTags = profile.tags.map((t) => ({
+    label: t.label,
+    color: t.colorHex,
+    isAlert: !!t.isUrgentAlert,
+  }));
+
+  for (const tag of profile.tags) {
+    if (tag.isUrgentAlert) {
+      urgentAlerts.push(tag.label);
+    }
+    if (tag.counterTip?.trim()) {
+      tipsForDesk.push(`[${tag.label}] ${tag.counterTip.trim()}`);
+    }
+  }
+
+  if (profile.specialNotes?.trim()) {
+    tipsForDesk.push(`[메모] ${profile.specialNotes.trim()}`);
+  }
+
+  return {
+    hasUrgentAlert: urgentAlerts.length > 0,
+    urgentAlerts,
+    tipsForDesk,
+    displayTags,
+  };
+}
+

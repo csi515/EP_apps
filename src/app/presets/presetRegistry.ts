@@ -101,6 +101,11 @@ import { vendorApInvoiceSetupSchema } from '@/capabilities/vendor_ap_invoice/set
 import { vendorApInvoiceResources } from '@/capabilities/vendor_ap_invoice/resources';
 import { workAttendancePayrollSetupSchema } from '@/capabilities/work_attendance_payroll/setupSchema';
 import { workAttendancePayrollResources } from '@/capabilities/work_attendance_payroll/resources';
+import { pickupOrdersSetupSchema } from '@/capabilities/pickup_orders/setupSchema';
+import { pickupOrdersResources } from '@/capabilities/pickup_orders/resources';
+import { loyaltyStampSetupSchema } from '@/capabilities/loyalty_stamp/setupSchema';
+import { loyaltyStampResources } from '@/capabilities/loyalty_stamp/resources';
+
 
 /**
  * 전방위 17대 원자적 Capability 번들 레지스트리
@@ -361,7 +366,22 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: workAttendancePayrollSetupSchema,
     resources: workAttendancePayrollResources,
   },
+
+  // 범주 AB: 사전 예약 픽업 칸반
+  pickup_orders: {
+    capabilityId: 'pickup_orders',
+    setupSchema: pickupOrdersSetupSchema,
+    resources: pickupOrdersResources,
+  },
+
+  // 범주 AC: 모바일 전자 스탬프 / 칭찬 스티커
+  loyalty_stamp: {
+    capabilityId: 'loyalty_stamp',
+    setupSchema: loyaltyStampSetupSchema,
+    resources: loyaltyStampResources,
+  },
 };
+
 
 // Core 런타임 동적 레지스트리에 번들 등록
 registerCapabilityBundles(CAPABILITY_BUNDLES);
@@ -465,9 +485,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '태권도장',
     description: '수련부 출결, 정기 수련권, 도복/띠 재고, 차량 탑승 및 안전 서약서',
     category: 'education',
-    capabilities: ['attendance', 'passes', 'billing_invoicing', 'safety_consent', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree'] as const,
+    capabilities: ['attendance', 'passes', 'billing_invoicing', 'safety_consent', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree', 'loyalty_stamp'] as const,
     requiredCapabilities: ['attendance', 'passes', 'billing_invoicing'] as const,
-    optionalCapabilities: ['safety_consent', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree'] as const,
+    optionalCapabilities: ['safety_consent', 'consultation_crm', 'curriculum_progress', 'vehicle_shuttle', 'membership_referral_tree', 'loyalty_stamp'] as const,
     businessRules: { promotionBeltLevels: 9, attendancePinDigits: 4 },
     resourceTypes: [{ name: '수련장', type: 'court', capacity: 40 }],
     roles: [
@@ -1019,9 +1039,10 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '카페 / 디저트전문점',
     description: '원두/부자재 재고, 테이블 홀 좌석, 바리스타 시프트 근무 및 선불 충전금',
     category: 'food',
-    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
+    capabilities: ['inventory', 'seat_room', 'ledger_simple', 'shift_schedule', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll', 'pickup_orders', 'loyalty_stamp'] as const,
     requiredCapabilities: ['inventory', 'ledger_simple', 'shift_schedule'] as const,
-    optionalCapabilities: ['seat_room', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll'] as const,
+    optionalCapabilities: ['seat_room', 'credit_wallet', 'table_order_kds', 'recipe_bom', 'waitlist_turn_queue', 'equipment_lifecycle', 'kiosk_staff_call', 'hygiene_haccp_log', 'vendor_ap_invoice', 'work_attendance_payroll', 'pickup_orders', 'loyalty_stamp'] as const,
+
     businessRules: { prepaidCardDiscount: 5 },
     resourceTypes: [
       { name: '에스프레소 머신', type: 'equipment' },
@@ -1139,9 +1160,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '맞춤 제작 공방 & 수리점',
     description: '단계별 제작/수리 칸반 파이프라인, 원자재 재고 관리 및 픽업 예약',
     category: 'studio',
-    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple', 'sop_risk_assessment'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory'] as const,
-    optionalCapabilities: ['booking', 'ledger_simple', 'sop_risk_assessment'] as const,
+    optionalCapabilities: ['booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders'] as const,
     resourceTypes: [{ name: '작업대', type: 'table' }],
     roles: [{ name: '공방장', rank_order: 1, permissions: ['*'] }],
     readinessLevel: 'basic_ui',
@@ -1152,13 +1173,14 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '셀프 세차장 & 코인샵',
     description: 'RF카드 선불 충전금/보너스, 시설 기물 루틴 점검 및 세차 소모품 재고 관리',
     category: 'automotive',
-    capabilities: ['credit_wallet', 'maintenance_checklist', 'inventory'] as const,
+    capabilities: ['credit_wallet', 'maintenance_checklist', 'inventory', 'loyalty_stamp'] as const,
     requiredCapabilities: ['credit_wallet', 'maintenance_checklist'] as const,
-    optionalCapabilities: ['inventory'] as const,
+    optionalCapabilities: ['inventory', 'loyalty_stamp'] as const,
     resourceTypes: [{ name: '세차 베이 1~6', type: 'bay' }],
     roles: [{ name: '점주', rank_order: 1, permissions: ['*'] }],
     readinessLevel: 'basic_ui',
   },
+
 
   daycare: {
     id: 'daycare',

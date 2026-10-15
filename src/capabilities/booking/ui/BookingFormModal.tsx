@@ -42,6 +42,9 @@ export interface BookingFormModalProps {
   onChartNoteChange: (v: string) => void;
   selectedService: ServiceOffering | undefined;
   draftCapacity: SlotCapacityInfo | null | undefined;
+  turnaroundBufferMinutes?: number;
+  visibility?: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE';
+  onVisibilityChange?: (v: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE') => void;
   onSaveCapacityOnly: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
@@ -83,6 +86,9 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({
   onChartNoteChange,
   selectedService,
   draftCapacity,
+  turnaroundBufferMinutes,
+  visibility = 'PUBLIC',
+  onVisibilityChange,
   onSaveCapacityOnly,
   onSubmit,
 }) => {
@@ -174,6 +180,12 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({
             />
           </div>
         </div>
+        {turnaroundBufferMinutes !== undefined && turnaroundBufferMinutes > 0 && (
+          <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center justify-between">
+            <span className="font-semibold">🧹 공간 정비·청소 버퍼: {turnaroundBufferMinutes}분</span>
+            <span className="text-[11px] text-amber-700">이전/다음 예약 사이에 자동 확보됩니다</span>
+          </div>
+        )}
         {!skin && selectedService && resolvedFormStaffId && (
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">이 시간대 정원</label>
@@ -254,6 +266,49 @@ export const BookingFormModal: React.FC<BookingFormModalProps> = ({
             </div>
           </>
         )}
+        <div className="pt-2 border-t border-slate-100">
+          <label className="block text-xs font-bold text-slate-700 mb-1.5">
+            동료 직원 일정 공개 범위 (Visibility)
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => onVisibilityChange?.('PUBLIC')}
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                visibility === 'PUBLIC'
+                  ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 font-bold ring-1 ring-indigo-500'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="text-xs font-bold">전체 공개</div>
+              <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">상세 정보 공유</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onVisibilityChange?.('FREE_BUSY_ONLY')}
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                visibility === 'FREE_BUSY_ONLY'
+                  ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 font-bold ring-1 ring-indigo-500'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="text-xs font-bold">바쁨만 공유</div>
+              <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">고객/메모 마스킹</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => onVisibilityChange?.('PRIVATE')}
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                visibility === 'PRIVATE'
+                  ? 'border-indigo-600 bg-indigo-50/80 text-indigo-950 font-bold ring-1 ring-indigo-500'
+                  : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div className="text-xs font-bold">비공개</div>
+              <div className="text-[10px] text-slate-500 mt-0.5 leading-tight">타 직원에게 숨김</div>
+            </button>
+          </div>
+        </div>
         <button
           type="submit"
           disabled={Boolean(draftCapacity?.isClosed) || !resolvedFormStaffId}

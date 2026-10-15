@@ -1,12 +1,19 @@
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
-import { PackagePlus, SlidersHorizontal, Warehouse } from 'lucide-react';
+import { PackagePlus, SlidersHorizontal, Warehouse, Camera, Printer, QrCode } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { EmptyState, PageHeader } from '@/shared/components';
 import { FilterBar, FilterTabs, SearchField } from '@/shared/components/ui';
+import {
+  BarcodeLabelPrintModal,
+  StoreQrPopPrintModal,
+  InventoryScannerModal,
+  generateItemBarcode,
+  type InventoryItem,
+} from '@/capabilities/inventory';
 import { inventoryService } from '../../services/inventoryService';
 import {
   INVENTORY_LOW_STOCK_THRESHOLD,
@@ -45,6 +52,10 @@ export const InventoryListView: FC = () => {
   const [inboundInitial, setInboundInitial] = useState<InventoryStockRow | null>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjustInitial, setAdjustInitial] = useState<InventoryStockRow | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [labelPrintOpen, setLabelPrintOpen] = useState(false);
+  const [selectedLabelItem, setSelectedLabelItem] = useState<InventoryItem | null>(null);
+  const [storePopOpen, setStorePopOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!orgId || !isSupabaseConfigured()) {
@@ -96,6 +107,30 @@ export const InventoryListView: FC = () => {
     setAdjustOpen(true);
   };
 
+  const inventoryItems: InventoryItem[] = useMemo(() => {
+    const orgCode = orgId ? orgId.replace(/-/g, '').slice(0, 4).toUpperCase() : '0001';
+    return rows.map((r, idx) => ({
+      id: r.key,
+      name: r.variantName ? `${r.productName} (${r.variantName})` : r.productName,
+      sku: r.key,
+      barcode: generateItemBarcode(orgCode, idx + 1),
+      qrCodeUrl: `https://moa.app/scan/item?id=${encodeURIComponent(r.key)}`,
+      currentStock: r.quantity,
+      safetyStock: INVENTORY_LOW_STOCK_THRESHOLD,
+      unitPrice: 0,
+    }));
+  }, [rows, orgId]);
+
+  const openLabelPrint = (row?: InventoryStockRow) => {
+    if (row) {
+      const found = inventoryItems.find((it) => it.id === row.key);
+      setSelectedLabelItem(found ?? null);
+    } else {
+      setSelectedLabelItem(inventoryItems[0] ?? null);
+    }
+    setLabelPrintOpen(true);
+  };
+
   if (!orgId) {
     return (
       <div className="p-4 sm:p-6">
@@ -116,28 +151,46 @@ export const InventoryListView: FC = () => {
         title={COPY.title}
         description={canMutate ? COPY.description : COPY.descriptionReadOnly}
         actions={
-          canMutate ? (
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => openAdjust()}
-                disabled={rows.length === 0}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-800 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                {COPY.adjust}
-              </button>
-              <button
-                type="button"
-                onClick={() => openInbound()}
-                disabled={rows.length === 0}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
-              >
-                <PackagePlus className="w-4 h-4" />
-                {COPY.inbound}
-              </button>
-            </div>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto shadow-sm"
+            >
+              <Camera className="w-4 h-4" />
+              실시간 스캔
+            </button>
+            <button
+              type="button"
+              onClick={() => setStorePopOpen(true)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl w-full sm:w-auto border border-slate-200/80"
+            >
+              <QrCode className="w-4 h-4 text-slate-600" />
+              매장 QR POP
+            </button>
+            {canMutate && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => openAdjust()}
+                  disabled={rows.length === 0}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  {COPY.adjust}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openInbound()}
+                  disabled={rows.length === 0}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
+                >
+                  <PackagePlus className="w-4 h-4" />
+                  {COPY.inbound}
+                </button>
+              </>
+            )}
+          </div>
         }
       />
 
@@ -199,24 +252,34 @@ export const InventoryListView: FC = () => {
                       >
                         {row.isActive ? COPY.statusActive : COPY.statusInactive}
                       </span>
-                      {canMutate && (
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openAdjust(row)}
-                            className="text-xs font-bold text-slate-700 min-h-[44px] px-1"
-                          >
-                            {COPY.adjust}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openInbound(row)}
-                            className="text-xs font-bold text-teal-700 min-h-[44px] px-1"
-                          >
-                            {COPY.inbound}
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openLabelPrint(row)}
+                          className="text-xs font-bold text-indigo-600 min-h-[44px] px-1 flex items-center gap-1"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          라벨
+                        </button>
+                        {canMutate && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => openAdjust(row)}
+                              className="text-xs font-bold text-slate-700 min-h-[44px] px-1"
+                            >
+                              {COPY.adjust}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openInbound(row)}
+                              className="text-xs font-bold text-teal-700 min-h-[44px] px-1"
+                            >
+                              {COPY.inbound}
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                 </div>
               </div>
@@ -231,7 +294,7 @@ export const InventoryListView: FC = () => {
                   <th className="px-4 py-3 font-bold">{COPY.colOption}</th>
                   <th className="px-4 py-3 font-bold text-right">{COPY.colQty}</th>
                   <th className="px-4 py-3 font-bold">{COPY.colStatus}</th>
-                  {canMutate && <th className="px-4 py-3 font-bold text-right"> </th>}
+                  <th className="px-4 py-3 font-bold text-right">관리</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -264,24 +327,34 @@ export const InventoryListView: FC = () => {
                         {row.isActive ? COPY.statusActive : COPY.statusInactive}
                       </span>
                     </td>
-                    {canMutate && (
-                      <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => openAdjust(row)}
-                          className="text-xs font-bold text-slate-700 min-h-[44px] px-2"
-                        >
-                          {COPY.adjust}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openInbound(row)}
-                          className="text-xs font-bold text-teal-600 min-h-[44px] px-2"
-                        >
-                          {COPY.inbound}
-                        </button>
-                      </td>
-                    )}
+                    <td className="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => openLabelPrint(row)}
+                        className="text-xs font-bold text-indigo-600 hover:text-indigo-800 min-h-[44px] px-2 inline-flex items-center gap-1"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        라벨
+                      </button>
+                      {canMutate && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => openAdjust(row)}
+                            className="text-xs font-bold text-slate-700 min-h-[44px] px-2"
+                          >
+                            {COPY.adjust}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openInbound(row)}
+                            className="text-xs font-bold text-teal-600 min-h-[44px] px-2"
+                          >
+                            {COPY.inbound}
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -319,6 +392,31 @@ export const InventoryListView: FC = () => {
           />
         </>
       )}
+
+      <InventoryScannerModal
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        items={inventoryItems}
+        onStockUpdated={(_updatedItem, reason) => {
+          showToast(`스캔 완료: ${reason}`, 'success');
+          void load();
+        }}
+      />
+
+      <BarcodeLabelPrintModal
+        isOpen={labelPrintOpen}
+        onClose={() => setLabelPrintOpen(false)}
+        item={selectedLabelItem}
+        organizationName={currentOrganization?.name || '사업장'}
+      />
+
+      <StoreQrPopPrintModal
+        isOpen={storePopOpen}
+        onClose={() => setStorePopOpen(false)}
+        organizationName={currentOrganization?.name || '사업장'}
+        organizationCode={currentOrganization?.id?.replace(/-/g, '').slice(0, 8).toUpperCase() || 'MOA-001'}
+        industryLabel="스마트 사업장"
+      />
     </div>
   );
 };

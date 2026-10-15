@@ -47,6 +47,8 @@ const COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = 
   amber: { bg: 'bg-amber-50/95', text: 'text-amber-900', border: 'border-amber-200' },
   emerald: { bg: 'bg-emerald-50/95', text: 'text-emerald-900', border: 'border-emerald-200' },
   slate: { bg: 'bg-slate-50/95', text: 'text-slate-900', border: 'border-slate-200' },
+  purple: { bg: 'bg-purple-50/95', text: 'text-purple-900', border: 'border-purple-200' },
+  blue: { bg: 'bg-blue-50/95', text: 'text-blue-900', border: 'border-blue-200' },
 };
 
 export const CalendarDayView: FC<CalendarDayViewProps> = ({

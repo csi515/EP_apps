@@ -47,6 +47,14 @@ export interface Booking {
   depositStatus?: 'pending' | 'claimed' | 'confirmed';
   /** 대기. 정원·겹침에서 제외 */
   waitlist?: boolean;
+  /** 일정 공개 범위: PUBLIC(전체 공유) | FREE_BUSY_ONLY(바쁨만 공유) | PRIVATE(비공개) */
+  visibility?: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE';
+  /** 소속 사업장 테넌트 ID */
+  organizationId?: string;
+  /** 고객 연락처 */
+  customerPhone?: string;
+  /** 동료 직원 조회 시 마스킹 여부 */
+  isMasked?: boolean;
 }
 
 /** 횟수권. Session(방문 사실)이 아니다. source of truth = core.session_passes */

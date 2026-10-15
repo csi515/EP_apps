@@ -236,3 +236,115 @@ export function generateMonthlyGrowthReport(input: MonthlyGrowthInput): MonthlyG
     },
   };
 }
+
+export interface LessonJournalEntry {
+  id: string;
+  studentId: string;
+  studentName: string;
+  lessonDate: string; // YYYY-MM-DD
+  instructorName: string;
+  title: string; // e.g. "체르니 100번 12번곡 양손 밸런스 지도", "수채화 명암 표현"
+  notes: string; // 수업 내용 및 칭찬 코멘트
+  photoUrls: string[]; // 수업/완성작 사진 (최대 4장)
+  videoUrl?: string; // 연주/자세 클립 링크
+  skillsPracticed?: string[]; // 연습 테크닉 (예: ["스타카토", "페달링", "손목 힘빼기"])
+  homePracticeGuide?: string; // 가정 내 10분 연습 가이드
+  guardianFeedback?: {
+    comment: string;
+    respondedAt: string;
+  };
+  createdAt: string;
+}
+
+export interface MonthlyJournalGroup {
+  yearMonth: string; // YYYY-MM
+  count: number;
+  entries: LessonJournalEntry[];
+}
+
+/**
+ * 4. 레슨 저널(수업 알림장) 엔트리 생성 및 검증 (순수 함수)
+ */
+export function createLessonJournalEntry(params: {
+  id?: string;
+  studentId: string;
+  studentName: string;
+  lessonDate: string;
+  instructorName: string;
+  title: string;
+  notes: string;
+  photoUrls?: readonly string[];
+  videoUrl?: string;
+  skillsPracticed?: readonly string[];
+  homePracticeGuide?: string;
+  createdAt?: string;
+}): LessonJournalEntry {
+  const cleanPhotos = (params.photoUrls ?? [])
+    .map((u) => u.trim())
+    .filter((u) => u.length > 0)
+    .slice(0, 4);
+
+  const cleanSkills = (params.skillsPracticed ?? [])
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  return {
+    id: params.id ?? `jnl-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+    studentId: params.studentId,
+    studentName: params.studentName,
+    lessonDate: params.lessonDate.slice(0, 10),
+    instructorName: params.instructorName.trim(),
+    title: params.title.trim() || '오늘의 수업 알림장',
+    notes: params.notes.trim(),
+    photoUrls: cleanPhotos,
+    videoUrl: params.videoUrl?.trim(),
+    skillsPracticed: cleanSkills,
+    homePracticeGuide: params.homePracticeGuide?.trim(),
+    createdAt: params.createdAt ?? new Date().toISOString(),
+  };
+}
+
+/**
+ * 5. 학생별 레슨 저널 타임라인 월별 그룹핑 (순수 함수)
+ */
+export function groupJournalEntriesByMonth(
+  entries: readonly LessonJournalEntry[],
+  studentId?: string
+): MonthlyJournalGroup[] {
+  const filtered = studentId ? entries.filter((e) => e.studentId === studentId) : entries;
+  const sorted = [...filtered].sort(
+    (a, b) => new Date(b.lessonDate).getTime() - new Date(a.lessonDate).getTime()
+  );
+
+  const map = new Map<string, LessonJournalEntry[]>();
+  for (const entry of sorted) {
+    const ym = entry.lessonDate.slice(0, 7);
+    const list = map.get(ym) ?? [];
+    list.push(entry);
+    map.set(ym, list);
+  }
+
+  return Array.from(map.entries()).map(([yearMonth, list]) => ({
+    yearMonth,
+    count: list.length,
+    entries: list,
+  }));
+}
+
+/**
+ * 6. 학부모 감사/응원 코멘트 작성 (순수 함수)
+ */
+export function attachGuardianFeedback(
+  entry: LessonJournalEntry,
+  comment: string,
+  respondedAt: string = new Date().toISOString()
+): LessonJournalEntry {
+  return {
+    ...entry,
+    guardianFeedback: {
+      comment: comment.trim(),
+      respondedAt,
+    },
+  };
+}
+

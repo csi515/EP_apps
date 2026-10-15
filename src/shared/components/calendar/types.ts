@@ -31,7 +31,7 @@ export interface CalendarEventItem<T = any> {
 
   /** 상태 및 스타일 */
   status?: string;
-  colorTheme?: 'indigo' | 'teal' | 'rose' | 'amber' | 'slate' | 'emerald';
+  colorTheme?: 'indigo' | 'teal' | 'rose' | 'amber' | 'slate' | 'emerald' | 'purple' | 'blue';
 
   /** 인터랙션 제어 */
   isDraggable?: boolean;

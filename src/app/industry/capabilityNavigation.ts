@@ -111,6 +111,8 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   sop_risk_assessment: ['sop-risk', 'safety', 'hazards', 'sops'],
   vendor_ap_invoice: ['vendor-ap', 'vendors', 'ap-invoices', 'purchase-invoices'],
   work_attendance_payroll: ['work-payroll', 'timecards', 'payroll-slips', 'staff-payroll'],
+  pickup_orders: ['pickup-orders', 'pickups', 'orders'],
+  loyalty_stamp: ['loyalty-stamps', 'stamps', 'stickers'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

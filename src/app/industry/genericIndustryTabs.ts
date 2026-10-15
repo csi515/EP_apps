@@ -52,6 +52,8 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'sop-risk': ['sop_risk_assessment'],
   'vendor-ap': ['vendor_ap_invoice'],
   'work-payroll': ['work_attendance_payroll'],
+  'pickup-orders': ['pickup_orders'],
+  'loyalty-stamps': ['loyalty_stamp'],
 };
 
 export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
@@ -374,6 +376,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '매장 Wi-Fi/GPS 출퇴근 인증, 주 15시간 주휴수당, 연장·야간가산 및 법정 임금명세서',
     tier: 'tier2_basic',
     primaryCapability: 'work_attendance_payroll',
+  },
+  'pickup-orders': {
+    tab: 'pickup-orders',
+    label: '사전예약·픽업칸반',
+    description: '수령 희망 일시 지정 주문 접수, 제작 진행 및 픽업 대기/안내 4단계 칸반 파이프라인',
+    tier: 'tier2_basic',
+    primaryCapability: 'pickup_orders',
+  },
+  'loyalty-stamps': {
+    tab: 'loyalty-stamps',
+    label: '전자스탬프·칭찬도장',
+    description: '종이 쿠폰 분실 없는 모바일 스탬프 적립 및 목표 달성 리워드 쿠폰 관리',
+    tier: 'tier2_basic',
+    primaryCapability: 'loyalty_stamp',
+  },
+  capabilities: {
+    tab: 'capabilities',
+    label: '기능 스위치보드 & 용어 사전',
+    description: '매장 운영 기능 ON/OFF 및 맞춤 도메인 용어 설정',
+    tier: 'tier1_ready',
+    primaryCapability: 'core',
   },
   settings: {
     tab: 'settings',

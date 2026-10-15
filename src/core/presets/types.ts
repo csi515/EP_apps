@@ -76,7 +76,12 @@ export type BundledPresetCapabilityId =
   // 범주 Z: 공급처 원장 & 매입 세무 전표
   | 'vendor_ap_invoice'
   // 범주 AA: 직원 근태 & 법정 급여명세서
-  | 'work_attendance_payroll';
+  | 'work_attendance_payroll'
+  // 범주 AB: 사전 예약 픽업 칸반
+  | 'pickup_orders'
+  // 범주 AC: 모바일 전자 스탬프 / 칭찬 스티커
+  | 'loyalty_stamp';
+
 
 export type PresetCapabilityId =
   | BundledPresetCapabilityId

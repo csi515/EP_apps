@@ -8,4 +8,6 @@ export {
   type RescheduleBookingResult,
   type RescheduleConflictType,
 } from './domain/rescheduleBooking';
+export * from './domain/resourceBundledBookingEngine';
+
 

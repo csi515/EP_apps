@@ -23,13 +23,21 @@ import { rescheduleBooking } from '@/capabilities/booking/domain/rescheduleBooki
 import { notifyBookingChange } from '@/capabilities/booking';
 import { validateScheduleConstraints } from '@/capabilities/scheduling/domain/calendarConstraintEngine';
 import { EmptyState, FilterTabs, Modal, PageHeader, UnifiedScheduleCalendar, type CalendarEventItem, type CalendarResourceColumn, type CalendarSlotTarget } from '@/shared/components';
-import { Calendar, List } from 'lucide-react';
+import { Calendar, List, Users, Eye, EyeOff, UserCheck, ShieldAlert } from 'lucide-react';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import {
+  filterAndSanitizeSchedulesForViewer,
+  type ScheduleViewMode,
+  type StaffScheduleProfile,
+  type ScheduleVisibility,
+} from '@/core/schedules/domain/scheduleVisibilityEngine';
 import { executeBookingCreate } from './executeBookingCreate';
 import { mergeScopedBookingsWithInbox, useBookingFilters } from './useBookingFilters';
 import { useBookingForm } from './useBookingForm';
 
 export const BookingCalendarView: React.FC = () => {
-  const { industry } = usePermissions();
+  const { industry, isOwner, isAdmin, isStaff } = usePermissions();
+  const { currentOrganization } = useOrganization();
   const labels = useModuleLabels();
   const bookingUi = resolveBookingUi(industry);
   const appointment = bookingUi.flow === 'appointmentCards';
@@ -41,7 +49,13 @@ export const BookingCalendarView: React.FC = () => {
   const accentTab = bookingUi.calendarAccentTab;
   const accentText = bookingUi.calendarAccentText;
   const refreshKey = useStorageRefresh('bookings');
-  const { isScoped, staffId, scopeBookings, scopeMembersForPilates } = useStaffScope();
+  const { isScoped, staffId, scopeMembersForPilates } = useStaffScope();
+
+  // 동료 스케줄 상호 조회 / 오버레이 필터 모드
+  const [scheduleScopeMode, setScheduleScopeMode] = React.useState<ScheduleViewMode>(
+    isScoped ? 'my_only' : 'all'
+  );
+  const [selectedStaffIds, setSelectedStaffIds] = React.useState<string[]>([]);
 
   const form = useBookingForm({ isScoped, staffId });
 
@@ -51,15 +65,64 @@ export const BookingCalendarView: React.FC = () => {
     () => buildSlotOccupancyIndex(allBookingsRaw),
     [allBookingsRaw, refreshKey]
   );
+
+  const instructors = StorageService.getTeachers().filter((t) => t.status === 'active');
+  const services = ScheduleService.getActiveServiceOfferings();
+  const treatmentRooms = useMemo(
+    () => getConfiguredRooms(StorageService.getSettings()).filter((room) => room.kind === 'treatment'),
+    [refreshKey]
+  );
+
+  const staffProfiles = useMemo<StaffScheduleProfile[]>(() => {
+    return instructors.map((t) => ({
+      id: t.id,
+      name: t.name,
+      organizationId: t.organizationId || currentOrganization?.id || '',
+      roleTitle: t.roleTitle || t.specialty,
+      defaultVisibility: (t.defaultScheduleVisibility as ScheduleVisibility) || 'PUBLIC',
+      color: t.color,
+    }));
+  }, [instructors, currentOrganization?.id]);
+
+  const processedScheduleItems = useMemo(() => {
+    return filterAndSanitizeSchedulesForViewer<Booking>({
+      viewer: {
+        id: staffId,
+        role: isOwner ? 'owner' : isAdmin ? 'admin' : isStaff ? 'staff' : 'customer',
+        organizationId: currentOrganization?.id || '',
+      },
+      schedules: allBookingsRaw,
+      staffProfiles,
+      viewMode: scheduleScopeMode,
+      selectedStaffIds,
+      maskCustomerPIIOnPublic: !isOwner && !isAdmin,
+    });
+  }, [
+    staffId,
+    isOwner,
+    isAdmin,
+    isStaff,
+    currentOrganization?.id,
+    allBookingsRaw,
+    staffProfiles,
+    scheduleScopeMode,
+    selectedStaffIds,
+    refreshKey,
+  ]);
+
+  const processedMap = useMemo(() => {
+    return new Map(processedScheduleItems.map((p) => [p.original.id, p]));
+  }, [processedScheduleItems]);
+
   const allBookings = useMemo(() => {
-    const scoped = scopeBookings(allBookingsRaw);
+    const sanitizedList = processedScheduleItems.map((p) => p.sanitized);
     return mergeScopedBookingsWithInbox({
-      scoped,
+      scoped: sanitizedList,
       allRaw: allBookingsRaw,
       skin: appointment,
-      isScoped,
+      isScoped: scheduleScopeMode === 'my_only',
     });
-  }, [allBookingsRaw, scopeBookings, refreshKey, appointment, isScoped]);
+  }, [processedScheduleItems, allBookingsRaw, appointment, scheduleScopeMode]);
 
   const members = useMemo(
     () =>
@@ -68,12 +131,6 @@ export const BookingCalendarView: React.FC = () => {
         allBookingsRaw
       ),
     [allBookingsRaw, scopeMembersForPilates, refreshKey]
-  );
-  const instructors = StorageService.getTeachers().filter((t) => t.status === 'active');
-  const services = ScheduleService.getActiveServiceOfferings();
-  const treatmentRooms = useMemo(
-    () => getConfiguredRooms(StorageService.getSettings()).filter((room) => room.kind === 'treatment'),
-    [refreshKey]
   );
 
   const {
@@ -152,13 +209,19 @@ export const BookingCalendarView: React.FC = () => {
       const date = b.startsAt.slice(0, 10);
       const startTime = b.startsAt.slice(11, 16);
       const endTime = b.endsAt.slice(11, 16);
-      const isEditable = !isScoped || b.staffId === staffId;
+      const proc = processedMap.get(b.id);
+      const isEditable = proc ? proc.canEdit : (!isScoped || b.staffId === staffId);
       const isInactive = b.status === 'completed' || b.status === 'cancelled';
+      const colorTheme = proc?.colorTheme || (appointment ? 'rose' : 'teal');
+      const title = proc?.displayTitle || b.customerName;
+      const subtitle =
+        proc?.displaySubtitle ||
+        `${b.serviceName || bookingUi.sessionNoun || '예약'} · ${b.staffName || `${staffLabel} 미지정`}${b.roomName ? ` · ${b.roomName}` : ''}`;
 
       return {
         id: b.id,
-        title: b.customerName,
-        subtitle: `${b.serviceName || bookingUi.sessionNoun || '예약'} · ${b.staffName || `${staffLabel} 미지정`}${b.roomName ? ` · ${b.roomName}` : ''}`,
+        title,
+        subtitle,
         date,
         startTime,
         endTime,
@@ -167,7 +230,7 @@ export const BookingCalendarView: React.FC = () => {
         roomId: b.roomId,
         roomName: b.roomName,
         status: b.status,
-        colorTheme: appointment ? 'rose' : 'teal',
+        colorTheme,
         isDraggable: isEditable && !isInactive,
         isResizable: isEditable && !isInactive,
         capacity: capacity
@@ -182,6 +245,7 @@ export const BookingCalendarView: React.FC = () => {
     });
   }, [
     allBookings,
+    processedMap,
     services,
     allBookingsRaw,
     recruitments,
@@ -278,11 +342,12 @@ export const BookingCalendarView: React.FC = () => {
   };
 
   const handleCalendarSlotClick = (slot: CalendarSlotTarget) => {
-    if (slot.date) form.setDate(slot.date);
-    if (slot.startTime) form.setTime(slot.startTime);
-    if (slot.staffId) form.setFormStaffId(slot.staffId);
-    if (slot.roomId) form.setRoomId(slot.roomId);
-    form.openCreateModal();
+    form.openCreateModalWithSlot({
+      date: slot.date,
+      time: slot.startTime,
+      staffId: slot.staffId,
+      roomId: slot.roomId,
+    });
   };
 
   const memberRemaining = form.memberId
@@ -786,6 +851,126 @@ export const BookingCalendarView: React.FC = () => {
         }
       />
 
+      {/* 동료 스케줄 상호 조회 및 가시성 제어 필터 바 */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-3 sm:p-4 shadow-2xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-800">동료 스케줄 조회 범위</span>
+              <span className="text-[11px] text-slate-400 ml-1.5 hidden sm:inline">
+                (공개 일정 및 바쁨 상태 자동 동기화)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                setScheduleScopeMode('my_only');
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                scheduleScopeMode === 'my_only'
+                  ? 'bg-white text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              내 일정만 보기
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setScheduleScopeMode('all');
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                scheduleScopeMode === 'all'
+                  ? 'bg-white text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Eye className="w-3.5 h-3.5" />
+              전체 동료 일정 함께 보기
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setScheduleScopeMode('custom_staff');
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                scheduleScopeMode === 'custom_staff'
+                  ? 'bg-white text-indigo-700 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              직원 다중 선택
+              {selectedStaffIds.length > 0 && ` (${selectedStaffIds.length}명)`}
+            </button>
+          </div>
+        </div>
+
+        {/* 특정 직원 다중 선택 칩 영역 */}
+        {scheduleScopeMode === 'custom_staff' && (
+          <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-500 mr-1">표시할 직원:</span>
+            {instructors.map((inst) => {
+              const isSelected = selectedStaffIds.includes(inst.id);
+              return (
+                <button
+                  key={inst.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStaffIds((prev) =>
+                      isSelected ? prev.filter((id) => id !== inst.id) : [...prev, inst.id]
+                    );
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isSelected ? 'bg-white' : 'bg-slate-400'
+                    }`}
+                  />
+                  <span>{inst.name}</span>
+                  {inst.roleTitle && (
+                    <span
+                      className={`text-[10px] ${
+                        isSelected ? 'text-indigo-200' : 'text-slate-400'
+                      }`}
+                    >
+                      ({inst.roleTitle})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {instructors.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedStaffIds.length === instructors.length) {
+                    setSelectedStaffIds([]);
+                  } else {
+                    setSelectedStaffIds(instructors.map((i) => i.id));
+                  }
+                }}
+                className="text-[11px] text-indigo-600 hover:underline font-bold ml-1.5 cursor-pointer"
+              >
+                {selectedStaffIds.length === instructors.length ? '전체 해제' : '전체 선택'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
       {displayMode === 'calendar' ? (
         <UnifiedScheduleCalendar<Booking>
           mode="appointment_timeline"
@@ -1081,27 +1266,68 @@ export const BookingCalendarView: React.FC = () => {
       <Modal
         isOpen={Boolean(selectedBookingForDetail)}
         onClose={() => setSelectedBookingForDetail(null)}
-        title="예약 상세 정보"
+        title={selectedBookingForDetail?.isMasked ? '동료 비공개(바쁨) 일정' : '예약 상세 정보'}
       >
         {selectedBookingForDetail && (
           <div className="p-6 space-y-4">
-            <div>
-              <p className="text-lg font-black text-slate-900">
-                {selectedBookingForDetail.customerName}
-              </p>
-              <p className="text-sm text-slate-600 mt-1">
-                {selectedBookingForDetail.serviceName} · {selectedBookingForDetail.staffName || `${staffLabel} 미지정`}
-                {selectedBookingForDetail.roomName ? ` · ${selectedBookingForDetail.roomName}` : ''}
-              </p>
-              <p className="text-xs font-mono font-bold text-teal-700 mt-1">
-                {selectedBookingForDetail.startsAt.slice(0, 16).replace('T', ' ')} ~ {selectedBookingForDetail.endsAt.slice(11, 16)}
-              </p>
-              {selectedBookingForDetail.memo && (
-                <p className="text-xs text-slate-500 mt-2 p-3 bg-slate-50 rounded-xl whitespace-pre-wrap">
-                  {selectedBookingForDetail.memo}
+            {selectedBookingForDetail.isMasked ? (
+              <div className="space-y-3">
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-3">
+                  <div className="p-2 bg-slate-200/80 rounded-xl text-slate-600">
+                    <ShieldAlert className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800">동료 직원의 비공개(바쁨) 일정</h4>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      해당 직원이 상세 정보를 비공개로 설정하였습니다. 슬롯 예약 상태(바쁨)만 공유되며, 고객명·연락처·시술 메모 등 민감 정보는 자동 보호됩니다.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-base font-bold text-slate-900">
+                    {selectedBookingForDetail.staffName || '동료 직원'} 일정
+                  </p>
+                  <p className="text-xs font-mono font-bold text-slate-600 mt-1">
+                    {selectedBookingForDetail.startsAt.slice(0, 16).replace('T', ' ')} ~{' '}
+                    {selectedBookingForDetail.endsAt.slice(11, 16)}
+                  </p>
+                  {selectedBookingForDetail.roomName && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      배정 공간: {selectedBookingForDetail.roomName}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBookingForDetail(null)}
+                    className="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold"
+                  >
+                    확인
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-lg font-black text-slate-900">
+                  {selectedBookingForDetail.customerName}
                 </p>
-              )}
-            </div>
+                <p className="text-sm text-slate-600 mt-1">
+                  {selectedBookingForDetail.serviceName} · {selectedBookingForDetail.staffName || `${staffLabel} 미지정`}
+                  {selectedBookingForDetail.roomName ? ` · ${selectedBookingForDetail.roomName}` : ''}
+                </p>
+                <p className="text-xs font-mono font-bold text-teal-700 mt-1">
+                  {selectedBookingForDetail.startsAt.slice(0, 16).replace('T', ' ')} ~ {selectedBookingForDetail.endsAt.slice(11, 16)}
+                </p>
+                {selectedBookingForDetail.memo && (
+                  <p className="text-xs text-slate-500 mt-2 p-3 bg-slate-50 rounded-xl whitespace-pre-wrap">
+                    {selectedBookingForDetail.memo}
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center gap-2 pt-2 border-t border-slate-100 flex-wrap">
               <span className="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 text-slate-700">
@@ -1220,6 +1446,8 @@ export const BookingCalendarView: React.FC = () => {
         onChartNoteChange={form.setChartNote}
         selectedService={selectedService}
         draftCapacity={draftCapacity || undefined}
+        visibility={form.visibility}
+        onVisibilityChange={form.setVisibility}
         onSaveCapacityOnly={saveCapacityOnly}
         onSubmit={handleCreate}
       />

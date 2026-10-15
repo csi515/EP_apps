@@ -15,6 +15,8 @@ import {
   saveOrganizationBusinessStatus,
 } from '../auth/services/ownerBusinessGate';
 import type { Organization, MemberRole } from '../../lib/supabase';
+import { getCoreClient } from '../../lib/supabase';
+
 import { StorageService } from '../../services/storage';
 import { runLoginAccountSync } from '../accounts/loginBootstrapService';
 import { applyOAuthSignupIntentIfAny } from '../auth/services/oauthSignupService';
@@ -99,7 +101,12 @@ interface OrganizationContextType {
   exitParentPortal: () => void;
   enterCustomerPortal: () => void;
   exitCustomerPortal: () => void;
+  activeCapabilities: string[];
+  customTerms: Record<string, string>;
+  updateActiveCapabilities: (newCaps: string[]) => Promise<void>;
+  updateCustomTerms: (newTerms: Record<string, string>) => Promise<void>;
 }
+
 
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
@@ -445,6 +452,123 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     commitPortalMode('none');
   }, [commitPortalMode]);
 
+  const activeCapabilities = useMemo(() => {
+    const raw = (currentOrganization as any)?.active_capabilities;
+    if (Array.isArray(raw)) return raw as string[];
+    const fromSettings = (currentOrganization?.settings as any)?.active_capabilities;
+    if (Array.isArray(fromSettings)) return fromSettings as string[];
+    return [];
+  }, [currentOrganization]);
+
+  const customTerms = useMemo(() => {
+    return ((currentOrganization?.settings as any)?.custom_terms ?? {}) as Record<string, string>;
+  }, [currentOrganization]);
+
+  const updateActiveCapabilities = useCallback(
+    async (newCaps: string[]) => {
+      const orgId = currentOrganization?.id;
+      if (!orgId) return;
+
+      const currentSettings = ((currentOrganization.settings as any) || {}) as Record<string, unknown>;
+      const nextSettings = {
+        ...currentSettings,
+        active_capabilities: newCaps,
+      };
+
+      try {
+        const client = getCoreClient();
+        await client
+          .from('organizations')
+          .update({
+            active_capabilities: newCaps,
+            settings: nextSettings,
+          } as any)
+          .eq('id', orgId);
+      } catch (err) {
+        console.warn('Failed to update active_capabilities in DB, updating local state:', err);
+      }
+
+      setMemberships((prev) =>
+        prev.map((m) =>
+          m.organizationId === orgId
+            ? {
+                ...m,
+                organization: {
+                  ...m.organization,
+                  active_capabilities: newCaps,
+                  settings: nextSettings,
+                } as any,
+              }
+            : m
+        )
+      );
+      setSelectedMembership((prev) =>
+        prev?.organizationId === orgId
+          ? {
+              ...prev,
+              organization: {
+                ...prev.organization,
+                active_capabilities: newCaps,
+                settings: nextSettings,
+              } as any,
+            }
+          : prev
+      );
+    },
+    [currentOrganization]
+  );
+
+  const updateCustomTerms = useCallback(
+    async (newTerms: Record<string, string>) => {
+      const orgId = currentOrganization?.id;
+      if (!orgId) return;
+
+      const currentSettings = ((currentOrganization.settings as any) || {}) as Record<string, unknown>;
+      const nextSettings = {
+        ...currentSettings,
+        custom_terms: newTerms,
+      };
+
+      try {
+        const client = getCoreClient();
+        await client
+          .from('organizations')
+          .update({
+            settings: nextSettings,
+          } as any)
+          .eq('id', orgId);
+      } catch (err) {
+        console.warn('Failed to update custom_terms in DB, updating local state:', err);
+      }
+
+      setMemberships((prev) =>
+        prev.map((m) =>
+          m.organizationId === orgId
+            ? {
+                ...m,
+                organization: {
+                  ...m.organization,
+                  settings: nextSettings,
+                } as any,
+              }
+            : m
+        )
+      );
+      setSelectedMembership((prev) =>
+        prev?.organizationId === orgId
+          ? {
+              ...prev,
+              organization: {
+                ...prev.organization,
+                settings: nextSettings,
+              } as any,
+            }
+          : prev
+      );
+    },
+    [currentOrganization]
+  );
+
   return (
     <OrganizationContext.Provider
       value={{
@@ -485,8 +609,13 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         exitParentPortal,
         enterCustomerPortal,
         exitCustomerPortal,
+        activeCapabilities,
+        customTerms,
+        updateActiveCapabilities,
+        updateCustomTerms,
       }}
     >
+
       {children}
     </OrganizationContext.Provider>
   );

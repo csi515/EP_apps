@@ -20,6 +20,8 @@ import {
   ClipboardList,
   Workflow,
   FileText,
+  SlidersHorizontal,
+  Award,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -133,6 +135,16 @@ const VendorApInvoiceView = lazy(() =>
 const WorkAttendancePayrollView = lazy(() =>
   import('@/capabilities/work_attendance_payroll').then((m) => ({ default: m.WorkAttendancePayrollView }))
 );
+const PickupOrdersKanbanView = lazy(() =>
+  import('@/capabilities/pickup_orders').then((m) => ({ default: m.PickupOrdersKanbanView }))
+);
+const LoyaltyStampView = lazy(() =>
+  import('@/capabilities/loyalty_stamp').then((m) => ({ default: m.LoyaltyStampView }))
+);
+const CapabilitySwitchboardView = lazy(() =>
+  import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
+);
+
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
@@ -305,7 +317,7 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
 export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode>; Overlays?: React.ComponentType | null }> = ({ viewMap: externalViewMap, Overlays }) => {
   const { activeTab, setActiveTab, currentUser } = useApp();
   const { allowedTabs, roleLabel, roleBadge, industry, isOwner } = usePermissions();
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, activeCapabilities = [] } = useOrganization();
   const { t } = useTerminology(currentOrganization?.industry_type || industry);
 
   const customerWord = t('customer.singular', '고객');
@@ -315,10 +327,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   }, [currentOrganization?.industry_type, industry]);
 
   const enabledCaps = useMemo(() => {
-    const fromSettings = (currentOrganization?.settings as any)?.capabilities;
-    if (Array.isArray(fromSettings) && fromSettings.length > 0) return fromSettings as string[];
-    return (preset?.capabilities ?? []) as string[];
-  }, [currentOrganization?.settings, preset]);
+    const baseCaps = (preset?.capabilities ?? []) as string[];
+    const set = new Set<string>([...baseCaps, ...activeCapabilities]);
+    return Array.from(set);
+  }, [preset, activeCapabilities]);
+
 
   const navSections: NavMenuSection[] = useMemo(() => {
     const items: NavMenuItem[] = [
@@ -375,6 +388,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('inventory') || enabledCaps.includes('commerce')) {
       extendedItems.push({ tab: 'inventory', label: '재고·상품', icon: <Package className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('loyalty_stamp')) {
+      extendedItems.push({ tab: 'loyalty-stamps', label: '전자 스탬프', icon: <Award className="w-4 h-4" /> });
+    }
 
     const sections: NavMenuSection[] = [
       {
@@ -393,6 +409,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     sections.push({
       title: '관리',
       items: [
+        { tab: 'capabilities', label: '기능 스위치보드', icon: <SlidersHorizontal className="w-4 h-4" /> },
         { tab: 'settings', label: '설정', icon: <Settings className="w-4 h-4" /> },
         { tab: 'account', label: '내 계정', icon: <User className="w-4 h-4" /> },
       ],
@@ -609,6 +626,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'work-payroll': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">직원 근태 및 급여 화면을 불러오는 중...</div>}>
         <WorkAttendancePayrollView />
+      </Suspense>
+    ),
+    'pickup-orders': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사전예약 픽업 칸반 화면을 불러오는 중...</div>}>
+        <PickupOrdersKanbanView />
+      </Suspense>
+    ),
+    'loyalty-stamps': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 스탬프 화면을 불러오는 중...</div>}>
+        <LoyaltyStampView />
+      </Suspense>
+    ),
+    capabilities: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">기능 스위치보드를 불러오는 중...</div>}>
+        <CapabilitySwitchboardView />
       </Suspense>
     ),
     ...financeViewEntries,

@@ -57,6 +57,8 @@ export const CAPABILITY_IDS = [
   'sop_risk_assessment',
   'vendor_ap_invoice',
   'work_attendance_payroll',
+  'pickup_orders',
+  'loyalty_stamp',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

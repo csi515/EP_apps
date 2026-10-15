@@ -3,6 +3,9 @@ import {
   calculateCurriculumProgress,
   evaluateLevelAdvancement,
   generateMonthlyGrowthReport,
+  createLessonJournalEntry,
+  groupJournalEntriesByMonth,
+  attachGuardianFeedback,
   type CurriculumItemDefinition,
   type StudentProgressRecord,
 } from './curriculumProgressEngine';
@@ -124,7 +127,49 @@ function run() {
   assert.ok(effortReport.headline.includes('동기 부여와 출석 독려'));
   assert.ok(effortReport.summaryText.includes('정기 레슨 참석'));
 
-  console.log('✅ curriculumProgressEngine tests all passed!');
+  // 4. Lesson Journal (수업 알림장 & 사진 포트폴리오)
+  const j1 = createLessonJournalEntry({
+    studentId: 'std-1',
+    studentName: '김민수',
+    lessonDate: '2026-10-15',
+    instructorName: '박선생',
+    title: '체르니 100번 12번곡 양손 밸런스 지도',
+    notes: '왼손 반주 음량이 너무 커지지 않도록 멜로디와 균형을 맞추는 연습을 진행했습니다.',
+    photoUrls: ['https://moa.app/photos/p1.jpg', ' https://moa.app/photos/p2.jpg '],
+    skillsPracticed: ['왼손 피아니시모', '페달 체인지'],
+    homePracticeGuide: '하루 15분씩 왼손만 스타카토로 메트로놈에 맞춰 연습하기',
+  });
+
+  assert.equal(j1.studentId, 'std-1');
+  assert.equal(j1.photoUrls.length, 2);
+  assert.equal(j1.photoUrls[1], 'https://moa.app/photos/p2.jpg');
+  assert.equal(j1.skillsPracticed?.length, 2);
+
+  const j2 = createLessonJournalEntry({
+    studentId: 'std-1',
+    studentName: '김민수',
+    lessonDate: '2026-09-28',
+    instructorName: '박선생',
+    title: '부르크뮐러 25 아라베스크 완성',
+    notes: '빠른 템포에서도 또렷한 아티큘레이션을 완성했습니다.',
+    photoUrls: ['https://moa.app/photos/p3.jpg'],
+  });
+
+  // 월별 그룹핑 테스트
+  const grouped = groupJournalEntriesByMonth([j1, j2], 'std-1');
+  assert.equal(grouped.length, 2);
+  assert.equal(grouped[0].yearMonth, '2026-10');
+  assert.equal(grouped[0].count, 1);
+  assert.equal(grouped[1].yearMonth, '2026-09');
+  assert.equal(grouped[1].count, 1);
+
+  // 학부모 피드백 첨부 테스트
+  const withFeedback = attachGuardianFeedback(j1, '선생님 말씀대로 집에서도 왼손 따로 연습시킬게요! 감사합니다 ^^');
+  assert.ok(withFeedback.guardianFeedback);
+  assert.equal(withFeedback.guardianFeedback?.comment, '선생님 말씀대로 집에서도 왼손 따로 연습시킬게요! 감사합니다 ^^');
+
+  console.log('✅ curriculumProgressEngine tests all passed (with Lesson Journal)!');
 }
 
 run();
+

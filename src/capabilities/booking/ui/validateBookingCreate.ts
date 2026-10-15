@@ -28,6 +28,7 @@ export type BookingFormSnapshot = {
   slotCapacity: string;
   skinCondition: string;
   chartNote: string;
+  visibility?: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE';
 };
 
 export type BookingParty = {
@@ -67,6 +68,7 @@ export type BookingCreatePayload = {
   roomName?: string;
   skinCondition?: string;
   chartNote?: string;
+  visibility?: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE';
 };
 
 export type ValidateBookingCreateResult =
@@ -310,6 +312,7 @@ export function validateBookingCreate(
       roomName: selectedRoom?.name,
       skinCondition: form.skinCondition.trim() || undefined,
       chartNote: form.chartNote.trim() || undefined,
+      visibility: form.visibility || undefined,
     },
   };
 }

@@ -92,6 +92,9 @@ export interface Teacher {
   memo?: string;
   classIds?: string[];
   grants?: StaffGrants;
+  defaultScheduleVisibility?: 'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE';
+  roleTitle?: string;
+  organizationId?: string;
 }
 
 /** @deprecated 신규 코드는 `@/core/staff/workWindow` */

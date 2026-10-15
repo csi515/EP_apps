@@ -52,6 +52,8 @@ const COLOR_MAP: Record<string, { bg: string; text: string; border: string; acce
   amber: { bg: 'bg-amber-50/95', text: 'text-amber-950', border: 'border-amber-300', accent: 'bg-amber-600' },
   emerald: { bg: 'bg-emerald-50/95', text: 'text-emerald-950', border: 'border-emerald-300', accent: 'bg-emerald-600' },
   slate: { bg: 'bg-slate-50/95', text: 'text-slate-950', border: 'border-slate-300', accent: 'bg-slate-600' },
+  purple: { bg: 'bg-purple-50/95', text: 'text-purple-950', border: 'border-purple-300', accent: 'bg-purple-600' },
+  blue: { bg: 'bg-blue-50/95', text: 'text-blue-950', border: 'border-blue-300', accent: 'bg-blue-600' },
 };
 
 export const CalendarResourceTimelineView: FC<CalendarResourceTimelineViewProps> = ({

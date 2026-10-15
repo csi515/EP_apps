@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import {
   normalizeCustomerTimeline,
   evaluateReEnrollmentDDay,
+  evaluateDeskGreetingTip,
   type ConsultationRecord,
+  type CustomerPreferenceProfile,
 } from './consultationCrmEngine';
 
 function run() {
@@ -81,7 +83,49 @@ function run() {
   assert.equal(dDay0.requiresAction, true);
   assert.equal(dDay0.urgencyLevel, 'CRITICAL');
 
-  console.log('consultationCrmEngine.test.ts: ok');
+  // 3. 스마트 고객 태그 & 카운터 접수/응대 가이드 평가
+  const customerProfile: CustomerPreferenceProfile = {
+    customerId: 'cust-1',
+    tags: [
+      {
+        id: 'tag-1',
+        label: '손목 건초염/부상',
+        category: 'HEALTH_ALERT',
+        colorHex: '#EF4444',
+        isUrgentAlert: true,
+        counterTip: '손목 무리 가는 고중량 및 빠른 템포 옥타브 연타 주의',
+      },
+      {
+        id: 'tag-2',
+        label: '식물 킬러/초보',
+        category: 'PREFERENCE',
+        colorHex: '#10B981',
+        counterTip: '과습에 강하고 통풍 요구량 낮은 스투키/몬스테라 추천',
+      },
+      {
+        id: 'tag-3',
+        label: '왼손잡이',
+        category: 'INTERACTION_TIP',
+        colorHex: '#3B82F6',
+        counterTip: '좌측 타석 또는 좌수용 장비 안내',
+      },
+    ],
+    specialNotes: '오후 4시 이후에는 주차가 혼잡하므로 사전 출차 등록 안내 요망',
+  };
+
+  const deskGreeting = evaluateDeskGreetingTip(customerProfile);
+  assert.equal(deskGreeting.hasUrgentAlert, true);
+  assert.equal(deskGreeting.urgentAlerts.length, 1);
+  assert.equal(deskGreeting.urgentAlerts[0], '손목 건초염/부상');
+  assert.equal(deskGreeting.tipsForDesk.length, 4); // 3개 태그 팁 + 1개 특별 메모
+  assert.ok(deskGreeting.tipsForDesk[0].includes('손목 무리 가는'));
+  assert.ok(deskGreeting.tipsForDesk[2].includes('좌측 타석'));
+  assert.ok(deskGreeting.tipsForDesk[3].includes('사전 출차 등록'));
+  assert.equal(deskGreeting.displayTags.length, 3);
+  assert.equal(deskGreeting.displayTags[0].isAlert, true);
+
+  console.log('consultationCrmEngine.test.ts: ok (with Smart Tags & Desk Greeting Tip)');
 }
 
 run();
+

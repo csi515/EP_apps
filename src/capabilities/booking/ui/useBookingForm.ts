@@ -18,6 +18,7 @@ export function useBookingForm(opts: {
   const [skinCondition, setSkinCondition] = useState('');
   const [chartNote, setChartNote] = useState('');
   const [slotCapacity, setSlotCapacity] = useState('1');
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'FREE_BUSY_ONLY' | 'PRIVATE'>('PUBLIC');
   const [chartTarget, setChartTarget] = useState<Booking | null>(null);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function useBookingForm(opts: {
       slotCapacity,
       skinCondition,
       chartNote,
+      visibility,
     };
   }, [
     memberId,
@@ -50,14 +52,32 @@ export function useBookingForm(opts: {
     slotCapacity,
     skinCondition,
     chartNote,
+    visibility,
   ]);
 
   const openCreateModal = useCallback(() => {
     setRoomId('');
     setSkinCondition('');
     setChartNote('');
+    setVisibility('PUBLIC');
     setIsModalOpen(true);
   }, []);
+
+  const openCreateModalWithSlot = useCallback(
+    (slot: { date?: string; time?: string; staffId?: string; roomId?: string }) => {
+      if (slot.date) setDate(slot.date);
+      if (slot.time) setTime(slot.time);
+      if (slot.staffId && (!opts.isScoped || opts.staffId === slot.staffId)) {
+        setFormStaffId(slot.staffId);
+      }
+      if (slot.roomId) setRoomId(slot.roomId);
+      setSkinCondition('');
+      setChartNote('');
+      setVisibility('PUBLIC');
+      setIsModalOpen(true);
+    },
+    [opts.isScoped, opts.staffId]
+  );
 
   const closeCreateModal = useCallback(() => {
     setIsModalOpen(false);
@@ -76,7 +96,10 @@ export function useBookingForm(opts: {
   return {
     isModalOpen,
     openCreateModal,
+    openCreateModalWithSlot,
     closeCreateModal,
+    visibility,
+    setVisibility,
     memberId,
     setMemberId,
     serviceId,

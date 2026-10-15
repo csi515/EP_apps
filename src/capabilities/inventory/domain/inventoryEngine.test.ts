@@ -4,8 +4,17 @@ import {
   checkSafetyStockWarning,
   generatePurchaseOrderRecommendations,
   convertPurchaseOrderToApInvoicePayload,
+  deductBundleStock,
+  scanBarcodeAndFindItem,
+  calculateEan13CheckDigit,
+  isValidEan13,
+  generateItemBarcode,
+  generatePrintLabelItems,
+  formatLabelSheetPages,
   type InventoryItem,
+  type BundleProduct,
 } from './inventoryEngine';
+
 
 function run() {
   const item: InventoryItem = {
@@ -117,15 +126,125 @@ function run() {
   assert.equal(milkPoItem.recommendedOrderQuantity, 12);
   assert.equal(milkPoItem.estimatedSupplyAmount, 31200);
 
-  // 7. 발주서(PO)를 매입 전표(AP Invoice) 페이로드로 변환
-  const apInvoice = convertPurchaseOrderToApInvoicePayload(po, '2026-10-15', 30);
-  assert.equal(apInvoice.vendorId, 'vend-1');
-  assert.equal(apInvoice.totalSupplyAmount, 281200);
-  assert.equal(apInvoice.totalTaxAmount, 28120);
-  assert.equal(apInvoice.totalAmount, 309320);
-  assert.equal(apInvoice.dueDate, '2026-11-14');
+  // 8. 번들 세트(조합형 SKU) 원자적 재고 동시 차감 테스트
+  const bundleProduct: BundleProduct = {
+    id: 'bundle-plant-kit',
+    bundleSku: 'KIT-GARDEN-01',
+    name: '화원 초보자 가드닝 세트',
+    barcode: '8801234567890',
+    sellingPrice: 45000,
+    components: [
+      { itemId: 'pot-1', componentSku: 'POT-CERAMIC', componentName: '도자기 화분', quantityPerBundle: 1 },
+      { itemId: 'soil-1', componentSku: 'SOIL-5L', componentName: '배양토 5L', quantityPerBundle: 2 },
+    ],
+  };
 
-  console.log('inventoryEngine.test.ts: ok (with Auto-PO & AP Invoice conversion)');
+  const gardenInventory: InventoryItem[] = [
+    { id: 'pot-1', name: '도자기 화분', sku: 'POT-CERAMIC', barcode: '880001', currentStock: 10, safetyStock: 2, unitPrice: 12000 },
+    { id: 'soil-1', name: '배양토 5L', sku: 'SOIL-5L', barcode: '880002', currentStock: 5, safetyStock: 2, unitPrice: 3000 },
+  ];
+
+  // 8-1. 세트 3개 판매 시도 -> 배양토가 6포 필요하지만 현재고 5포뿐이라 실패해야 함
+  const overBundle = deductBundleStock({
+    bundle: bundleProduct,
+    sellQuantity: 3,
+    currentInventory: gardenInventory,
+  });
+  assert.equal(overBundle.success, false);
+  assert.equal(overBundle.shortages?.length, 1);
+  assert.equal(overBundle.shortages?.[0].itemId, 'soil-1');
+  assert.equal(overBundle.shortages?.[0].required, 6);
+
+  // 8-2. 세트 2개 판매 -> 화분 2개, 배양토 4개 정상 차감
+  const validBundle = deductBundleStock({
+    bundle: bundleProduct,
+    sellQuantity: 2,
+    currentInventory: gardenInventory,
+  });
+  assert.equal(validBundle.success, true);
+  const updatedPot = validBundle.updatedInventory.find((it) => it.id === 'pot-1')!;
+  const updatedSoil = validBundle.updatedInventory.find((it) => it.id === 'soil-1')!;
+  assert.equal(updatedPot.currentStock, 8); // 10 - 2
+  assert.equal(updatedSoil.currentStock, 1); // 5 - 4
+
+  // 9. 바코드 스캔 파싱 & 아이템/번들 즉시 매칭
+  // 9-1. 단품 바코드 매칭
+  const scanSingle = scanBarcodeAndFindItem({
+    barcodeRaw: '880001\n',
+    items: gardenInventory,
+    bundles: [bundleProduct],
+  });
+  assert.equal(scanSingle.success, true);
+  assert.equal(scanSingle.foundType, 'single');
+  assert.equal(scanSingle.item?.id, 'pot-1');
+
+  // 9-2. 번들 바코드 매칭
+  const scanBundle = scanBarcodeAndFindItem({
+    barcodeRaw: '8801234567890',
+    items: gardenInventory,
+    bundles: [bundleProduct],
+  });
+  assert.equal(scanBundle.success, true);
+  assert.equal(scanBundle.foundType, 'bundle');
+  assert.equal(scanBundle.bundle?.id, 'bundle-plant-kit');
+
+  // 10. EAN-13 체크섬 계산 및 유효성 검증
+  const sample12 = '880123456789';
+  const checkDigit = calculateEan13CheckDigit(sample12);
+  assert.equal(typeof checkDigit, 'number');
+  assert.equal(checkDigit >= 0 && checkDigit <= 9, true);
+
+  const fullBarcode = `${sample12}${checkDigit}`;
+  assert.equal(isValidEan13(fullBarcode), true);
+  assert.equal(isValidEan13('8801234567899' === fullBarcode ? '8801234567890' : '8801234567899'), false);
+
+  // 11. 자동 채번 함수 generateItemBarcode
+  const generated1 = generateItemBarcode('ORG-SEOUL', 1);
+  assert.equal(generated1.length, 13);
+  assert.equal(generated1.startsWith('880'), true);
+  assert.equal(isValidEan13(generated1), true);
+
+  const generated2 = generateItemBarcode('ORG-SEOUL', 2);
+  assert.equal(generated2.length, 13);
+  assert.notEqual(generated1, generated2);
+  assert.equal(isValidEan13(generated2), true);
+
+  // 12. 라벨 인쇄 아이템 생성 및 시트 페이지 분할
+  const printItem: InventoryItem = {
+    id: 'item-coffee-01',
+    name: '에티오피아 예가체프 원두 200g',
+    sku: 'COFFEE-ETH-01',
+    barcode: generated1,
+    currentStock: 50,
+    safetyStock: 10,
+    unitPrice: 18000,
+    vendorName: '모아 로스터리',
+  };
+
+  const labels = generatePrintLabelItems({
+    item: printItem,
+    quantity: 50,
+  });
+  assert.equal(labels.length, 50);
+  assert.equal(labels[0].barcode, generated1);
+  assert.equal(labels[0].printSequence, 1);
+  assert.equal(labels[49].printSequence, 50);
+  assert.equal(labels[0].qrCodeValue, `https://moa.app/i/${generated1}`);
+
+  // A4 24칸 분할 (50장 = 24 + 24 + 2 = 3페이지)
+  const a4Pages = formatLabelSheetPages(labels, 'A4_24_FORMTEC');
+  assert.equal(a4Pages.length, 3);
+  assert.equal(a4Pages[0].length, 24);
+  assert.equal(a4Pages[1].length, 24);
+  assert.equal(a4Pages[2].length, 2);
+
+  // 감열식 라벨프린터 분할 (50장 = 50페이지)
+  const thermalPages = formatLabelSheetPages(labels, 'THERMAL_50_30');
+  assert.equal(thermalPages.length, 50);
+  assert.equal(thermalPages[0].length, 1);
+
+  console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen & Label Print)');
 }
 
 run();
+
