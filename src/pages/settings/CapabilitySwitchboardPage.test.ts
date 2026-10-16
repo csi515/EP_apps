@@ -82,6 +82,7 @@ console.log('✓ 2. 복합 매장 다중 세트 안전 보호 검증 완료');
     'shift_schedule',
     'instructor_match',
     'task_pipeline',
+    'feedbacks',
   ];
   const activeSetIds = getActiveToolSetIdsFromCapabilities(caps);
   assert.ok(activeSetIds.includes('attendance_safety'), 'attendance_safety 감지');

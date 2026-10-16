@@ -82,7 +82,13 @@ export type BundledPresetCapabilityId =
   // 범주 AC: 모바일 전자 스탬프 / 칭찬 스티커
   | 'loyalty_stamp'
   // 범주 AD: 매장 내규·사규 관리
-  | 'workplace_policy';
+  | 'workplace_policy'
+  // 범주 AE: 현장 소통 및 교대 인수인계
+  | 'feedbacks'
+  // 범주 AF: 무료 체험 및 상담 리드 전환 파이프라인
+  | 'trial_funnel'
+  // 범주 AG: 수업 일지 및 학부모 알림장 피드
+  | 'learning_journal';
 
 
 export type PresetCapabilityId =

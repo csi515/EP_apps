@@ -114,6 +114,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   pickup_orders: ['pickup-orders', 'pickups', 'orders'],
   loyalty_stamp: ['loyalty-stamps', 'stamps', 'stickers'],
   workplace_policy: ['policies', 'workplace-policies', 'regulations'],
+  feedbacks: ['operations', 'handover', 'feedbacks', 'incidents'],
+  trial_funnel: ['trial-funnel', 'trials', 'leads'],
+  learning_journal: ['learning-journal', 'journals', 'growth-log'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

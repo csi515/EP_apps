@@ -51,6 +51,9 @@ import { work_attendance_payrollCapability } from './work_attendance_payroll/man
 import { pickup_ordersCapability } from './pickup_orders/manifest';
 import { loyalty_stampCapability } from './loyalty_stamp/manifest';
 import { workplace_policyCapability } from './workplace_policy/manifest';
+import { feedbacksCapability } from './feedbacks/manifest';
+import { trial_funnelCapability } from './trial_funnel/manifest';
+import { learning_journalCapability } from './learning_journal/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -115,7 +118,13 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   pickup_ordersCapability,
   loyalty_stampCapability,
   workplace_policyCapability,
+  feedbacksCapability,
+  trial_funnelCapability,
+  learning_journalCapability,
 ];
+
+export * from './trial_funnel';
+export * from './learning_journal';
 
 
 

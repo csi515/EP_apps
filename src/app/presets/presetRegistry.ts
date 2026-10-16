@@ -107,6 +107,12 @@ import { loyaltyStampSetupSchema } from '@/capabilities/loyalty_stamp/setupSchem
 import { loyaltyStampResources } from '@/capabilities/loyalty_stamp/resources';
 import { workplacePolicySetupSchema } from '@/capabilities/workplace_policy/setupSchema';
 import { workplacePolicyResources } from '@/capabilities/workplace_policy/resources';
+import { feedbacksSetupSchema } from '@/capabilities/feedbacks/setupSchema';
+import { feedbacksResources } from '@/capabilities/feedbacks/resources';
+import { trial_funnelSetupSchema } from '@/capabilities/trial_funnel/setupSchema';
+import { trial_funnelResources } from '@/capabilities/trial_funnel/resources';
+import { learning_journalSetupSchema } from '@/capabilities/learning_journal/setupSchema';
+import { learning_journalResources } from '@/capabilities/learning_journal/resources';
 
 
 /**
@@ -388,6 +394,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'workplace_policy',
     setupSchema: workplacePolicySetupSchema,
     resources: workplacePolicyResources,
+  },
+
+  // 범주 AE: 현장 소통 및 교대 인수인계
+  feedbacks: {
+    capabilityId: 'feedbacks',
+    setupSchema: feedbacksSetupSchema,
+    resources: feedbacksResources,
+  },
+
+  // 범주 AF: 무료 체험 및 상담 리드 전환 파이프라인
+  trial_funnel: {
+    capabilityId: 'trial_funnel',
+    setupSchema: trial_funnelSetupSchema,
+    resources: trial_funnelResources,
+  },
+
+  // 범주 AG: 수업 일지 및 학부모 알림장 피드
+  learning_journal: {
+    capabilityId: 'learning_journal',
+    setupSchema: learning_journalSetupSchema,
+    resources: learning_journalResources,
   },
 };
 

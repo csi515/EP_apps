@@ -2583,6 +2583,119 @@ export interface Database {
           },
         ];
       };
+      trial_leads: {
+        Row: {
+          id: string;
+          organization_id: string;
+          customer_name: string;
+          phone: string;
+          source: string;
+          status: string;
+          target_program: string | null;
+          trial_date: string | null;
+          assigned_staff_id: string | null;
+          notes: string | null;
+          drop_reason: string | null;
+          converted_pass_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          customer_name: string;
+          phone: string;
+          source?: string;
+          status?: string;
+          target_program?: string | null;
+          trial_date?: string | null;
+          assigned_staff_id?: string | null;
+          notes?: string | null;
+          drop_reason?: string | null;
+          converted_pass_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['trial_leads']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'trial_leads_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      learning_journals: {
+        Row: {
+          id: string;
+          organization_id: string;
+          student_id: string;
+          author_staff_id: string;
+          lesson_date: string;
+          title: string;
+          content: string;
+          practice_homework: string | null;
+          media_urls: string[];
+          parent_viewed_at: string | null;
+          parent_acknowledgement: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          student_id: string;
+          author_staff_id: string;
+          lesson_date?: string;
+          title: string;
+          content: string;
+          practice_homework?: string | null;
+          media_urls?: string[];
+          parent_viewed_at?: string | null;
+          parent_acknowledgement?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['learning_journals']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'learning_journals_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      learning_journal_comments: {
+        Row: {
+          id: string;
+          journal_id: string;
+          author_id: string;
+          author_role: string;
+          author_name: string;
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          journal_id: string;
+          author_id: string;
+          author_role: string;
+          author_name: string;
+          content: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['learning_journal_comments']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'learning_journal_comments_journal_id_fkey';
+            columns: ['journal_id'];
+            referencedRelation: 'learning_journals';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

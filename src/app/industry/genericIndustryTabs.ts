@@ -55,6 +55,9 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'pickup-orders': ['pickup_orders'],
   'loyalty-stamps': ['loyalty_stamp'],
   policies: ['workplace_policy'],
+  handover: ['feedbacks'],
+  feedbacks: ['feedbacks'],
+  incidents: ['feedbacks'],
 };
 
 export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
@@ -398,6 +401,41 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '매장 내규·사규 등록, 개정 버전 관리 및 직원 자필 서약 관리',
     tier: 'tier1_ready',
     primaryCapability: 'workplace_policy',
+  },
+  handover: {
+    tab: 'handover',
+    label: '교대 인수인계장',
+    description: '근무 교대 인수인계 루틴 체크리스트 및 다음 근무자 서약',
+    tier: 'tier1_ready',
+    primaryCapability: 'feedbacks',
+  },
+  feedbacks: {
+    tab: 'feedbacks',
+    label: 'VOC 및 건의함',
+    description: '고객의견(VOC) 및 직원 현장 개선 건의 접수/처리',
+    tier: 'tier1_ready',
+    primaryCapability: 'feedbacks',
+  },
+  incidents: {
+    tab: 'incidents',
+    label: '안전사고 감사 일지',
+    description: '현장 안전사고 및 특이사항 비공개 감사 기록',
+    tier: 'tier1_ready',
+    primaryCapability: 'feedbacks',
+  },
+  'trial-funnel': {
+    tab: 'trial-funnel',
+    label: '체험·상담 파이프라인',
+    description: '무료 체험 신청부터 상담, 1회 체험 및 정규 수강권 등록까지 5단계 전환 파이프라인',
+    tier: 'tier1_ready',
+    primaryCapability: 'trial_funnel',
+  },
+  'learning-journal': {
+    tab: 'learning-journal',
+    label: '수업 일지·알림장',
+    description: '원생별 수업 진도, 연습 과제, 칭찬 코멘트 기록 및 학부모 안심 피드',
+    tier: 'tier1_ready',
+    primaryCapability: 'learning_journal',
   },
   capabilities: {
     tab: 'capabilities',

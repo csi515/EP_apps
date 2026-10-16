@@ -60,6 +60,9 @@ export const CAPABILITY_IDS = [
   'pickup_orders',
   'loyalty_stamp',
   'workplace_policy',
+  'feedbacks',
+  'trial_funnel',
+  'learning_journal',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

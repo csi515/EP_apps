@@ -144,6 +144,15 @@ const LoyaltyStampView = lazy(() =>
 const WorkplacePolicyView = lazy(() =>
   import('@/capabilities/workplace_policy').then((m) => ({ default: m.WorkplacePolicyManagementView }))
 );
+const FeedbacksAndHandoverView = lazy(() =>
+  import('@/capabilities/feedbacks').then((m) => ({ default: m.FeedbacksAndHandoverView }))
+);
+const TrialFunnelKanbanView = lazy(() =>
+  import('@/capabilities/trial_funnel').then((m) => ({ default: m.TrialFunnelKanbanView }))
+);
+const LearningJournalFeedView = lazy(() =>
+  import('@/capabilities/learning_journal').then((m) => ({ default: m.LearningJournalFeedView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -397,6 +406,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('workplace_policy')) {
       extendedItems.push({ tab: 'policies', label: '매장 사규·내규', icon: <FileText className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('feedbacks')) {
+      extendedItems.push({ tab: 'handover', label: '현장 소통·인수인계', icon: <ClipboardList className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('trial_funnel')) {
+      extendedItems.push({ tab: 'trial-funnel', label: '체험·상담 파이프라인', icon: <Sparkles className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('learning_journal')) {
+      extendedItems.push({ tab: 'learning-journal', label: '수업 일지·알림장', icon: <FileText className="w-4 h-4" /> });
+    }
 
     const sections: NavMenuSection[] = [
       {
@@ -647,6 +665,31 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     policies: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">매장 사규 관리 화면을 불러오는 중...</div>}>
         <WorkplacePolicyView />
+      </Suspense>
+    ),
+    handover: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">교대 인수인계장을 불러오는 중...</div>}>
+        <FeedbacksAndHandoverView />
+      </Suspense>
+    ),
+    feedbacks: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">VOC 및 건의함을 불러오는 중...</div>}>
+        <FeedbacksAndHandoverView />
+      </Suspense>
+    ),
+    incidents: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전사고 감사 일지를 불러오는 중...</div>}>
+        <FeedbacksAndHandoverView />
+      </Suspense>
+    ),
+    'trial-funnel': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">체험·상담 파이프라인을 불러오는 중...</div>}>
+        <TrialFunnelKanbanView />
+      </Suspense>
+    ),
+    'learning-journal': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">수업 일지·알림장을 불러오는 중...</div>}>
+        <LearningJournalFeedView />
       </Suspense>
     ),
     capabilities: () => (
