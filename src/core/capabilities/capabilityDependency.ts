@@ -44,6 +44,19 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
 
   // 유지보수 점검표는 공간 또는 장비 점검
   maintenance_checklist: ['seat_room'],
+
+  // 사규 관리는 근무표 및 스태프 관리와 결합
+  workplace_policy: ['shift_schedule'],
+
+  // 분실물/습득물, 전자계약, 모바일스탬프, 추천인, 셔틀은 고객 명부(roster) 필수
+  lost_found: ['roster'],
+  digital_contract: ['roster'],
+  loyalty_stamp: ['roster'],
+  membership_referral_tree: ['roster'],
+  vehicle_shuttle: ['roster'],
+
+  // 단원평가 성적 분석은 진도 기록 필수
+  exam_grade_analytics: ['curriculum_progress'],
 };
 
 export interface DependencyResolutionResult {

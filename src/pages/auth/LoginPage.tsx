@@ -20,6 +20,7 @@ export const LoginPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isTossLoading, setIsTossLoading] = useState(false);
   const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+  const [rememberMe, setRememberMe] = useState(true);
 
   const navigate = useNavigate();
   const { mutate: login, isPending: isLoading } = useLogin();
@@ -99,7 +100,7 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setErrorMessage(null);
     login(
-      { email, password },
+      { email, password, rememberMe } as any,
       {
         onSuccess: (data: any) => {
           const redirectTo = data?.redirectTo || "/workspace";
@@ -240,6 +241,8 @@ export const LoginPage: React.FC = () => {
             isTossLoading={isTossLoading}
             language={language}
             onLanguageChange={setLanguage}
+            rememberMe={rememberMe}
+            onRememberMeChange={setRememberMe}
           />
         </div>
       </div>

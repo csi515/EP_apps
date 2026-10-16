@@ -59,6 +59,7 @@ export const CAPABILITY_IDS = [
   'work_attendance_payroll',
   'pickup_orders',
   'loyalty_stamp',
+  'workplace_policy',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

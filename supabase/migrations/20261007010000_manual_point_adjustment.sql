@@ -31,13 +31,13 @@ BEGIN
   END IF;
 
   -- Upsert point balance for customer
-  INSERT INTO core.customer_point_balances (organization_id, customer_id, balance, total_earned, updated_at)
-  VALUES (p_organization_id, p_customer_id, 0, 0, v_now)
+  INSERT INTO core.point_accounts (organization_id, customer_id, balance, updated_at)
+  VALUES (p_organization_id, p_customer_id, 0, v_now)
   ON CONFLICT (organization_id, customer_id) DO NOTHING;
 
   -- Lock row
   SELECT balance INTO v_balance_before
-  FROM core.customer_point_balances
+  FROM core.point_accounts
   WHERE organization_id = p_organization_id
     AND customer_id = p_customer_id
   FOR UPDATE;
@@ -51,9 +51,8 @@ BEGIN
     RAISE EXCEPTION '잔여 포인트가 부족합니다.';
   END IF;
 
-  UPDATE core.customer_point_balances
+  UPDATE core.point_accounts
   SET balance = v_balance_after,
-      total_earned = CASE WHEN p_amount > 0 THEN total_earned + p_amount ELSE total_earned END,
       updated_at = v_now
   WHERE organization_id = p_organization_id
     AND customer_id = p_customer_id;

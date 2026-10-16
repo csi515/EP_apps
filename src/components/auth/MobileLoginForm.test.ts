@@ -90,8 +90,23 @@ async function runTests() {
     /<MobileLoginForm/,
     'LoginPage.tsx must mount MobileLoginForm component'
   );
+  assert.match(
+    loginPageCode,
+    /rememberMe=\{rememberMe\}/,
+    'LoginPage.tsx must bind rememberMe state to MobileLoginForm'
+  );
+  assert.match(
+    loginPageCode,
+    /onRememberMeChange=\{setRememberMe\}/,
+    'LoginPage.tsx must bind onRememberMeChange to MobileLoginForm'
+  );
+  assert.match(
+    loginPageCode,
+    /login\(\s*\{\s*email,\s*password,\s*rememberMe\s*\}/,
+    'LoginPage.tsx must pass rememberMe in login payload'
+  );
 
-  // 6. authService support for Google and Apple OAuth
+  // 6. authService support for Google and Apple OAuth & rememberMe session partitioning
   const authServicePath = join(root, 'src/core/auth/services/authService.ts');
   const authServiceCode = readFileSync(authServicePath, 'utf8');
   assert.match(
@@ -103,6 +118,31 @@ async function runTests() {
     authServiceCode,
     /export async function signInWithApple/,
     'authService must export signInWithApple'
+  );
+  assert.match(
+    authServiceCode,
+    /rememberMe\?: boolean/,
+    'authService.SignInParams must support rememberMe optional flag'
+  );
+  assert.match(
+    authServiceCode,
+    /setAuthStoragePreference\(rememberMe\)/,
+    'authService.signIn must apply setAuthStoragePreference when rememberMe is provided'
+  );
+
+  // 7. Dynamic Auth Storage module check
+  const authStoragePath = join(root, 'src/core/auth/services/authStorage.ts');
+  assert.ok(existsSync(authStoragePath), 'authStorage.ts must exist');
+  const authStorageCode = readFileSync(authStoragePath, 'utf8');
+  assert.match(
+    authStorageCode,
+    /export const dynamicAuthStorage/,
+    'authStorage.ts must export dynamicAuthStorage adapter'
+  );
+  assert.match(
+    authStorageCode,
+    /sessionStorage/,
+    'dynamicAuthStorage must leverage sessionStorage for shared kiosk partitioning'
   );
 
   console.log('MobileLoginForm & Social Auth tests passed successfully!');

@@ -54,6 +54,7 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'work-payroll': ['work_attendance_payroll'],
   'pickup-orders': ['pickup_orders'],
   'loyalty-stamps': ['loyalty_stamp'],
+  policies: ['workplace_policy'],
 };
 
 export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
@@ -390,6 +391,13 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '종이 쿠폰 분실 없는 모바일 스탬프 적립 및 목표 달성 리워드 쿠폰 관리',
     tier: 'tier2_basic',
     primaryCapability: 'loyalty_stamp',
+  },
+  policies: {
+    tab: 'policies',
+    label: '매장 사규·내규',
+    description: '매장 내규·사규 등록, 개정 버전 관리 및 직원 자필 서약 관리',
+    tier: 'tier1_ready',
+    primaryCapability: 'workplace_policy',
   },
   capabilities: {
     tab: 'capabilities',

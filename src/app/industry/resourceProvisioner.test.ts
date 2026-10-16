@@ -67,4 +67,25 @@ for (const ind of ['piano', 'pilates', 'auto_repair', 'study_cafe']) {
 }
 console.log('✓ Resource deduplication passed');
 
+// 6. Ad-Hoc dynamic capability provisioning check (Zero-refresh)
+const pianoBaseRes = provisionIndustryResources({
+  industry: 'piano',
+  i18n: dummyI18n,
+  activeCapabilities: [],
+});
+const pianoBaseNames = new Set(pianoBaseRes.map((r) => r.name));
+assert.strictEqual(pianoBaseNames.has('workplace_policies'), false, 'Piano preset should not have workplace_policies by default');
+assert.strictEqual(pianoBaseNames.has('rental_equipments'), false, 'Piano preset should not have rental_equipments by default');
+
+const pianoAdHocRes = provisionIndustryResources({
+  industry: 'piano',
+  i18n: dummyI18n,
+  activeCapabilities: ['workplace_policy', 'rental_equipment'],
+});
+const pianoAdHocNames = new Set(pianoAdHocRes.map((r) => r.name));
+assert.ok(pianoAdHocNames.has('workplace_policies'), 'workplace_policies must be dynamically provisioned when activeCapabilities includes workplace_policy');
+assert.ok(pianoAdHocNames.has('rental_equipments'), 'rental_equipments must be dynamically provisioned when activeCapabilities includes rental_equipment');
+console.log('✓ Ad-Hoc dynamic capability provisioning (Zero-refresh) passed');
+
 console.log('[TEST] resourceProvisioner ALL TESTS PASSED!');
+

@@ -2396,6 +2396,193 @@ export interface Database {
           },
         ];
       };
+      workplace_policies: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          category: string;
+          content: string;
+          version: number;
+          is_mandatory: boolean;
+          effective_date: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          category?: string;
+          content: string;
+          version?: number;
+          is_mandatory?: boolean;
+          effective_date?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['workplace_policies']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'workplace_policies_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      policy_acknowledgements: {
+        Row: {
+          id: string;
+          organization_id: string;
+          policy_id: string;
+          policy_version: number;
+          staff_id: string;
+          acknowledged_at: string;
+          signature_data_url: string;
+          ip_address: string | null;
+          user_agent: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          policy_id: string;
+          policy_version: number;
+          staff_id: string;
+          acknowledged_at?: string;
+          signature_data_url: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Update: Partial<Database['core']['Tables']['policy_acknowledgements']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'policy_acknowledgements_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'policy_acknowledgements_policy_id_fkey';
+            columns: ['policy_id'];
+            referencedRelation: 'workplace_policies';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      feedbacks: {
+        Row: {
+          id: string;
+          organization_id: string;
+          author_type: string;
+          author_id: string | null;
+          title: string;
+          content: string;
+          status: string;
+          is_internal_only: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          author_type: string;
+          author_id?: string | null;
+          title: string;
+          content: string;
+          status?: string;
+          is_internal_only?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['feedbacks']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'feedbacks_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      handover_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          shift_date: string;
+          shift_type: string;
+          writer_staff_id: string;
+          content: string;
+          checklist_items: Json;
+          confirmed_by_next_shift_staff_id: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          shift_date?: string;
+          shift_type?: string;
+          writer_staff_id: string;
+          content: string;
+          checklist_items?: Json;
+          confirmed_by_next_shift_staff_id?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['handover_notes']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'handover_notes_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      incident_logs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          occurred_at: string;
+          severity: string;
+          title: string;
+          description: string;
+          reporter_staff_id: string | null;
+          involved_customer_id: string | null;
+          actions_taken: string | null;
+          preventive_measures: string | null;
+          is_resolved: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          occurred_at?: string;
+          severity?: string;
+          title: string;
+          description: string;
+          reporter_staff_id?: string | null;
+          involved_customer_id?: string | null;
+          actions_taken?: string | null;
+          preventive_measures?: string | null;
+          is_resolved?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['incident_logs']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'incident_logs_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -50,6 +50,7 @@ import { vendor_ap_invoiceCapability } from './vendor_ap_invoice/manifest';
 import { work_attendance_payrollCapability } from './work_attendance_payroll/manifest';
 import { pickup_ordersCapability } from './pickup_orders/manifest';
 import { loyalty_stampCapability } from './loyalty_stamp/manifest';
+import { workplace_policyCapability } from './workplace_policy/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -113,6 +114,7 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   work_attendance_payrollCapability,
   pickup_ordersCapability,
   loyalty_stampCapability,
+  workplace_policyCapability,
 ];
 
 

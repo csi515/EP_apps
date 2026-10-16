@@ -7,7 +7,7 @@ import * as orgService from "@/core/organizations/services/organizationService";
 import { requestSignOut } from "@/core/auth/services/signOutCoordinator";
 
 export const authProvider: AuthProvider = {
-  login: async ({ email, password, provider }) => {
+  login: async ({ email, password, provider, rememberMe }: any) => {
     if (!supabase) {
       return {
         success: false,
@@ -73,7 +73,7 @@ export const authProvider: AuthProvider = {
       }
 
       if (email && password) {
-        const session = await authService.signIn({ email, password });
+        const session = await authService.signIn({ email, password, rememberMe });
         if (!session) {
           return {
             success: false,

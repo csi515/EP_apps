@@ -65,7 +65,7 @@ registerQueryClientClear(() => {
 });
 
 const RefineApp: React.FC = () => {
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, activeCapabilities } = useOrganization();
   const industryType = currentOrganization?.industry_type;
 
   const currentI18nProvider = useMemo(() => {
@@ -79,27 +79,32 @@ const RefineApp: React.FC = () => {
     const base = provisionIndustryResources({
       industry: industryType,
       i18n: currentI18nProvider,
+      activeCapabilities,
     });
-    return [
-      ...base,
-      {
+    const existingNames = new Set(base.map((r) => r.name));
+    const extra: typeof base = [];
+    if (!existingNames.has("passes")) {
+      extra.push({
         name: "passes",
         list: "/passes",
         meta: {
           label: "이용권/회원권",
           icon: React.createElement(Ticket, { className: "h-4 w-4" }),
         },
-      },
-      {
+      });
+    }
+    if (!existingNames.has("lockers")) {
+      extra.push({
         name: "lockers",
         list: "/lockers",
         meta: {
           label: "사물함/락커",
           icon: React.createElement(Lock, { className: "h-4 w-4" }),
         },
-      },
-    ];
-  }, [industryType, currentI18nProvider]);
+      });
+    }
+    return [...base, ...extra];
+  }, [industryType, currentI18nProvider, activeCapabilities]);
 
   return (
     <Refine
@@ -195,6 +200,10 @@ const RefineApp: React.FC = () => {
             <Route path="/consents/*" element={<IndustryAppRouter />} />
             <Route path="/inventory" element={<IndustryAppRouter />} />
             <Route path="/inventory/*" element={<IndustryAppRouter />} />
+            <Route path="/policies" element={<IndustryAppRouter />} />
+            <Route path="/policies/*" element={<IndustryAppRouter />} />
+            <Route path="/settings/policies" element={<IndustryAppRouter />} />
+            <Route path="/settings/policies/*" element={<IndustryAppRouter />} />
           </Route>
         </Route>
 

@@ -113,6 +113,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   work_attendance_payroll: ['work-payroll', 'timecards', 'payroll-slips', 'staff-payroll'],
   pickup_orders: ['pickup-orders', 'pickups', 'orders'],
   loyalty_stamp: ['loyalty-stamps', 'stamps', 'stickers'],
+  workplace_policy: ['policies', 'workplace-policies', 'regulations'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

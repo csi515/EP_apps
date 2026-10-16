@@ -141,6 +141,9 @@ const PickupOrdersKanbanView = lazy(() =>
 const LoyaltyStampView = lazy(() =>
   import('@/capabilities/loyalty_stamp').then((m) => ({ default: m.LoyaltyStampView }))
 );
+const WorkplacePolicyView = lazy(() =>
+  import('@/capabilities/workplace_policy').then((m) => ({ default: m.WorkplacePolicyManagementView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -391,6 +394,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('loyalty_stamp')) {
       extendedItems.push({ tab: 'loyalty-stamps', label: '전자 스탬프', icon: <Award className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('workplace_policy')) {
+      extendedItems.push({ tab: 'policies', label: '매장 사규·내규', icon: <FileText className="w-4 h-4" /> });
+    }
 
     const sections: NavMenuSection[] = [
       {
@@ -636,6 +642,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'loyalty-stamps': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 스탬프 화면을 불러오는 중...</div>}>
         <LoyaltyStampView />
+      </Suspense>
+    ),
+    policies: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">매장 사규 관리 화면을 불러오는 중...</div>}>
+        <WorkplacePolicyView />
       </Suspense>
     ),
     capabilities: () => (

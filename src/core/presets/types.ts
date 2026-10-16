@@ -80,7 +80,9 @@ export type BundledPresetCapabilityId =
   // 범주 AB: 사전 예약 픽업 칸반
   | 'pickup_orders'
   // 범주 AC: 모바일 전자 스탬프 / 칭찬 스티커
-  | 'loyalty_stamp';
+  | 'loyalty_stamp'
+  // 범주 AD: 매장 내규·사규 관리
+  | 'workplace_policy';
 
 
 export type PresetCapabilityId =

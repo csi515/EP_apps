@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
+import { dynamicAuthStorage } from '@/core/auth/services/authStorage';
 
 const defaultUrl = 'https://mock-supabase.moa.local';
 const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mock-anon-key';
@@ -16,6 +17,7 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
+      storage: dynamicAuthStorage,
     },
     db: {
       schema: 'core',

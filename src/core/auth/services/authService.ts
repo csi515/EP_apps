@@ -1,5 +1,6 @@
 import { Session, User, type Provider } from '@supabase/supabase-js';
 import { getCoreClient } from '../../../lib/supabase';
+import { setAuthStoragePreference } from './authStorage';
 
 export interface SignUpParams {
   email: string;
@@ -10,6 +11,7 @@ export interface SignUpParams {
 export interface SignInParams {
   email: string;
   password: string;
+  rememberMe?: boolean;
 }
 
 /** 앱 origin / 배포 URL 기준 redirect */
@@ -48,7 +50,11 @@ export async function signUp({
   return { user: data.user, session: data.session };
 }
 
-export async function signIn({ email, password }: SignInParams): Promise<Session> {
+export async function signIn({ email, password, rememberMe }: SignInParams): Promise<Session> {
+  if (rememberMe !== undefined) {
+    setAuthStoragePreference(rememberMe);
+  }
+
   const { data, error } = await getCoreClient().auth.signInWithPassword({
     email,
     password,

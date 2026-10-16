@@ -41,6 +41,13 @@ import {
   type PresetOperatingHoursConfig,
   type IndustryQuestionField,
 } from '@/app/presets/presetQuestionEngine';
+import {
+  OPERATION_TOOL_SETS,
+  getRecommendedToolSetsForPreset,
+  resolveToolSetActivation,
+  type OperationToolSetId,
+} from '@/core/presets/operationBundles';
+import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
 
 interface QuickSetupFormData {
   name: string;
@@ -174,6 +181,9 @@ export const QuickSetupPage: React.FC = () => {
   // 동적 질문 필드 목록
   const [dynamicQuestions, setDynamicQuestions] = useState<IndustryQuestionField[]>([]);
 
+  // 맞춤 도구 세트 선택 상태
+  const [selectedToolSetIds, setSelectedToolSetIds] = useState<OperationToolSetId[]>([]);
+
   // Refine / React Hook Form
   const {
     register,
@@ -205,10 +215,20 @@ export const QuickSetupPage: React.FC = () => {
     const questions = getQuestionsForIndustry(industry);
     setDynamicQuestions(questions);
 
+    // 업종별 추천 맞춤 도구 세트 자동 체크
+    const recommendedSets = getRecommendedToolSetsForPreset(industry);
+    setSelectedToolSetIds(recommendedSets);
+
     // 질문 기본값도 폼에 주입
     for (const q of questions) {
       setValue(q.id, q.defaultValue);
     }
+  };
+
+  const handleToggleToolSetOption = (setId: OperationToolSetId) => {
+    setSelectedToolSetIds((prev) =>
+      prev.includes(setId) ? prev.filter((id) => id !== setId) : [...prev, setId]
+    );
   };
 
   useEffect(() => {
@@ -263,12 +283,20 @@ export const QuickSetupPage: React.FC = () => {
         throw new Error('데이터베이스 서비스에 연결할 수 없습니다.');
       }
 
+      // 선택된 맞춤 세트로부터 필요한 추가 Capability 자동 계산
+      const presetCaps = (activePreset?.capabilities ?? []) as CapabilityId[];
+      const activationResult = resolveToolSetActivation(selectedToolSetIds, presetCaps);
+      const additionalCaps = activationResult.nextCapabilities.filter(
+        (id) => !presetCaps.includes(id)
+      );
+
       const payload = buildPresetPayload(selectedIndustry, {
         ...data,
         roles,
         rooms,
         locker_count: selectedIndustry === 'sauna' ? lockerCount : undefined,
         operating_hours: operatingHours,
+        active_capabilities: additionalCaps,
       });
 
       const { data: rpcResult, error } = await getCoreClient().rpc(
@@ -537,6 +565,79 @@ export const QuickSetupPage: React.FC = () => {
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Step 1.5: [우리 매장 맞춤 세트] 자동 추천 및 선택 */}
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-base font-bold text-slate-900">
+                    [우리 매장 맞춤 세트] 선택
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  선택하신 업종에 가장 필요한 기본 도구 세트가 자동 체크되었습니다. 필요한 세트를 자유롭게 추가·해제하세요.
+                </p>
+              </div>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                {selectedToolSetIds.length}개 세트 선택됨
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              {OPERATION_TOOL_SETS.map((set) => {
+                const isSelected = selectedToolSetIds.includes(set.id);
+                const isRecommended = set.recommendedFor.includes('*') || set.recommendedFor.includes(selectedIndustry);
+
+                return (
+                  <button
+                    key={set.id}
+                    type="button"
+                    onClick={() => handleToggleToolSetOption(set.id)}
+                    className={`p-4 text-left rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-indigo-600 bg-indigo-50/30 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <span className="font-bold text-sm text-slate-900">
+                          {set.displayName}
+                        </span>
+                        <div
+                          className={`w-5 h-5 rounded-md flex items-center justify-center border transition ${
+                            isSelected
+                              ? 'bg-indigo-600 border-indigo-600 text-white'
+                              : 'bg-white border-slate-300'
+                          }`}
+                        >
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed mb-3">
+                        {set.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100">
+                      {isRecommended && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                          추천 세트
+                        </span>
+                      )}
+                      {set.badge && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                          {set.badge}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

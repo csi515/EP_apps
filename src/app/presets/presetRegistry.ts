@@ -105,6 +105,8 @@ import { pickupOrdersSetupSchema } from '@/capabilities/pickup_orders/setupSchem
 import { pickupOrdersResources } from '@/capabilities/pickup_orders/resources';
 import { loyaltyStampSetupSchema } from '@/capabilities/loyalty_stamp/setupSchema';
 import { loyaltyStampResources } from '@/capabilities/loyalty_stamp/resources';
+import { workplacePolicySetupSchema } from '@/capabilities/workplace_policy/setupSchema';
+import { workplacePolicyResources } from '@/capabilities/workplace_policy/resources';
 
 
 /**
@@ -379,6 +381,13 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'loyalty_stamp',
     setupSchema: loyaltyStampSetupSchema,
     resources: loyaltyStampResources,
+  },
+
+  // 범주 AD: 매장 내규·사규 관리
+  workplace_policy: {
+    capabilityId: 'workplace_policy',
+    setupSchema: workplacePolicySetupSchema,
+    resources: workplacePolicyResources,
   },
 };
 
