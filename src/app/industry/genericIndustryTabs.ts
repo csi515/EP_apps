@@ -479,6 +479,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tier: 'tier1_ready',
     primaryCapability: 'daily_care_report',
   },
+  'substitute-dispatch': {
+    tab: 'substitute-dispatch',
+    label: '강사 대강 긴급호출',
+    description: '결강 시 대체 강사 긴급 공고, 지원 접수, 원장 원클릭 승인 및 단톡방 서식 조립',
+    tier: 'tier1_ready',
+    primaryCapability: 'substitute_dispatch',
+  },
+  'entry-pass-ticket': {
+    tab: 'entry-pass-ticket',
+    label: '일일 모바일 입장권',
+    description: '키즈카페·공간대여 1회성 방문객 대상 W3C SVG QR 티켓 발권 및 현장 중복 검표 방어',
+    tier: 'tier1_ready',
+    primaryCapability: 'entry_pass_ticket',
+  },
+  'event-contest-hub': {
+    tab: 'event-contest-hub',
+    label: '원내 발표회·대회',
+    description: '음악 연주회·대회 참가자 등번호 채번, 무대 큐시트 조립 및 0원 W3C SVG 전자 상장',
+    tier: 'tier1_ready',
+    primaryCapability: 'event_contest_hub',
+  },
   capabilities: {
     tab: 'capabilities',
     label: '기능 스위치보드 & 용어 사전',

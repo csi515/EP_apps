@@ -125,6 +125,12 @@ import { intakeAssessmentSetupSchema } from '@/capabilities/intake_assessment/se
 import { intakeAssessmentResources } from '@/capabilities/intake_assessment/resources';
 import { dailyCareReportSetupSchema } from '@/capabilities/daily_care_report/setupSchema';
 import { dailyCareReportResources } from '@/capabilities/daily_care_report/resources';
+import { substituteDispatchSetupSchema } from '@/capabilities/substitute_dispatch/setupSchema';
+import { substituteDispatchResources } from '@/capabilities/substitute_dispatch/resources';
+import { entryPassTicketSetupSchema } from '@/capabilities/entry_pass_ticket/setupSchema';
+import { entryPassTicketResources } from '@/capabilities/entry_pass_ticket/resources';
+import { eventContestHubSetupSchema } from '@/capabilities/event_contest_hub/setupSchema';
+import { eventContestHubResources } from '@/capabilities/event_contest_hub/resources';
 
 
 /**
@@ -469,6 +475,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'daily_care_report',
     setupSchema: dailyCareReportSetupSchema,
     resources: dailyCareReportResources,
+  },
+
+  // 범주 AN: 강사 대진/대강 긴급 호출
+  substitute_dispatch: {
+    capabilityId: 'substitute_dispatch',
+    setupSchema: substituteDispatchSetupSchema,
+    resources: substituteDispatchResources,
+  },
+
+  // 범주 AO: 모바일 일일 입장권 & QR 검표
+  entry_pass_ticket: {
+    capabilityId: 'entry_pass_ticket',
+    setupSchema: entryPassTicketSetupSchema,
+    resources: entryPassTicketResources,
+  },
+
+  // 범주 AP: 원내 발표회·대회 큐시트/심사
+  event_contest_hub: {
+    capabilityId: 'event_contest_hub',
+    setupSchema: eventContestHubSetupSchema,
+    resources: eventContestHubResources,
   },
 };
 

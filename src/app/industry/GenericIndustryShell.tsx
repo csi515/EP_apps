@@ -171,6 +171,15 @@ const IntakeAssessmentView = lazy(() =>
 const DailyCareReportView = lazy(() =>
   import('@/capabilities/daily_care_report').then((m) => ({ default: m.DailyCareReportView }))
 );
+const SubstituteDispatchView = lazy(() =>
+  import('@/capabilities/substitute_dispatch').then((m) => ({ default: m.SubstituteDispatchView }))
+);
+const EntryPassTicketView = lazy(() =>
+  import('@/capabilities/entry_pass_ticket').then((m) => ({ default: m.EntryPassTicketView }))
+);
+const EventContestHubView = lazy(() =>
+  import('@/capabilities/event_contest_hub').then((m) => ({ default: m.EventContestHubView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -450,6 +459,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('daily_care_report')) {
       extendedItems.push({ tab: 'daily-care-report', label: '일일 안심 알림장', icon: <ClipboardList className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('substitute_dispatch')) {
+      extendedItems.push({ tab: 'substitute-dispatch', label: '강사 대강 긴급호출', icon: <Users className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('entry_pass_ticket')) {
+      extendedItems.push({ tab: 'entry-pass-ticket', label: '일일 모바일 입장권', icon: <Ticket className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('event_contest_hub')) {
+      extendedItems.push({ tab: 'event-contest-hub', label: '원내 발표회·대회', icon: <Award className="w-4 h-4" /> });
     }
 
     const sections: NavMenuSection[] = [
@@ -756,6 +774,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'daily-care-report': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">일일 알림장 화면을 불러오는 중...</div>}>
         <DailyCareReportView />
+      </Suspense>
+    ),
+    'substitute-dispatch': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">강사 대강 긴급호출 화면을 불러오는 중...</div>}>
+        <SubstituteDispatchView />
+      </Suspense>
+    ),
+    'entry-pass-ticket': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">일일 모바일 입장권 화면을 불러오는 중...</div>}>
+        <EntryPassTicketView />
+      </Suspense>
+    ),
+    'event-contest-hub': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">원내 발표회·대회 화면을 불러오는 중...</div>}>
+        <EventContestHubView />
       </Suspense>
     ),
     capabilities: () => (

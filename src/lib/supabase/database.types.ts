@@ -3162,6 +3162,242 @@ export interface Database {
           },
         ];
       };
+      substitute_requests: {
+        Row: {
+          id: string;
+          organization_id: string;
+          requester_staff_id: string;
+          requester_name: string;
+          class_name: string;
+          target_date: string;
+          start_time: string;
+          end_time: string;
+          reason: string;
+          reason_detail: string | null;
+          pay_rate_type: string;
+          offered_fee: number;
+          assigned_staff_id: string | null;
+          assigned_name: string | null;
+          status: string;
+          approved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          requester_staff_id: string;
+          requester_name: string;
+          class_name: string;
+          target_date: string;
+          start_time: string;
+          end_time: string;
+          reason?: string;
+          reason_detail?: string | null;
+          pay_rate_type?: string;
+          offered_fee?: number;
+          assigned_staff_id?: string | null;
+          assigned_name?: string | null;
+          status?: string;
+          approved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['substitute_requests']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'substitute_requests_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      substitute_bids: {
+        Row: {
+          id: string;
+          organization_id: string;
+          request_id: string;
+          candidate_staff_id: string;
+          candidate_name: string;
+          bid_message: string | null;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          request_id: string;
+          candidate_staff_id: string;
+          candidate_name: string;
+          bid_message?: string | null;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['substitute_bids']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'substitute_bids_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      entry_pass_tickets: {
+        Row: {
+          id: string;
+          organization_id: string;
+          ticket_number: string;
+          customer_name: string;
+          customer_phone: string | null;
+          ticket_type: string;
+          valid_date: string;
+          price: number;
+          status: string;
+          security_hash: string;
+          checked_in_at: string | null;
+          checked_out_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          ticket_number: string;
+          customer_name: string;
+          customer_phone?: string | null;
+          ticket_type?: string;
+          valid_date: string;
+          price?: number;
+          status?: string;
+          security_hash: string;
+          checked_in_at?: string | null;
+          checked_out_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['entry_pass_tickets']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'entry_pass_tickets_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      entry_pass_scans: {
+        Row: {
+          id: string;
+          organization_id: string;
+          ticket_id: string | null;
+          ticket_number: string;
+          scanner_staff_id: string | null;
+          scan_action: string;
+          scan_result: string;
+          scan_message: string | null;
+          scanned_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          ticket_id?: string | null;
+          ticket_number: string;
+          scanner_staff_id?: string | null;
+          scan_action?: string;
+          scan_result: string;
+          scan_message?: string | null;
+          scanned_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['entry_pass_scans']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'entry_pass_scans_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      event_contests: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          event_category: string;
+          event_date: string;
+          venue_name: string;
+          entry_fee: number;
+          registration_deadline: string;
+          rubric_criteria: Json;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          event_category?: string;
+          event_date: string;
+          venue_name: string;
+          entry_fee?: number;
+          registration_deadline: string;
+          rubric_criteria?: Json;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['event_contests']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'event_contests_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      event_contest_entries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          contest_id: string;
+          participant_id: string | null;
+          participant_name: string;
+          performance_piece: string;
+          entry_order: number;
+          score_details: Json;
+          final_score: number;
+          award_title: string | null;
+          certificate_issued: boolean;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          contest_id: string;
+          participant_id?: string | null;
+          participant_name: string;
+          performance_piece: string;
+          entry_order?: number;
+          score_details?: Json;
+          final_score?: number;
+          award_title?: string | null;
+          certificate_issued?: boolean;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['event_contest_entries']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'event_contest_entries_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

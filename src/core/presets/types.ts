@@ -100,7 +100,13 @@ export type BundledPresetCapabilityId =
   // 범주 AL: 사전 문진표 & 맞춤 진단서
   | 'intake_assessment'
   // 범주 AM: 돌봄/활동 일일 알림장 & 타임라인 피드
-  | 'daily_care_report';
+  | 'daily_care_report'
+  // 범주 AN: 강사 대진/대강 긴급 호출
+  | 'substitute_dispatch'
+  // 범주 AO: 모바일 일일 입장권 & QR 검표
+  | 'entry_pass_ticket'
+  // 범주 AP: 원내 발표회·대회 큐시트/심사
+  | 'event_contest_hub';
 
 
 export type PresetCapabilityId =

@@ -73,6 +73,15 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
   // 돌봄 알림장은 원생/대상 명부 필수
   daily_care_report: ['roster'],
 
+  // 강사 대강 긴급 호출은 근무표 연계
+  substitute_dispatch: ['shift_schedule'],
+
+  // 모바일 입장권은 공간/좌석 점유 연계
+  entry_pass_ticket: ['seat_room'],
+
+  // 원내 발표회·대회는 원생 명부 연계
+  event_contest_hub: ['roster'],
+
   // 단원평가 성적 분석은 진도 기록 필수
   exam_grade_analytics: ['curriculum_progress'],
 };

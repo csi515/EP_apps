@@ -123,6 +123,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   makeup_lesson_pass: ['makeup-lesson-pass', 'makeup-tokens', 'makeup-slots'],
   intake_assessment: ['intake-assessment', 'intakes', 'questionnaires'],
   daily_care_report: ['daily-care-report', 'daily-care', 'care-logs'],
+  substitute_dispatch: ['substitute-dispatch', 'substitutes', 'dispatches'],
+  entry_pass_ticket: ['entry-pass-ticket', 'tickets', 'scans'],
+  event_contest_hub: ['event-contest-hub', 'contests', 'cue-sheet'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

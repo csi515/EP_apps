@@ -69,6 +69,9 @@ export const CAPABILITY_IDS = [
   'makeup_lesson_pass',
   'intake_assessment',
   'daily_care_report',
+  'substitute_dispatch',
+  'entry_pass_ticket',
+  'event_contest_hub',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

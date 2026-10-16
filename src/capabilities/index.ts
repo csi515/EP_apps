@@ -60,6 +60,9 @@ import { supply_restockCapability } from './supply_restock/manifest';
 import { makeup_lesson_passCapability } from './makeup_lesson_pass/manifest';
 import { intake_assessmentCapability } from './intake_assessment/manifest';
 import { daily_care_reportCapability } from './daily_care_report/manifest';
+import { substitute_dispatchCapability } from './substitute_dispatch/manifest';
+import { entry_pass_ticketCapability } from './entry_pass_ticket/manifest';
+import { event_contest_hubCapability } from './event_contest_hub/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -133,6 +136,9 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   makeup_lesson_passCapability,
   intake_assessmentCapability,
   daily_care_reportCapability,
+  substitute_dispatchCapability,
+  entry_pass_ticketCapability,
+  event_contest_hubCapability,
 ];
 
 export * from './trial_funnel';
@@ -143,6 +149,9 @@ export * from './supply_restock';
 export * from './makeup_lesson_pass';
 export * from './intake_assessment';
 export * from './daily_care_report';
+export * from './substitute_dispatch';
+export * from './entry_pass_ticket';
+export * from './event_contest_hub';
 
 
 

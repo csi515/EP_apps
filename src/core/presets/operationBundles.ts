@@ -97,7 +97,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '매장 사규/내규 전자 서약, 강사·직원 교대 근무표(시프트) 및 현장 업무 인수인계를 지원합니다.',
     iconName: 'UsersGear',
     badge: '직원 고용 매장 필수',
-    capabilities: ['workplace_policy', 'shift_schedule', 'instructor_match', 'task_pipeline', 'feedbacks'],
+    capabilities: ['workplace_policy', 'shift_schedule', 'instructor_match', 'task_pipeline', 'feedbacks', 'substitute_dispatch'],
     recommendedFor: ['*'], // 전 업종 공통 권장
   },
   {
@@ -128,7 +128,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '레슨/수업 진도 기록, 단원평가 채점 및 피트니스 체형/운동 일지를 기록합니다.',
     iconName: 'GraduationCap',
     badge: '성장 관리',
-    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment', 'makeup_lesson_pass', 'daily_care_report'],
+    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment', 'makeup_lesson_pass', 'daily_care_report', 'event_contest_hub'],
     recommendedFor: [
       'piano',
       'art_academy',
@@ -167,7 +167,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '사물함(락커) 배정, 룸/좌석 시간제 타이머 과금 및 공용 장비 대여를 관리합니다.',
     iconName: 'Box',
     badge: '공간·기물 관리',
-    capabilities: ['locker', 'seat_room', 'seat_timer_billing', 'rental_equipment', 'space_turnaround'],
+    capabilities: ['locker', 'seat_room', 'seat_timer_billing', 'rental_equipment', 'space_turnaround', 'entry_pass_ticket'],
     recommendedFor: [
       'study_cafe',
       'reading_room',
