@@ -49,13 +49,20 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
   workplace_policy: ['shift_schedule'],
   feedbacks: ['shift_schedule'],
 
-  // 분실물/습득물, 전자계약, 모바일스탬프, 추천인, 셔틀, 수업일지는 고객 명부(roster) 필수
+  // 분실물/습득물, 전자계약, 모바일스탬프, 추천인, 셔틀, 수업일지, 승급심사는 고객 명부(roster) 필수
   lost_found: ['roster'],
   digital_contract: ['roster'],
   loyalty_stamp: ['roster'],
   membership_referral_tree: ['roster'],
   vehicle_shuttle: ['roster'],
   learning_journal: ['roster'],
+  level_assessment: ['roster'],
+
+  // 공간 턴어라운드 버퍼는 공간(seat_room) 필수
+  space_turnaround: ['seat_room'],
+
+  // 소모품 안전재고 발주는 재고(inventory) 필수
+  supply_restock: ['inventory'],
 
   // 단원평가 성적 분석은 진도 기록 필수
   exam_grade_analytics: ['curriculum_progress'],

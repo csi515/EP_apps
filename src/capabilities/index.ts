@@ -54,6 +54,9 @@ import { workplace_policyCapability } from './workplace_policy/manifest';
 import { feedbacksCapability } from './feedbacks/manifest';
 import { trial_funnelCapability } from './trial_funnel/manifest';
 import { learning_journalCapability } from './learning_journal/manifest';
+import { level_assessmentCapability } from './level_assessment/manifest';
+import { space_turnaroundCapability } from './space_turnaround/manifest';
+import { supply_restockCapability } from './supply_restock/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -121,10 +124,16 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   feedbacksCapability,
   trial_funnelCapability,
   learning_journalCapability,
+  level_assessmentCapability,
+  space_turnaroundCapability,
+  supply_restockCapability,
 ];
 
 export * from './trial_funnel';
 export * from './learning_journal';
+export * from './level_assessment';
+export * from './space_turnaround';
+export * from './supply_restock';
 
 
 

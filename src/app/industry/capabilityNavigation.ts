@@ -117,6 +117,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   feedbacks: ['operations', 'handover', 'feedbacks', 'incidents'],
   trial_funnel: ['trial-funnel', 'trials', 'leads'],
   learning_journal: ['learning-journal', 'journals', 'growth-log'],
+  level_assessment: ['level-assessment', 'assessments', 'certifications'],
+  space_turnaround: ['space-turnaround', 'turnarounds', 'cleaning'],
+  supply_restock: ['supply-restock', 'restock', 'supplies'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

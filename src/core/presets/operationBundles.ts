@@ -128,7 +128,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '레슨/수업 진도 기록, 단원평가 채점 및 피트니스 체형/운동 일지를 기록합니다.',
     iconName: 'GraduationCap',
     badge: '성장 관리',
-    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal'],
+    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment'],
     recommendedFor: [
       'piano',
       'art_academy',
@@ -148,7 +148,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '교재·운동용품 재고 관리, 매입 전표 정리 및 사전 예약 픽업 주문을 처리합니다.',
     iconName: 'ShoppingBag',
     badge: '물품 판매',
-    capabilities: ['inventory', 'vendor_ap_invoice', 'pickup_orders', 'recipe_bom'],
+    capabilities: ['inventory', 'vendor_ap_invoice', 'pickup_orders', 'recipe_bom', 'supply_restock'],
     recommendedFor: [
       'craft_workshop',
       'baking_studio',
@@ -167,7 +167,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '사물함(락커) 배정, 룸/좌석 시간제 타이머 과금 및 공용 장비 대여를 관리합니다.',
     iconName: 'Box',
     badge: '공간·기물 관리',
-    capabilities: ['locker', 'seat_room', 'seat_timer_billing', 'rental_equipment'],
+    capabilities: ['locker', 'seat_room', 'seat_timer_billing', 'rental_equipment', 'space_turnaround'],
     recommendedFor: [
       'study_cafe',
       'reading_room',

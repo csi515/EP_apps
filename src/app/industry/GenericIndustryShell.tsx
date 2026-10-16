@@ -153,6 +153,15 @@ const TrialFunnelKanbanView = lazy(() =>
 const LearningJournalFeedView = lazy(() =>
   import('@/capabilities/learning_journal').then((m) => ({ default: m.LearningJournalFeedView }))
 );
+const LevelAssessmentView = lazy(() =>
+  import('@/capabilities/level_assessment').then((m) => ({ default: m.LevelAssessmentView }))
+);
+const SpaceTurnaroundView = lazy(() =>
+  import('@/capabilities/space_turnaround').then((m) => ({ default: m.SpaceTurnaroundView }))
+);
+const SupplyRestockView = lazy(() =>
+  import('@/capabilities/supply_restock').then((m) => ({ default: m.SupplyRestockView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -414,6 +423,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('learning_journal')) {
       extendedItems.push({ tab: 'learning-journal', label: '수업 일지·알림장', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('level_assessment')) {
+      extendedItems.push({ tab: 'level-assessment', label: '승급 심사·합격증', icon: <Award className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('space_turnaround')) {
+      extendedItems.push({ tab: 'space-turnaround', label: '공간 턴어라운드', icon: <Sparkles className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('supply_restock')) {
+      extendedItems.push({ tab: 'supply-restock', label: '소모품 안전재고', icon: <Package className="w-4 h-4" /> });
     }
 
     const sections: NavMenuSection[] = [
@@ -690,6 +708,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'learning-journal': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">수업 일지·알림장을 불러오는 중...</div>}>
         <LearningJournalFeedView />
+      </Suspense>
+    ),
+    'level-assessment': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">승급 심사·합격증을 불러오는 중...</div>}>
+        <LevelAssessmentView />
+      </Suspense>
+    ),
+    'space-turnaround': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공간 턴어라운드를 불러오는 중...</div>}>
+        <SpaceTurnaroundView />
+      </Suspense>
+    ),
+    'supply-restock': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">소모품 안전재고를 불러오는 중...</div>}>
+        <SupplyRestockView />
       </Suspense>
     ),
     capabilities: () => (

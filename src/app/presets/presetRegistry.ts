@@ -113,6 +113,12 @@ import { trial_funnelSetupSchema } from '@/capabilities/trial_funnel/setupSchema
 import { trial_funnelResources } from '@/capabilities/trial_funnel/resources';
 import { learning_journalSetupSchema } from '@/capabilities/learning_journal/setupSchema';
 import { learning_journalResources } from '@/capabilities/learning_journal/resources';
+import { level_assessmentSetupSchema } from '@/capabilities/level_assessment/setupSchema';
+import { level_assessmentResources } from '@/capabilities/level_assessment/resources';
+import { space_turnaroundSetupSchema } from '@/capabilities/space_turnaround/setupSchema';
+import { space_turnaroundResources } from '@/capabilities/space_turnaround/resources';
+import { supply_restockSetupSchema } from '@/capabilities/supply_restock/setupSchema';
+import { supply_restockResources } from '@/capabilities/supply_restock/resources';
 
 
 /**
@@ -415,6 +421,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'learning_journal',
     setupSchema: learning_journalSetupSchema,
     resources: learning_journalResources,
+  },
+
+  // 범주 AH: 정기 승급 심사 및 모바일 합격증
+  level_assessment: {
+    capabilityId: 'level_assessment',
+    setupSchema: level_assessmentSetupSchema,
+    resources: level_assessmentResources,
+  },
+
+  // 범주 AI: 공간 턴어라운드 및 정비 버퍼
+  space_turnaround: {
+    capabilityId: 'space_turnaround',
+    setupSchema: space_turnaroundSetupSchema,
+    resources: space_turnaroundResources,
+  },
+
+  // 범주 AJ: 소모품 안전재고 및 간이 발주서
+  supply_restock: {
+    capabilityId: 'supply_restock',
+    setupSchema: supply_restockSetupSchema,
+    resources: supply_restockResources,
   },
 };
 

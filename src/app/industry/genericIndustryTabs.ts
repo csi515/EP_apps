@@ -437,6 +437,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tier: 'tier1_ready',
     primaryCapability: 'learning_journal',
   },
+  'level-assessment': {
+    tab: 'level-assessment',
+    label: '승급 심사·합격증',
+    description: '정기 승급·승품 루브릭 채점 및 W3C 모바일 전자 합격증 발급',
+    tier: 'tier1_ready',
+    primaryCapability: 'level_assessment',
+  },
+  'space-turnaround': {
+    tab: 'space-turnaround',
+    label: '공간 턴어라운드',
+    description: '예약 종료 후 15분 정비/청소 버퍼 확보 및 입실 준비 완료 관리',
+    tier: 'tier1_ready',
+    primaryCapability: 'space_turnaround',
+  },
+  'supply-restock': {
+    tab: 'supply-restock',
+    label: '소모품 안전재고·발주',
+    description: '최소 안전재고 미달 품목 실시간 감지 및 공급처별 원터치 간이 발주서 생성',
+    tier: 'tier1_ready',
+    primaryCapability: 'supply_restock',
+  },
   capabilities: {
     tab: 'capabilities',
     label: '기능 스위치보드 & 용어 사전',

@@ -2696,6 +2696,217 @@ export interface Database {
           },
         ];
       };
+      level_assessments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          target_program: string;
+          assessment_date: string;
+          passing_score: number;
+          rubric_items: Json;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          target_program: string;
+          assessment_date: string;
+          passing_score?: number;
+          rubric_items?: Json;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['level_assessments']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'level_assessments_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      assessment_results: {
+        Row: {
+          id: string;
+          organization_id: string;
+          assessment_id: string;
+          student_id: string;
+          student_name: string;
+          current_level: string;
+          target_level: string;
+          scores: Json;
+          total_score: number;
+          is_passed: boolean;
+          certificate_number: string | null;
+          evaluator_feedback: string | null;
+          evaluated_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          assessment_id: string;
+          student_id: string;
+          student_name: string;
+          current_level: string;
+          target_level: string;
+          scores?: Json;
+          total_score?: number;
+          is_passed?: boolean;
+          certificate_number?: string | null;
+          evaluator_feedback?: string | null;
+          evaluated_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['assessment_results']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'assessment_results_assessment_id_fkey';
+            columns: ['assessment_id'];
+            referencedRelation: 'level_assessments';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'assessment_results_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      space_turnarounds: {
+        Row: {
+          id: string;
+          organization_id: string;
+          room_id: string;
+          room_name: string;
+          booking_id: string | null;
+          service_start_at: string;
+          service_end_at: string;
+          buffer_minutes: number;
+          buffer_end_at: string;
+          status: string;
+          cleaner_staff_id: string | null;
+          checklist: Json;
+          cleaned_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          room_id: string;
+          room_name: string;
+          booking_id?: string | null;
+          service_start_at: string;
+          service_end_at: string;
+          buffer_minutes?: number;
+          buffer_end_at: string;
+          status?: string;
+          cleaner_staff_id?: string | null;
+          checklist?: Json;
+          cleaned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['space_turnarounds']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'space_turnarounds_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      supply_restock_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          item_name: string;
+          category: string;
+          current_quantity: number;
+          safety_threshold: number;
+          optimal_order_quantity: number;
+          unit: string;
+          unit_cost: number;
+          vendor_name: string;
+          vendor_contact: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          item_name: string;
+          category?: string;
+          current_quantity?: number;
+          safety_threshold?: number;
+          optimal_order_quantity?: number;
+          unit?: string;
+          unit_cost?: number;
+          vendor_name: string;
+          vendor_contact?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['supply_restock_items']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'supply_restock_items_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      purchase_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          po_number: string;
+          vendor_name: string;
+          vendor_contact: string | null;
+          order_items: Json;
+          total_amount: number;
+          status: string;
+          memo: string | null;
+          sent_at: string | null;
+          received_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          po_number: string;
+          vendor_name: string;
+          vendor_contact?: string | null;
+          order_items?: Json;
+          total_amount?: number;
+          status?: string;
+          memo?: string | null;
+          sent_at?: string | null;
+          received_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['purchase_orders']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_orders_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

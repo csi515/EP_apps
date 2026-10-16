@@ -88,7 +88,13 @@ export type BundledPresetCapabilityId =
   // 범주 AF: 무료 체험 및 상담 리드 전환 파이프라인
   | 'trial_funnel'
   // 범주 AG: 수업 일지 및 학부모 알림장 피드
-  | 'learning_journal';
+  | 'learning_journal'
+  // 범주 AH: 정기 승급 심사 및 모바일 합격증
+  | 'level_assessment'
+  // 범주 AI: 공간 턴어라운드 및 정비 버퍼
+  | 'space_turnaround'
+  // 범주 AJ: 소모품 안전재고 및 간이 발주서
+  | 'supply_restock';
 
 
 export type PresetCapabilityId =
