@@ -162,6 +162,15 @@ const SpaceTurnaroundView = lazy(() =>
 const SupplyRestockView = lazy(() =>
   import('@/capabilities/supply_restock').then((m) => ({ default: m.SupplyRestockView }))
 );
+const MakeupLessonPassView = lazy(() =>
+  import('@/capabilities/makeup_lesson_pass').then((m) => ({ default: m.MakeupLessonPassView }))
+);
+const IntakeAssessmentView = lazy(() =>
+  import('@/capabilities/intake_assessment').then((m) => ({ default: m.IntakeAssessmentView }))
+);
+const DailyCareReportView = lazy(() =>
+  import('@/capabilities/daily_care_report').then((m) => ({ default: m.DailyCareReportView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -432,6 +441,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('supply_restock')) {
       extendedItems.push({ tab: 'supply-restock', label: '소모품 안전재고', icon: <Package className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('makeup_lesson_pass')) {
+      extendedItems.push({ tab: 'makeup-lesson-pass', label: '결석 보강 매칭', icon: <Calendar className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('intake_assessment')) {
+      extendedItems.push({ tab: 'intake-assessment', label: '사전 문진표', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('daily_care_report')) {
+      extendedItems.push({ tab: 'daily-care-report', label: '일일 안심 알림장', icon: <ClipboardList className="w-4 h-4" /> });
     }
 
     const sections: NavMenuSection[] = [
@@ -723,6 +741,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'supply-restock': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">소모품 안전재고를 불러오는 중...</div>}>
         <SupplyRestockView />
+      </Suspense>
+    ),
+    'makeup-lesson-pass': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">결석 보강 매칭 화면을 불러오는 중...</div>}>
+        <MakeupLessonPassView />
+      </Suspense>
+    ),
+    'intake-assessment': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사전 문진표 화면을 불러오는 중...</div>}>
+        <IntakeAssessmentView />
+      </Suspense>
+    ),
+    'daily-care-report': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">일일 알림장 화면을 불러오는 중...</div>}>
+        <DailyCareReportView />
       </Suspense>
     ),
     capabilities: () => (

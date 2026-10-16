@@ -64,6 +64,15 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
   // 소모품 안전재고 발주는 재고(inventory) 필수
   supply_restock: ['inventory'],
 
+  // 결석 보강은 원생 명부 및 스케줄링 필수
+  makeup_lesson_pass: ['roster', 'scheduling'],
+
+  // 사전 문진표는 상담 CRM 연계
+  intake_assessment: ['consultation_crm'],
+
+  // 돌봄 알림장은 원생/대상 명부 필수
+  daily_care_report: ['roster'],
+
   // 단원평가 성적 분석은 진도 기록 필수
   exam_grade_analytics: ['curriculum_progress'],
 };

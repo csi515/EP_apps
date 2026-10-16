@@ -119,6 +119,12 @@ import { space_turnaroundSetupSchema } from '@/capabilities/space_turnaround/set
 import { space_turnaroundResources } from '@/capabilities/space_turnaround/resources';
 import { supply_restockSetupSchema } from '@/capabilities/supply_restock/setupSchema';
 import { supply_restockResources } from '@/capabilities/supply_restock/resources';
+import { makeupLessonPassSetupSchema } from '@/capabilities/makeup_lesson_pass/setupSchema';
+import { makeupLessonPassResources } from '@/capabilities/makeup_lesson_pass/resources';
+import { intakeAssessmentSetupSchema } from '@/capabilities/intake_assessment/setupSchema';
+import { intakeAssessmentResources } from '@/capabilities/intake_assessment/resources';
+import { dailyCareReportSetupSchema } from '@/capabilities/daily_care_report/setupSchema';
+import { dailyCareReportResources } from '@/capabilities/daily_care_report/resources';
 
 
 /**
@@ -442,6 +448,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'supply_restock',
     setupSchema: supply_restockSetupSchema,
     resources: supply_restockResources,
+  },
+
+  // 범주 AK: 결석 보강 티켓 & 보강 슬롯 매칭
+  makeup_lesson_pass: {
+    capabilityId: 'makeup_lesson_pass',
+    setupSchema: makeupLessonPassSetupSchema,
+    resources: makeupLessonPassResources,
+  },
+
+  // 범주 AL: 사전 문진표 & 맞춤 진단서
+  intake_assessment: {
+    capabilityId: 'intake_assessment',
+    setupSchema: intakeAssessmentSetupSchema,
+    resources: intakeAssessmentResources,
+  },
+
+  // 범주 AM: 돌봄/활동 일일 알림장 & 타임라인 피드
+  daily_care_report: {
+    capabilityId: 'daily_care_report',
+    setupSchema: dailyCareReportSetupSchema,
+    resources: dailyCareReportResources,
   },
 };
 

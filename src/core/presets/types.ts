@@ -94,7 +94,13 @@ export type BundledPresetCapabilityId =
   // 범주 AI: 공간 턴어라운드 및 정비 버퍼
   | 'space_turnaround'
   // 범주 AJ: 소모품 안전재고 및 간이 발주서
-  | 'supply_restock';
+  | 'supply_restock'
+  // 범주 AK: 결석 보강 티켓 & 보강 슬롯 매칭
+  | 'makeup_lesson_pass'
+  // 범주 AL: 사전 문진표 & 맞춤 진단서
+  | 'intake_assessment'
+  // 범주 AM: 돌봄/활동 일일 알림장 & 타임라인 피드
+  | 'daily_care_report';
 
 
 export type PresetCapabilityId =

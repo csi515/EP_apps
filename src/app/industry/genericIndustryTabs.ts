@@ -458,6 +458,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tier: 'tier1_ready',
     primaryCapability: 'supply_restock',
   },
+  'makeup-lesson-pass': {
+    tab: 'makeup-lesson-pass',
+    label: '결석 보강 매칭',
+    description: '결석 발생 시 30일 보강 티켓 발행 및 강사 잔여 공석 원클릭 스왑 배정',
+    tier: 'tier1_ready',
+    primaryCapability: 'makeup_lesson_pass',
+  },
+  'intake-assessment': {
+    tab: 'intake-assessment',
+    label: '사전 문진표',
+    description: '첫 방문 고객 사전 건강/부상/알레르기 위험 요인 감지 및 상담용 요약 카드',
+    tier: 'tier1_ready',
+    primaryCapability: 'intake_assessment',
+  },
+  'daily-care-report': {
+    tab: 'daily-care-report',
+    label: '일일 안심 알림장',
+    description: '식사·배변·수면·투약 안심 케어 기록 및 비용 0원 W3C SVG 모바일 알림장 발행',
+    tier: 'tier1_ready',
+    primaryCapability: 'daily_care_report',
+  },
   capabilities: {
     tab: 'capabilities',
     label: '기능 스위치보드 & 용어 사전',

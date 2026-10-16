@@ -128,7 +128,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '레슨/수업 진도 기록, 단원평가 채점 및 피트니스 체형/운동 일지를 기록합니다.',
     iconName: 'GraduationCap',
     badge: '성장 관리',
-    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment'],
+    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment', 'makeup_lesson_pass', 'daily_care_report'],
     recommendedFor: [
       'piano',
       'art_academy',
@@ -205,7 +205,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '체험 상담 리드 전환, 모바일 전자 스탬프 및 패밀리 추천인 리워드로 단골을 확보합니다.',
     iconName: 'Sparkles',
     badge: '단골 유치',
-    capabilities: ['consultation_crm', 'loyalty_stamp', 'membership_referral_tree', 'retention_marketing', 'trial_funnel'],
+    capabilities: ['consultation_crm', 'loyalty_stamp', 'membership_referral_tree', 'retention_marketing', 'trial_funnel', 'intake_assessment'],
     recommendedFor: [
       'hair_salon',
       'nail_shop',

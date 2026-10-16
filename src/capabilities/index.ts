@@ -57,6 +57,9 @@ import { learning_journalCapability } from './learning_journal/manifest';
 import { level_assessmentCapability } from './level_assessment/manifest';
 import { space_turnaroundCapability } from './space_turnaround/manifest';
 import { supply_restockCapability } from './supply_restock/manifest';
+import { makeup_lesson_passCapability } from './makeup_lesson_pass/manifest';
+import { intake_assessmentCapability } from './intake_assessment/manifest';
+import { daily_care_reportCapability } from './daily_care_report/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -127,6 +130,9 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   level_assessmentCapability,
   space_turnaroundCapability,
   supply_restockCapability,
+  makeup_lesson_passCapability,
+  intake_assessmentCapability,
+  daily_care_reportCapability,
 ];
 
 export * from './trial_funnel';
@@ -134,6 +140,9 @@ export * from './learning_journal';
 export * from './level_assessment';
 export * from './space_turnaround';
 export * from './supply_restock';
+export * from './makeup_lesson_pass';
+export * from './intake_assessment';
+export * from './daily_care_report';
 
 
 

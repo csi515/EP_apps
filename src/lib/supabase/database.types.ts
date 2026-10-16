@@ -2907,6 +2907,261 @@ export interface Database {
           },
         ];
       };
+      makeup_tokens: {
+        Row: {
+          id: string;
+          organization_id: string;
+          student_id: string;
+          student_name: string;
+          origin_reason: string;
+          origin_date: string;
+          expires_at: string;
+          status: string;
+          used_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          student_id: string;
+          student_name: string;
+          origin_reason?: string;
+          origin_date: string;
+          expires_at: string;
+          status?: string;
+          used_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['makeup_tokens']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'makeup_tokens_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      makeup_slots: {
+        Row: {
+          id: string;
+          organization_id: string;
+          instructor_id: string | null;
+          instructor_name: string;
+          room_name: string;
+          slot_date: string;
+          start_time: string;
+          end_time: string;
+          capacity: number;
+          reserved_count: number;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          instructor_id?: string | null;
+          instructor_name: string;
+          room_name: string;
+          slot_date: string;
+          start_time: string;
+          end_time: string;
+          capacity?: number;
+          reserved_count?: number;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['makeup_slots']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'makeup_slots_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      makeup_reservations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          token_id: string;
+          slot_id: string;
+          student_id: string;
+          student_name: string;
+          status: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          token_id: string;
+          slot_id: string;
+          student_id: string;
+          student_name: string;
+          status?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['makeup_reservations']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'makeup_reservations_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      intake_templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          industry_target: string;
+          question_sections: Json;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          industry_target?: string;
+          question_sections?: Json;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['intake_templates']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'intake_templates_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      intake_submissions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          template_id: string;
+          customer_id: string | null;
+          customer_name: string;
+          customer_phone: string | null;
+          answers: Json;
+          risk_flags: Json;
+          has_critical_condition: boolean;
+          summary_notes: string | null;
+          signed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          template_id: string;
+          customer_id?: string | null;
+          customer_name: string;
+          customer_phone?: string | null;
+          answers?: Json;
+          risk_flags?: Json;
+          has_critical_condition?: boolean;
+          summary_notes?: string | null;
+          signed_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['intake_submissions']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'intake_submissions_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      daily_care_logs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          subject_id: string;
+          subject_name: string;
+          subject_type: string;
+          log_date: string;
+          meal_status: string;
+          potty_status: string;
+          nap_minutes: number;
+          medication_given: boolean;
+          condition_rating: number;
+          summary_comment: string;
+          dispatch_status: string;
+          dispatched_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          subject_id: string;
+          subject_name: string;
+          subject_type?: string;
+          log_date: string;
+          meal_status?: string;
+          potty_status?: string;
+          nap_minutes?: number;
+          medication_given?: boolean;
+          condition_rating?: number;
+          summary_comment?: string;
+          dispatch_status?: string;
+          dispatched_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['daily_care_logs']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'daily_care_logs_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      care_timeline_entries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          care_log_id: string;
+          entry_time: string;
+          category: string;
+          note: string;
+          image_url: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          care_log_id: string;
+          entry_time: string;
+          category: string;
+          note: string;
+          image_url?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['care_timeline_entries']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'care_timeline_entries_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
