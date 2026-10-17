@@ -39,6 +39,7 @@ import {
   FROZEN_PLUGIN_TYPES_REL,
   checkPluginManifestFrozenProperties,
 } from './plugin-manifest-freeze.mjs';
+import { isFrozenCoreCapabilityShim } from './core-capability-shims-freeze.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..');
@@ -295,8 +296,14 @@ function relativeSpecifierLayer(fromRel, spec) {
   return layerOfRel(resolved);
 }
 
-function isCapabilityCompatShim(source) {
-  return source.includes('@deprecated 신규 코드는') && /from ['"]@\/capabilities\//.test(source);
+function isCapabilityCompatShim(source, rel) {
+  if (!source.includes('@deprecated 신규 코드는') || !/from ['"]@\/capabilities\//.test(source)) {
+    return false;
+  }
+  if (rel && !isFrozenCoreCapabilityShim(rel)) {
+    return false;
+  }
+  return true;
 }
 
 function capabilityIdFromRel(rel) {
@@ -314,7 +321,8 @@ function resolveAliasFile(spec) {
 
 function shimCapabilityTarget(filePath) {
   const source = readFileSync(filePath, 'utf8');
-  if (!isCapabilityCompatShim(source)) return null;
+  const rel = toPosix(relative(root, filePath));
+  if (!isCapabilityCompatShim(source, rel)) return null;
   const match = source.match(/from ['"]@\/capabilities\/([^/'"]+)/);
   return match?.[1] ?? null;
 }
@@ -428,7 +436,7 @@ function scanFile(filePath) {
     }
     const toLayer = specifierLayer(spec) ?? relativeSpecifierLayer(rel, spec);
     if (fromLayer && toLayer && FORBIDDEN_FROM[fromLayer]?.has(toLayer)) {
-      if (fromLayer === 'core' && toLayer === 'capability' && isCapabilityCompatShim(source)) {
+      if (fromLayer === 'core' && toLayer === 'capability' && isCapabilityCompatShim(source, rel)) {
         continue;
       }
       kinds.add('layer_import');
@@ -823,6 +831,13 @@ function selfTest() {
         "import { x } from '@/industries/piano/plugin';\n"
       )
     );
+    probes.push(
+      writeProbe(
+        join(srcRoot, 'core'),
+        '_architecture_probe_new_shim.tmp.ts',
+        "/** @deprecated 신규 코드는 ... */\nimport { x } from '@/capabilities/attendance';\n"
+      )
+    );
     writeFileSync(
       typesIndexFile,
       `${typesIndexOriginal}\nimport { x } from '@/industries/piano/plugin';\nimport { y } from '@/capabilities/billing/finance/services/tuitionService';\nexport interface ProbeDomainType { x: string }\nexport type StudentLevel = '바이엘 상' | '0세반';\n`,
@@ -1021,6 +1036,14 @@ function selfTest() {
     if (!parentLeakHit) {
       throw new Error('architecture self-test: parent portal → industry leak 을 잡지 못했습니다.');
     }
+    const newShimHit = next.some(
+      (row) =>
+        row.kind === 'layer_import' &&
+        row.file.includes('_architecture_probe_new_shim.tmp.ts')
+    );
+    if (!newShimHit) {
+      throw new Error('architecture self-test: 신규 Core shim 생성을 잡지 못했습니다.');
+    }
     if (!industryStorageHit) {
       throw new Error('architecture self-test: Industry → StorageService 를 잡지 못했습니다.');
     }
@@ -1059,12 +1082,13 @@ function selfTest() {
       !typesNewDefHit ||
       !typesLevelUnionHit ||
       !typesNewImportHit ||
-      !parentLeakHit
+      !parentLeakHit ||
+      !newShimHit
     ) {
       throw new Error('architecture self-test: 계층 위반을 잡지 못했습니다.');
     }
     console.log(
-      'architecture self-test: core→industry / capability→industry / services→industry / StorageService (@/ + .ts + relative + industry + freeze) / legacy attendance / capability→shim cycle / permanently forbid core academy / Core·Capability→AppContext / appUi / relative context / registry→impl / catalog composition / Core·Capability→Composition / types barrel freeze / new @/types import / parent portal leak 탐지 ok'
+      'architecture self-test: core→industry / capability→industry / services→industry / StorageService (@/ + .ts + relative + industry + freeze) / legacy attendance / capability→shim cycle / permanently forbid core academy / Core·Capability→AppContext / appUi / relative context / registry→impl / catalog composition / Core·Capability→Composition / types barrel freeze / new @/types import / parent portal leak / new core shim freeze 탐지 ok'
     );
   } finally {
     writeFileSync(registryFile, registryOriginal, 'utf8');

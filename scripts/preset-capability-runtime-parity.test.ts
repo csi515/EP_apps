@@ -25,7 +25,7 @@ import {
 } from '../src/app/industry/genericIndustryTabs';
 import {
   getIndustryCapabilities,
-  INDUSTRY_CAPABILITY_MAP,
+  hasIndustryCapability,
 } from '../src/app/industry/industryCapabilityMap';
 import { provisionIndustryResources } from '../src/app/industry/resourceProvisioner';
 import { MODULE_INDUSTRY_IDS } from '../src/core/industry/catalog';
@@ -236,7 +236,28 @@ function run(): void {
 
   const yogaCaps = getIndustryCapabilities('yoga_studio');
   assert.equal(yogaCaps.booking, true);
-  console.log('  -> 전용 모듈 및 일반 프리셋 업종의 런타임 Capability 해석 검증 완료');
+
+  // 5-3. 44개 프리셋 전수의 모든 선언 Capability 런타임 활성화 패리티 검증 (SSOT 무결성 보장)
+  for (const preset of presets) {
+    if (MODULE_INDUSTRY_IDS.includes(preset.id as any)) continue;
+
+    for (const cap of preset.capabilities) {
+      assert.equal(
+        hasIndustryCapability(preset.id, cap),
+        true,
+        `[${preset.id}] 프리셋에 선언된 capability [${cap}]가 런타임에서 활성화되지 않았습니다.`
+      );
+    }
+  }
+
+  // 7대 전용 모듈의 핵심 Capability 정상 활성화 검증
+  assert.equal(hasIndustryCapability('piano', 'attendance'), true);
+  assert.equal(hasIndustryCapability('piano', 'billing'), true);
+  assert.equal(hasIndustryCapability('pilates', 'booking'), true);
+  assert.equal(hasIndustryCapability('gym', 'transport'), true);
+  assert.equal(hasIndustryCapability('retail', 'commerce'), true);
+
+  console.log('  -> 전용 모듈 및 44개 프리셋 전수 Capability 런타임 활성화 패리티 검증 완료');
 
   console.log('=== [6] Resource Provisioner Parity ===');
   // 6-1. 전용 모듈 리소스 프로비저닝 검증

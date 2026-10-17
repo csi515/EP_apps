@@ -75,6 +75,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:persistence-policy',
   'test:reservation-machine',
   'check:db-types',
+  'test:preset-runtime-parity',
 ];
 
 const scripts = loadPackageScripts();

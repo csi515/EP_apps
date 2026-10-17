@@ -71,17 +71,23 @@ Moa-v2의 최종 아키텍처는 다음 3개 계층으로 단일화된다.
 
 ---
 
-## 5. 44개 업종 프리셋 및 26개 Capability 규격
+## 5. 44개 업종 프리셋 및 61개 원자적 번들(70개 식별자) 규격
 
 1. **Preset 카탈로그 (`src/app/presets/presetRegistry.ts`)**:
    - 44개 업종 프리셋이 선언적으로 등록되어 있으며, `assemblePreset(presetId)` 엔진을 통해 동적 조립된다.
    - 각 프리셋은 신규 애플리케이션 코드를 복제하지 않고, 결합된 Capability 번들의 리소스와 온보딩 스키마를 병합한다.
 2. **Capability 번들 및 Alias 체계 (`src/core/presets/types.ts`)**:
-   - 17개 원자적 번들(`BundledPresetCapabilityId`): `attendance`, `passes`, `locker`, `booking`, `inventory`, `seat_room`, `rental_equipment`, `maintenance_checklist`, `instructor_match`, `shift_schedule`, `task_pipeline`, `billing_invoicing`, `ledger_simple`, `credit_wallet`, `consultation_crm`, `treatment_chart`, `safety_consent`.
-   - 9개 코어/기반 식별자: `billing`, `consultation`, `commerce`, `scheduling`, `resources`, `roster`, `enrollment`, `parent`, `transport`.
-   - `CAPABILITY_ALIASES`: 코어 식별자는 대응하는 원자적 번들로 자동 매핑되어 코드 중복을 방지한다 (`billing` $\rightarrow$ `billing_invoicing`, `consultation` $\rightarrow$ `consultation_crm`, `commerce` $\rightarrow$ `inventory` 등).
+   - **61개 원자적 번들(`BundledPresetCapabilityId`, 범주 A~AV)**: `attendance`, `passes`, `locker`, `booking`, `inventory`, `seat_room`, `rental_equipment`, `maintenance_checklist`, `instructor_match`, `shift_schedule`, `task_pipeline`, `billing_invoicing`, `ledger_simple`, `credit_wallet`, `consultation_crm`, `treatment_chart`, `safety_consent`, `curriculum_progress`, `table_order_kds`, `package_split_billing`, `exam_grade_analytics`, `kiosk_staff_call`, `membership_referral_tree`, `hygiene_haccp_log`, `sop_risk_assessment`, `vendor_ap_invoice`, `work_attendance_payroll`, `pickup_orders`, `loyalty_stamp`, `workplace_policy`, `feedbacks`, `trial_funnel`, `learning_journal`, `level_assessment`, `space_turnaround`, `supply_restock`, `makeup_lesson_pass`, `intake_assessment`, `daily_care_report`, `substitute_dispatch`, `entry_pass_ticket`, `event_contest_hub`, `facility_incident_report`, `nps_survey_collector`, `achievement_quest_badge`, `parking_validator`, `emergency_alert_broadcast`, `digital_guestbook`, `digital_contract`, `waitlist_turn_queue`, `survey_quiz_builder`, `lost_found`, `certificate_generator`, `qr_smart_stamp`, `time_block_rental`, `dormitory_bed`, `laundry_drycleaning`, `pet_grooming_hotel`, `photo_shoot_project`, `vehicle_shuttle`, `retention_marketing`.
+   - **9개 코어/기반 식별자**: `billing`, `consultation`, `commerce`, `scheduling`, `resources`, `roster`, `enrollment`, `parent`, `transport`.
+   - `CAPABILITY_ALIASES`: 코어 식별자는 대응하는 원자적 번들로 자동 매핑되어 코드 중복을 방지한다 (`billing` $\rightarrow$ `billing_invoicing`, `consultation` $\rightarrow$ `consultation_crm`, `commerce` $\rightarrow$ `inventory`, `transport` $\rightarrow$ `vehicle_shuttle` 등).
 3. **포털 경계 엄격 격리**:
    - 학부모 포털(`src/modules/parent`)은 사업장 관리자(Director/Staff) 전용 뷰나 리테일 내부 뷰를 직접 import하지 않는다 (`test:architecture`로 자동 차단).
+4. **프리셋-런타임 매핑 단일 진실 공급원(SSOT) 규칙**:
+   - 업종별 Capability 활성화 여부(`hasIndustryCapability`)는 별도의 수동 매핑 객체를 유지하지 않고, 반드시 `presetRegistry`의 선언적 프리셋 정의(`INDUSTRY_PRESETS[id].capabilities`)를 단일 진실 공급원(SSOT)으로 직접 조회하여 판정한다.
+5. **Core Compatibility Shim 동결 및 신규 생성 영구 차단 규칙**:
+   - Core 디렉터리(`src/core/`) 내부에서는 `@/capabilities`를 참조하거나 re-export하는 어떠한 신규 파일도 생성할 수 없다. 기존의 호환성 Shim 파일들은 동결(Frozen) 상태로 관리되며, 신규 코드는 반드시 대상 Capability의 원본 경로(`@/capabilities/...`)를 직접 import해야 한다.
+6. **Capability 컴포넌트 데이터 페칭 표준 규칙 (Refine 우선 원칙)**:
+   - Capability의 표준 관리 UI 컴포넌트는 CRUD 데이터 페칭 시 Refine 프레임워크 훅(`useList`, `useOne`, `useCreate`, `useUpdate`, `useDelete`)을 우선 사용한다. 복합 비즈니스 로직이나 원자적 RPC 호출이 필요한 경우에 한해 도메인 Service 함수를 호출하되, 데이터 변경 후에는 반드시 `crossCacheBridge` 또는 Refine의 캐시 무효화 메커니즘을 통해 상태를 동기화한다.
 
 ---
 
@@ -93,5 +99,5 @@ Moa-v2의 최종 아키텍처는 다음 3개 계층으로 단일화된다.
 npm run check:all
 ```
 
-- 위 명령은 `lint` $\rightarrow$ `check:ci-structure` $\rightarrow$ `test:architecture` $\rightarrow$ `check:db-types` $\rightarrow$ `test:business-invariants:catalog` $\rightarrow$ `npm test` (57개 전체 테스트 체인)를 일괄 실행한다.
+- 위 명령은 `lint` $\rightarrow$ `check:ci-structure` $\rightarrow$ `test:architecture` $\rightarrow$ `check:db-types` $\rightarrow$ `test:business-invariants:catalog` $\rightarrow$ `npm test` (58개 전체 테스트 체인)를 일괄 실행한다.
 - 모든 검사가 exit code 0으로 통과해야만 정상 완료로 인정한다.
