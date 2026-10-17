@@ -500,6 +500,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tier: 'tier1_ready',
     primaryCapability: 'event_contest_hub',
   },
+  'facility-incident-report': {
+    tab: 'facility-incident-report',
+    label: '안전사고·보험대장',
+    description: '원내 사고 육하원칙 기록, 보호자 신속 안내문 및 비용 0원 W3C SVG 배상책임 사고경위서',
+    tier: 'tier1_ready',
+    primaryCapability: 'facility_incident_report',
+  },
+  'nps-survey-collector': {
+    tab: 'nps-survey-collector',
+    label: '만족도·NPS 설문',
+    description: '원생·학부모 실시간 만족도 집계, 0~10점 NPS 순추천지수 분석 및 불만 고객 즉시 케어',
+    tier: 'tier1_ready',
+    primaryCapability: 'nps_survey_collector',
+  },
+  'achievement-quest-badge': {
+    tab: 'achievement-quest-badge',
+    label: '성취 퀘스트·뱃지',
+    description: '원생 도전 과제 부여, 진척 카운팅 및 완주 시 0원 W3C SVG 공식 디지털 메달 뱃지 수여',
+    tier: 'tier1_ready',
+    primaryCapability: 'achievement_quest_badge',
+  },
   capabilities: {
     tab: 'capabilities',
     label: '기능 스위치보드 & 용어 사전',

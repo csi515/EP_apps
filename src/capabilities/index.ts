@@ -63,6 +63,9 @@ import { daily_care_reportCapability } from './daily_care_report/manifest';
 import { substitute_dispatchCapability } from './substitute_dispatch/manifest';
 import { entry_pass_ticketCapability } from './entry_pass_ticket/manifest';
 import { event_contest_hubCapability } from './event_contest_hub/manifest';
+import { facilityIncidentReportCapability } from './facility_incident_report/manifest';
+import { npsSurveyCollectorCapability } from './nps_survey_collector/manifest';
+import { achievementQuestBadgeCapability } from './achievement_quest_badge/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -139,6 +142,9 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   substitute_dispatchCapability,
   entry_pass_ticketCapability,
   event_contest_hubCapability,
+  facilityIncidentReportCapability,
+  npsSurveyCollectorCapability,
+  achievementQuestBadgeCapability,
 ];
 
 export * from './trial_funnel';
@@ -152,6 +158,9 @@ export * from './daily_care_report';
 export * from './substitute_dispatch';
 export * from './entry_pass_ticket';
 export * from './event_contest_hub';
+export * from './facility_incident_report';
+export * from './nps_survey_collector';
+export * from './achievement_quest_badge';
 
 
 

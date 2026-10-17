@@ -131,6 +131,12 @@ import { entryPassTicketSetupSchema } from '@/capabilities/entry_pass_ticket/set
 import { entryPassTicketResources } from '@/capabilities/entry_pass_ticket/resources';
 import { eventContestHubSetupSchema } from '@/capabilities/event_contest_hub/setupSchema';
 import { eventContestHubResources } from '@/capabilities/event_contest_hub/resources';
+import { facilityIncidentReportSetupSchema } from '@/capabilities/facility_incident_report/setupSchema';
+import { facilityIncidentReportResources } from '@/capabilities/facility_incident_report/resources';
+import { npsSurveyCollectorSetupSchema } from '@/capabilities/nps_survey_collector/setupSchema';
+import { npsSurveyCollectorResources } from '@/capabilities/nps_survey_collector/resources';
+import { achievementQuestBadgeSetupSchema } from '@/capabilities/achievement_quest_badge/setupSchema';
+import { achievementQuestBadgeResources } from '@/capabilities/achievement_quest_badge/resources';
 
 
 /**
@@ -496,6 +502,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'event_contest_hub',
     setupSchema: eventContestHubSetupSchema,
     resources: eventContestHubResources,
+  },
+
+  // 범주 AQ: 시설 안전사고·파손 경위서 & 보험 대장
+  facility_incident_report: {
+    capabilityId: 'facility_incident_report',
+    setupSchema: facilityIncidentReportSetupSchema,
+    resources: facilityIncidentReportResources,
+  },
+
+  // 범주 AR: 모바일 만족도·NPS 설문 조사 및 피드백 분석기
+  nps_survey_collector: {
+    capabilityId: 'nps_survey_collector',
+    setupSchema: npsSurveyCollectorSetupSchema,
+    resources: npsSurveyCollectorResources,
+  },
+
+  // 범주 AS: 원생 성취 퀘스트 & 0원 W3C SVG 뱃지 수여 엔진
+  achievement_quest_badge: {
+    capabilityId: 'achievement_quest_badge',
+    setupSchema: achievementQuestBadgeSetupSchema,
+    resources: achievementQuestBadgeResources,
   },
 };
 

@@ -82,6 +82,15 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
   // 원내 발표회·대회는 원생 명부 연계
   event_contest_hub: ['roster'],
 
+  // 시설 안전사고 대장은 안전동의서 연계
+  facility_incident_report: ['safety_consent'],
+
+  // NPS 설문 수집기는 고객 리텐션 마케팅 연계
+  nps_survey_collector: ['retention_marketing'],
+
+  // 성취 퀘스트 뱃지는 커리큘럼 진도 연계
+  achievement_quest_badge: ['curriculum_progress'],
+
   // 단원평가 성적 분석은 진도 기록 필수
   exam_grade_analytics: ['curriculum_progress'],
 };

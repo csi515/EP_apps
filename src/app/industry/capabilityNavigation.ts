@@ -126,6 +126,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   substitute_dispatch: ['substitute-dispatch', 'substitutes', 'dispatches'],
   entry_pass_ticket: ['entry-pass-ticket', 'tickets', 'scans'],
   event_contest_hub: ['event-contest-hub', 'contests', 'cue-sheet'],
+  facility_incident_report: ['facility-incident-report', 'incidents', 'accident-reports'],
+  nps_survey_collector: ['nps-survey-collector', 'nps-surveys', 'satisfaction'],
+  achievement_quest_badge: ['achievement-quest-badge', 'quests', 'badges'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

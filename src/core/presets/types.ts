@@ -106,7 +106,13 @@ export type BundledPresetCapabilityId =
   // 범주 AO: 모바일 일일 입장권 & QR 검표
   | 'entry_pass_ticket'
   // 범주 AP: 원내 발표회·대회 큐시트/심사
-  | 'event_contest_hub';
+  | 'event_contest_hub'
+  // 범주 AQ: 시설 안전사고·파손 경위서 & 보험 대장
+  | 'facility_incident_report'
+  // 범주 AR: 모바일 만족도·NPS 설문 조사 및 피드백 분석기
+  | 'nps_survey_collector'
+  // 범주 AS: 원생 성취 퀘스트 & 0원 W3C SVG 뱃지 수여 엔진
+  | 'achievement_quest_badge';
 
 
 export type PresetCapabilityId =

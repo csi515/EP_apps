@@ -128,7 +128,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '레슨/수업 진도 기록, 단원평가 채점 및 피트니스 체형/운동 일지를 기록합니다.',
     iconName: 'GraduationCap',
     badge: '성장 관리',
-    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment', 'makeup_lesson_pass', 'daily_care_report', 'event_contest_hub'],
+    capabilities: ['curriculum_progress', 'exam_grade_analytics', 'diet_body_log', 'learning_journal', 'level_assessment', 'makeup_lesson_pass', 'daily_care_report', 'event_contest_hub', 'achievement_quest_badge'],
     recommendedFor: [
       'piano',
       'art_academy',
@@ -186,7 +186,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '시설 정기 점검표, 기물 관리, 매장 유실물/분실물 보관 및 안전 감사 일지를 작성합니다.',
     iconName: 'Wrench',
     badge: '시설 안전',
-    capabilities: ['maintenance_checklist', 'equipment_lifecycle', 'lost_found', 'sop_risk_assessment', 'feedbacks'],
+    capabilities: ['maintenance_checklist', 'equipment_lifecycle', 'lost_found', 'sop_risk_assessment', 'feedbacks', 'facility_incident_report'],
     recommendedFor: [
       'swimming',
       'climbing',
@@ -205,7 +205,7 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
     description: '체험 상담 리드 전환, 모바일 전자 스탬프 및 패밀리 추천인 리워드로 단골을 확보합니다.',
     iconName: 'Sparkles',
     badge: '단골 유치',
-    capabilities: ['consultation_crm', 'loyalty_stamp', 'membership_referral_tree', 'retention_marketing', 'trial_funnel', 'intake_assessment'],
+    capabilities: ['consultation_crm', 'loyalty_stamp', 'membership_referral_tree', 'retention_marketing', 'trial_funnel', 'intake_assessment', 'nps_survey_collector'],
     recommendedFor: [
       'hair_salon',
       'nail_shop',

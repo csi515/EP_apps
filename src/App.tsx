@@ -234,6 +234,12 @@ const RefineApp: React.FC = () => {
             <Route path="/entry-pass-ticket/*" element={<IndustryAppRouter />} />
             <Route path="/event-contest-hub" element={<IndustryAppRouter />} />
             <Route path="/event-contest-hub/*" element={<IndustryAppRouter />} />
+            <Route path="/facility-incident-report" element={<IndustryAppRouter />} />
+            <Route path="/facility-incident-report/*" element={<IndustryAppRouter />} />
+            <Route path="/nps-survey-collector" element={<IndustryAppRouter />} />
+            <Route path="/nps-survey-collector/*" element={<IndustryAppRouter />} />
+            <Route path="/achievement-quest-badge" element={<IndustryAppRouter />} />
+            <Route path="/achievement-quest-badge/*" element={<IndustryAppRouter />} />
           </Route>
         </Route>
 

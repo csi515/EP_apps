@@ -3398,6 +3398,280 @@ export interface Database {
           },
         ];
       };
+      facility_incident_reports: {
+        Row: {
+          id: string;
+          organization_id: string;
+          incident_title: string;
+          incident_date: string;
+          incident_type: string;
+          severity: string;
+          location_in_facility: string;
+          involved_person_name: string;
+          involved_person_role: string;
+          witness_name: string | null;
+          supervisor_name: string | null;
+          description: string;
+          injury_details: string | null;
+          emergency_action_taken: string | null;
+          guardian_notified_at: string | null;
+          hospital_transported: boolean;
+          insurance_claimed: boolean;
+          insurance_claim_number: string | null;
+          preventative_action: string | null;
+          status: string;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          incident_title: string;
+          incident_date?: string;
+          incident_type?: string;
+          severity?: string;
+          location_in_facility: string;
+          involved_person_name: string;
+          involved_person_role?: string;
+          witness_name?: string | null;
+          supervisor_name?: string | null;
+          description: string;
+          injury_details?: string | null;
+          emergency_action_taken?: string | null;
+          guardian_notified_at?: string | null;
+          hospital_transported?: boolean;
+          insurance_claimed?: boolean;
+          insurance_claim_number?: string | null;
+          preventative_action?: string | null;
+          status?: string;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['facility_incident_reports']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'facility_incident_reports_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      facility_incident_timelines: {
+        Row: {
+          id: string;
+          organization_id: string;
+          incident_id: string;
+          recorded_at: string;
+          action_type: string;
+          actor_name: string;
+          note: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          incident_id: string;
+          recorded_at?: string;
+          action_type?: string;
+          actor_name: string;
+          note: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['facility_incident_timelines']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'facility_incident_timelines_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'facility_incident_timelines_incident_id_fkey';
+            columns: ['incident_id'];
+            referencedRelation: 'facility_incident_reports';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      nps_survey_campaigns: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          target_audience: string;
+          description: string | null;
+          status: string;
+          started_at: string | null;
+          ended_at: string | null;
+          survey_questions: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          target_audience?: string;
+          description?: string | null;
+          status?: string;
+          started_at?: string | null;
+          ended_at?: string | null;
+          survey_questions?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['nps_survey_campaigns']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'nps_survey_campaigns_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      nps_survey_responses: {
+        Row: {
+          id: string;
+          organization_id: string;
+          campaign_id: string;
+          respondent_name: string | null;
+          respondent_phone: string | null;
+          is_anonymous: boolean;
+          nps_score: number;
+          sentiment_category: string;
+          instructor_rating: number | null;
+          facility_rating: number | null;
+          curriculum_rating: number | null;
+          feedback_text: string | null;
+          action_status: string;
+          action_note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          campaign_id: string;
+          respondent_name?: string | null;
+          respondent_phone?: string | null;
+          is_anonymous?: boolean;
+          nps_score: number;
+          sentiment_category?: string;
+          instructor_rating?: number | null;
+          facility_rating?: number | null;
+          curriculum_rating?: number | null;
+          feedback_text?: string | null;
+          action_status?: string;
+          action_note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['nps_survey_responses']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'nps_survey_responses_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'nps_survey_responses_campaign_id_fkey';
+            columns: ['campaign_id'];
+            referencedRelation: 'nps_survey_campaigns';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      achievement_quests: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          description: string | null;
+          category: string;
+          target_count: number;
+          unit: string;
+          badge_tier: string;
+          badge_icon_name: string;
+          reward_points: number;
+          is_active: boolean;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          description?: string | null;
+          category?: string;
+          target_count?: number;
+          unit?: string;
+          badge_tier?: string;
+          badge_icon_name?: string;
+          reward_points?: number;
+          is_active?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['achievement_quests']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'achievement_quests_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      achievement_quest_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          quest_id: string;
+          member_name: string;
+          member_identifier: string | null;
+          current_progress: number;
+          is_completed: boolean;
+          completed_at: string | null;
+          badge_issued: boolean;
+          badge_issued_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          quest_id: string;
+          member_name: string;
+          member_identifier?: string | null;
+          current_progress?: number;
+          is_completed?: boolean;
+          completed_at?: string | null;
+          badge_issued?: boolean;
+          badge_issued_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['achievement_quest_members']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'achievement_quest_members_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'achievement_quest_members_quest_id_fkey';
+            columns: ['quest_id'];
+            referencedRelation: 'achievement_quests';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

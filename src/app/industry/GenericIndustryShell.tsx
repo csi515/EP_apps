@@ -180,6 +180,15 @@ const EntryPassTicketView = lazy(() =>
 const EventContestHubView = lazy(() =>
   import('@/capabilities/event_contest_hub').then((m) => ({ default: m.EventContestHubView }))
 );
+const FacilityIncidentReportView = lazy(() =>
+  import('@/capabilities/facility_incident_report').then((m) => ({ default: m.FacilityIncidentReportView }))
+);
+const NpsSurveyCollectorView = lazy(() =>
+  import('@/capabilities/nps_survey_collector').then((m) => ({ default: m.NpsSurveyCollectorView }))
+);
+const AchievementQuestBadgeView = lazy(() =>
+  import('@/capabilities/achievement_quest_badge').then((m) => ({ default: m.AchievementQuestBadgeView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -468,6 +477,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('event_contest_hub')) {
       extendedItems.push({ tab: 'event-contest-hub', label: '원내 발표회·대회', icon: <Award className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('facility_incident_report')) {
+      extendedItems.push({ tab: 'facility-incident-report', label: '안전사고·보험대장', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('nps_survey_collector')) {
+      extendedItems.push({ tab: 'nps-survey-collector', label: '만족도·NPS 설문', icon: <Sparkles className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('achievement_quest_badge')) {
+      extendedItems.push({ tab: 'achievement-quest-badge', label: '성취 퀘스트·뱃지', icon: <Award className="w-4 h-4" /> });
     }
 
     const sections: NavMenuSection[] = [
@@ -789,6 +807,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'event-contest-hub': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">원내 발표회·대회 화면을 불러오는 중...</div>}>
         <EventContestHubView />
+      </Suspense>
+    ),
+    'facility-incident-report': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전사고 대장 화면을 불러오는 중...</div>}>
+        <FacilityIncidentReportView />
+      </Suspense>
+    ),
+    'nps-survey-collector': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">만족도·NPS 설문 화면을 불러오는 중...</div>}>
+        <NpsSurveyCollectorView />
+      </Suspense>
+    ),
+    'achievement-quest-badge': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">성취 퀘스트 화면을 불러오는 중...</div>}>
+        <AchievementQuestBadgeView />
       </Suspense>
     ),
     capabilities: () => (
