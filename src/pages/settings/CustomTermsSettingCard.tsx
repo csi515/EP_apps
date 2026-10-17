@@ -64,7 +64,15 @@ export const CustomTermsSettingCard: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await updateCustomTerms(formTerms);
+      const cleanedTerms: Record<string, string> = {};
+      for (const [k, v] of Object.entries(formTerms)) {
+        const trimmed = (v || '').trim();
+        if (trimmed) {
+          cleanedTerms[k] = trimmed;
+        }
+      }
+      await updateCustomTerms(cleanedTerms);
+      setFormTerms(cleanedTerms);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } finally {

@@ -25,7 +25,7 @@ export interface TenantRoleRecord {
   created_at: string;
 }
 
-const PERMISSION_GROUPS = [
+export const PERMISSION_GROUPS = [
   {
     category: "수강권 / 이용권",
     domain: "passes",
@@ -37,11 +37,32 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
-    category: "출결 관리",
+    category: "출결 관리 / 등하원",
     domain: "attendance",
     items: [
       { key: "attendance:view", label: "출결 현황 조회" },
       { key: "attendance:checkin", label: "출석 / 퇴실 처리" },
+      { key: "shuttle:view", label: "셔틀 탑승 확인" },
+    ],
+  },
+  {
+    category: "수업 예약 / 공간·좌석",
+    domain: "booking",
+    items: [
+      { key: "booking:view", label: "예약 시간표 조회" },
+      { key: "booking:create", label: "예약 등록 / 변경" },
+      { key: "seat_room:assign", label: "좌석·룸 배정" },
+      { key: "parking:validate", label: "무료 주차 등록" },
+    ],
+  },
+  {
+    category: "고객 상담 CRM / 원생 관리",
+    domain: "crm",
+    items: [
+      { key: "roster:view", label: "회원 목록 조회" },
+      { key: "consultation:view", label: "상담 일지 조회" },
+      { key: "consultation:write", label: "상담 일지 작성" },
+      { key: "learning_journal:write", label: "학습 일지 작성" },
     ],
   },
   {
@@ -53,9 +74,29 @@ const PERMISSION_GROUPS = [
     ],
   },
   {
-    category: "정산 / 장부",
+    category: "정산 / 수납 및 장부",
     domain: "settlement",
-    items: [{ key: "settlement:view", label: "매출 / 장부 조회" }],
+    items: [
+      { key: "settlement:view", label: "매출 / 장부 조회" },
+      { key: "billing:invoice", label: "수강료 청구서 발행" },
+      { key: "billing:collect", label: "수납 확인 및 영수증" },
+    ],
+  },
+  {
+    category: "시설 점검 / 안전 관리",
+    domain: "facility",
+    items: [
+      { key: "maintenance:check", label: "점검 체크리스트" },
+      { key: "incident:report", label: "사고·파손 보고서" },
+    ],
+  },
+  {
+    category: "긴급 방송 / 매장 내규",
+    domain: "operations",
+    items: [
+      { key: "emergency:broadcast", label: "긴급 휴원·재난 방송" },
+      { key: "workplace:policy", label: "매장 사규·지침 서약" },
+    ],
   },
 ];
 
@@ -160,9 +201,25 @@ export const RolesPage: React.FC = () => {
 
   const onSubmitRole = async (data: any) => {
     if (!currentOrganization?.id) return;
+    const trimmedName = data.name?.trim() || "";
+    if (!trimmedName) {
+      alert("직급명을 공백 제외 1자 이상 입력하세요.");
+      return;
+    }
+
+    const isDuplicate = roles.some(
+      (r) =>
+        r.name.toLowerCase() === trimmedName.toLowerCase() &&
+        r.id !== editingRole?.id
+    );
+    if (isDuplicate) {
+      alert("이미 등록된 직급명입니다.");
+      return;
+    }
 
     await onFinish({
       ...data,
+      name: trimmedName,
       tenant_id: currentOrganization.id,
       rank_order: Number(data.rank_order) || 1,
       permissions: selectedPermissions,
@@ -369,10 +426,32 @@ export const RolesPage: React.FC = () => {
 
               {/* CRUD 권한 매트릭스 */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-3">
-                  권한 매트릭스 설정
-                </label>
-                <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    권한 매트릭스 설정 ({selectedPermissions.length}개 선택됨)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allPerms = PERMISSION_GROUPS.flatMap((g) => g.items.map((i) => i.key));
+                        setSelectedPermissions(allPerms);
+                      }}
+                      className="text-xs text-indigo-600 font-semibold hover:underline"
+                    >
+                      모든 권한 선택
+                    </button>
+                    <span className="text-slate-300 text-xs">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPermissions([])}
+                      className="text-xs text-slate-500 font-semibold hover:underline"
+                    >
+                      전체 해제
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-3.5 max-h-[50vh] overflow-y-auto pr-1">
                   {PERMISSION_GROUPS.map((group) => {
                     const allKeys = group.items.map((i) => i.key);
                     const isAllSelected = allKeys.every((k) =>

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FC, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useWorkUi as useApp } from '@/shared/navigation/useWorkUi';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -28,6 +29,7 @@ import {
   Plus,
   BookOpen,
   SlidersHorizontal,
+  Shield,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/CurrencyInput';
 import { getIndustryAccent, getCustomerLabel, getOwnerLabel, getPlaceLabel, getFeeLabel, getBankAccountPlaceholder, supportsDeposit as industrySupportsDeposit, showsTextbooksLink as industryShowsTextbooksLink, getRoomConfig } from '@/core/industry/industryUi';
@@ -53,6 +55,7 @@ import { CustomTermsSettingCard } from '@/pages/settings/CustomTermsSettingCard'
 import { buildWorkplaceSettingsSavePayload } from '../workplaceSettingsSave';
 
 export const WorkplaceSettingsView: FC = () => {
+  const navigate = useNavigate();
   const { showToast, triggerRefresh, setActiveTab } = useApp();
   const { industry, isAdmin } = usePermissions();
   const labels = useModuleLabels();
@@ -545,6 +548,7 @@ export const WorkplaceSettingsView: FC = () => {
         </SettingsCard>
 
         <div className="space-y-6">
+          {/* 기능 스위치보드 바로가기 카드 */}
           <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/80 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -553,7 +557,7 @@ export const WorkplaceSettingsView: FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">기능 스위치보드</h3>
-                  <p className="text-[11px] text-slate-500">매장 성격에 맞게 51대 기능을 자유롭게 켜고 끕니다</p>
+                  <p className="text-[11px] text-slate-500">매장 성격에 맞게 70대 운영 도구를 자유롭게 켜고 끕니다</p>
                 </div>
               </div>
               <button
@@ -562,6 +566,28 @@ export const WorkplaceSettingsView: FC = () => {
                 className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
               >
                 스위치보드 열기
+              </button>
+            </div>
+          </div>
+
+          {/* 직급 및 권한 설정 바로가기 카드 */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100/80 shadow-xs space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">직급 및 권한 설정</h3>
+                  <p className="text-[11px] text-slate-500">원장, 강사, 매니저 등 직급 신설 및 세부 권한을 제어합니다</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate('/settings/roles')}
+                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
+              >
+                직급 관리 열기
               </button>
             </div>
           </div>

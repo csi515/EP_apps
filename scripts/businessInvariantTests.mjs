@@ -257,6 +257,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:session-pass-mappers': 'session pass & core.passes adapter mapper unit',
   'test:cross-cache-bridge': 'Refine QueryClient & StorageService cross-cache bridge unit',
   'test:book-schedule-slot': 'atomic schedule slot booking client & local mirror unit',
+  'test:roles-permissions': 'tenant roles and permission matrix validation unit',
 };
 
 /**
