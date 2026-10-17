@@ -62,6 +62,11 @@ describe('emergency_alert_broadcast - domain engine', () => {
     const pending = filterPendingRecipients(receipts);
     assert.equal(pending.length, 2);
     assert.equal(pending[0].recipientName, '이서연 학부모');
+
+    // 수신자 0명일 때 빈 통계 안전 반환 (0으로 나누기 방어)
+    const emptyStats = calculateAcknowledgmentStats([]);
+    assert.equal(emptyStats.total, 0);
+    assert.equal(emptyStats.ackRatePct, 0);
   });
 
   it('긴급도에 따른 스타일이 올바르게 반환된다', () => {

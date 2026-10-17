@@ -92,7 +92,7 @@ export function renderEmergencyAlertSvg(broadcast: EmergencyBroadcastItem): stri
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  const safeStartDate = broadcast.effectiveStart.slice(0, 16).replace('T', ' ');
+  const safeStartDate = (broadcast.effectiveStart || new Date().toISOString()).slice(0, 16).replace('T', ' ');
   const safeEndDate = broadcast.effectiveEnd ? broadcast.effectiveEnd.slice(0, 16).replace('T', ' ') : '상황 종료 시까지';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 280" width="100%" height="100%">
@@ -103,7 +103,7 @@ export function renderEmergencyAlertSvg(broadcast: EmergencyBroadcastItem): stri
   <rect x="0" y="24" width="460" height="24" fill="${style.headerBg}"/>
   <text x="24" y="31" fill="#ffffff" font-size="16" font-weight="bold" font-family="sans-serif">${style.label}</text>
   <rect x="360" y="12" width="76" height="24" rx="12" fill="rgba(255,255,255,0.2)"/>
-  <text x="398" y="28" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle" font-family="sans-serif">${broadcast.severity.toUpperCase()}</text>
+  <text x="398" y="28" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle" font-family="sans-serif">${(broadcast.severity || 'advisory').toUpperCase()}</text>
 
   <text x="24" y="85" fill="#64748b" font-size="12" font-family="sans-serif">공고명</text>
   <text x="24" y="108" fill="#0f172a" font-size="17" font-weight="bold" font-family="sans-serif">${safeTitle}</text>
@@ -124,6 +124,7 @@ export function renderEmergencyAlertSvg(broadcast: EmergencyBroadcastItem): stri
  */
 export function formatEmergencyBroadcastText(broadcast: EmergencyBroadcastItem, orgName: string): string {
   const style = getSeverityStyle(broadcast.severity);
+  const startPeriod = (broadcast.effectiveStart || new Date().toISOString()).slice(0, 16).replace('T', ' ');
   const endPeriod = broadcast.effectiveEnd ? `~ ${broadcast.effectiveEnd.slice(0, 16).replace('T', ' ')}` : '(상황 종료 시까지)';
   const makeupText = broadcast.makeupPolicyNotice ? `\n- 보강/수업 안내: ${broadcast.makeupPolicyNotice}` : '';
 
@@ -134,7 +135,7 @@ export function formatEmergencyBroadcastText(broadcast: EmergencyBroadcastItem, 
 
 - 제목: ${broadcast.title}
 - 사유: ${broadcast.closureReason}
-- 적용 일시: ${broadcast.effectiveStart.slice(0, 16).replace('T', ' ')} ${endPeriod}${makeupText}
+- 적용 일시: ${startPeriod} ${endPeriod}${makeupText}
 - 모바일 수신 확인 링크: https://moa.app/alert/${broadcast.id}
 
 안내를 확인하신 학부모님/회원님께서는 위 링크를 눌러 [확인 완료] 버튼을 눌러주시면 감사하겠습니다. 아이들의 안전을 최우선으로 돌보겠습니다. 감사합니다.`;

@@ -41,6 +41,7 @@ export function validateGuestbookConsent(privacyAgreed: boolean): { valid: boole
  * 전화번호 서식 정리
  */
 export function formatPhoneNumber(raw: string): string {
+  if (!raw) return '';
   const digits = raw.replace(/\D/g, '');
   if (digits.length === 11) {
     return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
@@ -69,7 +70,15 @@ export function renderGuestbookCardSvg(entry: DigitalGuestbookEntryItem): string
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
-  const safeDate = entry.createdAt.slice(0, 16).replace('T', ' ');
+  const safePurpose = (entry.visitPurpose || '상담')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const safeStaff = (entry.assignedStaffName || '배정 대기')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  const safeDate = (entry.createdAt || new Date().toISOString()).slice(0, 16).replace('T', ' ');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 250" width="100%" height="100%">
   <rect width="420" height="250" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
@@ -87,10 +96,10 @@ export function renderGuestbookCardSvg(entry: DigitalGuestbookEntryItem): string
 
   <line x1="24" y1="135" x2="396" y2="135" stroke="#f1f5f9" stroke-width="1.5"/>
 
-  <text x="24" y="165" fill="#64748b" font-size="12" font-family="sans-serif">방문 목적: <tspan fill="#334155" font-weight="bold">${entry.visitPurpose}</tspan></text>
+  <text x="24" y="165" fill="#64748b" font-size="12" font-family="sans-serif">방문 목적: <tspan fill="#334155" font-weight="bold">${safePurpose}</tspan></text>
   <text x="24" y="190" fill="#64748b" font-size="12" font-family="sans-serif">접수 일시: ${safeDate}</text>
   <text x="220" y="165" fill="#64748b" font-size="12" font-family="sans-serif">마케팅 수신동의: ${entry.marketingAgreed ? '✅ 동의함' : '미동의'}</text>
-  <text x="220" y="190" fill="#64748b" font-size="12" font-family="sans-serif">담당 상담사: ${entry.assignedStaffName || '배정 대기'}</text>
+  <text x="220" y="190" fill="#64748b" font-size="12" font-family="sans-serif">담당 상담사: ${safeStaff}</text>
 
   <text x="210" y="230" fill="#94a3b8" font-size="10" text-anchor="middle" font-family="sans-serif">Moa Digital Guestbook • 개인정보보호법 준수 안전 보관</text>
 </svg>`;

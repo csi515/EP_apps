@@ -21,6 +21,7 @@ describe('digital_guestbook - domain engine', () => {
   it('전화번호 서식을 표준 형태로 정리한다', () => {
     assert.equal(formatPhoneNumber('01012345678'), '010-1234-5678');
     assert.equal(formatPhoneNumber('021234567'), '02-123-4567');
+    assert.equal(formatPhoneNumber(''), '');
   });
 
   it('W3C SVG 접수증 및 웰컴 안내 텍스트가 정상 생성된다', () => {

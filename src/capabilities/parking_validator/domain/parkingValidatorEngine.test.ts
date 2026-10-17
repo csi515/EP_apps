@@ -22,6 +22,9 @@ describe('parking_validator - domain engine', () => {
     assert.equal(calculateRequiredTickets(60, 60), 1);
     // 0분 -> 0장
     assert.equal(calculateRequiredTickets(0, 60), 0);
+    // 음수 체류 또는 0분 권종 -> 0장 (0으로 나누기 방어)
+    assert.equal(calculateRequiredTickets(-10, 60), 0);
+    assert.equal(calculateRequiredTickets(60, 0), 0);
   });
 
   it('주차권 잔여 재고를 정확히 계산한다', () => {
@@ -30,6 +33,13 @@ describe('parking_validator - domain engine', () => {
       usedQuantity: 35,
     });
     assert.equal(remaining, 65);
+
+    // 초과 사용 시 음수 방어
+    const overUsed = getBatchRemainingQuantity({
+      purchasedQuantity: 10,
+      usedQuantity: 20,
+    });
+    assert.equal(overUsed, 0);
   });
 
   it('W3C SVG 주차 확인증 및 안내 텍스트가 정상 생성된다', () => {
