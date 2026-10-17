@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Package,
@@ -63,12 +64,12 @@ export const RentalEquipmentManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_RENTALS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_RENTALS));
       if (saved) {
         setItems(JSON.parse(saved));
       } else {
         setItems(SAMPLE_EQUIPMENTS);
-        localStorage.setItem(STORAGE_KEY_RENTALS, JSON.stringify(SAMPLE_EQUIPMENTS));
+        localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RENTALS), JSON.stringify(SAMPLE_EQUIPMENTS));
       }
     } catch {
       setItems(SAMPLE_EQUIPMENTS);
@@ -78,7 +79,7 @@ export const RentalEquipmentManagementView: React.FC = () => {
   const saveItems = (next: EquipmentItem[]) => {
     setItems(next);
     try {
-      localStorage.setItem(STORAGE_KEY_RENTALS, JSON.stringify(next));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RENTALS), JSON.stringify(next));
     } catch {
       // 무시
     }

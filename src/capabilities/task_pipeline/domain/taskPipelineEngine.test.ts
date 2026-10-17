@@ -65,6 +65,15 @@ function run() {
   assert.equal(breachedSla.elapsedHours, 30);
   assert.equal(breachedSla.remainingHours, -6);
 
+  // 6. 부품 대기(PARTS_WAITING) 전이 및 작업 재개(IN_PROGRESS) 검증
+  const partsWait = transitionTaskPipelineStage(step1.updatedOrder, 'PARTS_WAITING', '2026-06-01T12:00:00Z');
+  assert.equal(partsWait.success, true);
+  assert.equal(partsWait.updatedOrder.currentStage, 'PARTS_WAITING');
+
+  const resume = transitionTaskPipelineStage(partsWait.updatedOrder, 'IN_PROGRESS', '2026-06-01T14:00:00Z');
+  assert.equal(resume.success, true);
+  assert.equal(resume.updatedOrder.currentStage, 'IN_PROGRESS');
+
   console.log('taskPipelineEngine.test.ts: ok');
 }
 

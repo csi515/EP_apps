@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Hourglass,
@@ -87,7 +88,7 @@ const DEFAULT_SLOTS: SeatTimerSlot[] = [
 export const SeatTimerBillingView: React.FC = () => {
   const [slots, setSlots] = useState<SeatTimerSlot[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_SEAT_TIMERS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_SEAT_TIMERS));
       return saved ? JSON.parse(saved) : DEFAULT_SLOTS;
     } catch {
       return DEFAULT_SLOTS;
@@ -106,7 +107,7 @@ export const SeatTimerBillingView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_SEAT_TIMERS, JSON.stringify(slots));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_SEAT_TIMERS), JSON.stringify(slots));
     } catch {}
   }, [slots]);
 

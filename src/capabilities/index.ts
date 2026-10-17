@@ -69,6 +69,10 @@ import { achievementQuestBadgeCapability } from './achievement_quest_badge/manif
 import { parking_validatorCapability } from './parking_validator/manifest';
 import { emergency_alert_broadcastCapability } from './emergency_alert_broadcast/manifest';
 import { digital_guestbookCapability } from './digital_guestbook/manifest';
+import { mboCapability } from './mbo/manifest';
+import { approval_workflowCapability } from './approval_workflow/manifest';
+import { qualityInspectionCapability } from './quality_inspection/manifest';
+import { change_managementCapability } from './change_management/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -151,6 +155,10 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   parking_validatorCapability,
   emergency_alert_broadcastCapability,
   digital_guestbookCapability,
+  mboCapability,
+  approval_workflowCapability,
+  qualityInspectionCapability,
+  change_managementCapability,
 ];
 
 export * from './trial_funnel';
@@ -170,6 +178,10 @@ export * from './achievement_quest_badge';
 export * from './parking_validator';
 export * from './emergency_alert_broadcast';
 export * from './digital_guestbook';
+export * from './mbo';
+export * from './approval_workflow';
+export * from './quality_inspection';
+export * from './change_management';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

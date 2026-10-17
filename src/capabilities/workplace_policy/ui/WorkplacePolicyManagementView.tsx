@@ -1,24 +1,23 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useList, useCreate, useUpdate } from '@refinedev/core';
+import { showToast } from '@/shared/feedback/uiFeedback';
 import {
   BookOpen,
   ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   Plus,
-  Users,
   Search,
   FileSignature,
-  History,
   RotateCcw,
   X,
   FileText,
-  Calendar,
 } from 'lucide-react';
 import {
   type WorkplacePolicy,
   type PolicyAcknowledgement,
   type PolicyCategory,
-  checkPendingMandatoryPolicies,
   calculatePolicyComplianceRate,
   getNextPolicyVersion,
 } from '../domain/policyEngine';
@@ -69,23 +68,77 @@ const DEFAULT_POLICIES: WorkplacePolicy[] = [
 ];
 
 export const WorkplacePolicyManagementView: React.FC = () => {
-  const [policies, setPolicies] = useState<WorkplacePolicy[]>(() => {
+  const [localPolicies, setLocalPolicies] = useState<WorkplacePolicy[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_POLICIES);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_POLICIES));
       return saved ? JSON.parse(saved) : DEFAULT_POLICIES;
     } catch {
       return DEFAULT_POLICIES;
     }
   });
 
-  const [acknowledgements, setAcknowledgements] = useState<PolicyAcknowledgement[]>(() => {
+  const [localAcknowledgements, setLocalAcknowledgements] = useState<PolicyAcknowledgement[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_ACKS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_ACKS));
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
+
+  // Refine DB 데이터 바인딩
+  const { query: policyQuery } = useList<any>({
+    resource: 'workplace_policies',
+    pagination: { mode: 'off' },
+  });
+  const { query: ackQuery } = useList<any>({
+    resource: 'policy_acknowledgements',
+    pagination: { mode: 'off' },
+  });
+  const { mutate: mutateCreate } = useCreate();
+  const { mutate: mutateUpdate } = useUpdate();
+
+  // 서버 데이터 우선 매핑 (DB 데이터가 존재하면 우선 사용, 없으면 로컬 데이터로 폴백)
+  const serverPolicies = useMemo(() => {
+    const data = policyQuery?.data?.data;
+    if (!data || !Array.isArray(data) || data.length === 0) return null;
+    return data.map((row: any) => ({
+      id: String(row.id),
+      organizationId: String(row.organization_id || 'org-current'),
+      title: String(row.title),
+      category: (row.category || 'service_code') as PolicyCategory,
+      content: String(row.content),
+      version: Number(row.version ?? 1),
+      isMandatory: Boolean(row.is_mandatory ?? true),
+      effectiveDate: String(row.effective_date || new Date().toISOString().slice(0, 10)),
+      createdAt: String(row.created_at || new Date().toISOString()),
+      updatedAt: String(row.updated_at || new Date().toISOString()),
+    }));
+  }, [policyQuery?.data?.data]);
+
+  const policies: WorkplacePolicy[] = useMemo(() => {
+    return serverPolicies && serverPolicies.length > 0 ? serverPolicies : localPolicies;
+  }, [serverPolicies, localPolicies]);
+
+  const serverAcks = useMemo(() => {
+    const data = ackQuery?.data?.data;
+    if (!data || !Array.isArray(data) || data.length === 0) return null;
+    return data.map((row: any) => ({
+      id: String(row.id),
+      organizationId: String(row.organization_id || 'org-current'),
+      policyId: String(row.policy_id),
+      policyVersion: Number(row.policy_version ?? 1),
+      staffId: String(row.staff_id || 'staff-current'),
+      acknowledgedAt: String(row.acknowledged_at || new Date().toISOString()),
+      signatureDataUrl: String(row.signature_data_url || ''),
+      ipAddress: row.ip_address ? String(row.ip_address) : undefined,
+      userAgent: row.user_agent ? String(row.user_agent) : undefined,
+    }));
+  }, [ackQuery?.data?.data]);
+
+  const acknowledgements: PolicyAcknowledgement[] = useMemo(() => {
+    return serverAcks && serverAcks.length > 0 ? serverAcks : localAcknowledgements;
+  }, [serverAcks, localAcknowledgements]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,25 +155,24 @@ export const WorkplacePolicyManagementView: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
-  const [signerStaffId, setSignerStaffId] = useState('staff-current');
-  const [signerStaffName, setSignerStaffName] = useState('홍길동 (직원)');
+  const [signerStaffId] = useState('staff-current');
 
-  // 영속화
+  // 로컬 캐시 영속화
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_POLICIES, JSON.stringify(policies));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_POLICIES), JSON.stringify(localPolicies));
     } catch (e) {
       console.warn('Failed to save policies:', e);
     }
-  }, [policies]);
+  }, [localPolicies]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_ACKS, JSON.stringify(acknowledgements));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_ACKS), JSON.stringify(localAcknowledgements));
     } catch (e) {
       console.warn('Failed to save acknowledgements:', e);
     }
-  }, [acknowledgements]);
+  }, [localAcknowledgements]);
 
   // 임의의 직원 풀 (통계 산출용)
   const mockStaffList = useMemo(() => ['staff-current', 'staff-2', 'staff-3'], []);
@@ -203,7 +255,31 @@ export const WorkplacePolicyManagementView: React.FC = () => {
       updatedAt: new Date().toISOString(),
     };
 
-    setPolicies((prev) => [newPol, ...prev]);
+    setLocalPolicies((prev) => [newPol, ...prev]);
+
+    mutateCreate(
+      {
+        resource: 'workplace_policies',
+        values: {
+          title: formTitle.trim(),
+          category: formCategory,
+          content: formContent.trim(),
+          version: 1,
+          is_mandatory: formIsMandatory,
+          effective_date: new Date().toISOString().slice(0, 10),
+        },
+      },
+      {
+        onSuccess: () => {
+          policyQuery?.refetch();
+          showToast('새 사규가 서버에 등록되었습니다.', 'success');
+        },
+        onError: (err) => {
+          console.warn('Fallback to local storage:', err);
+        },
+      }
+    );
+
     setActiveModal(null);
     setFormTitle('');
     setFormContent('');
@@ -225,7 +301,35 @@ export const WorkplacePolicyManagementView: React.FC = () => {
       userAgent: navigator.userAgent,
     };
 
-    setAcknowledgements((prev) => [newAck, ...prev]);
+    setLocalAcknowledgements((prev) => [newAck, ...prev]);
+
+    const isValidUuid = (val: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+    if (isValidUuid(selectedPolicy.id)) {
+      mutateCreate(
+        {
+          resource: 'policy_acknowledgements',
+          values: {
+            policy_id: selectedPolicy.id,
+            policy_version: selectedPolicy.version,
+            staff_id: isValidUuid(signerStaffId) ? signerStaffId : '00000000-0000-0000-0000-000000000001',
+            signature_data_url: signatureUrl,
+            user_agent: navigator.userAgent,
+          },
+        },
+        {
+          onSuccess: () => {
+            ackQuery?.refetch();
+            showToast('사규 전자서약이 영구 감사 로그에 기록되었습니다.', 'success');
+          },
+          onError: (err) => {
+            console.warn('Fallback to local storage:', err);
+          },
+        }
+      );
+    }
+
     setActiveModal(null);
     setSelectedPolicy(null);
     clearCanvas();
@@ -233,7 +337,7 @@ export const WorkplacePolicyManagementView: React.FC = () => {
 
   const handleRevisePolicy = (policy: WorkplacePolicy) => {
     const nextVer = getNextPolicyVersion(policy.version);
-    const updated = policies.map((p) =>
+    const updated = localPolicies.map((p) =>
       p.id === policy.id
         ? {
             ...p,
@@ -242,7 +346,32 @@ export const WorkplacePolicyManagementView: React.FC = () => {
           }
         : p
     );
-    setPolicies(updated);
+    setLocalPolicies(updated);
+
+    const isValidUuid = (val: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+    if (isValidUuid(policy.id)) {
+      mutateUpdate(
+        {
+          resource: 'workplace_policies',
+          id: policy.id,
+          values: {
+            version: nextVer,
+            updated_at: new Date().toISOString(),
+          },
+        },
+        {
+          onSuccess: () => {
+            policyQuery?.refetch();
+            showToast(`사규가 v${nextVer} 버전으로 개정되었습니다.`, 'success');
+          },
+          onError: (err) => {
+            console.warn('Fallback to local storage:', err);
+          },
+        }
+      );
+    }
   };
 
   return (

@@ -43,7 +43,7 @@ const mockI18n: MoaI18nProvider = {
 function run(): void {
   console.log('=== [1] Preset Registry & Aliases Coverage ===');
   const presets = listIndustryPresets();
-  assert.equal(presets.length, 44, `프리셋 총 개수는 정확히 44개여야 합니다. 현재: ${presets.length}`);
+  assert.equal(presets.length, 47, `프리셋 총 개수는 정확히 47개여야 합니다. 현재: ${presets.length}`);
 
   for (const preset of presets) {
     assert.ok(preset.id, '프리셋 ID 누락');
@@ -317,6 +317,9 @@ function run(): void {
     'shared_office',
     'space_rental',
     'locker_storage',
+    'general_enterprise',
+    'manufacturing_light',
+    'procurement_distribution',
   ]);
   // Tier 3: 도메인 엔진 및 스키마 구현 완료, UI 화면 연기 / 대시보드 안전 폴백
   const TIER3_DOMAIN_SCHEMA_DEFERRED = new Set([

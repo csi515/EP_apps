@@ -15,5 +15,12 @@ export const workplacePolicyResources: CapabilityResourceDefinition = {
         order: 175,
       },
     },
+    {
+      name: 'policy_acknowledgements',
+      meta: {
+        label: '사규 전자서약 로그',
+        order: 176,
+      },
+    },
   ],
 };

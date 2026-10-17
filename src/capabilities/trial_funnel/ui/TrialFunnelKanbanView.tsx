@@ -3,6 +3,8 @@ import { useList, useUpdate, useCreate } from '@refinedev/core';
 import {
   calculateFunnelMetrics,
   groupLeadsByStatus,
+  buildConsultationFromLead,
+  buildCustomerFromLead,
   type TrialLead,
   type TrialLeadStatus,
 } from '../domain/trialFunnelEngine';
@@ -26,6 +28,8 @@ export const TrialFunnelKanbanView: React.FC = () => {
 
   const { mutate: updateLead } = useUpdate();
   const { mutate: createLead } = useCreate();
+  const { mutate: createConsultation } = useCreate();
+  const { mutate: createCustomer } = useCreate();
 
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [newCustomerName, setNewCustomerName] = useState('');
@@ -67,13 +71,25 @@ export const TrialFunnelKanbanView: React.FC = () => {
   const handleStatusChange = (leadId: string, nextStatus: TrialLeadStatus) => {
     let dropReason: string | undefined;
     let convertedPassId: string | undefined;
+    const targetLead = leads.find((l) => l.id === leadId);
 
     if (nextStatus === 'dropped') {
       const reason = window.prompt('등록 포기(보류) 사유를 입력해주세요 (예: 시간표 불일치, 거리 문제 등)');
       if (!reason) return;
       dropReason = reason;
-    } else if (nextStatus === 'converted') {
+    } else if (nextStatus === 'consult_scheduled' && targetLead) {
+      // 1. 상담 CRM (consultations) 레코드 자동 연계 기안
+      createConsultation({
+        resource: 'consultations',
+        values: buildConsultationFromLead(targetLead),
+      });
+    } else if (nextStatus === 'converted' && targetLead) {
       convertedPassId = `pass-${Date.now().toString(36)}`;
+      // 2. 정규 고객 대장 (customers) 자동 등록 연계
+      createCustomer({
+        resource: 'customers',
+        values: buildCustomerFromLead(targetLead),
+      });
     }
 
     updateLead(
@@ -171,8 +187,22 @@ export const TrialFunnelKanbanView: React.FC = () => {
                         <div className="text-[11px] text-rose-500 font-medium">사유: {lead.drop_reason}</div>
                       )}
 
-                      {/* 단계 이동 드롭다운 */}
-                      <div className="pt-2 border-t border-gray-100 flex justify-end">
+                      {/* 단계 이동 드롭다운 및 CRM 연계 바로가기 */}
+                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            createConsultation({
+                              resource: 'consultations',
+                              values: buildConsultationFromLead(lead),
+                            });
+                            alert(`[${lead.customer_name}] 고객의 상담 일지가 CRM에 자동 등록되었습니다.`);
+                          }}
+                          className="text-[10px] text-indigo-600 hover:text-indigo-800 font-semibold"
+                          title="상담 CRM에 즉시 연계 기록"
+                        >
+                          💬 CRM연계
+                        </button>
                         <select
                           value={lead.status}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as TrialLeadStatus)}

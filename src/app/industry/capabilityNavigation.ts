@@ -132,6 +132,10 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   parking_validator: ['parking-validator', 'parking', 'parking-tickets'],
   emergency_alert_broadcast: ['emergency-broadcast', 'emergency-alerts', 'broadcasts'],
   digital_guestbook: ['digital-guestbook', 'guestbook', 'visitors'],
+  mbo: ['mbo', 'objectives', 'projects', 'evaluations'],
+  approval_workflow: ['approvals', 'approval-requests', 'approval-templates'],
+  quality_inspection: ['quality', 'inspection-standards', 'inspection-records'],
+  change_management: ['change-management', 'ecn', 'eco', 'change-orders'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

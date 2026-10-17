@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Bus,
@@ -73,7 +74,7 @@ export function VehicleShuttleManagementView() {
   const [selectedRouteId, setSelectedRouteId] = useState<string>('route-1');
   const [routes, setRoutes] = useState<ShuttleRoute[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_SHUTTLE_ROUTES);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_SHUTTLE_ROUTES));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -83,7 +84,7 @@ export function VehicleShuttleManagementView() {
 
   const [boardingLogs, setBoardingLogs] = useState<BoardingCheckRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_BOARDING_LOGS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_BOARDING_LOGS));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -98,11 +99,11 @@ export function VehicleShuttleManagementView() {
   const [elapsedMinutes, setElapsedMinutes] = useState(5);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_SHUTTLE_ROUTES, JSON.stringify(routes));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_SHUTTLE_ROUTES), JSON.stringify(routes));
   }, [routes]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_BOARDING_LOGS, JSON.stringify(boardingLogs));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_BOARDING_LOGS), JSON.stringify(boardingLogs));
   }, [boardingLogs]);
 
   const currentRoute = routes.find((r) => r.id === selectedRouteId) || routes[0];

@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   UtensilsCrossed,
@@ -74,7 +75,7 @@ const SAMPLE_TICKETS: TableOrderTicket[] = [
 export function KitchenDisplaySystemView() {
   const [tickets, setTickets] = useState<TableOrderTicket[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_KDS_TICKETS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_KDS_TICKETS));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -95,7 +96,7 @@ export function KitchenDisplaySystemView() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_KDS_TICKETS, JSON.stringify(tickets));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_KDS_TICKETS), JSON.stringify(tickets));
   }, [tickets]);
 
   // 실시간 주방 통계 지표 산출

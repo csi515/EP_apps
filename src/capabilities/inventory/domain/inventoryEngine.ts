@@ -551,4 +551,71 @@ export function formatLabelSheetPages(
   return pages;
 }
 
+export interface StockLotItem {
+  id: string;
+  itemId: string;
+  lotNumber: string;
+  expiryDate: string; // YYYY-MM-DD
+  quantity: number;
+  locationName?: string;
+}
+
+export interface FefoAllocationResult {
+  isFullyAllocated: boolean;
+  allocatedLots: {
+    lotNumber: string;
+    expiryDate: string;
+    allocatedQuantity: number;
+    remainingInLot: number;
+  }[];
+  totalAllocated: number;
+  shortageQuantity: number;
+}
+
+/**
+ * 유효기간 임박 우선 출고 (FEFO - First Expired, First Out) 로트 자동 배분
+ */
+export function allocateStockLotsFefo(
+  lots: StockLotItem[],
+  requestedQuantity: number
+): FefoAllocationResult {
+  if (requestedQuantity <= 0) {
+    return {
+      isFullyAllocated: true,
+      allocatedLots: [],
+      totalAllocated: 0,
+      shortageQuantity: 0,
+    };
+  }
+
+  // 1. 유효기간(expiryDate) 오름차순 정렬 (유효기간 빠른 순)
+  const sortedLots = [...lots]
+    .filter((l) => l.quantity > 0)
+    .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+
+  let remainingToAllocate = requestedQuantity;
+  const allocatedLots: FefoAllocationResult['allocatedLots'] = [];
+
+  for (const lot of sortedLots) {
+    if (remainingToAllocate <= 0) break;
+
+    const alloc = Math.min(lot.quantity, remainingToAllocate);
+    allocatedLots.push({
+      lotNumber: lot.lotNumber,
+      expiryDate: lot.expiryDate,
+      allocatedQuantity: alloc,
+      remainingInLot: lot.quantity - alloc,
+    });
+
+    remainingToAllocate -= alloc;
+  }
+
+  return {
+    isFullyAllocated: remainingToAllocate === 0,
+    allocatedLots,
+    totalAllocated: requestedQuantity - remainingToAllocate,
+    shortageQuantity: Math.max(0, remainingToAllocate),
+  };
+}
+
 

@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Activity,
@@ -103,7 +104,7 @@ export function DietBodyLogManagementView() {
 
   const [inbodyRecords, setInbodyRecords] = useState<InbodyRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_INBODY);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_INBODY));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -113,7 +114,7 @@ export function DietBodyLogManagementView() {
 
   const [workoutLogs, setWorkoutLogs] = useState<WorkoutExerciseLog[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_WORKOUT);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_WORKOUT));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -123,7 +124,7 @@ export function DietBodyLogManagementView() {
 
   const [mealLogs, setMealLogs] = useState<DietMealLog[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_MEALS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_MEALS));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -145,15 +146,15 @@ export function DietBodyLogManagementView() {
   const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_INBODY, JSON.stringify(inbodyRecords));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_INBODY), JSON.stringify(inbodyRecords));
   }, [inbodyRecords]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_WORKOUT, JSON.stringify(workoutLogs));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_WORKOUT), JSON.stringify(workoutLogs));
   }, [workoutLogs]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(mealLogs));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_MEALS), JSON.stringify(mealLogs));
   }, [mealLogs]);
 
   const currentMember = DEFAULT_MEMBERS.find((m) => m.id === selectedMemberId) || DEFAULT_MEMBERS[0];

@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   UtensilsCrossed,
@@ -115,7 +116,7 @@ const DEFAULT_RECIPES: RecipeItem[] = [
 export const RecipeBomManagementView: React.FC = () => {
   const [recipes, setRecipes] = useState<RecipeItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_RECIPES);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_RECIPES));
       return saved ? JSON.parse(saved) : DEFAULT_RECIPES;
     } catch {
       return DEFAULT_RECIPES;
@@ -128,7 +129,7 @@ export const RecipeBomManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_RECIPES, JSON.stringify(recipes));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RECIPES), JSON.stringify(recipes));
     } catch {}
   }, [recipes]);
 

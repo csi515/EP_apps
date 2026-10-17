@@ -143,6 +143,14 @@ import { emergencyAlertBroadcastSetupSchema } from '@/capabilities/emergency_ale
 import { emergencyAlertBroadcastResources } from '@/capabilities/emergency_alert_broadcast/resources';
 import { digitalGuestbookSetupSchema } from '@/capabilities/digital_guestbook/setupSchema';
 import { digitalGuestbookResources } from '@/capabilities/digital_guestbook/resources';
+import { mboSetupSchema } from '@/capabilities/mbo/setupSchema';
+import { mboResources } from '@/capabilities/mbo/resources';
+import { approvalWorkflowSetupSchema } from '@/capabilities/approval_workflow/setupSchema';
+import { approvalWorkflowResources } from '@/capabilities/approval_workflow/resources';
+import { qualityInspectionSetupSchema } from '@/capabilities/quality_inspection/setupSchema';
+import { qualityInspectionResources } from '@/capabilities/quality_inspection/resources';
+import { changeManagementSetupSchema } from '@/capabilities/change_management/setupSchema';
+import { changeManagementResources } from '@/capabilities/change_management/resources';
 
 
 /**
@@ -550,6 +558,34 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'digital_guestbook',
     setupSchema: digitalGuestbookSetupSchema,
     resources: digitalGuestbookResources,
+  },
+
+  // 범주 AW: 목표관리(MBO) 및 실행 프로젝트
+  mbo: {
+    capabilityId: 'mbo',
+    setupSchema: mboSetupSchema,
+    resources: mboResources,
+  },
+
+  // 범주 AX: 전사 범용 전자결재 및 기안 승인 워크플로
+  approval_workflow: {
+    capabilityId: 'approval_workflow',
+    setupSchema: approvalWorkflowSetupSchema,
+    resources: approvalWorkflowResources,
+  },
+
+  // 범주 AY: 전문 품질검사 및 규격 공차 판정 대장
+  quality_inspection: {
+    capabilityId: 'quality_inspection',
+    setupSchema: qualityInspectionSetupSchema,
+    resources: qualityInspectionResources,
+  },
+
+  // 범주 AZ: 공정/사양 4M 변경관리 (ECN/ECO)
+  change_management: {
+    capabilityId: 'change_management',
+    setupSchema: changeManagementSetupSchema,
+    resources: changeManagementResources,
   },
 };
 
@@ -1057,11 +1093,11 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   shared_office: {
     id: 'shared_office',
     name: '공유오피스',
-    description: '지정석/독립실 배정, 월간 청구서, 회의실 예약 및 시설 점검 루틴',
+    description: '지정석/독립실 배정, 월간 청구서, 회의실 예약, 전자결재 및 목표관리(MBO)',
     category: 'studio',
-    capabilities: ['seat_room', 'passes', 'billing_invoicing', 'maintenance_checklist', 'booking'] as const,
+    capabilities: ['seat_room', 'passes', 'billing_invoicing', 'maintenance_checklist', 'booking', 'mbo', 'approval_workflow'] as const,
     requiredCapabilities: ['seat_room', 'billing_invoicing'] as const,
-    optionalCapabilities: ['booking', 'passes', 'maintenance_checklist'] as const,
+    optionalCapabilities: ['booking', 'passes', 'maintenance_checklist', 'mbo', 'approval_workflow'] as const,
     businessRules: { monthlyRentBillingDay: 1 },
     resourceTypes: [
       { name: '독립오피스 1~8', type: 'room', capacity: 4 },
@@ -1251,9 +1287,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '자동차 정비소',
     description: '정비 리프트 배정, 부품 재고, 작업지시서 파이프라인, 차량 수리 이력 및 청구',
     category: 'automotive',
-    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'billing_invoicing', 'consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice', 'quality_inspection', 'change_management'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice'] as const,
+    optionalCapabilities: ['consultation_crm', 'booking', 'commission_payroll', 'work_order_kanban', 'equipment_lifecycle', 'sop_risk_assessment', 'vendor_ap_invoice', 'quality_inspection', 'change_management'] as const,
     businessRules: { vinRequired: true, workOrderStages: 4 },
     resourceTypes: [
       { name: '리프트 베이 1~3', type: 'bay', capacity: 1 },
@@ -1331,9 +1367,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '맞춤 제작 공방 & 수리점',
     description: '단계별 제작/수리 칸반 파이프라인, 원자재 재고 관리 및 픽업 예약',
     category: 'studio',
-    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders'] as const,
+    capabilities: ['task_pipeline', 'inventory', 'booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders', 'quality_inspection', 'change_management'] as const,
     requiredCapabilities: ['task_pipeline', 'inventory'] as const,
-    optionalCapabilities: ['booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders'] as const,
+    optionalCapabilities: ['booking', 'ledger_simple', 'sop_risk_assessment', 'pickup_orders', 'quality_inspection', 'change_management'] as const,
     resourceTypes: [{ name: '작업대', type: 'table' }],
     roles: [{ name: '공방장', rank_order: 1, permissions: ['*'] }],
     readinessLevel: 'basic_ui',
@@ -1384,6 +1420,55 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       { name: '야간 카운터', rank_order: 3, permissions: ['passes:deduct', 'lockers:assign'] },
     ],
     readinessLevel: 'persisted',
+  },
+
+  // ==========================================
+  // Group 7: 기업·제조·유통 엔터프라이즈 (Enterprise Suites) - 3종
+  // ==========================================
+  general_enterprise: {
+    id: 'general_enterprise',
+    name: '일반 기업 / 경영관리',
+    description: '전사 다단계 전자결재, 부서별 업무 칸반 파이프라인, MBO 성과관리, 사규 및 피드백 중심',
+    category: 'other',
+    capabilities: ['approval_workflow', 'task_pipeline', 'workplace_policy', 'mbo', 'feedbacks', 'billing_invoicing'] as const,
+    requiredCapabilities: ['approval_workflow', 'task_pipeline'] as const,
+    optionalCapabilities: ['workplace_policy', 'mbo', 'feedbacks', 'billing_invoicing'] as const,
+    roles: [
+      { name: '대표이사/임원', rank_order: 1, permissions: ['*'] },
+      { name: '팀장/관리자', rank_order: 2, permissions: ['approval_workflow:*', 'task_pipeline:*', 'mbo:*'] },
+      { name: '팀원', rank_order: 3, permissions: ['task_pipeline:*', 'mbo:view', 'workplace_policy:view'] },
+    ],
+    readinessLevel: 'basic_ui',
+  },
+
+  manufacturing_light: {
+    id: 'manufacturing_light',
+    name: '소형 제조 / 임가공 공장',
+    description: '작업지시 칸반, 전문 품질검사(공차 판정), 로트/유효기간 재고, 4M 변경관리(ECN) 및 안전 SOP',
+    category: 'studio',
+    capabilities: ['task_pipeline', 'quality_inspection', 'inventory', 'supply_restock', 'sop_risk_assessment', 'change_management', 'approval_workflow'] as const,
+    requiredCapabilities: ['task_pipeline', 'inventory', 'quality_inspection'] as const,
+    optionalCapabilities: ['supply_restock', 'sop_risk_assessment', 'change_management', 'approval_workflow'] as const,
+    roles: [
+      { name: '공장장/품질책임', rank_order: 1, permissions: ['*'] },
+      { name: '작업조장/검사원', rank_order: 2, permissions: ['quality_inspection:*', 'inventory:*', 'task_pipeline:*'] },
+    ],
+    readinessLevel: 'basic_ui',
+  },
+
+  procurement_distribution: {
+    id: 'procurement_distribution',
+    name: '도소매 / 자재 유통업',
+    description: '구매 요청(PR) 및 최적 견적 비교, FEFO 로트별 창고 재고, 외상매입금(AP) 및 전자결재',
+    category: 'other',
+    capabilities: ['supply_restock', 'inventory', 'approval_workflow', 'billing_invoicing', 'vendor_ap_invoice', 'credit_wallet'] as const,
+    requiredCapabilities: ['supply_restock', 'inventory', 'billing_invoicing'] as const,
+    optionalCapabilities: ['approval_workflow', 'vendor_ap_invoice', 'credit_wallet'] as const,
+    roles: [
+      { name: '유통총괄', rank_order: 1, permissions: ['*'] },
+      { name: '물류/자재담당', rank_order: 2, permissions: ['inventory:*', 'supply_restock:*'] },
+    ],
+    readinessLevel: 'basic_ui',
   },
 };
 

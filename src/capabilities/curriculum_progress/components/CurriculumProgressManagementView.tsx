@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   GraduationCap,
@@ -67,7 +68,7 @@ export function CurriculumProgressManagementView() {
   // 진도 상태 관리
   const [progressRecords, setProgressRecords] = useState<Record<string, StudentProgressRecord[]>>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_PROGRESS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_PROGRESS));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -87,7 +88,7 @@ export function CurriculumProgressManagementView() {
   // 월간 리포트 이력
   const [reports, setReports] = useState<MonthlyGrowthReportSummary[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_REPORTS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_REPORTS));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -105,11 +106,11 @@ export function CurriculumProgressManagementView() {
   });
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(progressRecords));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_PROGRESS), JSON.stringify(progressRecords));
   }, [progressRecords]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_REPORTS, JSON.stringify(reports));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_REPORTS), JSON.stringify(reports));
   }, [reports]);
 
   const currentStudent = DEFAULT_STUDENTS.find((s) => s.id === selectedStudentId) || DEFAULT_STUDENTS[0];

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useList, useCreate, useUpdate } from '@refinedev/core';
 import {
   ClipboardList,
   Plus,
@@ -12,6 +13,7 @@ import {
   Sliders,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   calculateChecklistProgress,
   evaluateChecklistUrgency,
@@ -61,28 +63,64 @@ const SAMPLE_ITEMS: ChecklistItem[] = [
 ];
 
 export const MaintenanceChecklistManagementView: React.FC = () => {
-  const [items, setItems] = useState<ChecklistItem[]>([]);
+  const [localItems, setLocalItems] = useState<ChecklistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const storageKey = getTenantStorageKey(STORAGE_KEY_CHECKLISTS);
 
+  // Refine 데이터 바인딩
+  const { query } = useList<any>({
+    resource: 'checklist_items',
+    pagination: { mode: 'off' },
+  });
+
+  const refineRows = query?.data?.data;
+  const isLoading = query?.isLoading;
+  const refetch = query?.refetch ?? (() => {});
+
+  const { mutate: mutateCreate } = useCreate();
+  const { mutate: mutateUpdate } = useUpdate();
+
+  // 로컬 스토리지 초기화 및 폴백 로직
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_CHECKLISTS);
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
-        setItems(JSON.parse(saved));
+        setLocalItems(JSON.parse(saved));
       } else {
-        setItems(SAMPLE_ITEMS);
-        localStorage.setItem(STORAGE_KEY_CHECKLISTS, JSON.stringify(SAMPLE_ITEMS));
+        setLocalItems(SAMPLE_ITEMS);
+        localStorage.setItem(storageKey, JSON.stringify(SAMPLE_ITEMS));
       }
     } catch {
-      setItems(SAMPLE_ITEMS);
+      setLocalItems(SAMPLE_ITEMS);
     }
-  }, []);
+  }, [storageKey]);
 
-  const saveItems = (next: ChecklistItem[]) => {
-    setItems(next);
+  // Refine 데이터가 있으면 서버 데이터 우선, 없으면 로컬 데이터 사용
+  const items: ChecklistItem[] = useMemo(() => {
+    if (refineRows && refineRows.length > 0) {
+      return refineRows.map((row: any) => {
+        const meta = (typeof row.metadata === 'object' && row.metadata !== null) ? row.metadata : {};
+        return {
+          id: row.id,
+          title: row.title,
+          isRequired: row.required ?? true,
+          isCompleted: meta.is_completed ?? false,
+          completedAt: meta.completed_at,
+          completedBy: meta.completed_by,
+          numericValue: meta.numeric_value,
+          minThreshold: meta.min_threshold,
+          maxThreshold: meta.max_threshold,
+        };
+      });
+    }
+    return localItems;
+  }, [refineRows, localItems]);
+
+  const saveLocalItems = (next: ChecklistItem[]) => {
+    setLocalItems(next);
     try {
-      localStorage.setItem(STORAGE_KEY_CHECKLISTS, JSON.stringify(next));
+      localStorage.setItem(storageKey, JSON.stringify(next));
     } catch {
       // 무시
     }
@@ -90,21 +128,79 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
 
   const toggleComplete = (item: ChecklistItem) => {
     const nextCompleted = !item.isCompleted;
-    const next = items.map((i) => {
-      if (i.id !== item.id) return i;
-      return {
-        ...i,
-        isCompleted: nextCompleted,
-        completedAt: nextCompleted ? new Date().toISOString() : undefined,
-        completedBy: nextCompleted ? '현재 사용자' : undefined,
-      };
-    });
-    saveItems(next);
+    const completedAt = nextCompleted ? new Date().toISOString() : undefined;
+    const completedBy = nextCompleted ? '현재 사용자' : undefined;
+
+    if (refineRows && refineRows.length > 0) {
+      mutateUpdate(
+        {
+          resource: 'checklist_items',
+          id: item.id,
+          values: {
+            metadata: {
+              is_completed: nextCompleted,
+              completed_at: completedAt,
+              completed_by: completedBy,
+              numeric_value: item.numericValue,
+              min_threshold: item.minThreshold,
+              max_threshold: item.maxThreshold,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            refetch();
+            showToast(nextCompleted ? '점검 완료 처리되었습니다.' : '점검 상태가 취소되었습니다.', 'success');
+          },
+          onError: () => {
+            const next = items.map((i) =>
+              i.id === item.id ? { ...i, isCompleted: nextCompleted, completedAt, completedBy } : i
+            );
+            saveLocalItems(next);
+            showToast(nextCompleted ? '로컬 점검 완료 처리되었습니다.' : '로컬 점검 취소되었습니다.', 'info');
+          },
+        }
+      );
+    } else {
+      const next = items.map((i) =>
+        i.id === item.id ? { ...i, isCompleted: nextCompleted, completedAt, completedBy } : i
+      );
+      saveLocalItems(next);
+      showToast(nextCompleted ? '점검 완료 처리되었습니다.' : '점검 상태가 취소되었습니다.', 'success');
+    }
   };
 
   const updateNumericValue = (item: ChecklistItem, value: number) => {
-    const next = items.map((i) => (i.id === item.id ? { ...i, numericValue: value, isCompleted: true } : i));
-    saveItems(next);
+    if (refineRows && refineRows.length > 0) {
+      mutateUpdate(
+        {
+          resource: 'checklist_items',
+          id: item.id,
+          values: {
+            metadata: {
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: '현재 사용자',
+              numeric_value: value,
+              min_threshold: item.minThreshold,
+              max_threshold: item.maxThreshold,
+            },
+          },
+        },
+        {
+          onSuccess: () => {
+            refetch();
+          },
+          onError: () => {
+            const next = items.map((i) => (i.id === item.id ? { ...i, numericValue: value, isCompleted: true } : i));
+            saveLocalItems(next);
+          },
+        }
+      );
+    } else {
+      const next = items.map((i) => (i.id === item.id ? { ...i, numericValue: value, isCompleted: true } : i));
+      saveLocalItems(next);
+    }
   };
 
   // 진행률 산출
@@ -319,9 +415,40 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
         <NewChecklistItemModal
           onClose={() => setIsNewModalOpen(false)}
           onCreated={(newItem) => {
-            saveItems([...items, newItem]);
-            setIsNewModalOpen(false);
-            showToast('신규 점검 항목이 등록되었습니다.', 'success');
+            if (refineRows) {
+              mutateCreate(
+                {
+                  resource: 'checklist_items',
+                  values: {
+                    template_id: '00000000-0000-0000-0000-000000000001',
+                    title: newItem.title,
+                    required: newItem.isRequired,
+                    sort_order: items.length + 1,
+                    metadata: {
+                      is_completed: false,
+                      min_threshold: newItem.minThreshold,
+                      max_threshold: newItem.maxThreshold,
+                    },
+                  },
+                },
+                {
+                  onSuccess: () => {
+                    refetch();
+                    setIsNewModalOpen(false);
+                    showToast('신규 점검 항목이 DB에 등록되었습니다.', 'success');
+                  },
+                  onError: () => {
+                    saveLocalItems([...items, newItem]);
+                    setIsNewModalOpen(false);
+                    showToast('신규 점검 항목이 로컬 등록되었습니다.', 'info');
+                  },
+                }
+              );
+            } else {
+              saveLocalItems([...items, newItem]);
+              setIsNewModalOpen(false);
+              showToast('신규 점검 항목이 등록되었습니다.', 'success');
+            }
           }}
         />
       )}

@@ -200,12 +200,22 @@ const EmergencyAlertBroadcastView = lazy(() =>
 const DigitalGuestbookView = lazy(() =>
   import('@/capabilities/digital_guestbook').then((m) => ({ default: m.DigitalGuestbookView }))
 );
+const MboManagementView = lazy(() =>
+  import('@/capabilities/mbo').then((m) => ({ default: m.MboManagementView }))
+);
+const QualityInspectionManagementView = lazy(() =>
+  import('@/capabilities/quality_inspection').then((m) => ({ default: m.QualityInspectionManagementView }))
+);
+const ChangeManagementView = lazy(() =>
+  import('@/capabilities/change_management').then((m) => ({ default: m.ChangeManagementView }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
 
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
+import { ExecutiveRiskDashboardWidget } from '@/shared/components/ExecutiveRiskDashboardWidget';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
 import { ModuleSidebar } from '@/shared/components/layout/ModuleSidebar';
 import { ModuleBottomNav } from '@/shared/components/layout/ModuleBottomNav';
@@ -300,6 +310,9 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
           </div>
         </div>
       </div>
+
+      {/* 전사 통합 경영 리스크 지수 위젯 */}
+      <ExecutiveRiskDashboardWidget />
 
       {/* 빠른 작업 */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-4 shadow-xs">
@@ -857,6 +870,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'digital-guestbook': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 방명록 화면을 불러오는 중...</div>}>
         <DigitalGuestbookView />
+      </Suspense>
+    ),
+    mbo: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">목표관리(MBO) 화면을 불러오는 중...</div>}>
+        <MboManagementView />
+      </Suspense>
+    ),
+    quality: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">품질 검사 대장을 불러오는 중...</div>}>
+        <QualityInspectionManagementView />
+      </Suspense>
+    ),
+    'change-management': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">4M 변경관리(ECN) 화면을 불러오는 중...</div>}>
+        <ChangeManagementView />
       </Suspense>
     ),
     capabilities: () => (

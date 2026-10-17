@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Calculator,
@@ -124,7 +125,7 @@ const DEFAULT_ITEMS: ServicePerformanceItem[] = [
 export const CommissionPayrollManagementView: React.FC = () => {
   const [policies, setPolicies] = useState<StaffPayrollPolicy[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_POLICIES);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_POLICIES));
       return saved ? JSON.parse(saved) : DEFAULT_POLICIES;
     } catch {
       return DEFAULT_POLICIES;
@@ -133,7 +134,7 @@ export const CommissionPayrollManagementView: React.FC = () => {
 
   const [items, setItems] = useState<ServicePerformanceItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_ITEMS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_ITEMS));
       return saved ? JSON.parse(saved) : DEFAULT_ITEMS;
     } catch {
       return DEFAULT_ITEMS;
@@ -152,13 +153,13 @@ export const CommissionPayrollManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_POLICIES, JSON.stringify(policies));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_POLICIES), JSON.stringify(policies));
     } catch {}
   }, [policies]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_ITEMS), JSON.stringify(items));
     } catch {}
   }, [items]);
 

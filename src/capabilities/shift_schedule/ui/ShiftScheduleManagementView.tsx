@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Clock,
@@ -62,12 +63,12 @@ export const ShiftScheduleManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_SHIFTS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_SHIFTS));
       if (saved) {
         setShifts(JSON.parse(saved));
       } else {
         setShifts(SAMPLE_SHIFTS);
-        localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(SAMPLE_SHIFTS));
+        localStorage.setItem(getTenantStorageKey(STORAGE_KEY_SHIFTS), JSON.stringify(SAMPLE_SHIFTS));
       }
     } catch {
       setShifts(SAMPLE_SHIFTS);
@@ -77,7 +78,7 @@ export const ShiftScheduleManagementView: React.FC = () => {
   const saveShifts = (next: ShiftWithStaffName[]) => {
     setShifts(next);
     try {
-      localStorage.setItem(STORAGE_KEY_SHIFTS, JSON.stringify(next));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_SHIFTS), JSON.stringify(next));
     } catch {
       // 무시
     }

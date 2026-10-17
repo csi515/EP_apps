@@ -191,3 +191,43 @@ export function groupLeadsByStatus(leads: TrialLead[]): Record<TrialLeadStatus, 
 
   return grouped;
 }
+
+/**
+ * 리드 데이터를 기반으로 상담 CRM(consultations) 레코드 페이로드 생성
+ */
+export function buildConsultationFromLead(
+  lead: TrialLead,
+  options?: {
+    consultationDate?: string;
+    staffId?: string | null;
+    customerId?: string;
+  }
+) {
+  const consultDate = options?.consultationDate || lead.trial_date || new Date().toISOString().slice(0, 10);
+  return {
+    customer_id: options?.customerId || lead.id,
+    staff_id: options?.staffId || lead.assigned_staff_id || null,
+    consultation_date: consultDate,
+    type: 'trial_inquiry',
+    content: `[체험/상담 리드 연계] 고객: ${lead.customer_name} (${lead.phone}) / 유입: ${lead.source} / 희망: ${lead.target_program || '일반'} / 메모: ${lead.notes || '없음'}`,
+    result: 'pending',
+    follow_up: '체험 수업 진행 및 등록 상담',
+  };
+}
+
+/**
+ * 리드 데이터를 기반으로 고객(customers) 등록 페이로드 생성
+ */
+export function buildCustomerFromLead(lead: TrialLead) {
+  return {
+    name: lead.customer_name,
+    phone: lead.phone,
+    status: 'active',
+    memo: `[리드 파이프라인 전환] 유입경로: ${lead.source}, 수강희망: ${lead.target_program || '미정'}`,
+    metadata: {
+      lead_id: lead.id,
+      source: lead.source,
+      converted_at: new Date().toISOString(),
+    },
+  };
+}

@@ -11,6 +11,7 @@ import {
   generateItemBarcode,
   generatePrintLabelItems,
   formatLabelSheetPages,
+  allocateStockLotsFefo,
   type InventoryItem,
   type BundleProduct,
 } from './inventoryEngine';
@@ -243,7 +244,24 @@ function run() {
   assert.equal(thermalPages.length, 50);
   assert.equal(thermalPages[0].length, 1);
 
-  console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen & Label Print)');
+  // 13. 유효기간 우선 출고(FEFO) 로트 자동 배분 검증
+  const lots = [
+    { id: 'l1', itemId: 'item-1', lotNumber: 'LOT-2026-A', expiryDate: '2026-10-30', quantity: 10 },
+    { id: 'l2', itemId: 'item-1', lotNumber: 'LOT-2026-B', expiryDate: '2026-08-15', quantity: 15 }, // 가장 빠른 유효기간
+    { id: 'l3', itemId: 'item-1', lotNumber: 'LOT-2026-C', expiryDate: '2026-12-31', quantity: 20 },
+  ];
+
+  // 20개 출고 요청 시: LOT-2026-B에서 15개 전량 소진, LOT-2026-A에서 5개 소진
+  const fefoRes = allocateStockLotsFefo(lots, 20);
+  assert.equal(fefoRes.isFullyAllocated, true);
+  assert.equal(fefoRes.totalAllocated, 20);
+  assert.equal(fefoRes.allocatedLots.length, 2);
+  assert.equal(fefoRes.allocatedLots[0].lotNumber, 'LOT-2026-B');
+  assert.equal(fefoRes.allocatedLots[0].allocatedQuantity, 15);
+  assert.equal(fefoRes.allocatedLots[1].lotNumber, 'LOT-2026-A');
+  assert.equal(fefoRes.allocatedLots[1].allocatedQuantity, 5);
+
+  console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen, Label Print & FEFO Lot)');
 }
 
 run();

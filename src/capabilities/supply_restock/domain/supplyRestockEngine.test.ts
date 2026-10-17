@@ -81,4 +81,22 @@ console.log('✓ 2. 공급처별 품목 묶음 통과');
 }
 console.log('✓ 3. 발주서 자동 조립 및 메시지 텍스트 생성 통과');
 
+// 4. 복수 견적 비교 및 최적 견적 선정 (단가 최저, 동일 시 리드타임 최단)
+{
+  const { evaluateOptimalVendorQuote } = await import('./supplyRestockEngine');
+  const quotes = [
+    { id: 'q1', prId: 'pr1', vendorName: '업체A', quotedAmount: 280000, leadTimeDays: 2, isSelected: false },
+    { id: 'q2', prId: 'pr1', vendorName: '업체B', quotedAmount: 250000, leadTimeDays: 4, isSelected: false }, // 최저가
+    { id: 'q3', prId: 'pr1', vendorName: '업체C', quotedAmount: 250000, leadTimeDays: 2, isSelected: false }, // 최저가 & 최단 리드타임
+  ];
+
+  const optimal = evaluateOptimalVendorQuote(quotes);
+  assert.ok(optimal);
+  assert.equal(optimal.id, 'q3');
+  assert.equal(optimal.vendorName, '업체C');
+  assert.equal(optimal.quotedAmount, 250000);
+}
+console.log('✓ 4. 복수 견적 비교 최적 견적 선정 통과');
+
 console.log('[test:supply-restock] ALL TESTS PASSED! (100%)');
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useList, useCreate, useUpdate } from '@refinedev/core';
 import {
   Workflow,
   Plus,
@@ -12,8 +13,10 @@ import {
   X,
   Search,
   Filter,
+  Package,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   transitionTaskPipelineStage,
   evaluateStageSla,
@@ -23,10 +26,17 @@ import {
 
 const STORAGE_KEY_PIPELINES = 'moa_task_pipeline_orders';
 
+export interface TaskPipelineKanbanViewProps {
+  defaultOrderType?: 'custom_order' | 'repair' | 'manufacturing' | 'maintenance' | 'inspection';
+  title?: string;
+  subtitle?: string;
+}
+
 const KANBAN_STAGES: { stage: PipelineStage; label: string; color: string }[] = [
   { stage: 'RECEIVED', label: '의뢰 접수', color: 'border-slate-300 bg-slate-50/50' },
   { stage: 'IN_PROGRESS', label: '작업 진행 중', color: 'border-blue-200 bg-blue-50/20' },
-  { stage: 'INSPECTION', label: '품질 검수', color: 'border-amber-200 bg-amber-50/20' },
+  { stage: 'PARTS_WAITING', label: '부품·자재 대기', color: 'border-amber-200 bg-amber-50/20' },
+  { stage: 'INSPECTION', label: '품질 검수', color: 'border-indigo-200 bg-indigo-50/20' },
   { stage: 'READY_FOR_PICKUP', label: '출고·픽업 대기', color: 'border-emerald-200 bg-emerald-50/20' },
   { stage: 'COMPLETED', label: '최종 완료', color: 'border-purple-200 bg-purple-50/20' },
 ];
@@ -35,55 +45,109 @@ const INITIAL_SAMPLE_ORDERS: TaskOrder[] = [
   {
     id: 'ord-101',
     orderNumber: 'RO-2026-0101',
+    orderType: 'repair',
     title: '빈티지 가죽 가방 지퍼 수선 및 가죽 영양 케어',
     customerId: 'cust-김민수',
+    customerName: '김민수',
     currentStage: 'IN_PROGRESS',
     stageEnteredAt: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
+    slaHours: 24,
     slaHoursPerStage: { IN_PROGRESS: 24 },
   },
   {
     id: 'ord-102',
     orderNumber: 'RO-2026-0102',
-    title: '프리미엄 자전거 브레이크 패드 교체 및 디레일러 세팅',
-    customerId: 'cust-이영희',
-    currentStage: 'RECEIVED',
-    stageEnteredAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(), // 24시간 초과 (SLA 지연)
-    slaHoursPerStage: { RECEIVED: 24 },
+    orderType: 'repair',
+    title: '제네시스 G80 브레이크 패드 교체 및 정비',
+    customerId: 'cust-홍길동',
+    customerName: '홍길동',
+    currentStage: 'PARTS_WAITING',
+    stageEnteredAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    slaHours: 24,
+    slaHoursPerStage: { PARTS_WAITING: 24 },
   },
   {
     id: 'ord-103',
     orderNumber: 'RO-2026-0103',
-    title: '디테일링 손세차 및 전면 유리 유막 제거',
-    customerId: 'cust-박지훈',
-    currentStage: 'INSPECTION',
-    stageEnteredAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    slaHoursPerStage: { INSPECTION: 4 },
+    orderType: 'custom_order',
+    title: '프리미엄 자전거 브레이크 세팅',
+    customerId: 'cust-이영희',
+    customerName: '이영희',
+    currentStage: 'RECEIVED',
+    stageEnteredAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(),
+    slaHours: 24,
+    slaHoursPerStage: { RECEIVED: 24 },
   },
 ];
 
-export const TaskPipelineKanbanView: React.FC = () => {
-  const [orders, setOrders] = useState<TaskOrder[]>([]);
+export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
+  defaultOrderType = 'custom_order',
+  title = '작업 파이프라인 (칸반 보드)',
+  subtitle = '자동차 정비, 공방 맞춤제작, 세탁·수선, 설비 수리 등 전사 작업 공정을 실시간 추적합니다.',
+}) => {
+  const [localOrders, setLocalOrders] = useState<TaskOrder[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const storageKey = getTenantStorageKey(STORAGE_KEY_PIPELINES);
 
+  // Refine 데이터 바인딩
+  const { query } = useList<any>({
+    resource: 'task_orders',
+    pagination: { mode: 'off' },
+  });
+
+  const refineRows = query?.data?.data;
+  const isLoading = query?.isLoading;
+  const refetch = query?.refetch ?? (() => {});
+
+  const { mutate: mutateCreate } = useCreate();
+  const { mutate: mutateUpdate } = useUpdate();
+
+  // 로컬 스토리지 초기화 및 폴백 로직
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_PIPELINES);
+      const saved = localStorage.getItem(storageKey);
       if (saved) {
-        setOrders(JSON.parse(saved));
+        setLocalOrders(JSON.parse(saved));
       } else {
-        setOrders(INITIAL_SAMPLE_ORDERS);
-        localStorage.setItem(STORAGE_KEY_PIPELINES, JSON.stringify(INITIAL_SAMPLE_ORDERS));
+        setLocalOrders(INITIAL_SAMPLE_ORDERS);
+        localStorage.setItem(storageKey, JSON.stringify(INITIAL_SAMPLE_ORDERS));
       }
     } catch {
-      setOrders(INITIAL_SAMPLE_ORDERS);
+      setLocalOrders(INITIAL_SAMPLE_ORDERS);
     }
-  }, []);
+  }, [storageKey]);
 
-  const saveOrders = (next: TaskOrder[]) => {
-    setOrders(next);
+  // Refine 데이터가 존재하면 서버 데이터를 우선 사용, 없으면 로컬 데이터 사용
+  const orders: TaskOrder[] = useMemo(() => {
+    if (refineRows && refineRows.length > 0) {
+      return refineRows.map((row: any) => ({
+        id: row.id,
+        orderNumber: row.order_number || row.id,
+        orderType: row.order_type,
+        title: row.title,
+        customerId: row.customer_id,
+        customerName: row.customer_name || '고객',
+        customerPhone: row.customer_phone,
+        targetItemName: row.target_item_name,
+        currentStage: row.current_stage as PipelineStage,
+        stageEnteredAt: row.stage_entered_at || row.created_at,
+        slaHours: row.sla_hours || 24,
+        laborFee: row.labor_fee,
+        partsCost: row.parts_cost,
+        totalAmount: row.total_amount,
+        diagnosis: row.diagnosis,
+        holdReason: row.hold_reason,
+        details: row.details,
+      }));
+    }
+    return localOrders;
+  }, [refineRows, localOrders]);
+
+  const saveLocalOrders = (next: TaskOrder[]) => {
+    setLocalOrders(next);
     try {
-      localStorage.setItem(STORAGE_KEY_PIPELINES, JSON.stringify(next));
+      localStorage.setItem(storageKey, JSON.stringify(next));
     } catch {
       // 무시
     }
@@ -96,9 +160,35 @@ export const TaskPipelineKanbanView: React.FC = () => {
       return;
     }
 
-    const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
-    saveOrders(next);
-    showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
+    // 서버 업데이트 시도
+    if (refineRows && refineRows.length > 0) {
+      mutateUpdate(
+        {
+          resource: 'task_orders',
+          id: order.id,
+          values: {
+            current_stage: targetStage,
+            stage_entered_at: new Date().toISOString(),
+          },
+        },
+        {
+          onSuccess: () => {
+            refetch();
+            showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
+          },
+          onError: () => {
+            // 폴백: 로컬 상태 업데이트
+            const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
+            saveLocalOrders(next);
+            showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 로컬 이동했습니다.`, 'info');
+          },
+        }
+      );
+    } else {
+      const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
+      saveLocalOrders(next);
+      showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
+    }
   };
 
   const filteredOrders = useMemo(() => {
@@ -108,7 +198,8 @@ export const TaskPipelineKanbanView: React.FC = () => {
       (o) =>
         o.orderNumber.toLowerCase().includes(term) ||
         o.title.toLowerCase().includes(term) ||
-        o.customerId.toLowerCase().includes(term)
+        (o.customerName && o.customerName.toLowerCase().includes(term)) ||
+        (o.customerId && o.customerId.toLowerCase().includes(term))
     );
   }, [orders, searchTerm]);
 
@@ -121,10 +212,8 @@ export const TaskPipelineKanbanView: React.FC = () => {
             <Workflow className="w-3.5 h-3.5" />
             <span>단계별 작업 공정 관리</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">작업 파이프라인 (칸반 보드)</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            자동차 정비, 가죽·도예 공방, 세탁·수선, 튜닝 등 수리·주문 제작 공정을 실시간 추적합니다.
-          </p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h1>
+          <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
         </div>
 
         <button
@@ -154,14 +243,14 @@ export const TaskPipelineKanbanView: React.FC = () => {
         </div>
       </div>
 
-      {/* 칸반 5단 컬럼 */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+      {/* 칸반 6단 컬럼 */}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3.5 items-start">
         {KANBAN_STAGES.map((col) => {
           const colOrders = filteredOrders.filter((o) => o.currentStage === col.stage);
           return (
             <div
               key={col.stage}
-              className={`rounded-2xl border ${col.color} p-3.5 min-h-[480px] flex flex-col space-y-3 bg-white/70 shadow-xs`}
+              className={`rounded-2xl border ${col.color} p-3 min-h-[480px] flex flex-col space-y-3 bg-white/70 shadow-xs`}
             >
               {/* 컬럼 헤더 */}
               <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
@@ -174,13 +263,10 @@ export const TaskPipelineKanbanView: React.FC = () => {
               {/* 주문 카드 목록 */}
               <div className="flex-1 space-y-3 overflow-y-auto max-h-[600px] pr-0.5">
                 {colOrders.length === 0 ? (
-                  <div className="py-12 text-center text-[11px] text-slate-400">
-                    진행 건 없음
-                  </div>
+                  <div className="py-12 text-center text-[11px] text-slate-400">진행 건 없음</div>
                 ) : (
                   colOrders.map((order) => {
-                    // SLA 지연 평가
-                    const slaHours = order.slaHoursPerStage?.[col.stage] || 24;
+                    const slaHours = order.slaHoursPerStage?.[col.stage] || order.slaHours || 24;
                     const sla = evaluateStageSla({
                       stageEnteredAt: order.stageEnteredAt,
                       slaHours,
@@ -190,7 +276,7 @@ export const TaskPipelineKanbanView: React.FC = () => {
                     return (
                       <div
                         key={order.id}
-                        className="bg-white rounded-xl border border-slate-200 p-3.5 space-y-2.5 shadow-xs hover:shadow-md transition-shadow"
+                        className="bg-white rounded-xl border border-slate-200 p-3 space-y-2.5 shadow-xs hover:shadow-md transition-shadow"
                       >
                         {/* 주문 번호 & SLA 배지 */}
                         <div className="flex items-center justify-between gap-1">
@@ -207,20 +293,18 @@ export const TaskPipelineKanbanView: React.FC = () => {
                             >
                               <Clock className="w-2.5 h-2.5" />
                               {sla.isBreached
-                                ? `지연 (${Math.abs(sla.remainingHours)}h 초과)`
-                                : `${sla.remainingHours}h 남음`}
+                                ? `지연 (${Math.abs(sla.remainingHours)}h)`
+                                : `${sla.remainingHours}h`}
                             </span>
                           )}
                         </div>
 
                         {/* 작업명 */}
-                        <p className="text-xs font-bold text-slate-900 leading-snug">
-                          {order.title}
-                        </p>
+                        <p className="text-xs font-bold text-slate-900 leading-snug">{order.title}</p>
 
-                        {/* 고객 정보 */}
+                        {/* 고객 정보 및 품목 */}
                         <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-100">
-                          <span>{order.customerId.replace('cust-', '')}</span>
+                          <span>{order.customerName || (order.customerId || '').replace('cust-', '')}</span>
                           <span className="text-[10px] text-slate-400">
                             {new Date(order.stageEnteredAt).toLocaleTimeString('ko-KR', {
                               hour: '2-digit',
@@ -230,20 +314,7 @@ export const TaskPipelineKanbanView: React.FC = () => {
                         </div>
 
                         {/* 단계 전이 액션 버튼들 */}
-                        <div className="flex items-center justify-between gap-1 pt-1">
-                          {/* 검수 불합격 시 재작업 되돌림 */}
-                          {col.stage === 'INSPECTION' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
-                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold flex items-center gap-0.5"
-                            >
-                              <RotateCcw className="w-2.5 h-2.5" />
-                              재작업
-                            </button>
-                          )}
-
-                          {/* 순차 진행 버튼 */}
+                        <div className="flex flex-col gap-1 pt-1">
                           {col.stage === 'RECEIVED' && (
                             <button
                               type="button"
@@ -256,25 +327,56 @@ export const TaskPipelineKanbanView: React.FC = () => {
                           )}
 
                           {col.stage === 'IN_PROGRESS' && (
+                            <div className="grid grid-cols-2 gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleStageTransition(order, 'PARTS_WAITING')}
+                                className="py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                              >
+                                <Package className="w-2.5 h-2.5" />
+                                <span>부품 대기</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStageTransition(order, 'INSPECTION')}
+                                className="py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                              >
+                                <span>검수 요청</span>
+                                <ChevronRight className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
+                          )}
+
+                          {col.stage === 'PARTS_WAITING' && (
                             <button
                               type="button"
-                              onClick={() => handleStageTransition(order, 'INSPECTION')}
-                              className="w-full py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-[11px] font-bold flex items-center justify-center gap-1"
+                              onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
+                              className="w-full py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center gap-1"
                             >
-                              <span>검수 요청</span>
+                              <span>작업 재개</span>
                               <ChevronRight className="w-3 h-3" />
                             </button>
                           )}
 
                           {col.stage === 'INSPECTION' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStageTransition(order, 'READY_FOR_PICKUP')}
-                              className="flex-1 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-bold flex items-center justify-center gap-1"
-                            >
-                              <span>합격·준비완료</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </button>
+                            <div className="grid grid-cols-2 gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
+                                className="py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                              >
+                                <RotateCcw className="w-2.5 h-2.5" />
+                                <span>재작업</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStageTransition(order, 'READY_FOR_PICKUP')}
+                                className="py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                              >
+                                <span>검수 합격</span>
+                                <ChevronRight className="w-2.5 h-2.5" />
+                              </button>
+                            </div>
                           )}
 
                           {col.stage === 'READY_FOR_PICKUP' && (
@@ -307,11 +409,40 @@ export const TaskPipelineKanbanView: React.FC = () => {
       {/* 신규 작업 접수 모달 */}
       {isNewModalOpen && (
         <NewTaskOrderModal
+          defaultOrderType={defaultOrderType}
           onClose={() => setIsNewModalOpen(false)}
           onCreated={(newOrder) => {
-            saveOrders([newOrder, ...orders]);
-            setIsNewModalOpen(false);
-            showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
+            if (refineRows) {
+              mutateCreate(
+                {
+                  resource: 'task_orders',
+                  values: {
+                    order_number: newOrder.orderNumber,
+                    order_type: newOrder.orderType || defaultOrderType,
+                    title: newOrder.title,
+                    customer_name: newOrder.customerName,
+                    current_stage: 'RECEIVED',
+                    sla_hours: newOrder.slaHours || 24,
+                  },
+                },
+                {
+                  onSuccess: () => {
+                    refetch();
+                    setIsNewModalOpen(false);
+                    showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
+                  },
+                  onError: () => {
+                    saveLocalOrders([newOrder, ...orders]);
+                    setIsNewModalOpen(false);
+                    showToast(`신규 작업 '${newOrder.orderNumber}'이 로컬 저장되었습니다.`, 'info');
+                  },
+                }
+              );
+            } else {
+              saveLocalOrders([newOrder, ...orders]);
+              setIsNewModalOpen(false);
+              showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
+            }
           }}
         />
       )}
@@ -320,11 +451,12 @@ export const TaskPipelineKanbanView: React.FC = () => {
 };
 
 interface NewModalProps {
+  defaultOrderType: string;
   onClose: () => void;
   onCreated: (order: TaskOrder) => void;
 }
 
-const NewTaskOrderModal: React.FC<NewModalProps> = ({ onClose, onCreated }) => {
+const NewTaskOrderModal: React.FC<NewModalProps> = ({ defaultOrderType, onClose, onCreated }) => {
   const [customerName, setCustomerName] = useState('');
   const [title, setTitle] = useState('');
   const [slaHours, setSlaHours] = useState('24');
@@ -343,10 +475,13 @@ const NewTaskOrderModal: React.FC<NewModalProps> = ({ onClose, onCreated }) => {
     const newOrder: TaskOrder = {
       id: `ord-${Date.now()}`,
       orderNumber,
+      orderType: defaultOrderType as any,
       title: title.trim(),
       customerId: `cust-${customerName.trim()}`,
+      customerName: customerName.trim(),
       currentStage: 'RECEIVED',
       stageEnteredAt: new Date().toISOString(),
+      slaHours: Number(slaHours) || 24,
       slaHoursPerStage: {
         RECEIVED: Number(slaHours) || 24,
         IN_PROGRESS: Number(slaHours) || 24,

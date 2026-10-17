@@ -110,3 +110,26 @@ export function assemblePurchaseOrder(
     orderSummaryText: lines.join('\n'),
   };
 }
+
+export interface VendorQuoteItem {
+  id: string;
+  prId: string;
+  vendorName: string;
+  quotedAmount: number;
+  leadTimeDays: number;
+  isSelected: boolean;
+  notes?: string;
+}
+
+/**
+ * 복수 공급업체 견적 중 최적 견적 자동 판정 (단가 최저 우선, 동일 시 리드타임 최단 우선)
+ */
+export function evaluateOptimalVendorQuote(quotes: VendorQuoteItem[]): VendorQuoteItem | null {
+  if (quotes.length === 0) return null;
+  return [...quotes].sort((a, b) => {
+    if (a.quotedAmount !== b.quotedAmount) {
+      return a.quotedAmount - b.quotedAmount;
+    }
+    return a.leadTimeDays - b.leadTimeDays;
+  })[0];
+}

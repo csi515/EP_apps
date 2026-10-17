@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Sparkles,
@@ -100,7 +101,7 @@ const DEFAULT_STYLES: PortfolioStyleItem[] = [
 export const TreatmentPortfolioView: React.FC = () => {
   const [styles, setStyles] = useState<PortfolioStyleItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_PORTFOLIO);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_PORTFOLIO));
       return saved ? JSON.parse(saved) : DEFAULT_STYLES;
     } catch {
       return DEFAULT_STYLES;
@@ -114,7 +115,7 @@ export const TreatmentPortfolioView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_PORTFOLIO, JSON.stringify(styles));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_PORTFOLIO), JSON.stringify(styles));
     } catch {}
   }, [styles]);
 

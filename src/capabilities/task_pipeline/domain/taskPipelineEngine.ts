@@ -8,6 +8,7 @@
 export type PipelineStage =
   | 'RECEIVED'
   | 'IN_PROGRESS'
+  | 'PARTS_WAITING'
   | 'INSPECTION'
   | 'READY_FOR_PICKUP'
   | 'COMPLETED'
@@ -17,21 +18,34 @@ export type PipelineStage =
 export interface TaskOrder {
   id: string;
   orderNumber: string;
+  orderType?: 'custom_order' | 'repair' | 'manufacturing' | 'maintenance' | 'inspection';
   title: string;
-  customerId: string;
+  customerId?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  targetItemName?: string | null;
   currentStage: PipelineStage;
   stageEnteredAt: string; // ISO String
+  assignedStaffId?: string | null;
+  assignedStaffName?: string | null;
   slaHoursPerStage?: Partial<Record<PipelineStage, number>>;
+  slaHours?: number;
+  laborFee?: number;
+  partsCost?: number;
+  totalAmount?: number;
+  diagnosis?: string | null;
   holdReason?: string;
+  details?: Record<string, any>;
 }
 
 const ALLOWED_TRANSITIONS: Record<PipelineStage, PipelineStage[]> = {
-  RECEIVED: ['IN_PROGRESS', 'ON_HOLD', 'CANCELLED'],
-  IN_PROGRESS: ['INSPECTION', 'ON_HOLD', 'CANCELLED'],
+  RECEIVED: ['IN_PROGRESS', 'PARTS_WAITING', 'ON_HOLD', 'CANCELLED'],
+  IN_PROGRESS: ['PARTS_WAITING', 'INSPECTION', 'ON_HOLD', 'CANCELLED'],
+  PARTS_WAITING: ['IN_PROGRESS', 'ON_HOLD', 'CANCELLED'],
   INSPECTION: ['READY_FOR_PICKUP', 'IN_PROGRESS', 'ON_HOLD', 'CANCELLED'], // 불합격 시 IN_PROGRESS 재진입
   READY_FOR_PICKUP: ['COMPLETED', 'ON_HOLD'],
   COMPLETED: [], // 최종 완료
-  ON_HOLD: ['RECEIVED', 'IN_PROGRESS', 'INSPECTION', 'CANCELLED'], // 보류 해제
+  ON_HOLD: ['RECEIVED', 'IN_PROGRESS', 'PARTS_WAITING', 'INSPECTION', 'CANCELLED'], // 보류 해제
   CANCELLED: [],
 };
 

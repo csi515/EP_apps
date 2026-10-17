@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Megaphone,
@@ -71,7 +72,7 @@ export function RetentionMarketingView() {
 
   const [templates, setTemplates] = useState<MessageTemplate[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_TEMPLATES);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_TEMPLATES));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -81,7 +82,7 @@ export function RetentionMarketingView() {
 
   const [history, setHistory] = useState<DispatchHistoryItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_HISTORY);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_HISTORY));
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -126,11 +127,11 @@ export function RetentionMarketingView() {
   }, [initialQueue]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_TEMPLATES, JSON.stringify(templates));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_TEMPLATES), JSON.stringify(templates));
   }, [templates]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+    localStorage.setItem(getTenantStorageKey(STORAGE_KEY_HISTORY), JSON.stringify(history));
   }, [history]);
 
   // 개별 메시지 발송 핸들러

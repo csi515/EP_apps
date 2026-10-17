@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   PackageSearch,
@@ -112,7 +113,7 @@ const CATEGORY_LABELS: Record<LostItemCategory, string> = {
 export const LostFoundManagementView: React.FC = () => {
   const [items, setItems] = useState<LostItem[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_LOST_ITEMS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_LOST_ITEMS));
       return saved ? JSON.parse(saved) : DEFAULT_LOST_ITEMS;
     } catch {
       return DEFAULT_LOST_ITEMS;
@@ -140,7 +141,7 @@ export const LostFoundManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_LOST_ITEMS, JSON.stringify(items));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_LOST_ITEMS), JSON.stringify(items));
     } catch {}
   }, [items]);
 

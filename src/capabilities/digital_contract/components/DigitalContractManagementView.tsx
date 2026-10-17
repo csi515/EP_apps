@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileCheck2,
@@ -78,7 +79,7 @@ const DEFAULT_CONTRACTS: SignedContract[] = [
 export const DigitalContractManagementView: React.FC = () => {
   const [contracts, setContracts] = useState<SignedContract[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_CONTRACTS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_CONTRACTS));
       return saved ? JSON.parse(saved) : DEFAULT_CONTRACTS;
     } catch {
       return DEFAULT_CONTRACTS;
@@ -95,7 +96,7 @@ export const DigitalContractManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY_CONTRACTS, JSON.stringify(contracts));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_CONTRACTS), JSON.stringify(contracts));
     } catch {}
   }, [contracts]);
 

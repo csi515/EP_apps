@@ -1,3 +1,4 @@
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileText,
@@ -68,12 +69,12 @@ export const TreatmentChartManagementView: React.FC = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_CHARTS);
+      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_CHARTS));
       if (saved) {
         setEntries(JSON.parse(saved));
       } else {
         setEntries(SAMPLE_ENTRIES);
-        localStorage.setItem(STORAGE_KEY_CHARTS, JSON.stringify(SAMPLE_ENTRIES));
+        localStorage.setItem(getTenantStorageKey(STORAGE_KEY_CHARTS), JSON.stringify(SAMPLE_ENTRIES));
       }
     } catch {
       setEntries(SAMPLE_ENTRIES);
@@ -83,7 +84,7 @@ export const TreatmentChartManagementView: React.FC = () => {
   const saveEntries = (next: NormalizedTreatmentEntry[]) => {
     setEntries(next);
     try {
-      localStorage.setItem(STORAGE_KEY_CHARTS, JSON.stringify(next));
+      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_CHARTS), JSON.stringify(next));
     } catch {
       // 무시
     }

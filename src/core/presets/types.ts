@@ -119,6 +119,14 @@ export type BundledPresetCapabilityId =
   | 'emergency_alert_broadcast'
   // 범주 AV: 오프라인 내방객 전자 방명록 & 마케팅 동의기
   | 'digital_guestbook'
+  // 범주 AW: 목표관리(MBO) 및 실행 프로젝트
+  | 'mbo'
+  // 범주 AX: 전사 범용 전자결재 및 기안 승인 워크플로
+  | 'approval_workflow'
+  // 범주 AY: 전문 품질검사 및 규격 공차 판정 대장
+  | 'quality_inspection'
+  // 범주 AZ: 공정/사양 4M 변경관리(ECN/ECO)
+  | 'change_management'
   // 향후 지속적인 신규 Capability 추가를 위한 Open Union 확장 (자동완성 유지 + 유연한 확장)
   | (string & {});
 

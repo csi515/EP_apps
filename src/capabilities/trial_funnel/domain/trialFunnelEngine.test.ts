@@ -3,6 +3,8 @@ import {
   validateLeadStatusTransition,
   calculateFunnelMetrics,
   groupLeadsByStatus,
+  buildConsultationFromLead,
+  buildCustomerFromLead,
   type TrialLead,
 } from './trialFunnelEngine';
 
@@ -111,5 +113,36 @@ console.log('✓ 1. 리드 상태 전이 및 필수 필드 가드 검증 통과'
   assert.equal(grouped.dropped.length, 1);
 }
 console.log('✓ 2. 퍼널 전환율 지표 산출 및 그룹화 검증 통과');
+
+// 3. 상담 CRM 및 고객 전환 브릿지 생성 검증
+{
+  const lead: TrialLead = {
+    id: 'lead-999',
+    organization_id: 'org1',
+    customer_name: '이지은',
+    phone: '01099998888',
+    source: 'instagram',
+    status: 'consult_scheduled',
+    target_program: '고급 보컬 레슨',
+    notes: '주말 오후 수업 희망',
+    created_at: '2026-10-17T00:00:00Z',
+    updated_at: '2026-10-17T00:00:00Z',
+  };
+
+  const consultPayload = buildConsultationFromLead(lead, { consultationDate: '2026-10-20' });
+  assert.equal(consultPayload.customer_id, 'lead-999');
+  assert.equal(consultPayload.type, 'trial_inquiry');
+  assert.equal(consultPayload.consultation_date, '2026-10-20');
+  assert.match(consultPayload.content, /이지은/);
+  assert.match(consultPayload.content, /고급 보컬 레슨/);
+
+  const customerPayload = buildCustomerFromLead(lead);
+  assert.equal(customerPayload.name, '이지은');
+  assert.equal(customerPayload.phone, '01099998888');
+  assert.equal(customerPayload.status, 'active');
+  assert.equal(customerPayload.metadata.lead_id, 'lead-999');
+  assert.match(customerPayload.memo, /리드 파이프라인 전환/);
+}
+console.log('✓ 3. 상담 CRM 및 고객 전환 브릿지 생성 검증 통과');
 
 console.log('[test:trial-funnel] ALL TESTS PASSED! (100%)');

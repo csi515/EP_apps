@@ -78,6 +78,10 @@ export const CAPABILITY_IDS = [
   'parking_validator',
   'emergency_alert_broadcast',
   'digital_guestbook',
+  'mbo',
+  'approval_workflow',
+  'quality_inspection',
+  'change_management',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

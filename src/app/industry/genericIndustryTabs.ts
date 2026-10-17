@@ -58,6 +58,8 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   handover: ['feedbacks'],
   feedbacks: ['feedbacks'],
   incidents: ['feedbacks'],
+  mbo: ['mbo'],
+  'change-management': ['change_management'],
 };
 
 /**
@@ -563,6 +565,20 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '오프라인 워크인/설명회 내방객 태블릿 서명, 개인정보/마케팅 동의 및 0원 SVG 접수증',
     tier: 'tier1_ready',
     primaryCapability: 'digital_guestbook',
+  },
+  mbo: {
+    tab: 'mbo',
+    label: '목표관리(MBO)',
+    description: '조직 및 개인 목표 계층화, 계획 승인 절차, 일자별 실행 피드 및 성과 다각 평가',
+    tier: 'tier1_ready',
+    primaryCapability: 'mbo',
+  },
+  'change-management': {
+    tab: 'change-management',
+    label: '4M 변경관리(ECN)',
+    description: '작업자·설비·원자재·공정 사양 변경 승인 및 사전 부서 영향도 평가 대장',
+    tier: 'tier1_ready',
+    primaryCapability: 'change_management',
   },
   capabilities: {
     tab: 'capabilities',

@@ -1144,6 +1144,10 @@ export interface Database {
           reference_type: string | null;
           reference_id: string | null;
           reason: string | null;
+          lot_number: string | null;
+          expiry_date: string | null;
+          source_location_id: string | null;
+          destination_location_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -1156,10 +1160,55 @@ export interface Database {
           reference_type?: string | null;
           reference_id?: string | null;
           reason?: string | null;
+          lot_number?: string | null;
+          expiry_date?: string | null;
+          source_location_id?: string | null;
+          destination_location_id?: string | null;
           created_at?: string;
         };
         Update: Partial<Database['core']['Tables']['stock_movements']['Insert']>;
         Relationships: [];
+      };
+      stock_lots: {
+        Row: {
+          id: string;
+          organization_id: string;
+          product_id: string;
+          variant_id: string | null;
+          lot_number: string;
+          expiry_date: string | null;
+          quantity: number;
+          location_name: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          product_id: string;
+          variant_id?: string | null;
+          lot_number: string;
+          expiry_date?: string | null;
+          quantity?: number;
+          location_name?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['stock_lots']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'stock_lots_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'stock_lots_product_id_fkey';
+            columns: ['product_id'];
+            referencedRelation: 'products';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       sales: {
         Row: {
@@ -3881,6 +3930,786 @@ export interface Database {
             foreignKeyName: 'digital_guestbook_entries_organization_id_fkey';
             columns: ['organization_id'];
             referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_objectives: {
+        Row: {
+          id: string;
+          organization_id: string;
+          parent_id: string | null;
+          level: 'company' | 'department' | 'individual' | 'project';
+          department_name: string | null;
+          owner_id: string | null;
+          owner_name: string;
+          title: string;
+          description: string | null;
+          success_criteria: string | null;
+          status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
+          start_date: string;
+          target_date: string;
+          weight: number;
+          progress_rate: number;
+          rejection_reason: string | null;
+          approved_by: string | null;
+          approved_at: string | null;
+          revision: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          parent_id?: string | null;
+          level?: 'company' | 'department' | 'individual' | 'project';
+          department_name?: string | null;
+          owner_id?: string | null;
+          owner_name: string;
+          title: string;
+          description?: string | null;
+          success_criteria?: string | null;
+          status?: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
+          start_date: string;
+          target_date: string;
+          weight?: number;
+          progress_rate?: number;
+          rejection_reason?: string | null;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          revision?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_objectives']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_objectives_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_objectives_parent_id_fkey';
+            columns: ['parent_id'];
+            referencedRelation: 'mbo_objectives';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_projects: {
+        Row: {
+          id: string;
+          organization_id: string;
+          objective_id: string;
+          title: string;
+          description: string | null;
+          owner_id: string | null;
+          owner_name: string;
+          status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
+          start_date: string;
+          target_date: string;
+          evaluation_period: string;
+          progress_rate: number;
+          rejection_reason: string | null;
+          approved_by: string | null;
+          approved_at: string | null;
+          revision: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          objective_id: string;
+          title: string;
+          description?: string | null;
+          owner_id?: string | null;
+          owner_name: string;
+          status?: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
+          start_date: string;
+          target_date: string;
+          evaluation_period?: string;
+          progress_rate?: number;
+          rejection_reason?: string | null;
+          approved_by?: string | null;
+          approved_at?: string | null;
+          revision?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_projects']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_projects_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_projects_objective_id_fkey';
+            columns: ['objective_id'];
+            referencedRelation: 'mbo_objectives';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_progress_logs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          author_id: string | null;
+          author_name: string;
+          log_date: string;
+          progress_rate: number;
+          achievements: string;
+          issues_and_actions: string | null;
+          next_steps: string | null;
+          attachments: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          author_id?: string | null;
+          author_name: string;
+          log_date?: string;
+          progress_rate: number;
+          achievements: string;
+          issues_and_actions?: string | null;
+          next_steps?: string | null;
+          attachments?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_progress_logs']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_progress_logs_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_progress_logs_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'mbo_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_feedback_comments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          progress_log_id: string | null;
+          author_id: string | null;
+          author_name: string;
+          author_role: string;
+          feedback_type: 'comment' | 'revision_request' | 'praise';
+          content: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          progress_log_id?: string | null;
+          author_id?: string | null;
+          author_name: string;
+          author_role?: string;
+          feedback_type?: 'comment' | 'revision_request' | 'praise';
+          content: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_feedback_comments']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_feedback_comments_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_feedback_comments_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'mbo_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_evaluations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          target_user_id: string | null;
+          evaluator_id: string | null;
+          evaluator_name: string;
+          evaluation_type: 'self' | 'peer' | 'manager' | 'final';
+          score: number;
+          grade: 'S' | 'A' | 'B' | 'C' | 'D';
+          qualitative_feedback: string;
+          is_confidential: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          target_user_id?: string | null;
+          evaluator_id?: string | null;
+          evaluator_name: string;
+          evaluation_type?: 'self' | 'peer' | 'manager' | 'final';
+          score: number;
+          grade: 'S' | 'A' | 'B' | 'C' | 'D';
+          qualitative_feedback: string;
+          is_confidential?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_evaluations']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_evaluations_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_evaluations_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'mbo_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      approval_templates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          category: 'general' | 'expense' | 'purchase' | 'leave' | 'work_order' | 'it_change';
+          description: string | null;
+          form_schema: Json;
+          default_steps: Json;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          category?: 'general' | 'expense' | 'purchase' | 'leave' | 'work_order' | 'it_change';
+          description?: string | null;
+          form_schema?: Json;
+          default_steps?: Json;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['approval_templates']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'approval_templates_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      approval_requests: {
+        Row: {
+          id: string;
+          organization_id: string;
+          template_id: string | null;
+          title: string;
+          content: Json;
+          requester_id: string | null;
+          requester_name: string;
+          status: 'draft' | 'pending' | 'approved' | 'rejected' | 'canceled';
+          current_step_order: number;
+          total_steps: number;
+          entity_type: string | null;
+          entity_id: string | null;
+          final_approved_at: string | null;
+          rejected_at: string | null;
+          rejection_reason: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          template_id?: string | null;
+          title: string;
+          content?: Json;
+          requester_id?: string | null;
+          requester_name: string;
+          status?: 'draft' | 'pending' | 'approved' | 'rejected' | 'canceled';
+          current_step_order?: number;
+          total_steps?: number;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          final_approved_at?: string | null;
+          rejected_at?: string | null;
+          rejection_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['approval_requests']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'approval_requests_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'approval_requests_template_id_fkey';
+            columns: ['template_id'];
+            referencedRelation: 'approval_templates';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      approval_steps: {
+        Row: {
+          id: string;
+          organization_id: string;
+          request_id: string;
+          step_order: number;
+          step_type: 'review' | 'approval' | 'consensus';
+          approver_id: string | null;
+          approver_name: string;
+          approver_role: string | null;
+          status: 'waiting' | 'pending' | 'approved' | 'rejected' | 'skipped';
+          comment: string | null;
+          signature_url: string | null;
+          processed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          request_id: string;
+          step_order: number;
+          step_type?: 'review' | 'approval' | 'consensus';
+          approver_id?: string | null;
+          approver_name: string;
+          approver_role?: string | null;
+          status?: 'waiting' | 'pending' | 'approved' | 'rejected' | 'skipped';
+          comment?: string | null;
+          signature_url?: string | null;
+          processed_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['approval_steps']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'approval_steps_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'approval_steps_request_id_fkey';
+            columns: ['request_id'];
+            referencedRelation: 'approval_requests';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      task_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          order_number: string;
+          order_type: 'custom_order' | 'repair' | 'manufacturing' | 'maintenance' | 'inspection';
+          title: string;
+          customer_id: string | null;
+          customer_name: string | null;
+          customer_phone: string | null;
+          target_item_name: string | null;
+          current_stage: 'RECEIVED' | 'IN_PROGRESS' | 'PARTS_WAITING' | 'INSPECTION' | 'READY_FOR_PICKUP' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
+          stage_entered_at: string;
+          assigned_staff_id: string | null;
+          assigned_staff_name: string | null;
+          sla_hours: number;
+          labor_fee: number;
+          parts_cost: number;
+          total_amount: number;
+          diagnosis: string | null;
+          hold_reason: string | null;
+          details: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          order_number: string;
+          order_type?: 'custom_order' | 'repair' | 'manufacturing' | 'maintenance' | 'inspection';
+          title: string;
+          customer_id?: string | null;
+          customer_name?: string | null;
+          customer_phone?: string | null;
+          target_item_name?: string | null;
+          current_stage?: 'RECEIVED' | 'IN_PROGRESS' | 'PARTS_WAITING' | 'INSPECTION' | 'READY_FOR_PICKUP' | 'COMPLETED' | 'ON_HOLD' | 'CANCELLED';
+          stage_entered_at?: string;
+          assigned_staff_id?: string | null;
+          assigned_staff_name?: string | null;
+          sla_hours?: number;
+          labor_fee?: number;
+          parts_cost?: number;
+          total_amount?: number;
+          diagnosis?: string | null;
+          hold_reason?: string | null;
+          details?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['task_orders']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'task_orders_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'task_orders_customer_id_fkey';
+            columns: ['customer_id'];
+            referencedRelation: 'customers';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'task_orders_assigned_staff_id_fkey';
+            columns: ['assigned_staff_id'];
+            referencedRelation: 'staff';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      task_order_timelines: {
+        Row: {
+          id: string;
+          organization_id: string;
+          task_order_id: string;
+          from_stage: string | null;
+          to_stage: string;
+          changed_by_user_id: string | null;
+          note: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          task_order_id: string;
+          from_stage?: string | null;
+          to_stage: string;
+          changed_by_user_id?: string | null;
+          note?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['task_order_timelines']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'task_order_timelines_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'task_order_timelines_task_order_id_fkey';
+            columns: ['task_order_id'];
+            referencedRelation: 'task_orders';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      purchase_requisitions: {
+        Row: {
+          id: string;
+          organization_id: string;
+          pr_number: string;
+          title: string;
+          requester_id: string | null;
+          requester_name: string;
+          status: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'ordered' | 'received';
+          approval_request_id: string | null;
+          needed_by_date: string | null;
+          total_estimated_amount: number;
+          items: Json;
+          justification: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          pr_number: string;
+          title: string;
+          requester_id?: string | null;
+          requester_name: string;
+          status?: 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'ordered' | 'received';
+          approval_request_id?: string | null;
+          needed_by_date?: string | null;
+          total_estimated_amount?: number;
+          items?: Json;
+          justification?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['purchase_requisitions']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'purchase_requisitions_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'purchase_requisitions_approval_request_id_fkey';
+            columns: ['approval_request_id'];
+            referencedRelation: 'approval_requests';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      vendor_quotes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          pr_id: string;
+          vendor_id: string | null;
+          vendor_name: string;
+          quoted_amount: number;
+          lead_time_days: number;
+          is_selected: boolean;
+          quote_file_url: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          pr_id: string;
+          vendor_id?: string | null;
+          vendor_name: string;
+          quoted_amount: number;
+          lead_time_days?: number;
+          is_selected?: boolean;
+          quote_file_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['vendor_quotes']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'vendor_quotes_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendor_quotes_pr_id_fkey';
+            columns: ['pr_id'];
+            referencedRelation: 'purchase_requisitions';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      quality_inspection_standards: {
+        Row: {
+          id: string;
+          organization_id: string;
+          item_name: string;
+          process_stage: 'inbound' | 'in_process' | 'final' | 'outgoing';
+          inspection_item: string;
+          unit: string;
+          target_value: number | null;
+          min_threshold: number | null;
+          max_threshold: number | null;
+          sample_size: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          item_name: string;
+          process_stage?: 'inbound' | 'in_process' | 'final' | 'outgoing';
+          inspection_item: string;
+          unit?: string;
+          target_value?: number | null;
+          min_threshold?: number | null;
+          max_threshold?: number | null;
+          sample_size?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['quality_inspection_standards']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'quality_inspection_standards_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      quality_inspection_records: {
+        Row: {
+          id: string;
+          organization_id: string;
+          standard_id: string | null;
+          lot_number: string;
+          sample_values: Json;
+          mean_value: number;
+          judgment: 'pass' | 'fail' | 'conditional_pass';
+          defect_count: number;
+          inspector_id: string | null;
+          inspector_name: string;
+          incident_report_id: string | null;
+          notes: string | null;
+          inspected_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          standard_id?: string | null;
+          lot_number: string;
+          sample_values?: Json;
+          mean_value: number;
+          judgment?: 'pass' | 'fail' | 'conditional_pass';
+          defect_count?: number;
+          inspector_id?: string | null;
+          inspector_name: string;
+          incident_report_id?: string | null;
+          notes?: string | null;
+          inspected_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['quality_inspection_records']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'quality_inspection_records_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'quality_inspection_records_standard_id_fkey';
+            columns: ['standard_id'];
+            referencedRelation: 'quality_inspection_standards';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      change_orders: {
+        Row: {
+          id: string;
+          organization_id: string;
+          change_number: string;
+          title: string;
+          category: 'man' | 'machine' | 'material' | 'method' | 'spec';
+          reason: string;
+          before_description: string;
+          after_description: string;
+          risk_level: 'low' | 'medium' | 'high' | 'critical';
+          status: 'draft' | 'reviewing' | 'approved' | 'applied' | 'rejected' | 'cancelled';
+          effective_date: string | null;
+          requester_id: string | null;
+          requester_name: string;
+          approval_request_id: string | null;
+          applied_at: string | null;
+          applied_by: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          change_number: string;
+          title: string;
+          category: 'man' | 'machine' | 'material' | 'method' | 'spec';
+          reason: string;
+          before_description: string;
+          after_description: string;
+          risk_level?: 'low' | 'medium' | 'high' | 'critical';
+          status?: 'draft' | 'reviewing' | 'approved' | 'applied' | 'rejected' | 'cancelled';
+          effective_date?: string | null;
+          requester_id?: string | null;
+          requester_name: string;
+          approval_request_id?: string | null;
+          applied_at?: string | null;
+          applied_by?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['change_orders']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'change_orders_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'change_orders_approval_request_id_fkey';
+            columns: ['approval_request_id'];
+            referencedRelation: 'approval_requests';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      change_order_evaluations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          change_order_id: string;
+          evaluator_role: 'quality' | 'production' | 'safety' | 'procurement' | 'engineering';
+          evaluator_name: string;
+          impact_assessment: string;
+          is_approved: boolean;
+          risk_notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          change_order_id: string;
+          evaluator_role: 'quality' | 'production' | 'safety' | 'procurement' | 'engineering';
+          evaluator_name: string;
+          impact_assessment: string;
+          is_approved?: boolean;
+          risk_notes?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['change_order_evaluations']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'change_order_evaluations_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'change_order_evaluations_change_order_id_fkey';
+            columns: ['change_order_id'];
+            referencedRelation: 'change_orders';
             referencedColumns: ['id'];
           },
         ];
