@@ -118,7 +118,9 @@ export type BundledPresetCapabilityId =
   // 범주 AU: 긴급 휴원·재난 공지 & 모바일 수신확인 대장
   | 'emergency_alert_broadcast'
   // 범주 AV: 오프라인 내방객 전자 방명록 & 마케팅 동의기
-  | 'digital_guestbook';
+  | 'digital_guestbook'
+  // 향후 지속적인 신규 Capability 추가를 위한 Open Union 확장 (자동완성 유지 + 유연한 확장)
+  | (string & {});
 
 
 export type PresetCapabilityId =

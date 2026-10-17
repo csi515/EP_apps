@@ -1416,3 +1416,18 @@ export function listIndustryPresets(): IndustryPresetDefinition[] {
   return Object.values(INDUSTRY_PRESETS);
 }
 
+/**
+ * 런타임에 동적으로 신규 Capability 번들을 등록하는 확장 함수.
+ * 향후 신규 Capability 추가 시 presetRegistry 파일을 직접 대규모 수정하지 않고도 동적 주입 가능.
+ */
+export function registerCapabilityBundle(bundle: CapabilityModuleBundle): void {
+  (CAPABILITY_BUNDLES as Record<string, CapabilityModuleBundle>)[bundle.capabilityId] = bundle;
+}
+
+/**
+ * 런타임에 동적으로 신규 업종 프리셋 정의를 등록하는 확장 함수.
+ */
+export function registerIndustryPreset(preset: IndustryPresetDefinition): void {
+  INDUSTRY_PRESETS[preset.id] = preset;
+}
+

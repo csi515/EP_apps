@@ -60,10 +60,32 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   incidents: ['feedbacks'],
 };
 
+/**
+ * 신규 Capability 탭 메타데이터 및 요구 Capability 동적 등록
+ */
+export function registerIndustryTab(
+  metadata: TabMetadataItem,
+  requiredCapabilities?: readonly string[]
+): void {
+  TAB_METADATA[metadata.tab] = metadata;
+  if (requiredCapabilities && requiredCapabilities.length > 0) {
+    TAB_REQUIRED_CAPABILITIES[metadata.tab] = requiredCapabilities;
+  } else {
+    TAB_REQUIRED_CAPABILITIES[metadata.tab] = [metadata.primaryCapability];
+  }
+}
+
 export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly string[]): boolean {
   const required = TAB_REQUIRED_CAPABILITIES[tab];
-  if (!required) return true;
-  return required.some((cap) => enabledCaps.includes(cap));
+  if (required) {
+    return required.some((cap) => enabledCaps.includes(cap));
+  }
+  // 신규 Capability 컨벤션 기반 자동 허용 (kebab-case 슬러그 -> snake_case 매핑)
+  const normalizedSlug = tab.replace(/-/g, '_');
+  if (enabledCaps.includes(tab) || enabledCaps.includes(normalizedSlug)) {
+    return true;
+  }
+  return true;
 }
 
 export type TabImplementationTier = 'tier1_ready' | 'tier2_basic' | 'tier3_deferred';

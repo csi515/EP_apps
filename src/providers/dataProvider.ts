@@ -85,12 +85,58 @@ export const TENANT_COLUMN_MAP: Record<string, string> = {
   tenant_operating_hours: "tenant_id",
 };
 
-export function getTenantColumnForResource(resource: string): string {
-  return TENANT_COLUMN_MAP[resource] ?? "organization_id";
+const dynamicTenantScopedResources = new Set<string>(TENANT_SCOPED_RESOURCES);
+const dynamicTenantColumnMap = new Map<string, string>(Object.entries(TENANT_COLUMN_MAP));
+
+/**
+ * 신규 Capability가 추가될 때 해당 기능의 테넌트 스코프 리소스 및 컬럼을 동적으로 등록
+ */
+export function registerTenantScopedResource(resource: string, tenantColumn: string = "organization_id"): void {
+  dynamicTenantScopedResources.add(resource);
+  if (tenantColumn !== "organization_id") {
+    dynamicTenantColumnMap.set(resource, tenantColumn);
+  }
 }
 
+export function registerTenantScopedResources(resources: string[] | Record<string, string>): void {
+  if (Array.isArray(resources)) {
+    for (const r of resources) dynamicTenantScopedResources.add(r);
+  } else {
+    for (const [r, col] of Object.entries(resources)) {
+      dynamicTenantScopedResources.add(r);
+      if (col !== "organization_id") dynamicTenantColumnMap.set(r, col);
+    }
+  }
+}
+
+export function getTenantColumnForResource(resource: string): string {
+  return dynamicTenantColumnMap.get(resource) ?? TENANT_COLUMN_MAP[resource] ?? "organization_id";
+}
+
+/**
+ * 주어진 리소스가 테넌트 격리 대상인지 판정.
+ * 등록된 리소스뿐만 아니라, 향후 새롭게 추가되는 비즈니스 리소스도 기본적으로 테넌트 격리 대상으로 보호 (Fail-Closed Default).
+ */
 export function isTenantScopedResource(resource: string): boolean {
-  return (TENANT_SCOPED_RESOURCES as readonly string[]).includes(resource);
+  if (!resource) return false;
+  // 공개 또는 인증/내비게이션 전용 리소스는 제외
+  if (
+    resource === "auth" ||
+    resource === "public" ||
+    resource === "public_organizations" ||
+    resource === "public_consultations" ||
+    resource === "dashboard" ||
+    resource === "account" ||
+    resource === "settings"
+  ) {
+    return false;
+  }
+  // 동적 등록 세트에 포함되어 있으면 즉시 true
+  if (dynamicTenantScopedResources.has(resource)) return true;
+  // 기본 배열에 포함되어 있으면 true
+  if ((TENANT_SCOPED_RESOURCES as readonly string[]).includes(resource)) return true;
+  // 신규 Capability가 등록한 리소스도 기본적으로 테넌트 스코프로 보호
+  return true;
 }
 
 /**

@@ -27,6 +27,18 @@ type GrantsCacheEntry = {
 };
 const CACHE_TTL_MS = 10_000;
 
+const dynamicResourcePermissionMap = new Map<string, Partial<Record<string, Permission>>>();
+
+/**
+ * 신규 Capability가 추가될 때 자신의 리소스에 대한 Refine action → Canonical Permission 매핑을 동적으로 등록
+ */
+export function registerResourceMoaPermission(
+  resource: string,
+  mappings: Partial<Record<string, Permission>>
+): void {
+  dynamicResourcePermissionMap.set(resource.trim().toLowerCase(), mappings);
+}
+
 /**
  * Canonical mapping between Refine (resource, action) pairs and MOA canonical permissions.
  * Unmapped pairs return null (Fail-Closed).
@@ -40,6 +52,12 @@ export function resolveMoaPermission(resource?: string, action?: string): Permis
   const directCandidate = `${res}.${act}`;
   if (isKnownPermission(directCandidate)) {
     return directCandidate;
+  }
+
+  // 1.5. Dynamic registration check (for newly added capabilities)
+  const dynamicMap = dynamicResourcePermissionMap.get(res);
+  if (dynamicMap && dynamicMap[act]) {
+    return dynamicMap[act]!;
   }
 
   // 2. Explicit mappings by resource
