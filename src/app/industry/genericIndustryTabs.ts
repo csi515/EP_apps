@@ -521,6 +521,27 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tier: 'tier1_ready',
     primaryCapability: 'achievement_quest_badge',
   },
+  'parking-validator': {
+    tab: 'parking-validator',
+    label: '무료주차 등록·정산',
+    description: '고객 차량 번호 등록, 무료 주차 할인권 즉시 차감 및 0원 W3C SVG 주차 확인증 발급',
+    tier: 'tier1_ready',
+    primaryCapability: 'parking_validator',
+  },
+  'emergency-broadcast': {
+    tab: 'emergency-broadcast',
+    label: '긴급휴원·재난공지',
+    description: '기상특보/비상 시 긴급 휴원 공고 발령, 모바일 수신확인 실시간 집계 및 0원 SVG 공고문',
+    tier: 'tier1_ready',
+    primaryCapability: 'emergency_alert_broadcast',
+  },
+  'digital-guestbook': {
+    tab: 'digital-guestbook',
+    label: '전자 방명록·상담접수',
+    description: '오프라인 워크인/설명회 내방객 태블릿 서명, 개인정보/마케팅 동의 및 0원 SVG 접수증',
+    tier: 'tier1_ready',
+    primaryCapability: 'digital_guestbook',
+  },
   capabilities: {
     tab: 'capabilities',
     label: '기능 스위치보드 & 용어 사전',

@@ -112,7 +112,13 @@ export type BundledPresetCapabilityId =
   // 범주 AR: 모바일 만족도·NPS 설문 조사 및 피드백 분석기
   | 'nps_survey_collector'
   // 범주 AS: 원생 성취 퀘스트 & 0원 W3C SVG 뱃지 수여 엔진
-  | 'achievement_quest_badge';
+  | 'achievement_quest_badge'
+  // 범주 AT: 고객 무료 주차 등록 & 상가 주차권 정산기
+  | 'parking_validator'
+  // 범주 AU: 긴급 휴원·재난 공지 & 모바일 수신확인 대장
+  | 'emergency_alert_broadcast'
+  // 범주 AV: 오프라인 내방객 전자 방명록 & 마케팅 동의기
+  | 'digital_guestbook';
 
 
 export type PresetCapabilityId =

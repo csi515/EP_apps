@@ -66,6 +66,9 @@ import { event_contest_hubCapability } from './event_contest_hub/manifest';
 import { facilityIncidentReportCapability } from './facility_incident_report/manifest';
 import { npsSurveyCollectorCapability } from './nps_survey_collector/manifest';
 import { achievementQuestBadgeCapability } from './achievement_quest_badge/manifest';
+import { parking_validatorCapability } from './parking_validator/manifest';
+import { emergency_alert_broadcastCapability } from './emergency_alert_broadcast/manifest';
+import { digital_guestbookCapability } from './digital_guestbook/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -145,6 +148,9 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   facilityIncidentReportCapability,
   npsSurveyCollectorCapability,
   achievementQuestBadgeCapability,
+  parking_validatorCapability,
+  emergency_alert_broadcastCapability,
+  digital_guestbookCapability,
 ];
 
 export * from './trial_funnel';
@@ -161,6 +167,9 @@ export * from './event_contest_hub';
 export * from './facility_incident_report';
 export * from './nps_survey_collector';
 export * from './achievement_quest_badge';
+export * from './parking_validator';
+export * from './emergency_alert_broadcast';
+export * from './digital_guestbook';
 
 
 

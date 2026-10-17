@@ -129,6 +129,9 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   facility_incident_report: ['facility-incident-report', 'incidents', 'accident-reports'],
   nps_survey_collector: ['nps-survey-collector', 'nps-surveys', 'satisfaction'],
   achievement_quest_badge: ['achievement-quest-badge', 'quests', 'badges'],
+  parking_validator: ['parking-validator', 'parking', 'parking-tickets'],
+  emergency_alert_broadcast: ['emergency-broadcast', 'emergency-alerts', 'broadcasts'],
+  digital_guestbook: ['digital-guestbook', 'guestbook', 'visitors'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

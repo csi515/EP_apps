@@ -93,6 +93,15 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
 
   // 단원평가 성적 분석은 진도 기록 필수
   exam_grade_analytics: ['curriculum_progress'],
+
+  // 고객 무료 주차 등록 & 정산기는 공간/시설(seat_room) 연계
+  parking_validator: ['seat_room'],
+
+  // 긴급 휴원·재난 공지는 원생/회원 명부(roster) 연계
+  emergency_alert_broadcast: ['roster'],
+
+  // 오프라인 방명록 & 마케팅 동의기는 상담/고객관리(consultation_crm) 연계
+  digital_guestbook: ['consultation_crm'],
 };
 
 export interface DependencyResolutionResult {

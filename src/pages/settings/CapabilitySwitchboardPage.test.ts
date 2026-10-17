@@ -77,6 +77,7 @@ console.log('✓ 2. 복합 매장 다중 세트 안전 보호 검증 완료');
     'attendance',
     'vehicle_shuttle',
     'parent',
+    'emergency_alert_broadcast',
     'roster',
     'workplace_policy',
     'shift_schedule',

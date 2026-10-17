@@ -75,6 +75,9 @@ export const CAPABILITY_IDS = [
   'facility_incident_report',
   'nps_survey_collector',
   'achievement_quest_badge',
+  'parking_validator',
+  'emergency_alert_broadcast',
+  'digital_guestbook',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

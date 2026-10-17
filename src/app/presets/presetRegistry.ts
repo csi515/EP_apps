@@ -137,6 +137,12 @@ import { npsSurveyCollectorSetupSchema } from '@/capabilities/nps_survey_collect
 import { npsSurveyCollectorResources } from '@/capabilities/nps_survey_collector/resources';
 import { achievementQuestBadgeSetupSchema } from '@/capabilities/achievement_quest_badge/setupSchema';
 import { achievementQuestBadgeResources } from '@/capabilities/achievement_quest_badge/resources';
+import { parkingValidatorSetupSchema } from '@/capabilities/parking_validator/setupSchema';
+import { parkingValidatorResources } from '@/capabilities/parking_validator/resources';
+import { emergencyAlertBroadcastSetupSchema } from '@/capabilities/emergency_alert_broadcast/setupSchema';
+import { emergencyAlertBroadcastResources } from '@/capabilities/emergency_alert_broadcast/resources';
+import { digitalGuestbookSetupSchema } from '@/capabilities/digital_guestbook/setupSchema';
+import { digitalGuestbookResources } from '@/capabilities/digital_guestbook/resources';
 
 
 /**
@@ -523,6 +529,27 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'achievement_quest_badge',
     setupSchema: achievementQuestBadgeSetupSchema,
     resources: achievementQuestBadgeResources,
+  },
+
+  // 범주 AT: 고객 무료 주차 등록 & 상가 주차권 정산기
+  parking_validator: {
+    capabilityId: 'parking_validator',
+    setupSchema: parkingValidatorSetupSchema,
+    resources: parkingValidatorResources,
+  },
+
+  // 범주 AU: 긴급 휴원·재난 공지 & 모바일 수신확인 대장
+  emergency_alert_broadcast: {
+    capabilityId: 'emergency_alert_broadcast',
+    setupSchema: emergencyAlertBroadcastSetupSchema,
+    resources: emergencyAlertBroadcastResources,
+  },
+
+  // 범주 AV: 오프라인 내방객 전자 방명록 & 마케팅 동의기
+  digital_guestbook: {
+    capabilityId: 'digital_guestbook',
+    setupSchema: digitalGuestbookSetupSchema,
+    resources: digitalGuestbookResources,
   },
 };
 

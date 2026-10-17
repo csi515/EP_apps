@@ -22,6 +22,8 @@ import {
   FileText,
   SlidersHorizontal,
   Award,
+  Car,
+  AlertTriangle,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -188,6 +190,15 @@ const NpsSurveyCollectorView = lazy(() =>
 );
 const AchievementQuestBadgeView = lazy(() =>
   import('@/capabilities/achievement_quest_badge').then((m) => ({ default: m.AchievementQuestBadgeView }))
+);
+const ParkingValidatorView = lazy(() =>
+  import('@/capabilities/parking_validator').then((m) => ({ default: m.ParkingValidatorView }))
+);
+const EmergencyAlertBroadcastView = lazy(() =>
+  import('@/capabilities/emergency_alert_broadcast').then((m) => ({ default: m.EmergencyAlertBroadcastView }))
+);
+const DigitalGuestbookView = lazy(() =>
+  import('@/capabilities/digital_guestbook').then((m) => ({ default: m.DigitalGuestbookView }))
 );
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
@@ -486,6 +497,15 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('achievement_quest_badge')) {
       extendedItems.push({ tab: 'achievement-quest-badge', label: '성취 퀘스트·뱃지', icon: <Award className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('parking_validator')) {
+      extendedItems.push({ tab: 'parking-validator', label: '무료주차 등록·정산', icon: <Car className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('emergency_alert_broadcast')) {
+      extendedItems.push({ tab: 'emergency-broadcast', label: '긴급휴원·재난공지', icon: <AlertTriangle className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('digital_guestbook')) {
+      extendedItems.push({ tab: 'digital-guestbook', label: '전자 방명록·상담접수', icon: <FileText className="w-4 h-4" /> });
     }
 
     const sections: NavMenuSection[] = [
@@ -822,6 +842,21 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'achievement-quest-badge': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">성취 퀘스트 화면을 불러오는 중...</div>}>
         <AchievementQuestBadgeView />
+      </Suspense>
+    ),
+    'parking-validator': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">무료주차 등록·정산 화면을 불러오는 중...</div>}>
+        <ParkingValidatorView />
+      </Suspense>
+    ),
+    'emergency-broadcast': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">긴급휴원·재난공지 화면을 불러오는 중...</div>}>
+        <EmergencyAlertBroadcastView />
+      </Suspense>
+    ),
+    'digital-guestbook': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 방명록 화면을 불러오는 중...</div>}>
+        <DigitalGuestbookView />
       </Suspense>
     ),
     capabilities: () => (

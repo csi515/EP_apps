@@ -140,7 +140,7 @@ console.log('✓ 7. 특정 Capability의 소속 세트 역조회 검증 완료')
 
 // 8. 현재 활성 Capability 목록으로부터 충족된 세트 역판별 검증
 {
-  const fullAttendanceCaps: CapabilityId[] = ['attendance', 'vehicle_shuttle', 'parent', 'roster'];
+  const fullAttendanceCaps: CapabilityId[] = ['attendance', 'vehicle_shuttle', 'parent', 'emergency_alert_broadcast', 'roster'];
   const activeToolSets = getActiveToolSetIdsFromCapabilities(fullAttendanceCaps);
   assert.ok(activeToolSets.includes('attendance_safety'), 'attendance_safety의 모든 부품이 활성화되어 있으면 감지되어야 함');
   assert.strictEqual(activeToolSets.includes('retail_commerce'), false, '부품이 없는 retail_commerce는 미감지되어야 함');

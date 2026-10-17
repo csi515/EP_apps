@@ -3672,6 +3672,219 @@ export interface Database {
           },
         ];
       };
+      parking_batches: {
+        Row: {
+          id: string;
+          organization_id: string;
+          batch_name: string;
+          ticket_type: string;
+          allocated_minutes: number;
+          unit_cost: number;
+          purchased_quantity: number;
+          used_quantity: number;
+          purchased_date: string;
+          expires_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          batch_name: string;
+          ticket_type?: string;
+          allocated_minutes?: number;
+          unit_cost?: number;
+          purchased_quantity?: number;
+          used_quantity?: number;
+          purchased_date?: string;
+          expires_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['parking_batches']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'parking_batches_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      parking_registrations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          batch_id: string | null;
+          vehicle_number: string;
+          visitor_name: string;
+          visitor_role: string;
+          purpose: string;
+          registered_at: string;
+          free_minutes: number;
+          tickets_used: number;
+          status: string;
+          memo: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          batch_id?: string | null;
+          vehicle_number: string;
+          visitor_name: string;
+          visitor_role?: string;
+          purpose?: string;
+          registered_at?: string;
+          free_minutes?: number;
+          tickets_used?: number;
+          status?: string;
+          memo?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['parking_registrations']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'parking_registrations_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'parking_registrations_batch_id_fkey';
+            columns: ['batch_id'];
+            referencedRelation: 'parking_batches';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      emergency_broadcasts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          emergency_type: string;
+          severity: string;
+          effective_start: string;
+          effective_end: string | null;
+          closure_reason: string;
+          makeup_policy_notice: string | null;
+          target_audience: string;
+          is_active: boolean;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          emergency_type?: string;
+          severity?: string;
+          effective_start?: string;
+          effective_end?: string | null;
+          closure_reason: string;
+          makeup_policy_notice?: string | null;
+          target_audience?: string;
+          is_active?: boolean;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['emergency_broadcasts']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'emergency_broadcasts_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      emergency_broadcast_receipts: {
+        Row: {
+          id: string;
+          organization_id: string;
+          broadcast_id: string;
+          recipient_name: string;
+          recipient_phone: string | null;
+          recipient_role: string;
+          is_acknowledged: boolean;
+          acknowledged_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          broadcast_id: string;
+          recipient_name: string;
+          recipient_phone?: string | null;
+          recipient_role?: string;
+          is_acknowledged?: boolean;
+          acknowledged_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['emergency_broadcast_receipts']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'emergency_broadcast_receipts_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'emergency_broadcast_receipts_broadcast_id_fkey';
+            columns: ['broadcast_id'];
+            referencedRelation: 'emergency_broadcasts';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      digital_guestbook_entries: {
+        Row: {
+          id: string;
+          organization_id: string;
+          visitor_name: string;
+          phone: string;
+          visit_purpose: string;
+          interested_program: string | null;
+          referral_source: string | null;
+          privacy_agreed: boolean;
+          marketing_agreed: boolean;
+          signature_svg: string | null;
+          assigned_staff_name: string | null;
+          notes: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          visitor_name: string;
+          phone: string;
+          visit_purpose?: string;
+          interested_program?: string | null;
+          referral_source?: string | null;
+          privacy_agreed?: boolean;
+          marketing_agreed?: boolean;
+          signature_svg?: string | null;
+          assigned_staff_name?: string | null;
+          notes?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['digital_guestbook_entries']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'digital_guestbook_entries_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {
