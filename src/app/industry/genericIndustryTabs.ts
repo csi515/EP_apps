@@ -60,6 +60,7 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   incidents: ['feedbacks'],
   mbo: ['mbo'],
   'change-management': ['change_management'],
+  'leave-management': ['leave_management'],
 };
 
 /**
@@ -579,6 +580,13 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '작업자·설비·원자재·공정 사양 변경 승인 및 사전 부서 영향도 평가 대장',
     tier: 'tier1_ready',
     primaryCapability: 'change_management',
+  },
+  'leave-management': {
+    tab: 'leave-management',
+    label: '휴가·연차 관리',
+    description: '시간(Hour) 단위 차감형 유연근무제 연동 휴가 신청 및 전자결재 승인 대장',
+    tier: 'tier1_ready',
+    primaryCapability: 'leave_management',
   },
   capabilities: {
     tab: 'capabilities',

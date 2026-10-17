@@ -8,6 +8,8 @@ import {
   FileText,
   X,
   Plus,
+  Activity,
+  TrendingUp,
 } from 'lucide-react';
 import {
   canTransitionMboStatus,
@@ -17,10 +19,16 @@ import {
   type MboEvaluationGrade,
   type MboEvaluationType,
 } from '../domain/mboEngine';
+import {
+  DEFAULT_WORKLOAD_THRESHOLDS,
+  type WorkloadThresholds,
+} from '../domain/workloadCapacityEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { MboObjectiveTreeViewer, type ObjectiveNode } from './MboObjectiveTreeViewer';
 import { MboQuarterlyReviewForm, type ProgressLogItem, type FeedbackItem } from './MboQuarterlyReviewForm';
 import { MboEvaluationMatrixView, type EvaluationItem } from './MboEvaluationMatrixView';
+import { TeamWeeklyWorkloadView } from './TeamWeeklyWorkloadView';
+import { MboYearlyCapacityForecastView } from './MboYearlyCapacityForecastView';
 
 // 로컬 폴백 샘플 데이터
 const INITIAL_OBJECTIVES: ObjectiveNode[] = [
@@ -115,7 +123,10 @@ const INITIAL_EVALUATIONS: EvaluationItem[] = [
 ];
 
 export const MboManagementView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'objectives' | 'projects' | 'evaluations'>('objectives');
+  const [activeTab, setActiveTab] = useState<
+    'objectives' | 'projects' | 'evaluations' | 'workload' | 'forecast'
+  >('objectives');
+  const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
 
   // 로컬 폴백 상태
@@ -392,6 +403,30 @@ export const MboManagementView: React.FC = () => {
             <Award className="w-3.5 h-3.5" />
             <span>다면 성과평가표</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('workload')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'workload'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Activity className="w-3.5 h-3.5" />
+            <span>주간 팀 부하</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('forecast')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              activeTab === 'forecast'
+                ? 'bg-white text-indigo-700 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>캐퍼시티 예측</span>
+          </button>
         </div>
       </div>
 
@@ -451,6 +486,19 @@ export const MboManagementView: React.FC = () => {
             setLocalEvaluations((prev) => [...prev, createdEval]);
           }}
         />
+      )}
+
+      {/* 탭 4: 주간 팀 부하 모니터링 */}
+      {activeTab === 'workload' && (
+        <TeamWeeklyWorkloadView
+          initialThresholds={thresholds}
+          onThresholdsChange={setThresholds}
+        />
+      )}
+
+      {/* 탭 5: 연간 캐퍼시티 예측 대사 */}
+      {activeTab === 'forecast' && (
+        <MboYearlyCapacityForecastView thresholds={thresholds} />
       )}
 
       {/* 신규 목표 등록 모달 */}

@@ -82,6 +82,8 @@ export const CAPABILITY_IDS = [
   'approval_workflow',
   'quality_inspection',
   'change_management',
+  'patent_ip_asset',
+  'leave_management',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

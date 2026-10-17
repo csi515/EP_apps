@@ -251,6 +251,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:parking-validator': 'parking validator free parking registration and calculation domain engine unit',
   'test:emergency-alert': 'emergency alert broadcast and mobile ack tracking domain engine unit',
   'test:digital-guestbook': 'digital guestbook visitor registration and marketing consent domain engine unit',
+  'test:human-capital-kpi': 'ISO 30414 human capital reporting KPI and metrics calculation domain engine unit',
   'test:mbo-engine': 'mbo objectives hierarchy approval workflow and evaluation domain engine unit',
   'test:approval-engine': 'approval workflow sequential multi-step approval state machine unit',
   'test:quality-inspection': 'quality inspection tolerance judgment and statistical process capability unit',

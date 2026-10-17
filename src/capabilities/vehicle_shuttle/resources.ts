@@ -15,5 +15,21 @@ export const vehicleShuttleResources: CapabilityResourceDefinition = {
         order: 210,
       },
     },
+    {
+      name: 'shuttle_stops',
+      list: '/shuttle/stops',
+      meta: {
+        label: '셔틀 정류장 순서',
+        parent: 'shuttle_routes',
+      },
+    },
+    {
+      name: 'shuttle_ride_requests',
+      list: '/shuttle/requests',
+      meta: {
+        label: '임직원 탑승 신청',
+        parent: 'shuttle_routes',
+      },
+    },
   ],
 };

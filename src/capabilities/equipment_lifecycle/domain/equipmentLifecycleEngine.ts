@@ -3,8 +3,11 @@ export type EquipmentUrgencyLevel = 'good' | 'due_soon' | 'overdue' | 'breakdown
 export interface EquipmentAsset {
   id: string;
   name: string; // 예: "필라테스 리포머 1호기", "에스프레소 머신 라마르조코", "정비 리프트 1번"
-  category: string; // "fitness", "cafe", "auto", "facility"
+  category: string; // "fitness", "cafe", "auto", "facility", "rnd_lab"
   purchaseCost: number; // 취득 원가 (예: 5,000,000원)
+  acquisitionCost?: number; // 취득 자산가격 (호환 별칭)
+  assetTagNumber?: string; // 사내 자산번호 (예: RND-2024-SEM01)
+  calibrationIntervalDays?: number; // 정기 점검/교정 주기 (일 단위)
   usefulLifeMonths: number; // 내용연수 (개월 수, 예: 60개월 = 5년)
   installedDate: string; // ISO
   lastMaintenanceDate: string; // ISO
@@ -12,6 +15,7 @@ export interface EquipmentAsset {
   cumulativeRepairCost: number; // 누적 수리 및 유지보수 비용
   status: EquipmentUrgencyLevel;
   breakdownNotes?: string;
+  repairHistories?: EquipmentRepairRecord[];
 }
 
 export interface RepairVsReplaceDecision {
@@ -211,3 +215,35 @@ export function createDepreciationLedgerEntryPayload(
     timestamp: dateStr,
   };
 }
+
+export interface EquipmentRepairRecord {
+  incidentId: string;
+  repairDate: string; // ISO / YYYY-MM-DD
+  vendorName: string; // 수리 업체 / 엔지니어
+  technicianName?: string;
+  replacedParts?: string[]; // 교체 부품 목록
+  repairCost: number; // 수리 비용 (원)
+  downtimeHours: number; // 가동 중단 시간 (Downtime 시간)
+  repairNotes: string;
+}
+
+/**
+ * 설비 고장 및 수리 이력을 영구 보존하고 누적 수리비 및 장비 상태를 갱신합니다.
+ */
+export function recordEquipmentRepairIncident(
+  asset: EquipmentAsset,
+  repair: EquipmentRepairRecord
+): EquipmentAsset {
+  const nextRepairs = [...(asset.repairHistories || []), repair];
+  const nextCumulativeCost = asset.cumulativeRepairCost + repair.repairCost;
+
+  return {
+    ...asset,
+    cumulativeRepairCost: nextCumulativeCost,
+    status: 'good', // 수리 완료 후 정상 상태 복귀
+    breakdownNotes: undefined,
+    lastMaintenanceDate: repair.repairDate,
+    repairHistories: nextRepairs,
+  };
+}
+

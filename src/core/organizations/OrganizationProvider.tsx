@@ -102,8 +102,10 @@ interface OrganizationContextType {
   enterCustomerPortal: () => void;
   exitCustomerPortal: () => void;
   activeCapabilities: string[];
+  hiddenCapabilities: string[];
   customTerms: Record<string, string>;
   updateActiveCapabilities: (newCaps: string[]) => Promise<void>;
+  updateHiddenCapabilities: (newHidden: string[]) => Promise<void>;
   updateCustomTerms: (newTerms: Record<string, string>) => Promise<void>;
 }
 
@@ -454,8 +456,17 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
   const activeCapabilities = useMemo(() => {
     const raw = (currentOrganization as any)?.active_capabilities;
-    if (Array.isArray(raw)) return raw as string[];
     const fromSettings = (currentOrganization?.settings as any)?.active_capabilities;
+    const customAddons = (currentOrganization?.settings as any)?.custom_addons;
+    const set = new Set<string>();
+    if (Array.isArray(raw)) raw.forEach((c) => set.add(c));
+    if (Array.isArray(fromSettings)) fromSettings.forEach((c) => set.add(c));
+    if (Array.isArray(customAddons)) customAddons.forEach((c) => set.add(c));
+    return Array.from(set);
+  }, [currentOrganization]);
+
+  const hiddenCapabilities = useMemo(() => {
+    const fromSettings = (currentOrganization?.settings as any)?.hidden_capabilities;
     if (Array.isArray(fromSettings)) return fromSettings as string[];
     return [];
   }, [currentOrganization]);
@@ -569,6 +580,57 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     [currentOrganization]
   );
 
+  const updateHiddenCapabilities = useCallback(
+    async (newHidden: string[]) => {
+      const orgId = currentOrganization?.id;
+      if (!orgId) return;
+
+      const currentSettings = ((currentOrganization.settings as any) || {}) as Record<string, unknown>;
+      const nextSettings = {
+        ...currentSettings,
+        hidden_capabilities: newHidden,
+      };
+
+      try {
+        const client = getCoreClient();
+        await client
+          .from('organizations')
+          .update({
+            settings: nextSettings,
+          } as any)
+          .eq('id', orgId);
+      } catch (err) {
+        console.warn('Failed to update hidden_capabilities in DB, updating local state:', err);
+      }
+
+      setMemberships((prev) =>
+        prev.map((m) =>
+          m.organizationId === orgId
+            ? {
+                ...m,
+                organization: {
+                  ...m.organization,
+                  settings: nextSettings,
+                } as any,
+              }
+            : m
+        )
+      );
+      setSelectedMembership((prev) =>
+        prev?.organizationId === orgId
+          ? {
+              ...prev,
+              organization: {
+                ...prev.organization,
+                settings: nextSettings,
+              } as any,
+            }
+          : prev
+      );
+    },
+    [currentOrganization]
+  );
+
   return (
     <OrganizationContext.Provider
       value={{
@@ -610,8 +672,10 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         enterCustomerPortal,
         exitCustomerPortal,
         activeCapabilities,
+        hiddenCapabilities,
         customTerms,
         updateActiveCapabilities,
+        updateHiddenCapabilities,
         updateCustomTerms,
       }}
     >

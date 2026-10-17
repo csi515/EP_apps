@@ -167,3 +167,26 @@ export async function listReservationsByRange(
   const rows = await listActiveResourceReservationRows(organizationId, start, end);
   return rows.map(toRoomReservationRow);
 }
+
+/**
+ * 자원의 require_approval 설정에 따라 예약의 초기 상태를 결정합니다.
+ */
+export function determineInitialReservationStatus(
+  resource: { metadata?: Record<string, unknown> | null }
+): 'pending' | 'approved' {
+  const meta = (resource.metadata || {}) as Record<string, any>;
+  return meta.require_approval === true ? 'pending' : 'approved';
+}
+
+/**
+ * 승인 대기 중인 예약 목록을 조회합니다.
+ */
+export async function listPendingReservations(
+  organizationId: string
+): Promise<ResourceReservation[]> {
+  return listResourceReservations({
+    organizationId,
+    status: 'pending',
+    order: 'asc',
+  });
+}

@@ -36,3 +36,20 @@ export type { ResourceCapability } from './resourceCapability';
 export { capacityCapability } from '@/capabilities/scheduling/capacity';
 export { resourceReservationCapability } from './resourceReservationCapability';
 export type { ResourceReservationCapability } from './resourceReservationCapability';
+
+export type {
+  ResourceCategory,
+  ApproverType,
+  UniversalResourceMetadata,
+} from './types';
+export { canUserApproveReservation } from './resourceService';
+export { determineInitialReservationStatus, listPendingReservations } from './reservationService';
+
+export { UniversalResourceCalendarView } from './ui/UniversalResourceCalendarView';
+export { ResourceMasterSettingsModal } from './ui/ResourceMasterSettingsModal';
+export { ResourceApprovalInboxView } from './ui/ResourceApprovalInboxView';
+export { ResourceReservationRequestModal } from './ui/ResourceReservationRequestModal';
+
+export * from './domain/equipmentLogbookEngine';
+
+

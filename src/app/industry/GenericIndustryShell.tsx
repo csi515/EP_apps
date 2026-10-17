@@ -81,7 +81,7 @@ const DietBodyLogView = lazy(() =>
   import('@/capabilities/diet_body_log').then((m) => ({ default: m.DietBodyLogManagementView }))
 );
 const VehicleShuttleView = lazy(() =>
-  import('@/capabilities/vehicle_shuttle').then((m) => ({ default: m.VehicleShuttleManagementView }))
+  import('@/capabilities/vehicle_shuttle').then((m) => ({ default: m.VehicleShuttleCommuteView }))
 );
 const CommissionPayrollView = lazy(() =>
   import('@/capabilities/commission_payroll').then((m) => ({ default: m.CommissionPayrollManagementView }))
@@ -208,6 +208,12 @@ const QualityInspectionManagementView = lazy(() =>
 );
 const ChangeManagementView = lazy(() =>
   import('@/capabilities/change_management').then((m) => ({ default: m.ChangeManagementView }))
+);
+const PatentAssetManagementView = lazy(() =>
+  import('@/capabilities/patent_ip_asset').then((m) => ({ default: m.PatentAssetManagementView }))
+);
+const LeaveManagementDashboardView = lazy(() =>
+  import('@/capabilities/leave_management').then((m) => ({ default: m.LeaveManagementDashboardView }))
 );
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
@@ -389,7 +395,7 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
 export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode>; Overlays?: React.ComponentType | null }> = ({ viewMap: externalViewMap, Overlays }) => {
   const { activeTab, setActiveTab, currentUser } = useApp();
   const { allowedTabs, roleLabel, roleBadge, industry, isOwner } = usePermissions();
-  const { currentOrganization, activeCapabilities = [] } = useOrganization();
+  const { currentOrganization, activeCapabilities = [], hiddenCapabilities = [] } = useOrganization();
   const { t } = useTerminology(currentOrganization?.industry_type || industry);
 
   const customerWord = t('customer.singular', '고객');
@@ -400,9 +406,12 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
   const enabledCaps = useMemo(() => {
     const baseCaps = (preset?.capabilities ?? []) as string[];
-    const set = new Set<string>([...baseCaps, ...activeCapabilities]);
-    return Array.from(set);
-  }, [preset, activeCapabilities]);
+    const requiredCaps = new Set<string>((preset?.requiredCapabilities ?? []) as string[]);
+    const customAddons = ((currentOrganization?.settings as any)?.custom_addons ?? []) as string[];
+    const hiddenSet = new Set<string>(hiddenCapabilities);
+    const combined = new Set<string>([...baseCaps, ...activeCapabilities, ...customAddons]);
+    return Array.from(combined).filter((cap) => requiredCaps.has(cap) || !hiddenSet.has(cap));
+  }, [preset, activeCapabilities, hiddenCapabilities, currentOrganization?.settings]);
 
 
   const navSections: NavMenuSection[] = useMemo(() => {
@@ -520,6 +529,24 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('digital_guestbook')) {
       extendedItems.push({ tab: 'digital-guestbook', label: '전자 방명록·상담접수', icon: <FileText className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('mbo')) {
+      extendedItems.push({ tab: 'mbo', label: '목표관리(MBO)', icon: <Award className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('quality_inspection')) {
+      extendedItems.push({ tab: 'quality', label: '품질 검사(QC)', icon: <CheckCircle2 className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('change_management')) {
+      extendedItems.push({ tab: 'change-management', label: '4M 설계변경', icon: <Workflow className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('patent_ip_asset')) {
+      extendedItems.push({ tab: 'patent-ip-asset', label: '특허·직무발명', icon: <Sparkles className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('approval_workflow')) {
+      extendedItems.push({ tab: 'approval-workflow', label: '전자 결재', icon: <FileText className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('leave_management')) {
+      extendedItems.push({ tab: 'leave-management', label: '휴가·연차 관리', icon: <Calendar className="w-4 h-4" /> });
+    }
 
     const sections: NavMenuSection[] = [
       {
@@ -538,7 +565,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     sections.push({
       title: '관리',
       items: [
-        { tab: 'capabilities', label: '기능 스위치보드', icon: <SlidersHorizontal className="w-4 h-4" /> },
         { tab: 'settings', label: '설정', icon: <Settings className="w-4 h-4" /> },
         { tab: 'account', label: '내 계정', icon: <User className="w-4 h-4" /> },
       ],
@@ -887,8 +913,23 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
         <ChangeManagementView />
       </Suspense>
     ),
+    'patent-ip-asset': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">특허 및 직무발명 관리 화면을 불러오는 중...</div>}>
+        <PatentAssetManagementView />
+      </Suspense>
+    ),
+    'leave-management': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">휴가·연차 관리 화면을 불러오는 중...</div>}>
+        <LeaveManagementDashboardView />
+      </Suspense>
+    ),
     capabilities: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">기능 스위치보드를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중...</div>}>
+        <CapabilitySwitchboardView />
+      </Suspense>
+    ),
+    'menu-visibility': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중...</div>}>
         <CapabilitySwitchboardView />
       </Suspense>
     ),

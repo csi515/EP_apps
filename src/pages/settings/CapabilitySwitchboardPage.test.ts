@@ -17,6 +17,13 @@ import {
 } from '@/core/presets/operationBundles';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import './menuVisibilityEngine.test';
+import '../admin/adminTenantConsole.test';
+import '@/capabilities/resources/universalResourceCalendar.test';
+import '@/capabilities/patent_ip_asset/domain/patentIpAssetEngine.test';
+import '@/capabilities/mbo/domain/workloadCapacityEngine.test';
+import '@/capabilities/leave_management/domain/leaveManagementEngine.test';
+import '@/capabilities/vehicle_shuttle/domain/shuttleCommuteEngine.test';
 
 console.log('[test:switchboard-store] starting test suite...');
 

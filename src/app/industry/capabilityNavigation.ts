@@ -136,6 +136,8 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   approval_workflow: ['approvals', 'approval-requests', 'approval-templates'],
   quality_inspection: ['quality', 'inspection-standards', 'inspection-records'],
   change_management: ['change-management', 'ecn', 'eco', 'change-orders'],
+  patent_ip_asset: ['patents', 'patent-inventors', 'patent-rewards'],
+  leave_management: ['leave-management', 'leave-requests', 'leave-balances'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

@@ -6,6 +6,7 @@ import {
   calculatePolicyComplianceRate,
   isPolicyAcknowledged,
   getNextPolicyVersion,
+  identifyNonCompliantStaffAlerts,
 } from './policyEngine';
 
 async function runTests() {
@@ -147,6 +148,62 @@ async function runTests() {
   // 5. getNextPolicyVersion
   assert.equal(getNextPolicyVersion(1), 2);
   assert.equal(getNextPolicyVersion(2), 3);
+
+  // 6. [인사/준법] 취업규칙 및 NDA 미서약 독촉 알림 대상 산출 검증
+  const hrPolicies: WorkplacePolicy[] = [
+    {
+      id: 'pol-hr-1',
+      organizationId: 'org-1',
+      title: '사업장 표준 취업규칙',
+      category: 'employment_terms',
+      content: '근로시간 및 휴게, 복무 규정',
+      version: 1,
+      isMandatory: true,
+      effectiveDate: '2026-01-01',
+      createdAt: '2026-01-01',
+      updatedAt: '2026-01-01',
+    },
+    {
+      id: 'pol-hr-2',
+      organizationId: 'org-1',
+      title: '영업비밀 및 지식재산권 비밀유지서약서(NDA)',
+      category: 'nda_confidentiality',
+      content: '기밀 누설 금지 및 퇴직 후 경업 금지',
+      version: 1,
+      isMandatory: true,
+      effectiveDate: '2026-01-01',
+      createdAt: '2026-01-01',
+      updatedAt: '2026-01-01',
+    },
+  ];
+
+  const hrAcks: PolicyAcknowledgement[] = [
+    {
+      id: 'ack-hr-1',
+      organizationId: 'org-1',
+      policyId: 'pol-hr-1',
+      policyVersion: 1,
+      staffId: 'staff-signed',
+      acknowledgedAt: '2026-01-02T09:00:00Z',
+      signatureDataUrl: 'data:mock',
+    },
+  ];
+
+  const alerts = identifyNonCompliantStaffAlerts(hrPolicies, hrAcks, ['staff-signed', 'staff-uncompleted']);
+  assert.equal(alerts.length, 2);
+
+  // staff-signed는 NDA 1건 미서약 -> urgency: 'high'
+  const signedStaffAlert = alerts.find((a) => a.staffId === 'staff-signed');
+  assert.ok(signedStaffAlert);
+  assert.equal(signedStaffAlert.missingPolicyIds.length, 1);
+  assert.equal(signedStaffAlert.missingPolicyIds[0], 'pol-hr-2');
+  assert.equal(signedStaffAlert.urgency, 'high');
+
+  // staff-uncompleted는 2건 모두 미서약 -> urgency: 'high'
+  const uncompletedAlert = alerts.find((a) => a.staffId === 'staff-uncompleted');
+  assert.ok(uncompletedAlert);
+  assert.equal(uncompletedAlert.missingPolicyIds.length, 2);
+  assert.equal(uncompletedAlert.urgency, 'high');
 
   console.log('workplace policyEngine tests passed successfully!');
 }

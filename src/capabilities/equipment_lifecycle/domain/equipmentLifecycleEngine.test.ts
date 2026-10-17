@@ -85,4 +85,44 @@ assert.ok(ledgerPayload.description.includes('고정자산 감가상각'));
 assert.strictEqual(ledgerPayload.timestamp, '2026-10-31T23:59:59.000Z');
 console.log('✅ Test 4 passed: Monthly depreciation reporting and ledger expense payload creation');
 
+// Test 5: 연구 설비 자산 마스터(자산번호, 교정주기) 및 수리/고장 이력 누적 영구 보존
+const { recordEquipmentRepairIncident } = await import('./equipmentLifecycleEngine');
+const semAsset: EquipmentAsset = {
+  id: 'eq_sem_01',
+  name: 'FE-SEM 전계방출형 주사전자현미경',
+  category: 'rnd_lab',
+  purchaseCost: 150000000,
+  assetTagNumber: 'RND-2024-SEM01',
+  calibrationIntervalDays: 180,
+  usefulLifeMonths: 120, // 10년
+  installedDate: '2024-01-01',
+  lastMaintenanceDate: '2026-04-01',
+  maintenanceIntervalMonths: 6,
+  cumulativeRepairCost: 2000000,
+  status: 'breakdown',
+  breakdownNotes: '전자총 고전압 공급 모듈 결함',
+};
+
+const repairRecord = {
+  incidentId: 'inc-202610-01',
+  repairDate: '2026-10-18',
+  vendorName: '한국자이스정밀',
+  technicianName: '박엔지니어',
+  replacedParts: ['FEG Gun High Voltage Module (HV-200)'],
+  repairCost: 5500000,
+  downtimeHours: 48,
+  repairNotes: '고전압 모듈 교체 및 진공도 재교정 완료 (정상 가동 복귀)',
+};
+
+const repairedSem = recordEquipmentRepairIncident(semAsset, repairRecord);
+assert.strictEqual(repairedSem.cumulativeRepairCost, 7500000);
+assert.strictEqual(repairedSem.status, 'good');
+assert.strictEqual(repairedSem.breakdownNotes, undefined);
+assert.strictEqual(repairedSem.lastMaintenanceDate, '2026-10-18');
+assert.strictEqual(repairedSem.repairHistories?.length, 1);
+assert.strictEqual(repairedSem.repairHistories[0].downtimeHours, 48);
+assert.strictEqual(repairedSem.repairHistories[0].replacedParts?.[0], 'FEG Gun High Voltage Module (HV-200)');
+console.log('✅ Test 5 passed: R&D equipment repair history and downtime tracking');
+
 console.log('🎉 All equipmentLifecycleEngine tests passed!');
+

@@ -8,6 +8,8 @@ import {
   canConfirmHandover,
   summarizeFeedbacks,
   countUnresolvedIncidents,
+  transitionGrievanceStage,
+  summarizeGrievanceMetrics,
   type HandoverNote,
   type FeedbackItem,
   type IncidentLog,
@@ -163,5 +165,109 @@ console.log('✓ 3. VOC 및 건의함 집계 검증 완료');
   assert.strictEqual(incRes.moderateCount, 0); // moderate는 is_resolved=true이므로 제외
 }
 console.log('✓ 4. 안전사고 미해결 건수 집계 검증 완료');
+
+// 5. [ISO 45003] 고충 처리 단계 전이 및 권한 검증
+{
+  const grievance: FeedbackItem = {
+    id: 'grv-1',
+    organization_id: 'org-1',
+    author_type: 'staff',
+    author_id: 'anonymous-reporter',
+    title: '직무 스트레스 및 연장근로 과다 고충',
+    content: '공정 일정 촉박으로 인한 휴게시간 미준수',
+    status: 'open',
+    is_internal_only: true,
+    created_at: '2026-10-17T09:00:00Z',
+    category: 'grievance_stress',
+    is_anonymous: true,
+    confidentiality_level: 'hr_committee_only',
+    grievance_stage: 'received',
+  };
+
+  // 일반 직원은 전이 불가
+  const staffFail = transitionGrievanceStage(grievance, 'investigating', {
+    actorRole: 'staff',
+  });
+  assert.strictEqual(staffFail.success, false);
+  assert.ok(staffFail.reason?.includes('인사담당자 또는 위원회 위원'));
+
+  // HR 관리자가 조사 단계로 전이
+  const hrSuccess = transitionGrievanceStage(grievance, 'investigating', {
+    actorRole: 'hr_manager',
+    note: '현장 관리자 면담 일정 수립',
+  });
+  assert.strictEqual(hrSuccess.success, true);
+  assert.strictEqual(hrSuccess.item?.grievance_stage, 'investigating');
+  assert.strictEqual(hrSuccess.item?.status, 'in_progress');
+  assert.strictEqual(hrSuccess.item?.committee_notes?.length, 1);
+
+  // 위원회 심의 거쳐 조치 완료로 전이
+  const actionDone = transitionGrievanceStage(hrSuccess.item!, 'action_taken', {
+    actorRole: 'committee_member',
+    note: '휴게시간 보장 및 파트타임 충원 결정',
+    actionSummary: '교대조 1명 추가 배치 및 휴게시간 강제 알람 도입',
+  });
+  assert.strictEqual(actionDone.success, true);
+  assert.strictEqual(actionDone.item?.grievance_stage, 'action_taken');
+  assert.strictEqual(actionDone.item?.status, 'resolved');
+  assert.ok(actionDone.item?.action_taken_summary);
+
+  console.log('✓ 5. [ISO 45003] 고충 처리 단계 전이 및 권한 가드 검증 완료');
+}
+
+// 6. [ISO 45003] 인사 고충 및 익명 상담 집계 통계 검증
+{
+  const items: FeedbackItem[] = [
+    {
+      id: 'f-1',
+      organization_id: 'org-1',
+      author_type: 'staff',
+      title: '고충 1',
+      content: '직장 내 괴롭힘',
+      status: 'in_progress',
+      is_internal_only: true,
+      created_at: '2026-10-17',
+      category: 'workplace_harassment',
+      is_anonymous: true,
+      confidentiality_level: 'hr_committee_only',
+      grievance_stage: 'committee_review',
+    },
+    {
+      id: 'f-2',
+      organization_id: 'org-1',
+      author_type: 'staff',
+      title: '고충 2',
+      content: '업무 스트레스',
+      status: 'resolved',
+      is_internal_only: true,
+      created_at: '2026-10-16',
+      category: 'grievance_stress',
+      is_anonymous: false,
+      confidentiality_level: 'internal',
+      grievance_stage: 'closed',
+    },
+    {
+      id: 'f-3',
+      organization_id: 'org-1',
+      author_type: 'customer',
+      title: '일반 건의',
+      content: '주차장 안내판',
+      status: 'open',
+      is_internal_only: false,
+      created_at: '2026-10-15',
+      category: 'general_voc',
+    },
+  ];
+
+  const metrics = summarizeGrievanceMetrics(items);
+  assert.strictEqual(metrics.totalGrievances, 2);
+  assert.strictEqual(metrics.anonymousCount, 1);
+  assert.strictEqual(metrics.hrConfidentialCount, 1);
+  assert.strictEqual(metrics.workplaceHarassmentCount, 1);
+  assert.strictEqual(metrics.openGrievances, 1);
+  assert.strictEqual(metrics.closedGrievances, 1);
+
+  console.log('✓ 6. [ISO 45003] 인사 고충 및 익명 통계 집계 검증 완료');
+}
 
 console.log('[test:handover-engine] ALL TESTS PASSED! (100%)');

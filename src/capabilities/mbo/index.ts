@@ -1,5 +1,6 @@
 export { mboCapability } from './manifest';
 export * from './domain/mboEngine';
+export * from './domain/workloadCapacityEngine';
 export * from './services/mboService';
 export * from './resources';
 export * from './setupSchema';
@@ -7,3 +8,6 @@ export * from './ui/MboManagementView';
 export * from './ui/MboObjectiveTreeViewer';
 export * from './ui/MboQuarterlyReviewForm';
 export * from './ui/MboEvaluationMatrixView';
+export * from './ui/WorkloadThresholdSettingsModal';
+export * from './ui/TeamWeeklyWorkloadView';
+export * from './ui/MboYearlyCapacityForecastView';

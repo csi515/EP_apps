@@ -176,7 +176,50 @@ assert.ok(
 );
 console.log('✓ equipment_rental preset provisioning passed');
 
-// 10. All 42 Presets batch verification
+// 9-1. Manufacturing Light preset onboarding template verification
+const mfgDefaults = getStandardPresetsForIndustry('manufacturing_light');
+assert.equal(mfgDefaults.roles.length, 3, 'Manufacturing preset must define 3 roles');
+assert.equal(mfgDefaults.roles[0].name, '공장장/관리자');
+assert.equal(mfgDefaults.roles[1].name, '생산반장');
+assert.equal(mfgDefaults.roles[2].name, '현장작업자');
+assert.equal(mfgDefaults.rooms?.length, 3, 'Manufacturing preset must define 3 work lines/rooms');
+assert.equal(mfgDefaults.rooms?.[0].name, '1호 가공 라인');
+assert.equal(mfgDefaults.rooms?.[1].name, '2호 조립 라인');
+assert.equal(mfgDefaults.rooms?.[2].name, '검사실/완제품실');
+assert.equal(mfgDefaults.operating_hours.start_time, '08:00');
+assert.equal(mfgDefaults.operating_hours.end_time, '17:00');
+assert.equal(mfgDefaults.operating_hours.day_type, 'WEEKDAY');
+
+const mfgPayload = buildPresetPayload('manufacturing_light');
+assert.equal(mfgPayload.industry, 'manufacturing_light');
+assert.ok(mfgPayload.capabilities?.includes('task_pipeline'), 'Must include task_pipeline');
+assert.ok(mfgPayload.capabilities?.includes('recipe_bom'), 'Must include recipe_bom');
+assert.ok(mfgPayload.capabilities?.includes('inventory'), 'Must include inventory');
+assert.ok(!mfgPayload.capabilities?.includes('attendance'), 'Must NOT include small business attendance');
+assert.ok(!mfgPayload.capabilities?.includes('locker'), 'Must NOT include small business locker');
+console.log('✓ manufacturing_light preset onboarding template verified successfully!');
+
+// 9-2. ISO Human Capital preset onboarding template verification
+const hrDefaults = getStandardPresetsForIndustry('iso_human_capital');
+assert.equal(hrDefaults.roles.length, 4, 'ISO Human capital preset must define 4 roles');
+assert.equal(hrDefaults.roles[0].name, '대표이사/총괄임원');
+assert.equal(hrDefaults.roles[1].name, '인사팀장/HRD');
+assert.equal(hrDefaults.roles[2].name, '부서장/팀장');
+assert.equal(hrDefaults.roles[3].name, '사원/팀원');
+assert.equal(hrDefaults.rooms?.length, 3, 'Must define 3 rooms');
+assert.equal(hrDefaults.operating_hours.start_time, '09:00');
+assert.equal(hrDefaults.operating_hours.end_time, '18:00');
+
+const hrPayload = buildPresetPayload('iso_human_capital');
+assert.equal(hrPayload.industry, 'iso_human_capital');
+assert.ok(hrPayload.capabilities?.includes('mbo'), 'Must include mbo');
+assert.ok(hrPayload.capabilities?.includes('work_attendance_payroll'), 'Must include work_attendance_payroll');
+assert.ok(hrPayload.capabilities?.includes('workplace_policy'), 'Must include workplace_policy');
+assert.ok(hrPayload.capabilities?.includes('feedbacks'), 'Must include feedbacks');
+assert.ok(!hrPayload.capabilities?.includes('passes'), 'Must NOT include passes');
+assert.ok(!hrPayload.capabilities?.includes('locker'), 'Must NOT include locker');
+console.log('✓ iso_human_capital preset onboarding template verified successfully!');
+
 const allPresets = listIndustryPresets();
 assert.ok(allPresets.length >= 40, `Expected at least 40 presets, got ${allPresets.length}`);
 

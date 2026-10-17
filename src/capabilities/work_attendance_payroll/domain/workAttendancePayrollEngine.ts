@@ -336,3 +336,218 @@ export function generatePayrollSlip(
     issuedAt: new Date().toISOString(),
   };
 }
+
+/**
+ * ============================================================================
+ * [ISO 9001 7.2항 & ISO 30422] 직무 역량 및 법정 자격증 관리 (Competence Register)
+ * ============================================================================
+ */
+
+export interface StaffCompetencyQualification {
+  id: string;
+  staffId: string;
+  staffName: string;
+  qualificationName: string; // 예: 전기기사, 용접기능사, 조리사, 안전관리자, 보육교사 등
+  issuingAuthority: string; // 발급 기관
+  issueDate: string; // YYYY-MM-DD
+  expiryDate?: string; // YYYY-MM-DD (만료일)
+  verificationStatus: 'verified' | 'pending' | 'expired' | 'revoked';
+  documentUrl?: string;
+}
+
+export interface QualificationExpiryCheckResult {
+  qualificationId: string;
+  qualificationName: string;
+  staffName: string;
+  daysRemaining: number;
+  status: 'valid' | 'expiring_soon' | 'expired';
+  urgency: 'none' | 'warning' | 'critical';
+}
+
+/**
+ * 8. 자격증 유효기간 및 D-Day 만료 상태 계산 (순수 함수)
+ * - 만료일이 지난 경우: 'expired' & 'critical'
+ * - 만료 30일 이내: 'expiring_soon' & 'warning'
+ * - 만료 30일 초과: 'valid' & 'none'
+ */
+export function checkQualificationExpiry(
+  qualification: StaffCompetencyQualification,
+  referenceDateStr?: string
+): QualificationExpiryCheckResult {
+  if (!qualification.expiryDate) {
+    return {
+      qualificationId: qualification.id,
+      qualificationName: qualification.qualificationName,
+      staffName: qualification.staffName,
+      daysRemaining: Infinity,
+      status: 'valid',
+      urgency: 'none',
+    };
+  }
+
+  const refDate = referenceDateStr ? new Date(referenceDateStr) : new Date();
+  const expDate = new Date(qualification.expiryDate);
+  const diffTime = expDate.getTime() - refDate.getTime();
+  const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  let status: 'valid' | 'expiring_soon' | 'expired' = 'valid';
+  let urgency: 'none' | 'warning' | 'critical' = 'none';
+
+  if (daysRemaining <= 0) {
+    status = 'expired';
+    urgency = 'critical';
+  } else if (daysRemaining <= 30) {
+    status = 'expiring_soon';
+    urgency = 'warning';
+  }
+
+  return {
+    qualificationId: qualification.id,
+    qualificationName: qualification.qualificationName,
+    staffName: qualification.staffName,
+    daysRemaining,
+    status,
+    urgency,
+  };
+}
+
+/**
+ * 9. 만료 임박(또는 만료된) 자격증 필터링
+ */
+export function filterExpiringQualifications(
+  qualifications: readonly StaffCompetencyQualification[],
+  thresholdDays: number = 30,
+  referenceDateStr?: string
+): StaffCompetencyQualification[] {
+  return qualifications.filter((q) => {
+    const result = checkQualificationExpiry(q, referenceDateStr);
+    return result.status === 'expired' || (result.status === 'expiring_soon' && result.daysRemaining <= thresholdDays);
+  });
+}
+
+/**
+ * ============================================================================
+ * [ISO 9001 7.2항 & ISO 30414] 교육훈련 계획/이력 및 유효성 평가 (Training & Effectiveness)
+ * ============================================================================
+ */
+
+export interface TrainingEffectivenessEvaluation {
+  evaluatorStaffId: string;
+  evaluatedAt: string; // ISO 8601
+  score: number; // 0 ~ 100점
+  result: 'effective' | 'retraining_required'; // 70점 이상 합격
+  criteriaMet: boolean;
+  feedbackComment?: string;
+  signatureDataUrl?: string;
+}
+
+export interface TrainingSessionRecord {
+  id: string;
+  organizationId: string;
+  title: string;
+  trainingType: 'mandatory_statutory' | 'job_skill' | 'safety_health' | 'quality_qms' | 'ojt';
+  plannedDate: string; // YYYY-MM-DD
+  completedDate?: string;
+  targetStaffIds: string[];
+  attendedStaffIds: string[];
+  trainerName: string;
+  durationHours: number;
+  trainingStatus: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  effectivenessEvaluation?: TrainingEffectivenessEvaluation;
+}
+
+/**
+ * 10. 교육훈련 유효성 평가 기록 (순수 함수)
+ * - 평가 점수 70점 이상: 'effective' (유효/합격)
+ * - 평가 점수 70점 미만: 'retraining_required' (재교육 필요)
+ */
+export function evaluateTrainingEffectiveness(
+  record: TrainingSessionRecord,
+  evalData: {
+    evaluatorStaffId: string;
+    score: number;
+    feedbackComment?: string;
+    signatureDataUrl?: string;
+    evaluatedAt?: string;
+  }
+): TrainingSessionRecord {
+  const isEffective = evalData.score >= 70;
+  const evaluation: TrainingEffectivenessEvaluation = {
+    evaluatorStaffId: evalData.evaluatorStaffId,
+    evaluatedAt: evalData.evaluatedAt || new Date().toISOString(),
+    score: Math.min(100, Math.max(0, evalData.score)),
+    result: isEffective ? 'effective' : 'retraining_required',
+    criteriaMet: isEffective,
+    feedbackComment: evalData.feedbackComment,
+    signatureDataUrl: evalData.signatureDataUrl,
+  };
+
+  return {
+    ...record,
+    trainingStatus: 'completed',
+    completedDate: record.completedDate || new Date().toISOString().split('T')[0],
+    effectivenessEvaluation: evaluation,
+  };
+}
+
+/**
+ * 11. 전사 교육훈련 집계 지표 계산 (ISO 30414 역량 개발 지표 연계)
+ */
+export function calculateTrainingMetrics(
+  records: readonly TrainingSessionRecord[],
+  totalStaffCount: number
+): {
+  totalPlannedSessions: number;
+  completedSessions: number;
+  completionRatePercent: number;
+  totalTrainedHours: number;
+  averageHoursPerStaff: number;
+  effectiveCount: number;
+  effectivenessRatePercent: number;
+} {
+  if (!records || records.length === 0) {
+    return {
+      totalPlannedSessions: 0,
+      completedSessions: 0,
+      completionRatePercent: 0,
+      totalTrainedHours: 0,
+      averageHoursPerStaff: 0,
+      effectiveCount: 0,
+      effectivenessRatePercent: 0,
+    };
+  }
+
+  const totalPlannedSessions = records.length;
+  const completedRecords = records.filter((r) => r.trainingStatus === 'completed');
+  const completedSessions = completedRecords.length;
+  const completionRatePercent = Math.round((completedSessions / totalPlannedSessions) * 100);
+
+  // 총 교육 이수 인시(Man-Hours) 계산: 각 세션의 (참석 인원 수 * 교육 시간)
+  const totalTrainedHours = completedRecords.reduce(
+    (sum, r) => sum + r.attendedStaffIds.length * r.durationHours,
+    0
+  );
+
+  const averageHoursPerStaff =
+    totalStaffCount > 0 ? Math.round((totalTrainedHours / totalStaffCount) * 10) / 10 : 0;
+
+  const evaluatedRecords = completedRecords.filter((r) => r.effectivenessEvaluation !== undefined);
+  const effectiveCount = evaluatedRecords.filter(
+    (r) => r.effectivenessEvaluation?.result === 'effective'
+  ).length;
+
+  const effectivenessRatePercent =
+    evaluatedRecords.length > 0
+      ? Math.round((effectiveCount / evaluatedRecords.length) * 100)
+      : 0;
+
+  return {
+    totalPlannedSessions,
+    completedSessions,
+    completionRatePercent,
+    totalTrainedHours,
+    averageHoursPerStaff,
+    effectiveCount,
+    effectivenessRatePercent,
+  };
+}

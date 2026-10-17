@@ -15,7 +15,12 @@ export type HazardCategory =
   | 'chemical' // 유해물질, 흡입, 화상
   | 'fire_explosion' // 화재, 폭발
   | 'ergonomic' // 근골격계, 중량물 운반
-  | 'hygiene_health'; // 소음, 분진, 온열질환
+  | 'hygiene_health' // 소음, 분진, 온열질환
+  // ISO 14001 환경측면평가 (Environmental Aspects)
+  | 'env_waste' // 산업폐기물·지정폐기물
+  | 'env_energy' // 에너지·온실가스 과소비
+  | 'env_emission' // 대기오염·수질오염 배출
+  | 'env_leakage'; // 화학물질 누출·토양오염
 
 export type RiskLevel = 'low' | 'medium' | 'high' | 'critical';
 
@@ -37,6 +42,13 @@ export interface WorkStandardSOP {
   revisedDate: string;
 }
 
+export interface EnvironmentalAspectDetail {
+  aspectCategory: 'waste' | 'energy' | 'emission' | 'leakage';
+  environmentalImpact: string; // 예: "하천 수질 오염", "폐유 배출", "대기 중 VOC 배출"
+  legalRequirement: string; // 관련 환경 법규 (예: 물환경보전법, 대기환경보전법, 폐기물관리법)
+  isSignificantAspect: boolean; // 중대한 환경측면 여부
+}
+
 export interface HazardRiskItem {
   hazardId: string;
   sopId?: string;
@@ -50,9 +62,9 @@ export interface HazardRiskItem {
   currentRiskScore: number; // 빈도 x 강도 (1 ~ 25)
   currentRiskLevel: RiskLevel;
 
-  // 위험성 감소 대책
+  // 위험성 감소 대책 (ISO 45001 위험요인 제거 4단계 계층)
   controlMeasure: string;
-  controlType: 'engineering' | 'administrative' | 'ppe'; // 공학적 / 관리적 / 보호구
+  controlType: 'elimination' | 'engineering' | 'administrative' | 'ppe'; // 본질적 제거/대체 | 공학적 | 관리적 | 보호구
 
   // 잔여 위험도 (개선 후)
   residualFrequency: number;
@@ -63,6 +75,7 @@ export interface HazardRiskItem {
   isImplemented: boolean;
   actionDeadline: string;
   inspectorName: string;
+  environmentalAspect?: EnvironmentalAspectDetail;
 }
 
 export interface RiskMatrixCell {
@@ -207,3 +220,134 @@ export function calculateSafetyAuditSummary(
     isLegalAuditReady,
   };
 }
+
+/**
+ * ISO 14001:2015 6.1.2항 환경측면(Environmental Aspects) 평가 결과 산출
+ */
+export function evaluateEnvironmentalAspect(input: {
+  aspectCategory: 'waste' | 'energy' | 'emission' | 'leakage';
+  frequency: number; // 발생 빈도 (1 ~ 5)
+  severity: number; // 환경 영향 심각성 (1 ~ 5)
+  legalRegulated: boolean; // 법적 규제 대상 여부
+}): {
+  score: number;
+  isSignificantAspect: boolean; // 중대한 환경측면 여부
+  managementRequirement: string;
+} {
+  const score = input.frequency * input.severity;
+  // 법적 규제 대상이거나 빈도x심각성 점수가 12점 이상인 경우 중대한 환경측면(Significant Aspect)으로 판정
+  const isSignificantAspect = input.legalRegulated || score >= 12;
+  const managementRequirement = isSignificantAspect
+    ? '중대 환경측면: 환경목표(EMP) 수립 및 중점 관리 지침 수립 필수'
+    : '일반 환경측면: 일상 운영 관리 기준 준수 및 모니터링';
+
+  return {
+    score,
+    isSignificantAspect,
+    managementRequirement,
+  };
+}
+
+/**
+ * 연구실안전환경조성에 관한 법률(연구실안전법) 제9조/제18조 대응 도메인
+ */
+export interface LabSafetyDailyInspection {
+  id: string;
+  labName: string; // 예: "제1합성연구실", "정밀분석기기실"
+  inspectionDate: string; // YYYY-MM-DD
+  inspectorName: string;
+  emergencyShowerWorking: boolean; // 비상 샤워기/세안기 통수 정상 여부
+  gasDetectorWorking: boolean; // 가스 누출 감지 경보기 정상 작동
+  fireExtinguisherValid: boolean; // 소화기 압력 게이지 정상 및 비치
+  fumeHoodVelocityOk: boolean; // 흄후드(배기설비) 제어풍속 정상 (0.4 m/s 이상)
+  chemicalStorageOrganized: boolean; // 시약 성상별(산/염기/유기) 분리보관
+  isAllPassed: boolean;
+  correctiveActions: string[];
+}
+
+export interface LabChemicalReagentMsds {
+  id: string;
+  reagentName: string; // 예: 아세톤, 황산, 메탄올
+  casNumber: string; // 예: 67-64-1
+  hazardClassification: string; // 예: 인화성 액체 구분2
+  storageLocation: string; // 예: 1연구실 내화 방폭 시약장 A-01
+  msdsAvailable: boolean; // MSDS 경고표지 및 서류 비치 여부
+  currentStock: number;
+  unit: string;
+}
+
+export interface LabSafetyTrainingRecord {
+  researcherId: string;
+  researcherName: string;
+  department: string;
+  halfYearPeriod: string; // 예: "2026-H2"
+  requiredHours: number; // 법정 의무 6시간
+  completedHours: number;
+  isFullyCompliant: boolean;
+}
+
+/**
+ * 연구실 일일 안전점검 결과를 판정하고 결함 시 시정조치 목록을 생성합니다.
+ */
+export function evaluateLabSafetyInspection(input: Omit<LabSafetyDailyInspection, 'id' | 'isAllPassed' | 'correctiveActions'>): LabSafetyDailyInspection {
+  const correctiveActions: string[] = [];
+
+  if (!input.emergencyShowerWorking) {
+    correctiveActions.push('비상 샤워기/세안기 급수 밸브 점검 및 배관 세척 조치 필요');
+  }
+  if (!input.gasDetectorWorking) {
+    correctiveActions.push('가스 감지기 센서 영점 교정 및 경보기 회로 긴급 수리 요망');
+  }
+  if (!input.fireExtinguisherValid) {
+    correctiveActions.push('소화기 압력 저하 확인: 소화기 즉시 교체 및 통로 장애물 제거');
+  }
+  if (!input.fumeHoodVelocityOk) {
+    correctiveActions.push('흄후드 배기 모터 및 필터 점검 요망 (기준 제어풍속 0.4 m/s 미달)');
+  }
+  if (!input.chemicalStorageOrganized) {
+    correctiveActions.push('화학 시약 산/염기 혼합 보관 금지: 성상별 분리 보관 및 밀폐 조치');
+  }
+
+  const isAllPassed = correctiveActions.length === 0;
+
+  return {
+    ...input,
+    id: `lab-insp-${Date.now()}`,
+    isAllPassed,
+    correctiveActions,
+  };
+}
+
+/**
+ * 연구실 연구원 법정 안전교육(반기 6시간) 이수율을 계산합니다.
+ */
+export function calculateLabSafetyTrainingCompliance(records: LabSafetyTrainingRecord[]): {
+  totalResearchers: number;
+  compliantCount: number;
+  nonCompliantCount: number;
+  overallComplianceRatePercent: number;
+  isFullyLegalCompliant: boolean;
+} {
+  if (records.length === 0) {
+    return {
+      totalResearchers: 0,
+      compliantCount: 0,
+      nonCompliantCount: 0,
+      overallComplianceRatePercent: 100,
+      isFullyLegalCompliant: true,
+    };
+  }
+
+  const compliantCount = records.filter((r) => r.completedHours >= r.requiredHours).length;
+  const nonCompliantCount = records.length - compliantCount;
+  const overallComplianceRatePercent = Number(((compliantCount / records.length) * 100).toFixed(1));
+
+  return {
+    totalResearchers: records.length,
+    compliantCount,
+    nonCompliantCount,
+    overallComplianceRatePercent,
+    isFullyLegalCompliant: nonCompliantCount === 0,
+  };
+}
+

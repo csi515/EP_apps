@@ -548,7 +548,7 @@ export const WorkplaceSettingsView: FC = () => {
         </SettingsCard>
 
         <div className="space-y-6">
-          {/* 기능 스위치보드 바로가기 카드 */}
+          {/* 사이드바 메뉴 표시 관리 바로가기 카드 */}
           <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100/80 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
@@ -556,8 +556,8 @@ export const WorkplaceSettingsView: FC = () => {
                   <SlidersHorizontal className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">기능 스위치보드</h3>
-                  <p className="text-[11px] text-slate-500">매장 성격에 맞게 70대 운영 도구를 자유롭게 켜고 끕니다</p>
+                  <h3 className="text-sm font-bold text-slate-900">사이드바 메뉴 표시 관리</h3>
+                  <p className="text-[11px] text-slate-500">현재 업종에 맞추어 불필요한 사이드바 메뉴를 숨기거나 표시합니다</p>
                 </div>
               </div>
               <button
@@ -565,7 +565,7 @@ export const WorkplaceSettingsView: FC = () => {
                 onClick={() => setActiveTab('capabilities')}
                 className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
               >
-                스위치보드 열기
+                메뉴 설정 열기
               </button>
             </div>
           </div>

@@ -100,3 +100,45 @@ export function evaluateInspectionSamples(
     cpk,
   };
 }
+
+/**
+ * ISO 9001 8.7항 / 10.2항: 품질 검사 불합격 시 CAPA 시정조치 티켓 자동 생성 연계
+ */
+export interface QualityCapaDraft {
+  sourceType: 'quality_defect';
+  sourceId: string;
+  title: string;
+  initialStage: 'reported';
+  summary: {
+    itemName: string;
+    inspectionItem: string;
+    defectRatePercent: number;
+    sampleCount: number;
+    defectCount: number;
+  };
+}
+
+export function createCapaFromInspectionFailure(
+  inspectionId: string,
+  standard: Pick<InspectionStandard, 'itemName' | 'inspectionItem'>,
+  result: SampleEvaluationResult
+): QualityCapaDraft | null {
+  if (result.judgment !== 'fail') {
+    return null;
+  }
+
+  return {
+    sourceType: 'quality_defect',
+    sourceId: inspectionId,
+    title: `[품질 부적합 시정요구] ${standard.itemName} - ${standard.inspectionItem} (불량률 ${result.defectRatePercent}%)`,
+    initialStage: 'reported',
+    summary: {
+      itemName: standard.itemName,
+      inspectionItem: standard.inspectionItem,
+      defectRatePercent: result.defectRatePercent,
+      sampleCount: result.count,
+      defectCount: result.defectCount,
+    },
+  };
+}
+

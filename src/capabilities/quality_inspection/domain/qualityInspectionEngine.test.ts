@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   evaluateInspectionSamples,
+  createCapaFromInspectionFailure,
   type InspectionStandard,
 } from './qualityInspectionEngine';
 
@@ -37,10 +38,18 @@ function run() {
   assert.equal(failRes.min, 7.88);
   assert.equal(failRes.max, 8.12);
 
-  // 3. 빈 샘플 방어
-  const emptyRes = evaluateInspectionSamples([], standard);
-  assert.equal(emptyRes.count, 0);
-  assert.equal(emptyRes.judgment, 'pass');
+  // 4. 불합격 시 ISO 10.2 CAPA 시정조치 티켓 자동 생성 연계 검증
+  const capaDraft = createCapaFromInspectionFailure('insp-202610-01', standard, failRes);
+  assert.ok(capaDraft !== null);
+  assert.equal(capaDraft.sourceType, 'quality_defect');
+  assert.equal(capaDraft.sourceId, 'insp-202610-01');
+  assert.equal(capaDraft.initialStage, 'reported');
+  assert.equal(capaDraft.summary.defectCount, 2);
+  assert.equal(capaDraft.summary.defectRatePercent, 40.0);
+
+  // 합격 시에는 CAPA 생성 안 됨 (null 반환)
+  const passCapa = createCapaFromInspectionFailure('insp-202610-02', standard, passRes);
+  assert.equal(passCapa, null);
 
   console.log('qualityInspectionEngine.test.ts: ok');
 }

@@ -23,9 +23,10 @@ import {
   Building2,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { ProcurementPipelineView } from './ProcurementPipelineView';
 
 export const SupplyRestockView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'restock_po' | 'pr_quotes'>('restock_po');
+  const [activeTab, setActiveTab] = useState<'restock_po' | 'pr_quotes' | 'procurement_pipeline'>('procurement_pipeline');
 
   // 1. 소모품 목록 쿼리
   const { query: restockQuery } = useList<RestockItem>({
@@ -225,6 +226,17 @@ export const SupplyRestockView: React.FC = () => {
           <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
             <button
               type="button"
+              onClick={() => setActiveTab('procurement_pipeline')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'procurement_pipeline'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              조달·구매 파이프라인 (4단계)
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('restock_po')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'restock_po'
@@ -243,11 +255,11 @@ export const SupplyRestockView: React.FC = () => {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              구매 요청(PR) & 견적 비교
+              간이 PR & 견적 비교
             </button>
           </div>
 
-          {activeTab === 'restock_po' ? (
+          {activeTab === 'restock_po' && (
             <button
               type="button"
               onClick={() => setIsModalOpen(true)}
@@ -256,7 +268,8 @@ export const SupplyRestockView: React.FC = () => {
               <Plus className="w-3.5 h-3.5" />
               <span>품목 등록</span>
             </button>
-          ) : (
+          )}
+          {activeTab === 'pr_quotes' && (
             <button
               type="button"
               onClick={() => setIsPrModalOpen(true)}
@@ -268,6 +281,9 @@ export const SupplyRestockView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* 탭 0: 전문 조달·구매 파이프라인 (4단계 전주기) */}
+      {activeTab === 'procurement_pipeline' && <ProcurementPipelineView />}
 
       {/* 탭 1: 안전재고 및 간이 발주서 (PO) */}
       {activeTab === 'restock_po' && (

@@ -127,6 +127,10 @@ export type BundledPresetCapabilityId =
   | 'quality_inspection'
   // 범주 AZ: 공정/사양 4M 변경관리(ECN/ECO)
   | 'change_management'
+  // 범주 BA: 특허 및 지식재산권(IP) 자산 관리
+  | 'patent_ip_asset'
+  // 범주 BB: 시간 단위 정밀 휴가 및 유연근무 차감 대장
+  | 'leave_management'
   // 향후 지속적인 신규 Capability 추가를 위한 Open Union 확장 (자동완성 유지 + 유연한 확장)
   | (string & {});
 
@@ -227,7 +231,7 @@ export interface PresetRoleTemplate {
 
 export interface PresetResourceTemplate {
   name: string;
-  type: 'room' | 'seat' | 'equipment' | 'locker' | 'bay' | 'vehicle' | 'court' | 'table';
+  type: 'room' | 'seat' | 'equipment' | 'locker' | 'bay' | 'vehicle' | 'court' | 'table' | 'line';
   capacity?: number;
 }
 

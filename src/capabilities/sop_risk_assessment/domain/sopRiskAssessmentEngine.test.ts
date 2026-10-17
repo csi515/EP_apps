@@ -3,6 +3,7 @@ import {
   calculateRiskLevel,
   evaluateRiskReduction,
   calculateSafetyAuditSummary,
+  evaluateEnvironmentalAspect,
   HazardRiskItem,
 } from './sopRiskAssessmentEngine';
 
@@ -115,6 +116,74 @@ const unreadyHazards: HazardRiskItem[] = [
 const audit2 = calculateSafetyAuditSummary(unreadyHazards);
 assert.strictEqual(audit2.isLegalAuditReady, false); // unaddressed critical hazard exists
 assert.strictEqual(audit2.complianceRatePercent, 67); // 2 out of 3
-console.log('✅ Test 4 passed: Unaddressed critical hazard flags audit unready');
+// Test 5: ISO 14001 Environmental aspect evaluation and ISO 45001 elimination control
+const env1 = evaluateEnvironmentalAspect({
+  aspectCategory: 'waste',
+  frequency: 4,
+  severity: 4,
+  legalRegulated: true, // 폐기물관리법 규제 대상
+});
+assert.strictEqual(env1.score, 16);
+assert.strictEqual(env1.isSignificantAspect, true);
+assert.ok(env1.managementRequirement.includes('중대 환경측면'));
+
+const env2 = evaluateEnvironmentalAspect({
+  aspectCategory: 'energy',
+  frequency: 2,
+  severity: 2,
+  legalRegulated: false,
+});
+assert.strictEqual(env2.score, 4);
+assert.strictEqual(env2.isSignificantAspect, false);
+assert.ok(env2.managementRequirement.includes('일반 환경측면'));
+console.log('✅ Test 5 passed: ISO 14001 Environmental aspect evaluation');
+
+// Test 6: 연구실안전법 일일 안전점검 및 법정 안전교육(반기 6시간) 이수율
+const { evaluateLabSafetyInspection, calculateLabSafetyTrainingCompliance } = await import('./sopRiskAssessmentEngine');
+
+// 6-1) 연구실 일일 안전점검 결함 감지 및 조치사항 도출
+const failedInspection = evaluateLabSafetyInspection({
+  labName: '제1합성연구실',
+  inspectionDate: '2026-10-18',
+  inspectorName: '김연구',
+  emergencyShowerWorking: false, // 결함!
+  gasDetectorWorking: true,
+  fireExtinguisherValid: true,
+  fumeHoodVelocityOk: false, // 결함!
+  chemicalStorageOrganized: true,
+});
+assert.strictEqual(failedInspection.isAllPassed, false);
+assert.strictEqual(failedInspection.correctiveActions.length, 2);
+assert.ok(failedInspection.correctiveActions[0].includes('비상 샤워기'));
+assert.ok(failedInspection.correctiveActions[1].includes('흄후드'));
+
+// 전 항목 합격 케이스
+const passedInspection = evaluateLabSafetyInspection({
+  labName: '정밀분석기기실',
+  inspectionDate: '2026-10-18',
+  inspectorName: '김연구',
+  emergencyShowerWorking: true,
+  gasDetectorWorking: true,
+  fireExtinguisherValid: true,
+  fumeHoodVelocityOk: true,
+  chemicalStorageOrganized: true,
+});
+assert.strictEqual(passedInspection.isAllPassed, true);
+assert.strictEqual(passedInspection.correctiveActions.length, 0);
+
+// 6-2) 법정 안전교육 이수율 계산 (3명 중 2명 6시간 이수 = 66.7%)
+const trainingRecords = [
+  { researcherId: 'r1', researcherName: 'A', department: 'Lab1', halfYearPeriod: '2026-H2', requiredHours: 6, completedHours: 6, isFullyCompliant: true },
+  { researcherId: 'r2', researcherName: 'B', department: 'Lab1', halfYearPeriod: '2026-H2', requiredHours: 6, completedHours: 8, isFullyCompliant: true },
+  { researcherId: 'r3', researcherName: 'C', department: 'Lab1', halfYearPeriod: '2026-H2', requiredHours: 6, completedHours: 4, isFullyCompliant: false },
+];
+const compliance = calculateLabSafetyTrainingCompliance(trainingRecords);
+assert.strictEqual(compliance.totalResearchers, 3);
+assert.strictEqual(compliance.compliantCount, 2);
+assert.strictEqual(compliance.nonCompliantCount, 1);
+assert.strictEqual(compliance.overallComplianceRatePercent, 66.7);
+assert.strictEqual(compliance.isFullyLegalCompliant, false);
+console.log('✅ Test 6 passed: Lab Safety inspection and statutory training compliance');
 
 console.log('🎉 All sopRiskAssessmentEngine tests passed!');
+

@@ -24,6 +24,8 @@ import {
   ChevronUp,
   Tag,
   SlidersHorizontal,
+  Factory,
+  Wrench,
 } from 'lucide-react';
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useTenant } from '@/core/auth/context/TenantContext';
@@ -127,6 +129,12 @@ const CAPABILITY_LABEL_MAP: Record<string, string> = {
   workplace_policy: '매장 사규·서약',
   feedbacks: '고객 건의함',
   substitute_dispatch: '대강사 파견',
+  recipe_bom: '부품표(BOM)·소모',
+  sop_risk_assessment: '작업표준 SOP·위험성평가',
+  quality_inspection: '품질검사·공차',
+  approval_workflow: '전자결재·승인',
+  change_management: '4M 변경관리(ECN)',
+  supply_restock: '자재 발주·입고',
 };
 
 function formatCapabilityLabel(cap: string): string {
@@ -141,6 +149,7 @@ const CATEGORY_TABS = [
   { id: 'wellness', label: '웰니스·스파' },
   { id: 'studio', label: '공간·스튜디오' },
   { id: 'childcare', label: '키즈·돌봄' },
+  { id: 'manufacturing', label: '제조·가공', icon: Factory },
   { id: 'other', label: '기타 서비스' },
 ];
 
@@ -165,7 +174,7 @@ export const QuickSetupPage: React.FC = () => {
         selectedCategory === 'all' ||
         p.category === selectedCategory ||
         (selectedCategory === 'other' &&
-          !['education', 'fitness', 'beauty', 'wellness', 'studio', 'childcare'].includes(
+          !['education', 'fitness', 'beauty', 'wellness', 'studio', 'childcare', 'manufacturing'].includes(
             p.category
           ));
 
@@ -516,26 +525,31 @@ export const QuickSetupPage: React.FC = () => {
 
                     {/* 카테고리 필터 탭 */}
                     <div className="flex flex-wrap gap-1.5">
-                      {CATEGORY_TABS.map((tab) => (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setSelectedCategory(tab.id)}
-                          className={`text-xs px-3 py-1 rounded-full font-medium transition ${
-                            selectedCategory === tab.id
-                              ? 'bg-indigo-600 text-white shadow-2xs'
-                              : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      ))}
+                      {CATEGORY_TABS.map((tab) => {
+                        const TabIcon = (tab as any).icon;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setSelectedCategory(tab.id)}
+                            className={`text-xs px-3 py-1 rounded-full font-medium transition inline-flex items-center gap-1.5 ${
+                              selectedCategory === tab.id
+                                ? 'bg-indigo-600 text-white shadow-2xs'
+                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {TabIcon && <TabIcon className="w-3.5 h-3.5" />}
+                            {tab.label}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* 업종 카드 그리드 */}
                     <div className="max-h-72 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {filteredPresets.map((preset) => {
                         const isSelected = selectedIndustry === preset.id;
+                        const isManufacturing = preset.category === 'manufacturing';
                         return (
                           <button
                             key={preset.id}
@@ -550,9 +564,18 @@ export const QuickSetupPage: React.FC = () => {
                             }`}
                           >
                             <div className="flex items-start justify-between gap-1 mb-1">
-                              <span className="text-xs font-bold text-slate-900">{preset.name}</span>
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-slate-100 text-slate-600 shrink-0">
-                                {preset.category}
+                              <span className="text-xs font-bold text-slate-900 inline-flex items-center gap-1.5">
+                                {isManufacturing && <Factory className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                                {preset.name}
+                              </span>
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 rounded-sm shrink-0 font-medium ${
+                                  isManufacturing
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}
+                              >
+                                {isManufacturing ? '제조·가공' : preset.category}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-500 line-clamp-1 mb-2">

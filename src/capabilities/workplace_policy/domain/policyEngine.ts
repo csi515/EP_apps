@@ -12,6 +12,8 @@ export type PolicyCategory =
   | 'safety_rule' // 매장 안전·위생 규정 (화재, 비상 대피, 소독)
   | 'dormitory_rule' // 숙소/휴게실 이용 내규
   | 'compensation' // 인센티브·수당·환불 규정
+  | 'employment_terms' // [인사/노무] 취업규칙 및 근로계약 기본 조건
+  | 'nda_confidentiality' // [보안/준법] 비밀유지서약서(NDA) 및 정보보호 서약
   | 'general'; // 일반 사업장 공통 내규
 
 export interface WorkplacePolicy {
@@ -153,3 +155,43 @@ export function calculatePolicyComplianceRate(
 export function getNextPolicyVersion(currentVersion: number): number {
   return Math.max(1, Math.floor(currentVersion) + 1);
 }
+
+export interface NonCompliantStaffAlert {
+  staffId: string;
+  missingPolicyIds: string[];
+  missingPolicyTitles: string[];
+  urgency: 'high' | 'normal';
+}
+
+/**
+ * 취업규칙 및 근로계약/NDA 미서약 직원 독촉 알림 목록 산출 (순수 함수)
+ * - employment_terms 또는 nda_confidentiality 누락 시 urgency: 'high' 부여
+ */
+export function identifyNonCompliantStaffAlerts(
+  mandatoryPolicies: readonly WorkplacePolicy[],
+  acknowledgements: readonly PolicyAcknowledgement[],
+  allStaffIds: readonly string[]
+): NonCompliantStaffAlert[] {
+  const alerts: NonCompliantStaffAlert[] = [];
+
+  for (const staffId of allStaffIds) {
+    const missingPolicies = mandatoryPolicies.filter(
+      (p) => !isPolicyAcknowledged(staffId, p, acknowledgements)
+    );
+
+    if (missingPolicies.length > 0) {
+      const hasHighPriority = missingPolicies.some(
+        (p) => p.category === 'nda_confidentiality' || p.category === 'employment_terms'
+      );
+      alerts.push({
+        staffId,
+        missingPolicyIds: missingPolicies.map((p) => p.id),
+        missingPolicyTitles: missingPolicies.map((p) => p.title),
+        urgency: hasHighPriority ? 'high' : 'normal',
+      });
+    }
+  }
+
+  return alerts;
+}
+

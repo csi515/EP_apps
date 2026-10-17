@@ -151,6 +151,10 @@ import { qualityInspectionSetupSchema } from '@/capabilities/quality_inspection/
 import { qualityInspectionResources } from '@/capabilities/quality_inspection/resources';
 import { changeManagementSetupSchema } from '@/capabilities/change_management/setupSchema';
 import { changeManagementResources } from '@/capabilities/change_management/resources';
+import { patentIpAssetSetupSchema } from '@/capabilities/patent_ip_asset/setupSchema';
+import { patentIpAssetResources } from '@/capabilities/patent_ip_asset/resources';
+import { leaveManagementSetupSchema } from '@/capabilities/leave_management/setupSchema';
+import { leaveManagementResources } from '@/capabilities/leave_management/resources';
 
 
 /**
@@ -586,6 +590,20 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'change_management',
     setupSchema: changeManagementSetupSchema,
     resources: changeManagementResources,
+  },
+
+  // 범주 BA: 특허 및 지식재산권(IP) 자산 관리
+  patent_ip_asset: {
+    capabilityId: 'patent_ip_asset',
+    setupSchema: patentIpAssetSetupSchema,
+    resources: patentIpAssetResources,
+  },
+
+  // 범주 BB: 시간(Hour) 단위 휴가·연차 관리
+  leave_management: {
+    capabilityId: 'leave_management',
+    setupSchema: leaveManagementSetupSchema,
+    resources: leaveManagementResources,
   },
 };
 
@@ -1443,16 +1461,57 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   manufacturing_light: {
     id: 'manufacturing_light',
-    name: '소형 제조 / 임가공 공장',
-    description: '작업지시 칸반, 전문 품질검사(공차 판정), 로트/유효기간 재고, 4M 변경관리(ECN) 및 안전 SOP',
-    category: 'studio',
-    capabilities: ['task_pipeline', 'quality_inspection', 'inventory', 'supply_restock', 'sop_risk_assessment', 'change_management', 'approval_workflow'] as const,
-    requiredCapabilities: ['task_pipeline', 'inventory', 'quality_inspection'] as const,
-    optionalCapabilities: ['supply_restock', 'sop_risk_assessment', 'change_management', 'approval_workflow'] as const,
+    name: '제조·가공업 (공정/BOM/품질 관리)',
+    description: '생산 공정 파이프라인, 부품표(BOM), 원자재 재고, 설비 점검 및 현장 안전 관리',
+    category: 'manufacturing',
+    capabilities: [
+      'task_pipeline',
+      'recipe_bom',
+      'inventory',
+      'quality_inspection',
+      'maintenance_checklist',
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'shift_schedule',
+      'workplace_policy',
+      'feedbacks',
+      'supply_restock',
+      'change_management',
+      'approval_workflow',
+    ] as const,
+    requiredCapabilities: ['task_pipeline', 'recipe_bom', 'inventory'] as const,
+    optionalCapabilities: [
+      'quality_inspection',
+      'maintenance_checklist',
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'shift_schedule',
+      'workplace_policy',
+      'feedbacks',
+      'supply_restock',
+      'change_management',
+      'approval_workflow',
+    ] as const,
     roles: [
-      { name: '공장장/품질책임', rank_order: 1, permissions: ['*'] },
-      { name: '작업조장/검사원', rank_order: 2, permissions: ['quality_inspection:*', 'inventory:*', 'task_pipeline:*'] },
+      { name: '공장장/관리자', rank_order: 1, permissions: ['*'], description: '공장 총괄 및 최종 승인권자' },
+      { name: '생산반장', rank_order: 2, permissions: ['task_pipeline:*', 'recipe_bom:*', 'inventory:*', 'quality_inspection:*', 'maintenance_checklist:*'], description: '공정 및 자재/설비 관리자' },
+      { name: '현장작업자', rank_order: 3, permissions: ['task_pipeline:view', 'task_pipeline:update', 'sop_risk_assessment:view', 'maintenance_checklist:submit', 'feedbacks:create'], description: '작업 수행 및 일상 점검' },
     ],
+    resourceTypes: [
+      { name: '1호 가공 라인', type: 'line', capacity: 10 },
+      { name: '2호 조립 라인', type: 'line', capacity: 10 },
+      { name: '검사실/완제품실', type: 'room', capacity: 5 },
+    ],
+    defaultSettings: {
+      shift_system: '2_shift',
+      daily_safety_briefing: true,
+      lot_tracking_mandatory: true,
+    },
+    businessRules: {
+      bom_auto_deduct: true,
+      inspection_required_before_shipment: true,
+      incident_capa_linkage: true,
+    },
     readinessLevel: 'basic_ui',
   },
 
@@ -1470,9 +1529,149 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     ],
     readinessLevel: 'basic_ui',
   },
+
+  iso_ims_enterprise: {
+    id: 'iso_ims_enterprise',
+    name: 'ISO 통합경영시스템 (QEHS)',
+    description: 'ISO 9001(품질), ISO 14001(환경), ISO 45001(안전보건) 3대 통합경영시스템 (품질검사, 위험성평가, 환경측면, 사고/CAPA, 전자결재)',
+    category: 'other',
+    capabilities: [
+      'quality_inspection',
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'change_management',
+      'approval_workflow',
+      'maintenance_checklist',
+      'workplace_policy',
+      'mbo',
+      'inventory',
+    ] as const,
+    requiredCapabilities: [
+      'quality_inspection',
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'approval_workflow',
+    ] as const,
+    optionalCapabilities: [
+      'change_management',
+      'maintenance_checklist',
+      'workplace_policy',
+      'mbo',
+      'inventory',
+    ] as const,
+    roles: [
+      { name: 'QEHS 최고경영자/총괄책임', rank_order: 1, permissions: ['*'] },
+      { name: '내부심사원/품질안전관리자', rank_order: 2, permissions: ['quality_inspection:*', 'sop_risk_assessment:*', 'facility_incident_report:*', 'approval_workflow:*'] },
+    ],
+    readinessLevel: 'basic_ui',
+  },
+
+  iso_human_capital: {
+    id: 'iso_human_capital',
+    name: 'ISO 인적자본 경영 (HR & MBO)',
+    description: 'ISO 30414 인적자본 보고 지표, MBO 성과관리, 직무 역량 및 법정 자격증, 교육훈련 유효성 평가, 직무 스트레스 및 익명 고충처리',
+    category: 'other',
+    capabilities: [
+      'mbo',
+      'shift_schedule',
+      'work_attendance_payroll',
+      'workplace_policy',
+      'feedbacks',
+      'approval_workflow',
+    ] as const,
+    requiredCapabilities: [
+      'mbo',
+      'work_attendance_payroll',
+      'workplace_policy',
+    ] as const,
+    optionalCapabilities: [
+      'shift_schedule',
+      'feedbacks',
+      'approval_workflow',
+    ] as const,
+    roles: [
+      { name: '대표이사/총괄임원', rank_order: 1, permissions: ['*'] },
+      { name: '인사팀장/HRD', rank_order: 2, permissions: ['mbo:*', 'work_attendance_payroll:*', 'workplace_policy:*', 'feedbacks:*', 'approval_workflow:*'] },
+      { name: '부서장/팀장', rank_order: 2, permissions: ['mbo:update', 'shift_schedule:*', 'feedbacks:view', 'approval_workflow:submit'] },
+      { name: '사원/팀원', rank_order: 3, permissions: ['mbo:view', 'workplace_policy:view', 'feedbacks:create', 'work_attendance_payroll:view'] },
+    ],
+    resourceTypes: [
+      { name: '본사 대회의실', type: 'room', capacity: 20 },
+      { name: 'HR 상담실', type: 'room', capacity: 4 },
+      { name: '교육 세미나실', type: 'room', capacity: 30 },
+    ],
+    defaultSettings: {
+      evaluation_cycle: 'quarterly',
+      grievance_anonymous_allowed: true,
+      competence_expiry_alert_days: 30,
+    },
+    businessRules: {
+      mbo_peer_review_enabled: true,
+      training_effectiveness_threshold: 70,
+      nda_mandatory_before_work: true,
+    },
+    readinessLevel: 'basic_ui',
+  },
+
+  rnd_lab_management: {
+    id: 'rnd_lab_management',
+    name: '기업부설연구소 & R&D 센터',
+    description: '연구 프로젝트 파이프라인, 연구 장비 예약 및 자동 사용일지, 특허/직무발명 보상 관리, 연구 설비 자산/수리 이력, 연구실안전법 일일점검 및 시약 MSDS 관리',
+    category: 'other',
+    capabilities: [
+      'task_pipeline',
+      'resources',
+      'patent_ip_asset',
+      'equipment_lifecycle',
+      'facility_incident_report',
+      'sop_risk_assessment',
+      'supply_restock',
+      'mbo',
+      'approval_workflow',
+    ] as const,
+    requiredCapabilities: [
+      'task_pipeline',
+      'resources',
+      'patent_ip_asset',
+      'sop_risk_assessment',
+    ] as const,
+    optionalCapabilities: [
+      'equipment_lifecycle',
+      'facility_incident_report',
+      'supply_restock',
+      'mbo',
+      'approval_workflow',
+    ] as const,
+    roles: [
+      { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
+      { name: '수석/책임연구원', rank_order: 2, permissions: ['task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
+      { name: '선임/전임연구원', rank_order: 3, permissions: ['task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
+      { name: '연구지원/안전관리자', rank_order: 2, permissions: ['sop_risk_assessment:*', 'supply_restock:*', 'facility_incident_report:*', 'approval_workflow:*'] },
+    ],
+    resourceTypes: [
+      { name: '정밀분석기기실 (FE-SEM/XRD)', type: 'equipment', capacity: 1 },
+      { name: '항온항습 신뢰성평가실', type: 'equipment', capacity: 2 },
+      { name: '제1합성실험실 (Lab 1)', type: 'room', capacity: 8 },
+      { name: 'R&D 프로젝트 대회의실', type: 'room', capacity: 12 },
+    ],
+    defaultSettings: {
+      lab_safety_inspection_cycle: 'daily',
+      patent_share_sum_mandatory: true,
+      equipment_logbook_auto_generate: true,
+      statutory_safety_training_hours: 6,
+    },
+    businessRules: {
+      require_fume_hood_daily_check: true,
+      auto_generate_logbook_on_reservation: true,
+      invention_review_grade_mandatory: true,
+    },
+    readinessLevel: 'basic_ui',
+  },
 };
 
 export const PRESET_ALIASES: Record<string, string> = {
+  rnd_lab: 'rnd_lab_management',
+  rnd: 'rnd_lab_management',
   gym: 'gym_fitness',
   academy: 'general_academy',
   private_tutoring: 'exam_tutoring',

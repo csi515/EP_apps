@@ -3,9 +3,25 @@
  * 안전사고·기물파손 경위서 & 배상책임보험 청구 대장
  */
 
-export type IncidentType = 'injury' | 'property_damage' | 'conflict' | 'pet_incident' | 'equipment_failure' | 'other';
+export type IncidentType =
+  | 'injury'
+  | 'property_damage'
+  | 'conflict'
+  | 'pet_incident'
+  | 'equipment_failure'
+  | 'near_miss' // ISO 45001 아차사고 (Near-miss)
+  | 'environmental_spill' // ISO 14001 환경오염 및 화학물질 유출 사고
+  | 'other';
 export type IncidentSeverity = 'minor' | 'moderate' | 'severe' | 'critical';
 export type IncidentStatus = 'open' | 'investigating' | 'insurance_processing' | 'resolved';
+
+export interface LegalReportingRequirement {
+  requiresGovernmentReport: boolean;
+  reportingDeadlineHours: number; // 법정 신고 기한 (시간)
+  targetAuthority: string; // 관할 관공서 (예: 고용노동부, 환경부/지자체 환경과)
+  isNearMiss: boolean;
+  internalInvestigationDeadlineHours: number; // 사내 조사 기한 (시간)
+}
 
 export interface IncidentReportItem {
   id: string;
@@ -27,6 +43,7 @@ export interface IncidentReportItem {
   insuranceClaimed: boolean;
   insuranceClaimNumber?: string | null;
   preventativeAction?: string | null;
+  legalReporting?: LegalReportingRequirement;
   status: IncidentStatus;
   metadata?: Record<string, unknown>;
   createdAt: string;
@@ -63,6 +80,53 @@ export function evaluateIncidentSeverity(input: {
     return 'moderate';
   }
   return 'minor';
+}
+
+/**
+ * ISO 45001 / ISO 14001: 아차사고(Near-miss) 및 환경사고 법정 보고/조사 기한 판정
+ */
+export function evaluateLegalReportingRequirement(
+  incidentType: IncidentType,
+  severity: IncidentSeverity
+): LegalReportingRequirement {
+  if (incidentType === 'near_miss') {
+    return {
+      requiresGovernmentReport: false,
+      reportingDeadlineHours: 0,
+      targetAuthority: '사내 안전보건위원회',
+      isNearMiss: true,
+      internalInvestigationDeadlineHours: 48, // 아차사고는 48시간 이내 원인조사 완료
+    };
+  }
+
+  if (incidentType === 'environmental_spill') {
+    const isMajor = severity === 'severe' || severity === 'critical';
+    return {
+      requiresGovernmentReport: isMajor,
+      reportingDeadlineHours: isMajor ? 24 : 72, // 중대 환경사고 24시간 이내 관할청 신고
+      targetAuthority: '지자체 환경보전과 / 유역환경청',
+      isNearMiss: false,
+      internalInvestigationDeadlineHours: 24,
+    };
+  }
+
+  if (severity === 'critical') {
+    return {
+      requiresGovernmentReport: true,
+      reportingDeadlineHours: 24, // 중대재해 발생 시 24시간 이내 관할 고용노동지청 보고
+      targetAuthority: '관할 고용노동지청',
+      isNearMiss: false,
+      internalInvestigationDeadlineHours: 12,
+    };
+  }
+
+  return {
+    requiresGovernmentReport: false,
+    reportingDeadlineHours: 0,
+    targetAuthority: '사내 안전관리팀',
+    isNearMiss: false,
+    internalInvestigationDeadlineHours: 72,
+  };
 }
 
 /**
@@ -176,4 +240,133 @@ export function formatIncidentNotificationText(report: IncidentReportItem): stri
 - 현장조치: ${report.emergencyActionTaken || hospitalText}
 
 원생/고객의 빠른 안정과 회복을 최우선으로 돌보고 있으며, 추가 문의사항은 언제든 원으로 연락 주시기 바랍니다.`;
+}
+
+/**
+ * ISO 9001 / 14001 / 45001 10.2항: 시정 및 예방 조치 (CAPA) 폐쇄 루프 상태
+ */
+export type CapaStage =
+  | 'reported' // 1. 부적합/사고 접수
+  | 'root_cause' // 2. 근본 원인 분석 (5-Why, 4M, 특성요인도)
+  | 'action_plan' // 3. 시정 및 재발방지 대책 수립
+  | 'implementation' // 4. 대책 실행 중
+  | 'verification' // 5. 유효성 검증 (재발 여부 확인)
+  | 'closed'; // 6. 유효성 입증 및 최종 종결
+
+export interface CapaActionPlanItem {
+  id: string;
+  actionTitle: string;
+  assigneeName: string;
+  dueDate: string;
+  completedAt?: string;
+  actionType: 'immediate_correction' | 'preventative_systemic';
+}
+
+export interface CapaRootCauseAnalysis {
+  method: '5_why' | '4m' | 'fishbone';
+  whys?: string[]; // 5-Why 단계별 답변
+  directCause: string; // 직접 원인
+  rootCause: string; // 근본 원인
+  contributingFactors?: string[]; // 기여 요인
+}
+
+export interface CapaEffectivenessVerification {
+  verifiedAt: string;
+  verifierName: string;
+  isEffective: boolean; // 효과성 입증 여부
+  recurrenceObserved: boolean; // 재발 관찰 여부
+  evidenceDescription: string; // 증빙 설명
+}
+
+export interface CapaRecord {
+  id: string;
+  organizationId: string;
+  sourceType: 'incident' | 'quality_defect' | 'audit_finding' | 'customer_complaint' | 'near_miss';
+  sourceId: string;
+  title: string;
+  currentStage: CapaStage;
+  rootCause?: CapaRootCauseAnalysis;
+  actions: CapaActionPlanItem[];
+  verification?: CapaEffectivenessVerification;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+}
+
+/**
+ * ISO 10.2 폐쇄 루프 CAPA 단계 전이 검증 엔진
+ */
+export function transitionCapaStage(
+  currentStage: CapaStage,
+  targetStage: CapaStage,
+  payload?: {
+    rootCause?: CapaRootCauseAnalysis;
+    actions?: CapaActionPlanItem[];
+    verification?: CapaEffectivenessVerification;
+  }
+): { valid: boolean; reason?: string } {
+  const allowedTransitions: Record<CapaStage, CapaStage[]> = {
+    reported: ['root_cause'],
+    root_cause: ['action_plan', 'reported'],
+    action_plan: ['implementation', 'root_cause'],
+    implementation: ['verification', 'action_plan'],
+    verification: ['closed', 'root_cause', 'action_plan'],
+    closed: ['verification'],
+  };
+
+  if (!allowedTransitions[currentStage]?.includes(targetStage)) {
+    return {
+      valid: false,
+      reason: `CAPA 단계 '${currentStage}'에서는 '${targetStage}'(으)로 직접 전이할 수 없습니다.`,
+    };
+  }
+
+  // 1. root_cause -> action_plan: 근본원인이 명시되어야 함
+  if (targetStage === 'action_plan' && currentStage === 'root_cause') {
+    if (!payload?.rootCause?.rootCause?.trim()) {
+      return {
+        valid: false,
+        reason: '대책 수립 단계로 진행하려면 근본 원인(Root Cause) 분석이 필수입니다.',
+      };
+    }
+  }
+
+  // 2. action_plan -> implementation: 1개 이상의 시정 조치 계획이 수립되어야 함
+  if (targetStage === 'implementation' && currentStage === 'action_plan') {
+    if (!payload?.actions || payload.actions.length === 0) {
+      return {
+        valid: false,
+        reason: '실행 단계로 진행하려면 1개 이상의 시정/예방 조치 계획이 수립되어야 합니다.',
+      };
+    }
+  }
+
+  // 3. implementation -> verification: 모든 시정 조치가 완료(completedAt 존재)되어야 함
+  if (targetStage === 'verification' && currentStage === 'implementation') {
+    const pendingActions = payload?.actions?.filter((a) => !a.completedAt) ?? [];
+    if (pendingActions.length > 0) {
+      return {
+        valid: false,
+        reason: `미완료된 시정 조치가 ${pendingActions.length}건 존재하여 유효성 검증으로 진행할 수 없습니다.`,
+      };
+    }
+  }
+
+  // 4. verification -> closed: 유효성이 입증(isEffective=true)되고 재발이 없어야(recurrenceObserved=false) 종결 가능
+  if (targetStage === 'closed' && currentStage === 'verification') {
+    if (!payload?.verification) {
+      return {
+        valid: false,
+        reason: '최종 종결을 위해서는 유효성 평가 결과가 등록되어야 합니다.',
+      };
+    }
+    if (!payload.verification.isEffective || payload.verification.recurrenceObserved) {
+      return {
+        valid: false,
+        reason: '시정 조치의 유효성이 입증되지 않았거나 동일 결함이 재발하여 종결할 수 없습니다. (원인 재분석 필요)',
+      };
+    }
+  }
+
+  return { valid: true };
 }

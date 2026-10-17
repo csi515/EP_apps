@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   WorkStandardSOP,
   HazardRiskItem,
@@ -6,6 +7,8 @@ import {
   evaluateRiskReduction,
   calculateSafetyAuditSummary,
 } from '../domain/sopRiskAssessmentEngine';
+
+const STORAGE_KEY_HAZARDS = 'moa_sop_risk_hazards';
 
 const INITIAL_SOPS: WorkStandardSOP[] = [
   {
@@ -111,7 +114,25 @@ const INITIAL_HAZARDS: HazardRiskItem[] = [
 export const SopRiskAssessmentView: React.FC = () => {
   const [sops] = useState<WorkStandardSOP[]>(INITIAL_SOPS);
   const [selectedSop, setSelectedSop] = useState<WorkStandardSOP>(INITIAL_SOPS[0]);
-  const [hazards, setHazards] = useState<HazardRiskItem[]>(INITIAL_HAZARDS);
+  const storageKey = getTenantStorageKey(STORAGE_KEY_HAZARDS);
+
+  const [hazards, setHazards] = useState<HazardRiskItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : INITIAL_HAZARDS;
+    } catch {
+      return INITIAL_HAZARDS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(hazards));
+    } catch (e) {
+      console.warn('Failed to save hazards to tenant cache:', e);
+    }
+  }, [hazards, storageKey]);
+
   const [activeTab, setActiveTab] = useState<'sop' | 'matrix' | 'controls'>('sop');
 
   // 신규 위험요인 입력 폼 상태

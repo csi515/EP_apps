@@ -43,7 +43,7 @@ const mockI18n: MoaI18nProvider = {
 function run(): void {
   console.log('=== [1] Preset Registry & Aliases Coverage ===');
   const presets = listIndustryPresets();
-  assert.equal(presets.length, 47, `프리셋 총 개수는 정확히 47개여야 합니다. 현재: ${presets.length}`);
+  assert.equal(presets.length, 50, `프리셋 총 개수는 정확히 50개여야 합니다. 현재: ${presets.length}`);
 
   for (const preset of presets) {
     assert.ok(preset.id, '프리셋 ID 누락');
@@ -57,9 +57,9 @@ function run(): void {
     assert.equal(resolved?.id, preset.id);
   }
 
-  // 13개 별칭(Alias) 전수 검증
+  // 15개 별칭(Alias) 전수 검증
   const aliasKeys = Object.keys(PRESET_ALIASES);
-  assert.equal(aliasKeys.length, 13, `프리셋 별칭은 13개여야 합니다. 현재: ${aliasKeys.length}`);
+  assert.equal(aliasKeys.length, 15, `프리셋 별칭은 15개여야 합니다. 현재: ${aliasKeys.length}`);
 
   for (const [alias, targetPresetId] of Object.entries(PRESET_ALIASES)) {
     assert.ok(INDUSTRY_PRESETS[targetPresetId], `별칭 [${alias}]의 대상 프리셋 [${targetPresetId}]가 미존재`);
@@ -320,6 +320,9 @@ function run(): void {
     'general_enterprise',
     'manufacturing_light',
     'procurement_distribution',
+    'iso_ims_enterprise',
+    'iso_human_capital',
+    'rnd_lab_management',
   ]);
   // Tier 3: 도메인 엔진 및 스키마 구현 완료, UI 화면 연기 / 대시보드 안전 폴백
   const TIER3_DOMAIN_SCHEMA_DEFERRED = new Set([

@@ -61,6 +61,9 @@ export function normalizeIndustryKey(industry: string): string {
   if (norm === 'sauna' || norm === 'sauna_jjimjilbang') return 'sauna';
   if (norm === 'pilates') return 'pilates';
   if (norm === 'taekwondo' || norm === 'taekwondo_academy') return 'taekwondo_academy';
+  if (norm === 'manufacturing_light' || norm === 'manufacturing') return 'manufacturing_light';
+  if (norm === 'iso_human_capital' || norm === 'human_capital') return 'iso_human_capital';
+  if (norm === 'rnd_lab_management' || norm === 'rnd_lab' || norm === 'rnd') return 'rnd_lab_management';
   if (norm === 'custom') return 'custom';
   return norm;
 }
@@ -183,6 +186,67 @@ export function getStandardPresetsForIndustry(industry: string): {
         },
       };
 
+    case 'manufacturing_light':
+      return {
+        roles: [
+          { name: '공장장/관리자', rank_order: 1, permissions: ['*'] },
+          { name: '생산반장', rank_order: 2, permissions: ['task_pipeline:*', 'recipe_bom:*', 'inventory:*', 'quality_inspection:*', 'maintenance_checklist:*'] },
+          { name: '현장작업자', rank_order: 3, permissions: ['task_pipeline:view', 'task_pipeline:update', 'sop_risk_assessment:view', 'maintenance_checklist:submit', 'feedbacks:create'] },
+        ],
+        rooms: [
+          { name: '1호 가공 라인', capacity: 10 },
+          { name: '2호 조립 라인', capacity: 10 },
+          { name: '검사실/완제품실', capacity: 5 },
+        ],
+        operating_hours: {
+          day_type: 'WEEKDAY',
+          start_time: '08:00',
+          end_time: '17:00',
+          slot_minutes: 60,
+        },
+      };
+
+    case 'iso_human_capital':
+      return {
+        roles: [
+          { name: '대표이사/총괄임원', rank_order: 1, permissions: ['*'] },
+          { name: '인사팀장/HRD', rank_order: 2, permissions: ['mbo:*', 'work_attendance_payroll:*', 'workplace_policy:*', 'feedbacks:*', 'approval_workflow:*'] },
+          { name: '부서장/팀장', rank_order: 2, permissions: ['mbo:update', 'shift_schedule:*', 'feedbacks:view', 'approval_workflow:submit'] },
+          { name: '사원/팀원', rank_order: 3, permissions: ['mbo:view', 'workplace_policy:view', 'feedbacks:create', 'work_attendance_payroll:view'] },
+        ],
+        rooms: [
+          { name: '본사 대회의실', capacity: 20 },
+          { name: 'HR 상담실', capacity: 4 },
+          { name: '교육 세미나실', capacity: 30 },
+        ],
+        operating_hours: {
+          day_type: 'WEEKDAY',
+          start_time: '09:00',
+          end_time: '18:00',
+          slot_minutes: 60,
+        },
+      };
+
+    case 'rnd_lab_management':
+      return {
+        roles: [
+          { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
+          { name: '수석/책임연구원', rank_order: 2, permissions: ['task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
+          { name: '선임/전임연구원', rank_order: 3, permissions: ['task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
+        ],
+        rooms: [
+          { name: '정밀분석기기실 (FE-SEM/XRD)', capacity: 1 },
+          { name: '항온항습 신뢰성평가실', capacity: 2 },
+          { name: '제1합성실험실 (Lab 1)', capacity: 8 },
+        ],
+        operating_hours: {
+          day_type: 'WEEKDAY',
+          start_time: '09:00',
+          end_time: '18:00',
+          slot_minutes: 60,
+        },
+      };
+
     default: {
       const preset = getIndustryPreset(normKey);
       if (preset) {
@@ -200,7 +264,7 @@ export function getStandardPresetsForIndustry(industry: string): {
             ? preset.resourceTypes.map((rt) => ({
                 name: rt.name,
                 capacity:
-                  rt.capacity ?? (rt.type === 'bay' || rt.type === 'court' || rt.type === 'room' ? 2 : 1),
+                  rt.capacity ?? (rt.type === 'bay' || rt.type === 'court' || rt.type === 'room' || rt.type === 'line' ? 2 : 1),
               }))
             : undefined;
 
@@ -226,6 +290,13 @@ export function getStandardPresetsForIndustry(industry: string): {
             day_type: 'WEEKDAY',
             start_time: '10:00',
             end_time: '20:00',
+            slot_minutes: 60,
+          };
+        } else if (preset.category === 'manufacturing') {
+          operating_hours = {
+            day_type: 'WEEKDAY',
+            start_time: '08:00',
+            end_time: '17:00',
             slot_minutes: 60,
           };
         } else if (preset.category === 'studio' || (preset.category as string) === 'space_rental') {

@@ -78,7 +78,58 @@ export async function upsertBookableResource(params: UpsertBookableResourceInput
     p_memo: params.memo ?? null,
   } as never);
   if (error) throw new Error(error.message || '자원 저장에 실패했습니다.');
-  return data as string;
+
+  const resourceId = data as string;
+
+  // metadata가 제공된 경우 DB에 JSONB 메타데이터 반영
+  if (params.metadata && resourceId) {
+    try {
+      await client()
+        .from('bookable_resources')
+        .update({ metadata: params.metadata } as any)
+        .eq('id', resourceId);
+    } catch (err) {
+      console.warn('Failed to update resource metadata in DB:', err);
+    }
+  }
+
+  return resourceId;
+}
+
+/**
+ * 특정 사용자가 해당 자원의 예약 건에 대한 승인/반려 권한을 가지고 있는지 판별합니다.
+ */
+export function canUserApproveReservation(
+  resource: Resource | BookableResource,
+  user: {
+    userId?: string | null;
+    staffId?: string | null;
+    role?: string | null;
+  }
+): boolean {
+  // 최고 관리자, 원장, 총괄 관리자는 기본 승인 권한 보유
+  const roleLower = (user.role || '').toLowerCase();
+  if (['owner', 'admin', 'director', 'super_admin'].includes(roleLower)) {
+    return true;
+  }
+
+  const meta = (resource.metadata || {}) as Record<string, any>;
+  if (!meta.require_approval) return false;
+
+  // 방식 A: 특정 담당자(staff) 지정
+  if (meta.approver_type === 'staff') {
+    if (user.staffId && meta.approver_id === user.staffId) return true;
+    if (user.userId && meta.approver_id === user.userId) return true;
+    return false;
+  }
+
+  // 방식 B: 역할/직급(role) 지정
+  if (meta.approver_type === 'role') {
+    if (user.role && meta.approver_id === user.role) return true;
+    return false;
+  }
+
+  return false;
 }
 
 export async function setResourceActive(

@@ -73,6 +73,8 @@ import { mboCapability } from './mbo/manifest';
 import { approval_workflowCapability } from './approval_workflow/manifest';
 import { qualityInspectionCapability } from './quality_inspection/manifest';
 import { change_managementCapability } from './change_management/manifest';
+import { patent_ip_assetCapability } from './patent_ip_asset/manifest';
+import { leave_managementCapability } from './leave_management/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -159,6 +161,8 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   approval_workflowCapability,
   qualityInspectionCapability,
   change_managementCapability,
+  patent_ip_assetCapability,
+  leave_managementCapability,
 ];
 
 export * from './trial_funnel';
@@ -182,6 +186,8 @@ export * from './mbo';
 export * from './approval_workflow';
 export * from './quality_inspection';
 export * from './change_management';
+export * from './patent_ip_asset';
+export * from './leave_management';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

@@ -93,6 +93,38 @@ export type RoomReservationRow = {
   customers?: { name: string } | null;
 };
 
+export type ResourceCategory = 'vehicle' | 'meeting_room' | 'health_room' | 'display' | 'other';
+export type ApproverType = 'staff' | 'role';
+
+export interface UniversalResourceMetadata {
+  category?: ResourceCategory;
+  require_approval?: boolean;
+  approver_type?: ApproverType;
+  approver_id?: string;
+  approver_name?: string;
+
+  // 1) 차량 (vehicle)
+  plate_number?: string;
+  vehicle_model?: string;
+  fuel_type?: string;
+  parking_location?: string;
+
+  // 2) 회의실 (meeting_room)
+  has_projector?: boolean;
+  has_video_conference?: boolean;
+  max_occupancy?: number;
+
+  // 3) 보건실 (health_room)
+  slot_duration_minutes?: number;
+  is_private_consultation?: boolean;
+
+  // 4) 디스플레이 (display)
+  screen_resolution?: string;
+  display_location?: string;
+
+  [key: string]: unknown;
+}
+
 export type UpsertBookableResourceInput = {
   organizationId: string;
   kind: string;
@@ -102,6 +134,7 @@ export type UpsertBookableResourceInput = {
   closeTime?: string;
   id?: string;
   memo?: string;
+  metadata?: UniversalResourceMetadata | Record<string, unknown>;
 };
 
 export type ListResourcesQuery = {

@@ -48,6 +48,9 @@ import { QuickSetupPage } from "./pages/onboarding/QuickSetupPage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
+import { SuperAdminGuard } from "./pages/admin/SuperAdminGuard";
+import { SuperAdminTenantsPage } from "./pages/admin/SuperAdminTenantsPage";
+import { ImpersonationFloatingBanner } from "./components/layout/ImpersonationFloatingBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -213,11 +216,22 @@ const RefineApp: React.FC = () => {
           {/* 사업장 업종 메인 워크스페이스 화면 */}
           
 
+          {/* 최고 관리자(개발자) 전용 테넌트 종합 관제 콘솔 */}
+          <Route
+            path="/admin/tenants"
+            element={
+              <SuperAdminGuard>
+                <SuperAdminTenantsPage />
+              </SuperAdminGuard>
+            }
+          />
+
           {/* Refine 관리 리소스 레이아웃 */}
           <Route
             element={
               <AppErrorBoundary>
                 <div className="flex min-h-screen flex-col">
+                  <ImpersonationFloatingBanner />
                   <Header />
                   <Layout>
                     <Outlet />
