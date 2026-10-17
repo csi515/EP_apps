@@ -25,7 +25,7 @@ import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
 console.log('[test:operation-bundles] starting test suite...');
 
 // 1. 카탈로그 기본 무결성 검증
-assert.strictEqual(OPERATION_TOOL_SETS.length, 9, '9대 맞춤 세트가 정의되어야 합니다.');
+assert.strictEqual(OPERATION_TOOL_SETS.length, 12, '12대 맞춤 세트가 정의되어야 합니다.');
 
 for (const set of OPERATION_TOOL_SETS) {
   assert.ok(set.id, `Set ID is required: ${set.id}`);
@@ -118,12 +118,17 @@ console.log('✓ 5. 세트 비활성화 시 공유 도구 안전 보존 검증 �
   assert.ok(pianoSets.includes('attendance_safety'), '피아노 학원은 안심 등하원 세트 추천');
   assert.ok(pianoSets.includes('billing_passes'), '피아노 학원은 수강료 세트 추천');
   assert.ok(pianoSets.includes('growth_records'), '피아노 학원은 성장 일지 세트 추천');
+  assert.ok(pianoSets.includes('academy_contest_exam'), '피아노 학원은 단원평가/대회 세트 추천');
   assert.ok(pianoSets.includes('staff_operations'), '전 업종 공통 직원 관리 세트 추천');
 
   const pilatesSets = getRecommendedToolSetsForPreset('pilates');
   assert.ok(pilatesSets.includes('booking_timeslot'), '필라테스는 예약 세트 추천');
   assert.ok(pilatesSets.includes('billing_passes'), '필라테스는 수강료 세트 추천');
+  assert.ok(pilatesSets.includes('beauty_wellness_chart'), '필라테스는 시술/차트/동의서 팩 추천');
   assert.ok(pilatesSets.includes('staff_operations'), '전 업종 공통 직원 관리 세트 추천');
+
+  const cafeSets = getRecommendedToolSetsForPreset('cafe_bakery');
+  assert.ok(cafeSets.includes('fnb_order_kitchen'), '카페는 F&B 주문/KDS/위생 세트 추천');
 }
 console.log('✓ 6. 업종별 추천 세트 판별 검증 완료');
 

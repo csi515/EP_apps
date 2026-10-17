@@ -24,6 +24,8 @@ import {
   HelpCircle,
   Info,
   RotateCcw,
+  FileText,
+  Award,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
@@ -41,7 +43,7 @@ import {
 } from '@/core/presets/operationBundles';
 import { CustomTermsSettingCard } from './CustomTermsSettingCard';
 
-// 9대 맞춤 세트 아이콘 맵
+// 12대 맞춤 세트 아이콘 맵
 const SET_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldCheck,
   CalendarClock,
@@ -52,6 +54,8 @@ const SET_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> 
   Box,
   Wrench,
   Sparkles,
+  FileText,
+  Award,
 };
 
 interface CapabilityCategoryGroup {

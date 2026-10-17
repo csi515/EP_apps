@@ -27,7 +27,10 @@ export type OperationToolSetId =
   | 'retail_commerce' // [매점 및 물품 판매 도구]
   | 'space_rental' // [매장 공간 및 사물함 도구]
   | 'facility_care' // [현장 소통 및 시설 관리 세트]
-  | 'crm_growth'; // [단골 락인 및 체험 유입 도구]
+  | 'crm_growth' // [단골 락인 및 체험 유입 도구]
+  | 'beauty_wellness_chart' // [뷰티·웰니스 맞춤 시술 & 차트 팩]
+  | 'fnb_order_kitchen' // [외식·카페 스마트 주문 & 주방 위생 팩]
+  | 'academy_contest_exam'; // [학원 단원평가 & 대회·발표회 팩]
 
 export interface OperationToolSet {
   readonly id: OperationToolSetId;
@@ -215,6 +218,60 @@ export const OPERATION_TOOL_SETS: readonly OperationToolSet[] = [
       'craft_workshop',
       'flower_shop',
       'baking_studio',
+    ],
+  },
+  {
+    id: 'beauty_wellness_chart',
+    displayName: '[뷰티·웰니스 맞춤 시술 & 차트 팩]',
+    shortName: '시술 차트·동의서',
+    description: '고객별 시술 이력 차트, 추천 시술 룩북 포트폴리오, 알레르기 안전 동의서 및 현장 전자계약을 일원화합니다.',
+    iconName: 'FileText',
+    badge: '뷰티·케어 추천',
+    capabilities: ['treatment_chart', 'treatment_portfolio', 'safety_consent', 'intake_assessment', 'digital_contract'],
+    recommendedFor: [
+      'hair_salon',
+      'nail_shop',
+      'skin_care',
+      'pet_grooming',
+      'pilates',
+      'yoga',
+    ],
+  },
+  {
+    id: 'fnb_order_kitchen',
+    displayName: '[외식·카페 스마트 주문 & 주방 위생 팩]',
+    shortName: '테이블 주문·KDS',
+    description: '테이블 QR 주문 접수 및 주방 디스플레이(KDS), 레시피 BOM 원가 자동 차감 및 주방 위생 HACCP 점검을 제공합니다.',
+    iconName: 'ShoppingBag',
+    badge: '외식·F&B 필수',
+    capabilities: ['table_order_kds', 'recipe_bom', 'hygiene_haccp_log', 'pickup_orders'],
+    recommendedFor: [
+      'cafe_bakery',
+      'baking_studio',
+      'boardgame_cafe',
+      'party_room',
+      'kids_cafe',
+    ],
+  },
+  {
+    id: 'academy_contest_exam',
+    displayName: '[학원 단원평가 & 대회·발표회 팩]',
+    shortName: '평가 채점·발표회',
+    description: '정기 단원평가 채점 및 취약점 분석, 정기 승급심사 모바일 합격증, 원내 발표회 큐시트 및 전자 상장을 수여합니다.',
+    iconName: 'Award',
+    badge: '교육·예체능 추천',
+    capabilities: ['exam_grade_analytics', 'level_assessment', 'event_contest_hub', 'achievement_quest_badge'],
+    recommendedFor: [
+      'piano',
+      'taekwondo',
+      'art_academy',
+      'english_academy',
+      'math_academy',
+      'coding_academy',
+      'robot_academy',
+      'ballet',
+      'swimming',
+      'study_room',
     ],
   },
 ] as const;
