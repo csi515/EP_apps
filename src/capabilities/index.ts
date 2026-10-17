@@ -171,5 +171,16 @@ export * from './parking_validator';
 export * from './emergency_alert_broadcast';
 export * from './digital_guestbook';
 
+const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
+  CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])
+);
+
+/**
+ * Capability ID에 대응하는 표준 한글 명칭(displayName)을 반환합니다.
+ */
+export function getCapabilityDisplayName(id: string): string {
+  return CAPABILITY_DISPLAY_NAME_MAP[id] || id;
+}
+
 
 

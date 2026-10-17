@@ -48,6 +48,7 @@ import {
   type OperationToolSetId,
 } from '@/core/presets/operationBundles';
 import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import { getCapabilityDisplayName } from '@/capabilities';
 
 interface QuickSetupFormData {
   name: string;
@@ -108,7 +109,29 @@ const CAPABILITY_LABEL_MAP: Record<string, string> = {
   consultation_crm: '상담 CRM',
   treatment_chart: '시술 차트',
   safety_consent: '안전 서약',
+  parking_validator: '주차 정산·등록',
+  emergency_alert_broadcast: '긴급 재난·공지 방송',
+  digital_guestbook: '전자 방명록',
+  trial_funnel: '체험 수업 유입',
+  learning_journal: '수업·학습 일지',
+  level_assessment: '급수·레벨 평가',
+  daily_care_report: '돌봄·활동 알림장',
+  vehicle_shuttle: '등하원 셔틀',
+  makeup_lesson_pass: '보강권 발행',
+  diet_body_log: '식단·체형 일지',
+  exam_grade_analytics: '단원평가·성적 분석',
+  entry_pass_ticket: '출입 티켓·패스',
+  achievement_quest_badge: '퀘스트 뱃지·메달',
+  facility_incident_report: '사고·파손 보고서',
+  nps_survey_collector: '만족도 NPS 조사',
+  workplace_policy: '매장 사규·서약',
+  feedbacks: '고객 건의함',
+  substitute_dispatch: '대강사 파견',
 };
+
+function formatCapabilityLabel(cap: string): string {
+  return CAPABILITY_LABEL_MAP[cap] || getCapabilityDisplayName(cap);
+}
 
 const CATEGORY_TABS = [
   { id: 'all', label: '전체' },
@@ -241,17 +264,23 @@ export const QuickSetupPage: React.FC = () => {
   };
 
   const handleAddRole = () => {
-    if (!newRoleName.trim()) return;
+    const roleName = newRoleName.trim();
+    if (!roleName) return;
+    if (roles.some((r) => r.name.toLowerCase() === roleName.toLowerCase())) {
+      setGeneralError('이미 등록된 직급명입니다.');
+      return;
+    }
     setRoles((prev) => [
       ...prev,
       {
-        name: newRoleName.trim(),
+        name: roleName,
         rank_order: (prev.length + 1) * 10,
         permissions: ['attendance:checkin'],
       },
     ]);
     setNewRoleName('');
     setAddingRole(false);
+    setGeneralError(null);
   };
 
   // 룸 조작
@@ -260,27 +289,44 @@ export const QuickSetupPage: React.FC = () => {
   };
 
   const handleAddRoom = () => {
-    if (!newRoomName.trim()) return;
+    const roomName = newRoomName.trim();
+    if (!roomName) return;
+    if (rooms.some((r) => r.name.toLowerCase() === roomName.toLowerCase())) {
+      setGeneralError('이미 등록된 공간/룸 이름입니다.');
+      return;
+    }
     setRooms((prev) => [
       ...prev,
       {
-        name: newRoomName.trim(),
+        name: roomName,
         capacity: newRoomCapacity || 1,
       },
     ]);
     setNewRoomName('');
     setNewRoomCapacity(1);
     setAddingRoom(false);
+    setGeneralError(null);
   };
 
   // 1회 원자적 DB 생성 RPC 호출
   const onSubmit = async (data: QuickSetupFormData) => {
+    const trimmedName = data.name?.trim() || '';
+    if (!trimmedName || trimmedName.length < 2) {
+      setError('name', { message: '사업장 상호명을 공백 제외 2자 이상 입력해 주세요.' });
+      return;
+    }
+
+    if (roles.length === 0) {
+      setGeneralError('사업장 운영을 위해 최소 1개 이상의 직급(예: 대표, 원장, 사장 등)이 필요합니다.');
+      return;
+    }
+
     setSubmitting(true);
     setGeneralError(null);
 
     try {
       if (!isSupabaseConfigured()) {
-        throw new Error('데이터베이스 서비스에 연결할 수 없습니다.');
+        throw new Error('데이터베이스 서비스에 연결할 수 없습니다. 네트워크 연결 또는 환경 설정을 확인해 주세요.');
       }
 
       // 선택된 맞춤 세트로부터 필요한 추가 Capability 자동 계산
@@ -292,6 +338,7 @@ export const QuickSetupPage: React.FC = () => {
 
       const payload = buildPresetPayload(selectedIndustry, {
         ...data,
+        name: trimmedName,
         roles,
         rooms,
         locker_count: selectedIndustry === 'sauna' ? lockerCount : undefined,
@@ -302,7 +349,7 @@ export const QuickSetupPage: React.FC = () => {
       const { data: rpcResult, error } = await getCoreClient().rpc(
         'create_organization_with_preset',
         {
-          p_org_name: data.name,
+          p_org_name: trimmedName,
           p_industry: selectedIndustry,
           p_custom_config: payload as any,
         }
@@ -324,7 +371,7 @@ export const QuickSetupPage: React.FC = () => {
       const applied = applyDomainErrorToForm(err, setError, 'name');
       if (!applied) {
         setGeneralError(
-          err instanceof Error ? err.message : '사업장 생성 중 오류가 발생했습니다.'
+          err instanceof Error ? err.message : '사업장 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
         );
       }
     } finally {
@@ -367,7 +414,11 @@ export const QuickSetupPage: React.FC = () => {
               <div className="relative">
                 <input
                   type="text"
-                  {...register('name', { required: '사업장 상호명을 입력해주세요.' })}
+                  {...register('name', {
+                    required: '사업장 상호명을 입력해주세요.',
+                    validate: (v) =>
+                      v.trim().length >= 2 || '상호명은 공백을 제외하고 2자 이상 입력해 주세요.',
+                  })}
                   placeholder="예: 모아 피아노 스튜디오, 청담 사우나, 바른 필라테스"
                   className="w-full h-12 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                 />
@@ -440,7 +491,7 @@ export const QuickSetupPage: React.FC = () => {
                 >
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
-                    <span>40개 전체 업종 프리셋 카탈로그 ({allPresets.length}개 업종)</span>
+                    <span>전체 업종 프리셋 카탈로그 ({allPresets.length}개 업종)</span>
                   </div>
                   {isCatalogOpen ? (
                     <ChevronUp className="w-4 h-4 text-slate-500" />
@@ -513,7 +564,7 @@ export const QuickSetupPage: React.FC = () => {
                                   key={cap}
                                   className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600"
                                 >
-                                  {CAPABILITY_LABEL_MAP[cap] || cap}
+                                  {formatCapabilityLabel(cap)}
                                 </span>
                               ))}
                               {preset.capabilities.length > 3 && (
@@ -559,12 +610,13 @@ export const QuickSetupPage: React.FC = () => {
                         className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 shadow-2xs"
                       >
                         <Tag className="w-2.5 h-2.5 text-indigo-500" />
-                        {CAPABILITY_LABEL_MAP[cap] || cap}
+                        {formatCapabilityLabel(cap)}
                       </span>
                     ))}
                   </div>
                 )}
               </div>
+
             </div>
           </div>
 
@@ -623,17 +675,34 @@ export const QuickSetupPage: React.FC = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100">
-                      {isRecommended && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                          추천 세트
-                        </span>
-                      )}
-                      {set.badge && (
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
-                          {set.badge}
-                        </span>
-                      )}
+                    <div className="pt-2 border-t border-slate-100 space-y-2">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isRecommended && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                            추천 세트
+                          </span>
+                        )}
+                        {set.badge && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                            {set.badge}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {set.capabilities.slice(0, 3).map((capId) => (
+                          <span
+                            key={capId}
+                            className="text-[10px] px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200/80 shadow-2xs"
+                          >
+                            {formatCapabilityLabel(capId)}
+                          </span>
+                        ))}
+                        {set.capabilities.length > 3 && (
+                          <span className="text-[10px] text-slate-400">
+                            +{set.capabilities.length - 3}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 );

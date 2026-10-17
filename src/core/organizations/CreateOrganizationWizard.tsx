@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOrganization } from './OrganizationProvider';
 import {
   Building2,
@@ -8,6 +9,7 @@ import {
   Loader2,
   KeyRound,
   UserCheck,
+  ArrowRight,
 } from 'lucide-react';
 import { type IndustryType } from '../industry/types';
 import { IndustryPicker } from '../industry/IndustryPicker';
@@ -44,6 +46,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
   onCancel,
   initialIndustryType = 'piano',
 }) => {
+  const navigate = useNavigate();
   const org = useOrganization();
   const submittingRef = useRef(false);
   const [step, setStep] = useState(0);
@@ -187,7 +190,28 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
 
         {step === 0 && (
           <form onSubmit={handleStepInfo} className="p-6 space-y-4">
-            <p className="text-sm text-slate-500">사업장 기본 정보를 입력해 주세요.</p>
+            {/* 10초 빠른 맞춤 셋업 추천 배너 */}
+            <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span className="text-xs text-indigo-900 font-medium">
+                  44개 업종 프리셋(직급·룸·도구 자동 완성)으로 시작하기
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onCancel();
+                  navigate('/onboarding/quick');
+                }}
+                className="shrink-0 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
+              >
+                <span>빠른 셋업</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500">사업장 기본 정보를 직접 입력해 등록합니다.</p>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">

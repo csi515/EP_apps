@@ -188,11 +188,30 @@ for (const p of allPresets) {
   assert.ok(defaults.operating_hours.slot_minutes > 0, `Preset ${p.id} must have slot_minutes`);
 
   const payload = buildPresetPayload(p.id);
-  assert.equal(payload.industry, p.id);
+  assert.equal(payload.industry, normalizeIndustryKey(p.id));
   assert.ok(payload.roles.length > 0);
   assert.ok(Array.isArray(payload.capabilities));
 }
 console.log(`✓ All ${allPresets.length} industry presets batch verified successfully!`);
+
+// 11. getCapabilityDisplayName and OPERATION_TOOL_SETS suite
+import { getCapabilityDisplayName } from '@/capabilities';
+import { OPERATION_TOOL_SETS, getRecommendedToolSetsForPreset } from '@/core/presets/operationBundles';
+import { CAPABILITY_IDS } from '@/capabilities/_shared/capabilityTypes';
+
+for (const capId of CAPABILITY_IDS) {
+  const name = getCapabilityDisplayName(capId);
+  assert.ok(name && name.length > 0, `Capability ${capId} must have a valid display name`);
+  assert.notEqual(name, '', `Capability ${capId} display name cannot be empty`);
+}
+console.log(`✓ All ${CAPABILITY_IDS.length} capabilities return non-empty display name`);
+
+assert.equal(OPERATION_TOOL_SETS.length, 12, 'Expected 12 operation tool sets');
+for (const p of allPresets) {
+  const recommended = getRecommendedToolSetsForPreset(p.id);
+  assert.ok(recommended.length > 0, `Preset ${p.id} should have at least 1 recommended tool set`);
+}
+console.log(`✓ All ${allPresets.length} presets have recommended tool sets in catalog`);
 
 console.log('[TEST] presetQuestionEngine ALL TESTS PASSED!');
 

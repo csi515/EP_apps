@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   UserPlus,
   KeyRound,
+  Sparkles,
 } from 'lucide-react';
 import { useOrganization } from './OrganizationProvider';
 import { getRoleLabel } from './services/organizationService';
@@ -188,6 +189,32 @@ export const OrganizationSelector: React.FC = () => {
             </>
           )}
 
+          {/* 10초 맞춤 빠른 셋업 (추천) */}
+          <button
+            type="button"
+            data-testid="btn-quick-onboarding"
+            onClick={() => navigate('/onboarding/quick')}
+            className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold hover:from-indigo-700 hover:to-indigo-800 shadow-md shadow-indigo-100 transition-all text-left min-h-[44px]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-bold">10초 맞춤 빠른 셋업</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 font-extrabold">
+                    추천
+                  </span>
+                </div>
+                <p className="text-xs text-indigo-100 font-normal mt-0.5">
+                  44개 업종 프리셋 & 12대 운영 도구가 자동 구성됩니다
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-indigo-200 shrink-0" />
+          </button>
+
           <button
             type="button"
             data-testid="btn-open-create-org-wizard"
@@ -195,7 +222,7 @@ export const OrganizationSelector: React.FC = () => {
             className="w-full flex items-center justify-center gap-2 py-3.5 border-2 border-dashed border-indigo-200 rounded-2xl text-indigo-700 font-bold hover:bg-indigo-50 hover:border-indigo-300 transition-colors min-h-[44px]"
           >
             <Plus className="w-5 h-5" />
-            새 사업장 등록하기
+            직접 입력하여 등록하기
           </button>
 
           <button
