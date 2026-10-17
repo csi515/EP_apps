@@ -35,6 +35,10 @@ import {
   getIndustryPreset,
 } from '@/app/presets/presetRegistry';
 import {
+  recommendIndustryPreset,
+  type RecommendationResult,
+} from '@/app/presets/presetRecommendationEngine';
+import {
   getQuestionsForIndustry,
   getStandardPresetsForIndustry,
   buildPresetPayload,
@@ -216,6 +220,11 @@ export const QuickSetupPage: React.FC = () => {
   // 맞춤 도구 세트 선택 상태
   const [selectedToolSetIds, setSelectedToolSetIds] = useState<OperationToolSetId[]>([]);
 
+  // AI 프리셋 진단 추천 상태
+  const [aiQuery, setAiQuery] = useState('');
+  const [aiResult, setAiResult] = useState<RecommendationResult | null>(null);
+  const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+
   // Refine / React Hook Form
   const {
     register,
@@ -255,6 +264,23 @@ export const QuickSetupPage: React.FC = () => {
     for (const q of questions) {
       setValue(q.id, q.defaultValue);
     }
+  };
+
+  // AI 프리셋 진단 실행
+  const handleRunAiRecommendation = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!aiQuery.trim()) return;
+
+    setIsAiAnalyzing(true);
+    setTimeout(() => {
+      const result = recommendIndustryPreset(aiQuery);
+      setAiResult(result);
+      setIsAiAnalyzing(false);
+
+      if (result.topRecommendation) {
+        applyIndustryDefaults(result.topRecommendation.presetId);
+      }
+    }, 200);
   };
 
   const handleToggleToolSetOption = (setId: OperationToolSetId) => {
@@ -414,6 +440,132 @@ export const QuickSetupPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {/* AI 기반 사업장 맞춤 프리셋 자동 진단 섹션 */}
+          <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-7 rounded-3xl shadow-xl border border-indigo-800/60 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>AI 맞춤 업종 프리셋 자동 진단</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/20">
+                      지능형 추천
+                    </span>
+                  </h2>
+                  <p className="text-xs text-indigo-200/80">
+                    운영하시는 사업장의 특징이나 필요한 기능을 자연어로 편하게 적어주시면 가장 적합한 프리셋을 찾아드립니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleRunAiRecommendation();
+                    }
+                  }}
+                  placeholder="예: 판교에서 20명 규모 성인 피아노 학원을 운영하고 연습실 대여와 주차 등록이 필요해요"
+                  className="w-full h-12 pl-4 pr-10 rounded-xl bg-slate-800/80 border border-indigo-500/30 text-sm text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-400 transition"
+                />
+                {aiQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAiQuery('');
+                      setAiResult(null);
+                    }}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRunAiRecommendation()}
+                disabled={isAiAnalyzing || !aiQuery.trim()}
+                className="h-12 px-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 shrink-0"
+              >
+                {isAiAnalyzing ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4" />
+                )}
+                <span>{isAiAnalyzing ? 'AI 분석 중...' : '맞춤 프리셋 진단'}</span>
+              </button>
+            </div>
+
+            {/* AI 추천 결과 카드 */}
+            {aiResult?.topRecommendation && (
+              <div className="bg-indigo-950/60 border border-indigo-400/30 p-4 rounded-2xl space-y-3 animate-in fade-in">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-800/50">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                    <span className="text-xs text-indigo-200">추천 1순위:</span>
+                    <span className="text-sm font-bold text-white">
+                      {aiResult.topRecommendation.presetName}
+                    </span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      일치도 {aiResult.topRecommendation.score}%
+                    </span>
+                  </div>
+                  <span className="text-xs text-indigo-300">
+                    ✓ 추천 설정이 아래 폼에 자동 적용되었습니다
+                  </span>
+                </div>
+
+                <p className="text-xs text-indigo-100/90 leading-relaxed">
+                  {aiResult.topRecommendation.explanation}
+                </p>
+
+                {/* 추가 추천 Add-on 배지 */}
+                {aiResult.topRecommendation.recommendedAddons.length > 0 && (
+                  <div className="pt-2 flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-indigo-300 font-semibold">
+                      함께 추천하는 부가기능:
+                    </span>
+                    {aiResult.topRecommendation.recommendedAddons.map((addon) => (
+                      <span
+                        key={addon.capabilityId}
+                        className="text-xs px-2.5 py-1 rounded-lg bg-indigo-800/80 text-indigo-200 border border-indigo-600/40 flex items-center gap-1.5"
+                        title={addon.reason}
+                      >
+                        <Tag className="w-3 h-3 text-indigo-400" />
+                        <span>{addon.name}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* 대안 추천 */}
+                {aiResult.alternativeRecommendations.length > 0 && (
+                  <div className="pt-2 flex items-center gap-2 text-xs text-indigo-300">
+                    <span>다른 후보:</span>
+                    {aiResult.alternativeRecommendations.map((alt) => (
+                      <button
+                        key={alt.presetId}
+                        type="button"
+                        onClick={() => applyIndustryDefaults(alt.presetId)}
+                        className="underline hover:text-white"
+                      >
+                        {alt.presetName} ({alt.score}%)
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Step 1: 기본 사업장 정보 & 업종 선택 */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
             <div>
