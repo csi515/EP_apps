@@ -40,6 +40,7 @@ export {
   resourceScope,
   scopeTargetId,
 } from './scopes';
+export { evaluateCustomPermission } from './permissions';
 export { AUTH_SCOPE_TYPES } from './types';
 export type {
   AuthorizationGrant,

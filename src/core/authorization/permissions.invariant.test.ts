@@ -90,4 +90,4 @@ console.log('[TEST] permissions.invariant.test running...');
   assert.equal(canAuthorize('parent', 'reports.read', org), false);
 }
 
-console.log('src/domain/permissions.invariant.test.ts: ok');
+console.log('src/core/authorization/permissions.invariant.test.ts: ok');

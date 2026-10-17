@@ -2,8 +2,21 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { dynamicAuthStorage } from '@/core/auth/services/authStorage';
 
+import { createLogger } from '@/core/logging';
+
+const logger = createLogger('SupabaseClient');
+
 const defaultUrl = 'https://mock-supabase.moa.local';
 const defaultKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mock-anon-key';
+
+const isProd = Boolean(import.meta.env?.PROD);
+const hasEnvConfig = Boolean(import.meta.env?.VITE_SUPABASE_URL && import.meta.env?.VITE_SUPABASE_ANON_KEY);
+
+if (isProd && !hasEnvConfig) {
+  logger.error(
+    'Critical: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing in production environment.'
+  );
+}
 
 const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || defaultKey;

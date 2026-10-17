@@ -1,4 +1,5 @@
 export { supabase, isSupabaseConfigured, getCoreClient } from './client';
+export { getIndustryClient } from './industryClient';
 export { getPianoClient } from './pianoClient';
 export { getBathClient } from './bathClient';
 export { getPlatformClient } from './platformClient';

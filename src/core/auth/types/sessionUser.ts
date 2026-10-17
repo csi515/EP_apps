@@ -10,4 +10,10 @@ export interface User {
   staffId?: string | null;
   parentCustomerId?: string | null;
   email: string;
+  permissions?: string[];
+  customRole?: {
+    id?: string;
+    name?: string;
+    permissions?: string[];
+  } | null;
 }

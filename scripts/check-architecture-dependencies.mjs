@@ -96,10 +96,6 @@ export const LEGACY_ALLOWLIST = {
     kinds: ['layer_import'],
     reason: 'LEGACY piano textbook sale merge in sync',
   },
-  'src/services/storage/eventsStorage.ts': {
-    kinds: ['layer_import'],
-    reason: 'LEGACY events labels → piano eventLabels',
-  },
   'src/capabilities/billing/ui/PassManagementView.tsx': {
     kinds: ['storage_service_import'],
     reason: 'LEGACY academy pass management UI',

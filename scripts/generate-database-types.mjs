@@ -15,8 +15,7 @@ const outFile = join(root, 'src/lib/supabase/database.generated.ts');
 const schemas = 'core,piano,bath,platform';
 
 const result = spawnSync(
-  'npx',
-  ['supabase', 'gen', 'types', 'typescript', '--local', '--schema', schemas],
+  `npx supabase gen types typescript --local --schema ${schemas}`,
   { cwd: root, encoding: 'utf8', shell: true }
 );
 

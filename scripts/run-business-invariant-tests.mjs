@@ -54,7 +54,7 @@ function failIntegrity(errors) {
 }
 
 function runScript(script) {
-  const result = spawnSync('npm', ['run', script], {
+  const result = spawnSync(`npm run ${script}`, {
     stdio: 'inherit',
     shell: true,
     env: process.env,

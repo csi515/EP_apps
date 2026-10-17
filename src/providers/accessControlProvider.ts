@@ -6,7 +6,7 @@ import { createAuthorizationApi } from "@/core/authorization/authorizationApi";
 import { isKnownPermission, isKnownScopeType } from "@/core/authorization/registry";
 import type { AuthorizationGrant, AuthScopeType, Permission } from "@/core/authorization/types";
 import type { User } from "@/types";
-import { evaluateCustomPermission } from "@/domain/permissions";
+import { evaluateCustomPermission } from "@/core/authorization";
 
 /**
  * AccessControl Context Resolver.
@@ -260,8 +260,8 @@ export function createAccessControlProvider(
 
       // 2.5 Evaluate Tenant Custom Role Permissions with Wildcards (Hybrid RBAC)
       const userPermissions =
-        (activeUser as any)?.permissions ||
-        (activeUser as any)?.customRole?.permissions ||
+        activeUser.permissions ||
+        activeUser.customRole?.permissions ||
         [];
       const requiredActionStr = `${resource}:${action || "view"}`;
       if (Array.isArray(userPermissions) && userPermissions.length > 0) {

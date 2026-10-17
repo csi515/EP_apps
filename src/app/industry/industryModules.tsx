@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import { lazy, type ReactNode, type ComponentType } from 'react';
 import { pianoPluginManifest } from '@/industries/piano/plugin';
 import { pilatesPluginManifest } from '@/industries/pilates/plugin';
 import { gymPluginManifest } from '@/industries/gym/plugin';
@@ -16,14 +16,19 @@ import {
 import { GenericIndustryShell } from './GenericIndustryShell';
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 
+interface LoadedViewMapModule {
+  default?: Record<string, () => ReactNode>;
+  Overlays?: ComponentType | null;
+  [key: string]: unknown;
+}
+
 function wrapIndustryApp(module: IndustryModuleDefinition): IndustryAppComponent {
   return lazy(async () => {
     try {
       const [viewMapMod, labelsMod] = await Promise.all([module.loadViewMap(), module.loadLabels()]);
-      // @ts-ignore
-      const viewMap = ('default' in viewMapMod ? viewMapMod.default : viewMapMod) as Record<string, () => ReactNode>;
-      // @ts-ignore
-      const Overlays = viewMapMod.Overlays || null;
+      const rawViewMap = viewMapMod as LoadedViewMapModule;
+      const viewMap = (rawViewMap.default || rawViewMap) as unknown as Record<string, () => ReactNode>;
+      const Overlays = rawViewMap.Overlays || null;
       const { ModuleLabelsProvider } = labelsMod;
       
       function IndustryApp() {

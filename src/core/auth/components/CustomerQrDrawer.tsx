@@ -3,7 +3,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { X, Plus, Trash2, Clock, CheckCircle2, User, Users, RefreshCw } from 'lucide-react';
 import { supabase, getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { buildEnrollmentPayload, type ChildEnrollmentInput } from '../domain/claimEngine';
-import { normalizeToE164 } from '@/domain/phoneValidation';
+import { normalizeToE164 } from '@/shared/utils/phoneValidation';
 
 export interface CustomerQrDrawerProps {
   isOpen: boolean;

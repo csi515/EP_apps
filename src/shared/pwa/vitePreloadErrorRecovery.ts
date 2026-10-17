@@ -7,6 +7,10 @@
  * 3. 서비스 워커 업데이트 및 원자적 새로고침 트리거
  */
 
+import { createLogger } from '@/core/logging';
+
+const logger = createLogger('VitePreloadRecovery');
+
 export const VITE_PRELOAD_FLAG = 'moa.vitePreloadRecovery';
 const RELOAD_COOLDOWN_MS = 15_000;
 
@@ -35,7 +39,7 @@ export function handlePreloadError(
       const elapsed = now - Number(lastAttempt);
       if (elapsed < RELOAD_COOLDOWN_MS) {
         // 무한 리로드 방지
-        console.error('[VitePreloadRecovery] Stale chunk detected but reload cooldown active:', error);
+        logger.error('Stale chunk detected but reload cooldown active:', error);
         return false;
       }
     }

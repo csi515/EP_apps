@@ -25,4 +25,41 @@ export default defineConfig({
     port: 3000,
     host: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("@refinedev")) {
+              return "refine-vendor";
+            }
+            if (id.includes("@supabase")) {
+              return "supabase-vendor";
+            }
+            if (id.includes("@tanstack")) {
+              return "query-vendor";
+            }
+            if (id.includes("lucide-react")) {
+              return "icons-vendor";
+            }
+            if (id.includes("recharts")) {
+              return "recharts-vendor";
+            }
+            if (
+              id.includes("react/") ||
+              id.includes("react-dom/") ||
+              id.includes("react-router/") ||
+              id.includes("react-router-dom/")
+            ) {
+              return "react-vendor";
+            }
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1200,
+  },
+  esbuild: {
+    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+  },
 });

@@ -14,7 +14,11 @@ import { getIndustryDefinition } from '../industry/catalog';
 import { normalizeIndustryType, type IndustryType } from '../industry/types';
 import type { TerminologyDictionary } from './types';
 
-export const DEFAULT_TERMINOLOGY_DICTIONARY: TerminologyDictionary = {
+/**
+ * 학원/교육 도메인 전용 용어 사전.
+ * piano 또는 education 카테고리 업종에서 사용됩니다.
+ */
+export const ACADEMY_TERMINOLOGY_DICTIONARY: TerminologyDictionary = {
   customer: {
     singular: '학생',
     plural: '학생',
@@ -66,6 +70,65 @@ export const DEFAULT_TERMINOLOGY_DICTIONARY: TerminologyDictionary = {
     room: '강의실',
   },
 };
+
+/**
+ * 기본 용어 사전 (중립적 범용 사업장 사전).
+ * 특정 업종이 지정되지 않은 상태(초기 상태/미선택)에서
+ * 특정 업종(학원 등)에 편향되지 않은 안전한 범용 어휘를 제공합니다.
+ */
+export const DEFAULT_TERMINOLOGY_DICTIONARY: TerminologyDictionary = {
+  customer: {
+    singular: '고객',
+    plural: '고객',
+    management: '고객 관리',
+    section: '고객',
+    add: '고객 등록',
+    search: '고객 검색',
+    statusActive: '이용중',
+    statusPaused: '정지',
+    statusWithdrawn: '종료',
+  },
+  contact: {
+    singular: '연락처',
+    plural: '연락처',
+    management: '연락처 관리',
+  },
+  staff: {
+    singular: '직원',
+    plural: '직원',
+    management: '직원 관리',
+    section: '직원',
+  },
+  service: {
+    singular: '서비스',
+    plural: '서비스',
+    management: '서비스 관리',
+    section: '서비스',
+  },
+  schedule: {
+    singular: '일정',
+    plural: '일정',
+    management: '일정',
+    section: '일정',
+  },
+  attendance: {
+    noun: '출입',
+    checkIn: '입실',
+    checkOut: '퇴실',
+  },
+  billing: {
+    fee: '이용료',
+    unpaid: '미납금',
+    pass: '이용권',
+    payment: '결제',
+  },
+  facility: {
+    place: '사업장',
+    owner: '대표',
+    room: '공간',
+  },
+};
+
 
 export const DEFAULT_EN_TERMINOLOGY_DICTIONARY: TerminologyDictionary = {
   customer: {
@@ -1436,9 +1499,9 @@ export function getTerminologyDictionary(
     return CATEGORY_DICTIONARIES.daycare;
   }
 
-  // 명시적 교육/학원 업종이면 DEFAULT_TERMINOLOGY_DICTIONARY
+  // 명시적 교육/학원 업종이면 ACADEMY_TERMINOLOGY_DICTIONARY
   if (rawKey === 'piano' || rawKey === 'academy' || cat === 'education') {
-    return DEFAULT_TERMINOLOGY_DICTIONARY;
+    return ACADEMY_TERMINOLOGY_DICTIONARY;
   }
 
   // 피아노/학원 외 일반 업종의 경우 학원 전용 용어 노출을 방지하는 중립 사전 반환

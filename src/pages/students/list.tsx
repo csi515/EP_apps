@@ -24,7 +24,7 @@ import { CustomerTransferModal } from "@/core/customer/components/CustomerTransf
 import {
   ResponsiveTable,
   type ResponsiveColumn,
-} from "@/components/ui/responsive-table";
+} from "@/shared/components/ui";
 
 export interface CustomerRecord {
   id: string;

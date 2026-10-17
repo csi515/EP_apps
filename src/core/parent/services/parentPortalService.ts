@@ -1,5 +1,5 @@
 import { getCoreClient } from '@/lib/supabase';
-import { normalizeToE164 } from '@/domain/phoneValidation';
+import { normalizeToE164 } from '@/shared/utils/phoneValidation';
 import type {
   ParentPortalTree,
   GlobalParent,

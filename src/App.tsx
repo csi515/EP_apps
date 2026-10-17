@@ -7,7 +7,7 @@ import routerBindings, {
 } from "@refinedev/react-router";
 import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Users, Calendar, CreditCard, LayoutDashboard, Ticket, Lock } from "lucide-react";
+import { Ticket, Lock } from "lucide-react";
 
 import { AuthProvider } from "@/core/auth/AuthProvider";
 import { OrganizationProvider, useOrganization } from "@/core/organizations/OrganizationProvider";
@@ -63,6 +63,81 @@ setTenantQueryClient(queryClient);
 registerQueryClientClear(() => {
   queryClient.clear();
 });
+
+const CAPABILITY_ROUTE_PATHS = [
+  // 범주 5대 기본 & A~AV 전체 Capability 엔드포인트
+  "attendance",
+  "bookings",
+  "seat-rooms",
+  "rentals",
+  "maintenance",
+  "instructors",
+  "shifts",
+  "pipelines",
+  "billing-invoices",
+  "ledger",
+  "wallets",
+  "consultations",
+  "charts",
+  "consents",
+  "inventory",
+  "policies",
+  "settings/policies",
+  "operations",
+  "operations/handover",
+  "operations/feedbacks",
+  "operations/incidents",
+  "handover",
+  "feedbacks",
+  "incidents",
+  "trial-funnel",
+  "learning-journal",
+  "level-assessment",
+  "space-turnaround",
+  "supply-restock",
+  "makeup-lesson-pass",
+  "intake-assessment",
+  "daily-care-report",
+  "substitute-dispatch",
+  "entry-pass-ticket",
+  "event-contest-hub",
+  "facility-incident-report",
+  "facility-incidents",
+  "nps-survey-collector",
+  "nps-surveys",
+  "achievement-quest-badge",
+  "achievement-quests",
+  "parking-validator",
+  "parking-registrations",
+  "emergency-broadcast",
+  "emergency-broadcasts",
+  "digital-guestbook",
+  "curriculum",
+  "commission-payroll",
+  "deposit-escrow",
+  "diet-body-log",
+  "contracts",
+  "equipment-lifecycle",
+  "grade-analytics",
+  "hygiene-log",
+  "staff-call",
+  "lost-found",
+  "loyalty-stamps",
+  "family-tree",
+  "package-billing",
+  "pickup-orders",
+  "recipe-bom",
+  "retention",
+  "seat-timers",
+  "sop-risk",
+  "kds",
+  "portfolio",
+  "shuttle",
+  "vendor-ap",
+  "turn-queue",
+  "work-payroll",
+  "work-orders",
+] as const;
 
 const RefineApp: React.FC = () => {
   const { currentOrganization, activeCapabilities } = useOrganization();
@@ -157,10 +232,20 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
             <Route path="/dashboard" element={<DashboardPage />} />
+            {/* Roster / Customers 범용 중립 경로 및 하위 호환 /students 경로 */}
             <Route path="/students" element={<StudentListPage />} />
             <Route path="/students/create" element={<StudentCreatePage />} />
             <Route path="/students/:id" element={<StudentShowPage />} />
             <Route path="/students/:id/edit" element={<StudentEditPage />} />
+            <Route path="/customers" element={<StudentListPage />} />
+            <Route path="/customers/create" element={<StudentCreatePage />} />
+            <Route path="/customers/:id" element={<StudentShowPage />} />
+            <Route path="/customers/:id/edit" element={<StudentEditPage />} />
+            <Route path="/roster" element={<StudentListPage />} />
+            <Route path="/roster/create" element={<StudentCreatePage />} />
+            <Route path="/roster/:id" element={<StudentShowPage />} />
+            <Route path="/roster/:id/edit" element={<StudentEditPage />} />
+
             <Route path="/schedules" element={<WeeklyTimetableView />} />
             <Route path="/billing" element={<TuitionManagementView />} />
             <Route path="/customer/pass" element={<MyPassView />} />
@@ -169,83 +254,13 @@ const RefineApp: React.FC = () => {
             <Route path="/settings/roles" element={<RolesPage />} />
             <Route path="/onboarding/quick" element={<QuickSetupPage />} />
 
-            {/* Capability 동적 리소스 경로 라우트 매핑 (Refine 사이드바 연동) */}
-            <Route path="/attendance" element={<IndustryAppRouter />} />
-            <Route path="/attendance/*" element={<IndustryAppRouter />} />
-            <Route path="/bookings" element={<IndustryAppRouter />} />
-            <Route path="/bookings/*" element={<IndustryAppRouter />} />
-            <Route path="/seat-rooms" element={<IndustryAppRouter />} />
-            <Route path="/seat-rooms/*" element={<IndustryAppRouter />} />
-            <Route path="/rentals" element={<IndustryAppRouter />} />
-            <Route path="/rentals/*" element={<IndustryAppRouter />} />
-            <Route path="/maintenance" element={<IndustryAppRouter />} />
-            <Route path="/maintenance/*" element={<IndustryAppRouter />} />
-            <Route path="/instructors" element={<IndustryAppRouter />} />
-            <Route path="/instructors/*" element={<IndustryAppRouter />} />
-            <Route path="/shifts" element={<IndustryAppRouter />} />
-            <Route path="/shifts/*" element={<IndustryAppRouter />} />
-            <Route path="/pipelines" element={<IndustryAppRouter />} />
-            <Route path="/pipelines/*" element={<IndustryAppRouter />} />
-            <Route path="/billing-invoices" element={<IndustryAppRouter />} />
-            <Route path="/billing-invoices/*" element={<IndustryAppRouter />} />
-            <Route path="/ledger" element={<IndustryAppRouter />} />
-            <Route path="/ledger/*" element={<IndustryAppRouter />} />
-            <Route path="/wallets" element={<IndustryAppRouter />} />
-            <Route path="/wallets/*" element={<IndustryAppRouter />} />
-            <Route path="/consultations" element={<IndustryAppRouter />} />
-            <Route path="/consultations/*" element={<IndustryAppRouter />} />
-            <Route path="/charts" element={<IndustryAppRouter />} />
-            <Route path="/charts/*" element={<IndustryAppRouter />} />
-            <Route path="/consents" element={<IndustryAppRouter />} />
-            <Route path="/consents/*" element={<IndustryAppRouter />} />
-            <Route path="/inventory" element={<IndustryAppRouter />} />
-            <Route path="/inventory/*" element={<IndustryAppRouter />} />
-            <Route path="/policies" element={<IndustryAppRouter />} />
-            <Route path="/policies/*" element={<IndustryAppRouter />} />
-            <Route path="/settings/policies" element={<IndustryAppRouter />} />
-            <Route path="/settings/policies/*" element={<IndustryAppRouter />} />
-            <Route path="/operations" element={<IndustryAppRouter />} />
-            <Route path="/operations/*" element={<IndustryAppRouter />} />
-            <Route path="/handover" element={<IndustryAppRouter />} />
-            <Route path="/handover/*" element={<IndustryAppRouter />} />
-            <Route path="/feedbacks" element={<IndustryAppRouter />} />
-            <Route path="/feedbacks/*" element={<IndustryAppRouter />} />
-            <Route path="/incidents" element={<IndustryAppRouter />} />
-            <Route path="/incidents/*" element={<IndustryAppRouter />} />
-            <Route path="/trial-funnel" element={<IndustryAppRouter />} />
-            <Route path="/trial-funnel/*" element={<IndustryAppRouter />} />
-            <Route path="/learning-journal" element={<IndustryAppRouter />} />
-            <Route path="/learning-journal/*" element={<IndustryAppRouter />} />
-            <Route path="/level-assessment" element={<IndustryAppRouter />} />
-            <Route path="/level-assessment/*" element={<IndustryAppRouter />} />
-            <Route path="/space-turnaround" element={<IndustryAppRouter />} />
-            <Route path="/space-turnaround/*" element={<IndustryAppRouter />} />
-            <Route path="/supply-restock" element={<IndustryAppRouter />} />
-            <Route path="/supply-restock/*" element={<IndustryAppRouter />} />
-            <Route path="/makeup-lesson-pass" element={<IndustryAppRouter />} />
-            <Route path="/makeup-lesson-pass/*" element={<IndustryAppRouter />} />
-            <Route path="/intake-assessment" element={<IndustryAppRouter />} />
-            <Route path="/intake-assessment/*" element={<IndustryAppRouter />} />
-            <Route path="/daily-care-report" element={<IndustryAppRouter />} />
-            <Route path="/daily-care-report/*" element={<IndustryAppRouter />} />
-            <Route path="/substitute-dispatch" element={<IndustryAppRouter />} />
-            <Route path="/substitute-dispatch/*" element={<IndustryAppRouter />} />
-            <Route path="/entry-pass-ticket" element={<IndustryAppRouter />} />
-            <Route path="/entry-pass-ticket/*" element={<IndustryAppRouter />} />
-            <Route path="/event-contest-hub" element={<IndustryAppRouter />} />
-            <Route path="/event-contest-hub/*" element={<IndustryAppRouter />} />
-            <Route path="/facility-incident-report" element={<IndustryAppRouter />} />
-            <Route path="/facility-incident-report/*" element={<IndustryAppRouter />} />
-            <Route path="/nps-survey-collector" element={<IndustryAppRouter />} />
-            <Route path="/nps-survey-collector/*" element={<IndustryAppRouter />} />
-            <Route path="/achievement-quest-badge" element={<IndustryAppRouter />} />
-            <Route path="/achievement-quest-badge/*" element={<IndustryAppRouter />} />
-            <Route path="/parking-validator" element={<IndustryAppRouter />} />
-            <Route path="/parking-validator/*" element={<IndustryAppRouter />} />
-            <Route path="/emergency-broadcast" element={<IndustryAppRouter />} />
-            <Route path="/emergency-broadcast/*" element={<IndustryAppRouter />} />
-            <Route path="/digital-guestbook" element={<IndustryAppRouter />} />
-            <Route path="/digital-guestbook/*" element={<IndustryAppRouter />} />
+            {/* Capability 동적 리소스 경로 선언적 라우트 매핑 (Refine 사이드바 연동) */}
+            {CAPABILITY_ROUTE_PATHS.map((path) => (
+              <React.Fragment key={path}>
+                <Route path={`/${path}`} element={<IndustryAppRouter />} />
+                <Route path={`/${path}/*`} element={<IndustryAppRouter />} />
+              </React.Fragment>
+            ))}
           </Route>
         </Route>
 

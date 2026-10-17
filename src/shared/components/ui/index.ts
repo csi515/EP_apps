@@ -13,3 +13,4 @@ export { Skeleton, PageListSkeleton, InlineBusy } from './Skeleton';
 export { BirthDateInput, formatBirthDateDigits } from './BirthDateInput';
 export { SegmentedControl } from './SegmentedControl';
 export { Section, type SectionProps } from './Section';
+export { ResponsiveTable, type ResponsiveColumn, type ResponsiveTableProps } from './ResponsiveTable';

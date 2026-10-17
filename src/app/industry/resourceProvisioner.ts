@@ -45,6 +45,9 @@ import {
 } from '@/app/presets/presetAssembler';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import type { PresetCapabilityId } from '@/core/presets/types';
+import { createLogger } from '@/core/logging';
+
+const logger = createLogger('ResourceProvisioner');
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
@@ -196,7 +199,7 @@ export function provisionIndustryResources(
         if (err instanceof PresetAssemblyError) {
           throw err;
         }
-        console.warn(`[provisionIndustryResources] Preset assembly skipped for ${industry}:`, err);
+        logger.warn(`Preset assembly skipped for ${industry}:`, err);
       }
     }
   }
@@ -227,7 +230,7 @@ export function provisionIndustryResources(
         }
       }
     } catch (err) {
-      console.warn('[provisionIndustryResources] Ad-hoc capability assembly skipped:', err);
+      logger.warn('Ad-hoc capability assembly skipped:', err);
     }
   }
 

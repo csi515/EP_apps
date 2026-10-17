@@ -5,7 +5,7 @@ import type {
   Song,
   Student,
 } from '../../types';
-import { academyEventTypeToVideoType } from '../../industries/piano/config/eventLabels';
+import { academyEventTypeToVideoType } from '../../types/education';
 import { STORAGE_KEYS } from '../adapters';
 import { deleteById, generateEntityId, getItem, setItem, type StorageApi } from './helpers';
 

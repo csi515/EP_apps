@@ -166,7 +166,6 @@ export async function getMyEnrollmentRequests(): Promise<EnrollmentRequest[]> {
 export async function approveEnrollmentRequest(
   requestId: string
 ): Promise<{ enrollmentId: string; customerId: string }> {
-  // @ts-expect-error - RPC not in generated types yet
   const { data, error } = await getCoreClient().rpc('approve_guardian_enrollment', {
     p_request_id: requestId,
   });
@@ -193,7 +192,6 @@ export async function rejectEnrollmentRequest(
   requestId: string,
   reason?: string
 ): Promise<void> {
-  // @ts-expect-error - RPC not in generated types yet
   const { data, error } = await getCoreClient().rpc('reject_guardian_enrollment', {
     p_request_id: requestId,
     p_reason: reason ?? null,
@@ -211,7 +209,6 @@ export async function getOrgEnrollmentRequests(
   orgId: string,
   status: EnrollmentRequestStatus['status'] = 'pending'
 ): Promise<GuardianEnrollmentRequest[]> {
-  // @ts-expect-error - RPC not in generated types yet
   const { data, error } = await getCoreClient().rpc('get_org_enrollment_requests', {
     p_org_id: orgId,
     p_status: status,

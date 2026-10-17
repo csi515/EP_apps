@@ -3888,6 +3888,46 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
+      approve_guardian_enrollment: {
+        Args: {
+          p_request_id: string;
+        };
+        Returns: Json;
+      };
+      reject_guardian_enrollment: {
+        Args: {
+          p_request_id: string;
+          p_reason?: string | null;
+        };
+        Returns: Json;
+      };
+      get_org_enrollment_requests: {
+        Args: {
+          p_org_id: string;
+          p_status?: string;
+        };
+        Returns: {
+          id: string;
+          parent_id: string;
+          parent_name: string;
+          parent_phone: string | null;
+          parent_email: string | null;
+          student_id: string;
+          student_name: string;
+          birth_date: string | null;
+          relationship: string;
+          status: string;
+          requested_at: string;
+          reviewed_at: string | null;
+          reviewed_by_name: string | null;
+          rejection_reason: string | null;
+          notes: string | null;
+          consent_fields?: string[] | null;
+          gender?: string | null;
+          school?: string | null;
+          grade?: string | null;
+        }[];
+      };
       create_organization_with_preset: {
         Args: {
           p_org_name: string;

@@ -258,6 +258,9 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:cross-cache-bridge': 'Refine QueryClient & StorageService cross-cache bridge unit',
   'test:book-schedule-slot': 'atomic schedule slot booking client & local mirror unit',
   'test:roles-permissions': 'tenant roles and permission matrix validation unit',
+  'test:app-routing': 'App layout routing and neutral endpoint mapping unit',
+  'test:logger': 'Central logger and sensitive data masking unit',
+  'test:network-status': 'PWA online and offline state observer unit',
 };
 
 /**

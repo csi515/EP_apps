@@ -1,5 +1,5 @@
 import { AttendanceStatus, InvoiceStatus, StudentStatus } from '../types';
-import { formatPhoneDisplay } from '@/domain/phoneValidation';
+import { formatPhoneDisplay } from '@/shared/utils/phoneValidation';
 
 export function formatNumberWithCommas(value: number | string | undefined | null): string {
   if (value === undefined || value === null || value === '') return '';
