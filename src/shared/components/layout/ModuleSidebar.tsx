@@ -41,9 +41,16 @@ export function ModuleSidebar({
       <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-3">
         {sections.map((section) => (
           <div key={section.title} className="space-y-1">
-            <p className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
-              {section.title}
-            </p>
+            <div className="px-3 flex items-center justify-between mb-1.5">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                {section.title}
+              </p>
+              {section.items.length > 3 && (
+                <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-400">
+                  {section.items.length}
+                </span>
+              )}
+            </div>
             {section.items.map((item) => {
               const isActive = isItemActive(item.tab, activeTab);
               return (

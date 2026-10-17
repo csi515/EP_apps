@@ -23,6 +23,7 @@ import {
   Store,
   HelpCircle,
   Info,
+  RotateCcw,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
@@ -60,10 +61,10 @@ interface CapabilityCategoryGroup {
   capabilityIds: CapabilityId[];
 }
 
-const CATEGORY_GROUPS: CapabilityCategoryGroup[] = [
+const BASE_CATEGORY_GROUPS: CapabilityCategoryGroup[] = [
   {
     id: 'roster_attendance',
-    title: '회원·원생 및 출결',
+    title: '회원·고객 및 출결·돌봄',
     icon: <Users className="w-5 h-5 text-indigo-600" />,
     capabilityIds: [
       'roster',
@@ -72,26 +73,53 @@ const CATEGORY_GROUPS: CapabilityCategoryGroup[] = [
       'locker',
       'membership_referral_tree',
       'consultation_crm',
+      'trial_funnel',
+      'intake_assessment',
+      'digital_guestbook',
+      'daily_care_report',
+      'makeup_lesson_pass',
+      'parent',
+      'enrollment',
     ],
   },
   {
     id: 'booking_space',
-    title: '예약, 공간 및 스케줄',
+    title: '예약, 시설 공간 및 입장·주차',
     icon: <Calendar className="w-5 h-5 text-purple-600" />,
     capabilityIds: [
       'booking',
       'seat_room',
+      'space_turnaround',
+      'parking_validator',
+      'entry_pass_ticket',
+      'seat_timer_billing',
       'rental_equipment',
       'maintenance_checklist',
+      'kiosk_staff_call',
+      'waitlist_turn_queue',
+      'scheduling',
+      'resources',
+    ],
+  },
+  {
+    id: 'staff_operations',
+    title: '강사·직원 및 매장 사규·소통',
+    icon: <Users className="w-5 h-5 text-blue-600" />,
+    capabilityIds: [
       'instructor_match',
       'shift_schedule',
-      'seat_timer_billing',
-      'kiosk_staff_call',
+      'substitute_dispatch',
+      'workplace_policy',
+      'work_attendance_payroll',
+      'feedbacks',
+      'task_pipeline',
+      'facility_incident_report',
+      'emergency_alert_broadcast',
     ],
   },
   {
     id: 'finance_settlement',
-    title: '정산, 수납 및 세무',
+    title: '정산, 수납, 회계 및 세무',
     icon: <Wallet className="w-5 h-5 text-emerald-600" />,
     capabilityIds: [
       'billing_invoicing',
@@ -101,41 +129,46 @@ const CATEGORY_GROUPS: CapabilityCategoryGroup[] = [
       'deposit_escrow',
       'package_split_billing',
       'vendor_ap_invoice',
-      'work_attendance_payroll',
+      'billing',
     ],
   },
   {
-    id: 'operations_safety',
-    title: '운영, 진도 및 안전·사규',
-    icon: <ShieldCheck className="w-5 h-5 text-amber-600" />,
+    id: 'learning_service_growth',
+    title: '진도, 심사·상장 및 성장 마케팅',
+    icon: <GraduationCap className="w-5 h-5 text-amber-600" />,
     capabilityIds: [
-      'workplace_policy',
-      'task_pipeline',
       'curriculum_progress',
+      'learning_journal',
+      'level_assessment',
+      'achievement_quest_badge',
       'exam_grade_analytics',
-      'safety_consent',
-      'sop_risk_assessment',
-      'hygiene_haccp_log',
-      'lost_found',
-      'digital_contract',
-      'vehicle_shuttle',
+      'event_contest_hub',
       'diet_body_log',
       'treatment_chart',
       'treatment_portfolio',
+      'safety_consent',
+      'loyalty_stamp',
+      'retention_marketing',
+      'nps_survey_collector',
     ],
   },
   {
     id: 'commerce_orders',
-    title: '주문, 재고 및 단골 마케팅',
+    title: '주문, 소모품·재고 및 주방 위생',
     icon: <ShoppingBag className="w-5 h-5 text-rose-600" />,
     capabilityIds: [
       'inventory',
+      'supply_restock',
       'pickup_orders',
-      'loyalty_stamp',
       'table_order_kds',
       'recipe_bom',
-      'retention_marketing',
-      'waitlist_turn_queue',
+      'hygiene_haccp_log',
+      'sop_risk_assessment',
+      'lost_found',
+      'digital_contract',
+      'vehicle_shuttle',
+      'commerce',
+      'transport',
     ],
   },
 ];
@@ -182,6 +215,55 @@ export const CapabilitySwitchboardPage: React.FC = () => {
     }
     return map;
   }, []);
+
+  // 미분류 도구가 있을 경우 자동 '기타 및 신규 도구' 그룹 동적 생성
+  const dynamicCategoryGroups = useMemo(() => {
+    const categorized = new Set<string>();
+    for (const group of BASE_CATEGORY_GROUPS) {
+      for (const id of group.capabilityIds) {
+        categorized.add(id);
+      }
+    }
+    const uncategorized: CapabilityId[] = [];
+    for (const [id] of manifestMap.entries()) {
+      if (!categorized.has(id)) {
+        uncategorized.push(id);
+      }
+    }
+    if (uncategorized.length === 0) {
+      return BASE_CATEGORY_GROUPS;
+    }
+    return [
+      ...BASE_CATEGORY_GROUPS,
+      {
+        id: 'other_custom',
+        title: '기타 및 추가 도구',
+        icon: <Sparkles className="w-5 h-5 text-teal-600" />,
+        capabilityIds: uncategorized,
+      },
+    ];
+  }, [manifestMap]);
+
+  // 업종 표준 기본 구성으로 원클릭 리셋 핸들러
+  const handleResetToPresetDefaults = async () => {
+    const additionalCaps = (activeCapabilities as CapabilityId[]).filter((id) => !presetBaseCaps.includes(id));
+    if (additionalCaps.length === 0) {
+      setToastMessage('이미 현재 업종의 표준 기본 구성으로 설정되어 있습니다.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    if (!window.confirm('추가로 켜둔 도구들을 모두 끄고, 현재 업종의 표준 기본 구성으로 초기화하시겠습니까?')) {
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateActiveCapabilities([]);
+      setToastMessage(`[${preset?.name ?? currentIndustry}] 업종의 표준 기본 구성으로 복원되었습니다.`);
+      setTimeout(() => setToastMessage(null), 4000);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // 1. [우리 매장 맞춤 세트] 원터치 토글 핸들러
   const handleToggleToolSet = async (toolSetId: OperationToolSetId, currentState: boolean) => {
@@ -310,20 +392,32 @@ export const CapabilitySwitchboardPage: React.FC = () => {
           </p>
         </div>
 
-        {/* 3대 탭 전환 버튼 */}
-        <div className="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => setActiveTab('toolsets')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-              activeTab === 'toolsets'
-                ? 'bg-white text-indigo-600 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
+            onClick={handleResetToPresetDefaults}
+            disabled={isSaving}
+            className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 hover:bg-slate-50 shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            title="추가 도구를 끄고 현재 업종 표준 기본 구성으로 복원"
           >
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>우리 매장 맞춤 세트</span>
+            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+            <span>기본 구성으로 복원</span>
           </button>
+
+          {/* 3대 탭 전환 버튼 */}
+          <div className="flex items-center bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setActiveTab('toolsets')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'toolsets'
+                  ? 'bg-white text-indigo-600 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+              <span>우리 매장 맞춤 세트</span>
+            </button>
           <button
             type="button"
             onClick={() => setActiveTab('advanced')}
@@ -350,6 +444,7 @@ export const CapabilitySwitchboardPage: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
 
       {/* 실시간 알림 토스트 */}
       {toastMessage && (
@@ -422,12 +517,17 @@ export const CapabilitySwitchboardPage: React.FC = () => {
                 };
               });
 
+              const activeCount = toolDetails.filter((td) => td.active).length;
+              const totalCount = toolDetails.length;
+
               return (
                 <div
                   key={toolSet.id}
                   className={`p-5 rounded-2xl border transition-all duration-200 flex flex-col justify-between ${
                     isFullyActive
                       ? 'bg-white border-indigo-300 shadow-md ring-1 ring-indigo-500/20'
+                      : activeCount > 0
+                      ? 'bg-white border-amber-200 shadow-xs ring-1 ring-amber-500/10'
                       : 'bg-slate-50/70 border-slate-200 hover:border-slate-300'
                   }`}
                 >
@@ -439,6 +539,8 @@ export const CapabilitySwitchboardPage: React.FC = () => {
                           className={`p-2.5 rounded-xl ${
                             isFullyActive
                               ? 'bg-indigo-600 text-white'
+                              : activeCount > 0
+                              ? 'bg-amber-500 text-white'
                               : 'bg-slate-200/80 text-slate-600'
                           }`}
                         >
@@ -489,7 +591,12 @@ export const CapabilitySwitchboardPage: React.FC = () => {
 
                     {/* 하위 포함 도구 태그 칩 */}
                     <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-semibold text-slate-400">포함 도구:</span>
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                        <span>포함 도구:</span>
+                        <span className={activeCount > 0 ? 'text-indigo-600 font-bold' : ''}>
+                          {activeCount}/{totalCount} 활성화
+                        </span>
+                      </div>
                       <div className="flex flex-wrap gap-1.5">
                         {toolDetails.map((td) => (
                           <span
@@ -512,19 +619,52 @@ export const CapabilitySwitchboardPage: React.FC = () => {
                   <div className="pt-3 border-t border-slate-100 mt-4 flex items-center justify-between text-xs">
                     <span
                       className={`font-bold flex items-center gap-1 ${
-                        isFullyActive ? 'text-indigo-600' : 'text-slate-400'
+                        isFullyActive
+                          ? 'text-indigo-600'
+                          : activeCount > 0
+                          ? 'text-amber-600'
+                          : 'text-slate-400'
                       }`}
                     >
-                      {isFullyActive ? '● 매장에 적용 중' : '○ 미사용'}
+                      {isFullyActive
+                        ? '● 매장 전체 적용 중'
+                        : activeCount > 0
+                        ? `◐ 일부 사용 중 (${activeCount}/${totalCount})`
+                        : '○ 미사용'}
                     </span>
                     <span className="text-[11px] text-slate-400 font-medium">
-                      {isFullyActive ? '좌측 메뉴 즉시 사용 가능' : '스위치를 켜면 즉시 준비됨'}
+                      {isFullyActive
+                        ? '좌측 메뉴 즉시 사용 가능'
+                        : activeCount > 0
+                        ? '스위치로 세트 완성'
+                        : '스위치를 켜면 즉시 준비됨'}
                     </span>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* 검색 결과가 없을 때의 Empty State */}
+          {displayedToolSets.length === 0 && (
+            <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-8 shadow-xs">
+              <Search className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+              <p className="font-bold text-slate-700">일치하는 맞춤 도구 세트가 없습니다</p>
+              <p className="text-xs text-slate-400 mt-1">
+                '{searchQuery}'에 해당하는 세트가 없습니다. 검색어를 변경하거나 추천 필터를 해제해보세요.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setShowRecommendedOnly(false);
+                }}
+                className="mt-4 px-3.5 py-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+              >
+                검색 조건 초기화
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -547,7 +687,7 @@ export const CapabilitySwitchboardPage: React.FC = () => {
               >
                 전체 보기 ({manifestMap.size}개)
               </button>
-              {CATEGORY_GROUPS.map((cat) => (
+              {dynamicCategoryGroups.map((cat) => (
                 <button
                   key={cat.id}
                   type="button"
@@ -577,7 +717,7 @@ export const CapabilitySwitchboardPage: React.FC = () => {
 
           {/* 카테고리별 그리드 표출 */}
           <div className="space-y-8">
-            {CATEGORY_GROUPS.filter(
+            {dynamicCategoryGroups.filter(
               (cat) => selectedCategory === 'ALL' || selectedCategory === cat.id
             ).map((group) => {
               const filteredCaps = group.capabilityIds.filter((capId) => {

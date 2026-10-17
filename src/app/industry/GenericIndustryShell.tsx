@@ -517,7 +517,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
     if (extendedItems.length > 0) {
       sections.push({
-        title: '확장 업무 (준비 중)',
+        title: '맞춤 운영 도구',
         items: extendedItems,
       });
     }
