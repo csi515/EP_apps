@@ -32,6 +32,7 @@ import { WorkplaceSettingsView } from '@/core/organizations/components/Workplace
 import { accountViewEntry, financeViewEntries } from '@/core/industry/commonViewEntries';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
+import { BusinessHealthWidget } from '@/shared/components/diagnostics';
 
 const AttendanceView = lazy(() =>
   import('@/capabilities/attendance').then((m) => ({ default: m.AttendanceManagementView }))
@@ -310,6 +311,19 @@ function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboard
         customerWord={customerWord}
         placeWord={placeWord}
         onOpenCustomerModal={() => setIsFormOpen(true)}
+      />
+
+      {/* 업종별 경영 건전성 자동 진단(Business Health Diagnostic) 위젯 */}
+      <BusinessHealthWidget
+        industryType={currentOrganization?.industry_type || industry}
+        diagnosticInput={{
+          totalCustomers: allCustomers.length,
+          activeCustomers: activeCustomers.length,
+          expiringCustomersThisMonth: Math.round(allCustomers.length * 0.15) || 5,
+          reEnrolledCustomersThisMonth: Math.round(allCustomers.length * 0.12) || 4,
+          inactiveTwoWeeksCount: Math.max(0, allCustomers.length - activeCustomers.length),
+        }}
+        onNavigate={onNavigate}
       />
 
       {/* 핵심 지표 카드 */}

@@ -61,6 +61,8 @@
     "test:domain-event-bus": "tsx src/core/events/domainEventBus.test.ts",
     "test:capability-listener": "tsx src/capabilities/passes/listeners/passAttendanceListener.test.ts",
     "test:schema-form": "tsx src/shared/components/schema-form/AutoSchemaForm.test.ts",
+    "test:business-health": "tsx src/core/diagnostics/businessHealthEngine.test.ts",
+    "test:role-matrix": "tsx src/core/authorization/roleMatrix.test.ts",
     "test:handover-engine": "tsx src/capabilities/feedbacks/domain/handoverEngine.test.ts",
     "test:pass-holding": "tsx src/capabilities/passes/domain/passHoldingEngine.test.ts",
     "test:trial-funnel": "tsx src/capabilities/trial_funnel/domain/trialFunnelEngine.test.ts",

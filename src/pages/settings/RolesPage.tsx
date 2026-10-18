@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useTable, useDelete, CanAccess } from "@refinedev/core";
+import React, { useState, useMemo } from "react";
+import { useTable, useDelete, useCreate, CanAccess } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import {
   Shield,
@@ -12,9 +12,11 @@ import {
   QrCode,
   Users,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { StaffInviteQrModal } from "@/components/staff/StaffInviteQrModal";
+import { getZeroConfigRoleTemplates } from "@/core/authorization/roleMatrix";
 
 export interface TenantRoleRecord {
   id: string;
@@ -106,6 +108,16 @@ export const RolesPage: React.FC = () => {
   const [editingRole, setEditingRole] = useState<TenantRoleRecord | null>(null);
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [isAutoProvisioning, setIsAutoProvisioning] = useState(false);
+
+  // 업종별 표준 4대 직급 템플릿
+  const roleTemplates = useMemo(
+    () => getZeroConfigRoleTemplates(currentOrganization?.industry_type),
+    [currentOrganization?.industry_type]
+  );
+
+  // Refine useCreate for batch/single role creation
+  const { mutateAsync: createRoleAsync } = useCreate();
 
   // Refine useTable for tenant_roles
   const {
@@ -130,6 +142,41 @@ export const RolesPage: React.FC = () => {
 
   const roles = tableQuery?.data?.data || [];
   const isLoading = tableQuery?.isLoading;
+
+  const handleAutoProvisionRoles = async () => {
+    if (!currentOrganization?.id) return;
+    if (
+      !window.confirm(
+        "현재 업종에 맞춘 표준 4대 직급(대표, 실장, 전담강사/담당자, 데스크/알바)을 일괄 자동 생성하시겠습니까?"
+      )
+    ) {
+      return;
+    }
+
+    setIsAutoProvisioning(true);
+    try {
+      for (const tpl of roleTemplates) {
+        if (roles.some((r) => r.name.toLowerCase() === tpl.name.toLowerCase())) {
+          continue;
+        }
+        await createRoleAsync({
+          resource: "tenant_roles",
+          values: {
+            tenant_id: currentOrganization.id,
+            name: tpl.name,
+            rank_order: tpl.rank_order,
+            permissions: tpl.permissions,
+          },
+          meta: { schema: "core" },
+        });
+      }
+      tableQuery.refetch();
+    } catch (err: any) {
+      alert("직급 일괄 생성 중 오류가 발생했습니다: " + (err?.message || ""));
+    } finally {
+      setIsAutoProvisioning(false);
+    }
+  };
 
   // Refine useForm for Role Create/Edit Modal
   const {
@@ -259,7 +306,17 @@ export const RolesPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleAutoProvisionRoles}
+            disabled={isAutoProvisioning}
+            className="h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors disabled:opacity-50"
+          >
+            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <span>{isAutoProvisioning ? "직급 세팅 중..." : "표준 직급 자동 완성"}</span>
+          </button>
+
           <CanAccess resource="tenant_roles" action="invite" fallback={null}>
             <button
               type="button"
@@ -297,12 +354,23 @@ export const RolesPage: React.FC = () => {
         {isLoading ? (
           <div className="p-16 text-center text-slate-400">직급 목록을 불러오는 중...</div>
         ) : roles.length === 0 ? (
-          <div className="p-16 text-center text-slate-500">
-            <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-slate-700">등록된 커스텀 직급이 없습니다.</p>
-            <p className="text-xs text-slate-400 mt-1">
-              [직급 신규 추가] 버튼을 눌러 점장, 알바, 강사 등의 직급을 등록하세요.
-            </p>
+          <div className="p-16 text-center text-slate-500 space-y-4">
+            <Users className="w-12 h-12 text-slate-300 mx-auto" />
+            <div className="space-y-1">
+              <p className="text-base font-bold text-slate-800">등록된 매장 직급이 없습니다.</p>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                일일이 권한 체크박스를 켜지 않아도, 버튼 1번으로 우리 업종에 꼭 맞는 4대 직급이 안전한 권한과 함께 자동 완성됩니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAutoProvisionRoles}
+              disabled={isAutoProvisioning}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 shadow-sm transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              <span>우리 업종 표준 4대 직급 1초 자동 세팅</span>
+            </button>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -391,6 +459,35 @@ export const RolesPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmit(onSubmitRole)} className="p-6 space-y-6">
+              {/* 우리 업종 추천 직급 프리셋 원클릭 자동완성 */}
+              <div className="space-y-2 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900">
+                  <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>우리 업종 추천 직급 (클릭 시 직급명 및 안전 권한 자동 완성)</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {roleTemplates.map((tpl) => (
+                    <button
+                      key={tpl.code}
+                      type="button"
+                      onClick={() => {
+                        reset({
+                          name: tpl.name,
+                          rank_order: tpl.rank_order,
+                        });
+                        setSelectedPermissions(tpl.permissions);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-100/80 text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1.5"
+                    >
+                      <span>{tpl.name}</span>
+                      <span className="text-[10px] text-indigo-400 font-normal">
+                        ({tpl.permissions.length}개 권한)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* 기본 정보 */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
