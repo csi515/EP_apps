@@ -234,6 +234,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:switchboard-store': 'settings store & toolset toggle unit',
   'test:domain-event-bus': 'core in-app domain event bus unit & fault-boundary test',
   'test:capability-listener': 'capability decoupled event listeners integration test',
+  'test:schema-form': 'dynamic schema form builder and all capability setup schema compatibility unit',
   'test:handover-engine': 'handover and feedbacks domain engine unit',
   'test:pass-holding': 'pass holding & family pool sharing domain engine unit',
   'test:trial-funnel': 'trial lead funnel and conversion domain engine unit',

@@ -19,3 +19,4 @@ export { PrintReceipt, type ReceiptProps, type ReceiptItem } from './receipt/Pri
 export { VirtualList, type VirtualListProps } from './virtual/VirtualList';
 export * from './ui';
 export * from './calendar';
+export * from './schema-form';
