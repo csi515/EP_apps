@@ -56,6 +56,363 @@ export type LearningReportStatus = 'draft' | 'published' | 'archived';
 export interface Database {
   core: {
     Tables: {
+      promotional_deals: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          title: string;
+          target_type: 'PASS' | 'RETAIL';
+          target_id: string;
+          original_price: number;
+          special_price: number;
+          start_at: string;
+          end_at: string;
+          limited_quantity: number | null;
+          sold_quantity: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          title: string;
+          target_type: 'PASS' | 'RETAIL';
+          target_id: string;
+          original_price: number;
+          special_price: number;
+          start_at: string;
+          end_at: string;
+          limited_quantity?: number | null;
+          sold_quantity?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          title?: string;
+          target_type?: 'PASS' | 'RETAIL';
+          target_id?: string;
+          original_price?: number;
+          special_price?: number;
+          start_at?: string;
+          end_at?: string;
+          limited_quantity?: number | null;
+          sold_quantity?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "promotional_deals_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      bookable_resource_reservations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          resource_id: string;
+          customer_id: string | null;
+          requested_by: string | null;
+          time_slot: string;
+          status: 'requested' | 'confirmed' | 'cancelled' | 'completed';
+          memo: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          resource_id: string;
+          customer_id?: string | null;
+          requested_by?: string | null;
+          time_slot: string;
+          status?: 'requested' | 'confirmed' | 'cancelled' | 'completed';
+          memo?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          resource_id?: string;
+          customer_id?: string | null;
+          requested_by?: string | null;
+          time_slot?: string;
+          status?: 'requested' | 'confirmed' | 'cancelled' | 'completed';
+          memo?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "bookable_resource_reservations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      fsm_transition_logs: {
+        Row: {
+          id: string;
+          organization_id: string;
+          domain: string;
+          entity_id: string;
+          from_state: string;
+          to_state: string;
+          actor_id: string | null;
+          actor_role: string | null;
+          reason: string | null;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          domain: string;
+          entity_id: string;
+          from_state: string;
+          to_state: string;
+          actor_id?: string | null;
+          actor_role?: string | null;
+          reason?: string | null;
+          payload?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          domain?: string;
+          entity_id?: string;
+          from_state?: string;
+          to_state?: string;
+          actor_id?: string | null;
+          actor_role?: string | null;
+          reason?: string | null;
+          payload?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fsm_transition_logs_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      resource_reservations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          resource_id: string;
+          customer_id: string | null;
+          requested_by: string | null;
+          time_slot: string;
+          status: string;
+          memo: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          resource_id: string;
+          customer_id?: string | null;
+          requested_by?: string | null;
+          time_slot: string;
+          status?: string;
+          memo?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          resource_id?: string;
+          customer_id?: string | null;
+          requested_by?: string | null;
+          time_slot?: string;
+          status?: string;
+          memo?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "resource_reservations_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "resource_reservations_resource_id_fkey";
+            columns: ["resource_id"];
+            isOneToOne: false;
+            referencedRelation: "bookable_resources";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      financial_ledgers: {
+        Row: {
+          id: string;
+          organization_id: string;
+          account_type: string;
+          reference_entity_type: string;
+          reference_entity_id: string;
+          entry_type: 'DEBIT' | 'CREDIT';
+          amount: number;
+          balance_after: number;
+          description: string;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          account_type: string;
+          reference_entity_type: string;
+          reference_entity_id: string;
+          entry_type: 'DEBIT' | 'CREDIT';
+          amount: number;
+          balance_after: number;
+          description: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          account_type?: string;
+          reference_entity_type?: string;
+          reference_entity_id?: string;
+          entry_type?: 'DEBIT' | 'CREDIT';
+          amount?: number;
+          balance_after?: number;
+          description?: string;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "financial_ledgers_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      activities: {
+        Row: {
+          id: string;
+          organization_id: string;
+          actor_id: string | null;
+          actor_name: string;
+          target_type: string;
+          target_id: string;
+          activity_type: string;
+          title: string;
+          content: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          actor_id?: string | null;
+          actor_name: string;
+          target_type: string;
+          target_id: string;
+          activity_type: string;
+          title: string;
+          content?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          actor_id?: string | null;
+          actor_name?: string;
+          target_type?: string;
+          target_id?: string;
+          activity_type?: string;
+          title?: string;
+          content?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activities_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      generic_entity_records: {
+        Row: {
+          id: string;
+          organization_id: string;
+          entity_type: string;
+          reference_id: string | null;
+          record_key: string | null;
+          payload: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          entity_type: string;
+          reference_id?: string | null;
+          record_key?: string | null;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          organization_id?: string;
+          entity_type?: string;
+          reference_id?: string | null;
+          record_key?: string | null;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "generic_entity_records_organization_id_fkey";
+            columns: ["organization_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       organizations: {
         Row: {
           id: string;

@@ -204,3 +204,90 @@ export function summarizePayrollBatch(
 export function formatKoreanWon(amount: number): string {
   return `${amount.toLocaleString('ko-KR')}원`;
 }
+
+/**
+ * ============================================================================
+ * [문화센터/평생교육원] 강좌별 수강료 매출 배분비율(RS %) 및 원천징수 정산
+ * ============================================================================
+ */
+
+export interface CourseRevenueShareItem {
+  courseId: string;
+  courseName: string;
+  instructorId: string;
+  instructorName: string;
+  totalEnrolled: number;
+  tuitionFeePerPerson: number;
+  totalGrossSales: number;
+  instructorShareRate: number; // e.g. 0.50
+  totalMaterialCostDeduction: number;
+  totalCardFeeDeduction: number;
+  netRevenueToShare: number;
+  instructorGrossPay: number;
+  centerGrossShare: number;
+  incomeTax: number;
+  localIncomeTax: number;
+  totalWithholdingTax: number;
+  instructorNetPayout: number;
+}
+
+export function calculateCourseRevenueShare(input: {
+  courseId: string;
+  courseName: string;
+  instructorId: string;
+  instructorName: string;
+  totalEnrolled: number;
+  tuitionFeePerPerson: number;
+  instructorShareRate: number; // e.g. 0.50 (50%)
+  materialCostPerPerson?: number;
+  cardFeeRate?: number; // e.g. 0.03 (3%)
+  withholdingTax?: boolean; // default true (3.3%)
+}): CourseRevenueShareItem {
+  const totalGrossSales = input.totalEnrolled * input.tuitionFeePerPerson;
+  const totalMaterialCostDeduction = input.totalEnrolled * (input.materialCostPerPerson || 0);
+
+  // 카드 수수료 공제: 매출액의 3% (설정된 경우)
+  const cardFeeRate = input.cardFeeRate !== undefined ? input.cardFeeRate : 0.03;
+  const totalCardFeeDeduction = Math.round(totalGrossSales * cardFeeRate);
+
+  // 배분 대상 순매출 = 총매출 - 재료비 - 카드수수료
+  const netRevenueToShare = Math.max(
+    0,
+    totalGrossSales - totalMaterialCostDeduction - totalCardFeeDeduction
+  );
+
+  // 강사 배분액 (세전)
+  const instructorGrossPay = Math.round(netRevenueToShare * input.instructorShareRate);
+  // 센터 귀속분
+  const centerGrossShare = Math.max(0, netRevenueToShare - instructorGrossPay);
+
+  // 3.3% 사업소득 원천징수
+  const applyTax = input.withholdingTax !== false;
+  const incomeTax = applyTax ? Math.round(instructorGrossPay * 0.03) : 0;
+  const localIncomeTax = applyTax ? Math.round(instructorGrossPay * 0.003) : 0;
+  const totalWithholdingTax = incomeTax + localIncomeTax;
+
+  // 강사 실수령액
+  const instructorNetPayout = Math.max(0, instructorGrossPay - totalWithholdingTax);
+
+  return {
+    courseId: input.courseId,
+    courseName: input.courseName,
+    instructorId: input.instructorId,
+    instructorName: input.instructorName,
+    totalEnrolled: input.totalEnrolled,
+    tuitionFeePerPerson: input.tuitionFeePerPerson,
+    totalGrossSales,
+    instructorShareRate: input.instructorShareRate,
+    totalMaterialCostDeduction,
+    totalCardFeeDeduction,
+    netRevenueToShare,
+    instructorGrossPay,
+    centerGrossShare,
+    incomeTax,
+    localIncomeTax,
+    totalWithholdingTax,
+    instructorNetPayout,
+  };
+}
+

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {
   transitionTaskPipelineStage,
   evaluateStageSla,
+  calculateStaffWorkload,
+  detectStageBottlenecks,
   type TaskOrder,
 } from './taskPipelineEngine';
 
@@ -73,6 +75,92 @@ function run() {
   const resume = transitionTaskPipelineStage(partsWait.updatedOrder, 'IN_PROGRESS', '2026-06-01T14:00:00Z');
   assert.equal(resume.success, true);
   assert.equal(resume.updatedOrder.currentStage, 'IN_PROGRESS');
+
+  // 7. 팀원별 업무 부하(Workload Clumping) 산출 및 경고 판정 검증
+  const sampleTasks: TaskOrder[] = [
+    {
+      id: 't-1',
+      orderNumber: 'RO-1',
+      title: '과업 1',
+      currentStage: 'IN_PROGRESS',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-alpha',
+      assignedStaffName: '알파 엔지니어',
+      slaHours: 24,
+    },
+    {
+      id: 't-2',
+      orderNumber: 'RO-2',
+      title: '과업 2',
+      currentStage: 'PARTS_WAITING',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-alpha',
+      assignedStaffName: '알파 엔지니어',
+      slaHours: 24,
+    },
+    {
+      id: 't-3',
+      orderNumber: 'RO-3',
+      title: '과업 3',
+      currentStage: 'IN_PROGRESS',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-alpha',
+      assignedStaffName: '알파 엔지니어',
+      slaHours: 24,
+    },
+    {
+      id: 't-4',
+      orderNumber: 'RO-4',
+      title: '과업 4',
+      currentStage: 'INSPECTION',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-alpha',
+      assignedStaffName: '알파 엔지니어',
+      slaHours: 24,
+    },
+    {
+      id: 't-5',
+      orderNumber: 'RO-5',
+      title: '과업 5',
+      currentStage: 'IN_PROGRESS',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-alpha',
+      assignedStaffName: '알파 엔지니어',
+      slaHours: 24,
+    },
+    {
+      id: 't-6',
+      orderNumber: 'RO-6',
+      title: '과업 6',
+      currentStage: 'IN_PROGRESS',
+      stageEnteredAt: '2026-06-01T09:00:00Z',
+      assignedStaffId: 'staff-beta',
+      assignedStaffName: '베타 엔지니어',
+      slaHours: 24,
+    },
+  ];
+
+  const workloads = calculateStaffWorkload(
+    sampleTasks,
+    4,
+    5,
+    '2026-06-01T12:00:00Z' // 시작 3시간 후 (SLA 정상 범위)
+  );
+  assert.equal(workloads.length, 2);
+
+  const alphaWorkload = workloads.find((w) => w.staffId === 'staff-alpha')!;
+  assert.equal(alphaWorkload.activeTaskCount, 5);
+  assert.equal(alphaWorkload.alertLevel, 'CRITICAL', '5건 이상 할당 시 CRITICAL 판정');
+
+  const betaWorkload = workloads.find((w) => w.staffId === 'staff-beta')!;
+  assert.equal(betaWorkload.activeTaskCount, 1);
+  assert.equal(betaWorkload.alertLevel, 'NORMAL', '1건 할당 시 NORMAL 판정');
+
+  // 8. 공정 병목(Bottleneck) 감지 검증
+  const bottlenecks = detectStageBottlenecks(sampleTasks, '2026-06-01T15:00:00Z');
+  const inProgressBottleneck = bottlenecks.find((b) => b.stage === 'IN_PROGRESS')!;
+  assert.equal(inProgressBottleneck.activeTaskCount, 4);
+  assert.equal(inProgressBottleneck.isBottleneck, true, '가장 태스크가 몰린 IN_PROGRESS 단계가 병목이어야 함');
 
   console.log('taskPipelineEngine.test.ts: ok');
 }

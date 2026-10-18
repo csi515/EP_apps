@@ -1,6 +1,20 @@
+import { createStateMachine } from '@/core/fsm/finiteStateMachine';
+
 export type ApprovalStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'canceled';
 export type StepStatus = 'waiting' | 'pending' | 'approved' | 'rejected' | 'skipped';
 export type StepType = 'review' | 'approval' | 'consensus';
+
+export const approvalFSM = createStateMachine<ApprovalStatus, 'SUBMIT' | 'APPROVE' | 'REJECT' | 'CANCEL'>({
+  domain: 'approval_workflow',
+  initialState: 'draft',
+  finalStates: ['approved', 'rejected', 'canceled'],
+  transitions: [
+    { from: 'draft', to: 'pending', event: 'SUBMIT' },
+    { from: 'pending', to: 'approved', event: 'APPROVE', allowedRoles: ['owner', 'admin', 'manager'] },
+    { from: 'pending', to: 'rejected', event: 'REJECT', allowedRoles: ['owner', 'admin', 'manager'] },
+    { from: 'pending', to: 'canceled', event: 'CANCEL' },
+  ],
+});
 
 export interface ApprovalStep {
   id: string;

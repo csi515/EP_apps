@@ -159,3 +159,9 @@ export function mergeCustomFieldValues(
     ...customValues,
   };
 }
+
+// 전사 Dynamic Entity Engine에 고객 커스텀 필드 자동 등록
+import { registerEntityCustomFields } from '../fields/dynamicFieldEngine';
+for (const [ind, fields] of Object.entries(INDUSTRY_CUSTOM_FIELDS)) {
+  registerEntityCustomFields('customer', ind, fields);
+}

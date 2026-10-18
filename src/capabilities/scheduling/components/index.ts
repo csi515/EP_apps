@@ -3,3 +3,4 @@ export { ClassScheduleHubView } from './schedule/ClassScheduleHubView';
 export { WeeklyTimetableView } from './timetable/WeeklyTimetableView';
 export { TimetableDayTimeline } from './timetable/TimetableDayTimeline';
 export type { TimetableDayClassRow } from './timetable/TimetableDayTimeline';
+export { CourseOpenScheduleModal, type CultureCourseSchedule } from './CourseOpenScheduleModal';

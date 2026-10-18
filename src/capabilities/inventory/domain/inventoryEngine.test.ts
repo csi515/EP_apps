@@ -12,8 +12,14 @@ import {
   generatePrintLabelItems,
   formatLabelSheetPages,
   allocateStockLotsFefo,
+  validateStockInLot,
+  evaluateInventoryExpiryStatus,
+  formatPickingLocation,
+  calculateStockAuditDiscrepancy,
+  createStockAuditSlip,
   type InventoryItem,
   type BundleProduct,
+  type StockAuditItem,
 } from './inventoryEngine';
 
 
@@ -261,7 +267,66 @@ function run() {
   assert.equal(fefoRes.allocatedLots[1].lotNumber, 'LOT-2026-A');
   assert.equal(fefoRes.allocatedLots[1].allocatedQuantity, 5);
 
-  console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen, Label Print & FEFO Lot)');
+  // 14. 입고 시 로트 번호 및 유효기간 필수 검증
+  const invalidLot1 = validateStockInLot({
+    lotNumber: '',
+    expiryDate: '2026-12-31',
+    quantity: 10,
+  });
+  assert.equal(invalidLot1.isValid, false);
+  assert.match(invalidLot1.error || '', /로트 번호/);
+
+  const invalidLot2 = validateStockInLot({
+    lotNumber: 'LOT-999',
+    expiryDate: 'invalid-date',
+    quantity: 10,
+  });
+  assert.equal(invalidLot2.isValid, false);
+  assert.match(invalidLot2.error || '', /유효기간/);
+
+  const validLot = validateStockInLot({
+    lotNumber: 'LOT-2026-X1',
+    expiryDate: '2027-01-31',
+    quantity: 50,
+  });
+  assert.equal(validLot.isValid, true);
+
+  // 15. 유효기간 임박/만료 상태 판정 검증
+  const refDate = '2026-10-18';
+  assert.equal(evaluateInventoryExpiryStatus('2026-10-15', refDate), 'EXPIRED'); // 이미 만료
+  assert.equal(evaluateInventoryExpiryStatus('2026-10-18', refDate), 'EXPIRED'); // 당일 만료
+  assert.equal(evaluateInventoryExpiryStatus('2026-10-22', refDate), 'CRITICAL_7_DAYS'); // 4일 남음
+  assert.equal(evaluateInventoryExpiryStatus('2026-11-05', refDate), 'WARNING_30_DAYS'); // 18일 남음
+  assert.equal(evaluateInventoryExpiryStatus('2026-12-31', refDate), 'NORMAL'); // 74일 남음
+
+  // 16. 물리적 랙/빈 위치 및 정기 재고 실사 대사표/감모 전표 생성 검증
+  const locStr = formatPickingLocation({ zoneId: 'ZONE-A', rackNo: 'RACK-02', binNo: 'BIN-08' });
+  assert.equal(locStr, 'ZONE-A / RACK-02 / BIN-08');
+
+  const auditItems: StockAuditItem[] = [
+    { itemId: 'item-1', itemName: '에스프레소 원두', sku: 'COF-01', bookQuantity: 50, actualQuantity: 50, unitPrice: 20000 },
+    { itemId: 'item-2', itemName: '생크림 1L', sku: 'DAIRY-01', bookQuantity: 20, actualQuantity: 15, unitPrice: 8000 }, // 5개 부족 (감모 40,000원)
+    { itemId: 'item-3', itemName: '바닐라 시럽', sku: 'SYR-01', bookQuantity: 10, actualQuantity: 12, unitPrice: 15000 }, // 2개 초과 (잉여 30,000원)
+    { itemId: 'item-4', itemName: '고급 와규 패티', sku: 'MEAT-01', bookQuantity: 30, actualQuantity: 20, unitPrice: 25000 }, // 10개 부족 (감모 250,000원)
+  ];
+
+  const auditAnalysis = calculateStockAuditDiscrepancy(auditItems);
+  assert.equal(auditAnalysis.hasDiscrepancies, true);
+  assert.equal(auditAnalysis.totalShortageAmount, 290000); // 4만 + 25만
+  assert.equal(auditAnalysis.totalSurplusAmount, 30000); // 3만
+  assert.equal(auditAnalysis.netVarianceAmount, -260000);
+
+  // 감모손실 29만 원으로 10만 원 초과 -> 승인 특약 필요(approvalRequired: true)
+  const auditSlip = createStockAuditSlip('AUDIT-2026-Q4', auditAnalysis.discrepancies, '홍길동 점장', {
+    auditDate: '2026-10-18',
+    approvalThreshold: 100000,
+  });
+  assert.equal(auditSlip.approvalRequired, true);
+  assert.equal(auditSlip.totalShortageAmount, 290000);
+  assert.equal(auditSlip.status, 'DRAFT');
+  assert.match(auditSlip.slipNumber, /AUDIT-SLIP-20261018/);
+
+  console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen, Label Print, FEFO Lot, Expiry & Stock Audit)');
 }
 
 run();

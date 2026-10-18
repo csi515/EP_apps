@@ -17,6 +17,9 @@ export {
   isOrgOwner,
   isParentRole,
   isStaffRole,
+  isDriverRole,
+  isWorkerRole,
+  isSuperAdminRole,
   resolveRoleAccessKind,
 } from './permissionsRole';
 export type { RoleAccessKind } from './permissionsRole';

@@ -1,5 +1,5 @@
-import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useGenericEntityRecords } from '@/core/storage/useGenericEntityRecords';
 import {
   UtensilsCrossed,
   Layers,
@@ -18,11 +18,12 @@ import { showToast } from '@/shared/feedback/uiFeedback';
 import {
   calculateMenuCost,
   calculateBatchConsumption,
+  executeBomStockDeduction,
+  recalculateRecipeCostWithUpdatedIngredientPrice,
   type RecipeItem,
   type RecipeIngredient,
+  type CostSimulationResult,
 } from '../domain/recipeBomEngine';
-
-const STORAGE_KEY_RECIPES = 'moa_recipe_bom_items';
 
 const DEFAULT_RECIPES: RecipeItem[] = [
   {
@@ -59,34 +60,41 @@ const DEFAULT_RECIPES: RecipeItem[] = [
   {
     id: 'rec-2',
     menuCode: 'BEV-002',
-    menuName: '아이스 아메리카노 (클래식)',
-    category: 'coffee',
-    sellingPrice: 4500,
-    preparationMinutes: 2,
+    menuName: '제주 유기농 말차 플랫화이트',
+    category: 'beverage',
+    sellingPrice: 6200,
+    preparationMinutes: 4,
     ingredients: [
+      {
+        inventoryItemId: 'ing-4',
+        ingredientName: '제주 유기농 말차 파우더',
+        requiredQuantity: 15,
+        unit: 'g',
+        costPerUnit: 55,
+      },
+      {
+        inventoryItemId: 'ing-2',
+        ingredientName: '신선 1등급 우유',
+        requiredQuantity: 160,
+        unit: 'ml',
+        costPerUnit: 2.4,
+      },
       {
         inventoryItemId: 'ing-1',
         ingredientName: '스페셜티 에스프레소 원두',
-        requiredQuantity: 18,
+        requiredQuantity: 9,
         unit: 'g',
         costPerUnit: 25,
-      },
-      {
-        inventoryItemId: 'ing-4',
-        ingredientName: '테이크아웃 친환경 컵&리드',
-        requiredQuantity: 1,
-        unit: 'piece',
-        costPerUnit: 120,
       },
     ],
   },
   {
     id: 'rec-3',
-    menuCode: 'FOOD-001',
-    menuName: '바질 토마토 파니니 샌드위치',
+    menuCode: 'BAK-001',
+    menuName: '바질 토마토 치아바타 샌드위치',
     category: 'food',
-    sellingPrice: 8500,
-    preparationMinutes: 8,
+    sellingPrice: 7500,
+    preparationMinutes: 6,
     ingredients: [
       {
         inventoryItemId: 'ing-5',
@@ -114,51 +122,104 @@ const DEFAULT_RECIPES: RecipeItem[] = [
 ];
 
 export const RecipeBomManagementView: React.FC = () => {
-  const [recipes, setRecipes] = useState<RecipeItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_RECIPES));
-      return saved ? JSON.parse(saved) : DEFAULT_RECIPES;
-    } catch {
-      return DEFAULT_RECIPES;
-    }
+  const { records: recipes, isLoading } = useGenericEntityRecords<RecipeItem>({
+    entityType: 'recipe_bom',
+    defaultRecords: DEFAULT_RECIPES,
+    idExtractor: (r) => r.id,
+    recordKeyExtractor: (r) => r.menuCode,
   });
 
   const [selectedRecipeId, setSelectedRecipeId] = useState<string>(DEFAULT_RECIPES[0].id);
   const [searchQuery, setSearchQuery] = useState('');
   const [simulatedQuantity, setSimulatedQuantity] = useState<number>(10);
+  const [targetMarginRatio, setTargetMarginRatio] = useState<number>(75);
+  const [updatedPrices, setUpdatedPrices] = useState<Record<string, number>>({});
+  const [stockLevels, setStockLevels] = useState<Record<string, number>>({
+    'ing-1': 500, // 원두 500g
+    'ing-2': 3000, // 우유 3000ml
+    'ing-3': 400, // 시럽 400ml
+    'ing-4': 200, // 말차 200g
+    'ing-5': 15, // 빵 15개
+    'ing-6': 800, // 치즈 800g
+    'ing-7': 300, // 페스토 300g
+  });
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RECIPES), JSON.stringify(recipes));
-    } catch {}
-  }, [recipes]);
-
-  const selectedRecipe = recipes.find((r) => r.id === selectedRecipeId) || recipes[0];
+  const selectedRecipe = recipes.find((r) => r.id === selectedRecipeId) || recipes[0] || DEFAULT_RECIPES[0];
   const selectedCost = useMemo(() => calculateMenuCost(selectedRecipe), [selectedRecipe]);
+
+  // 원자재 단가 변동 시뮬레이션
+  const priceSimulation = useMemo(() => {
+    return recalculateRecipeCostWithUpdatedIngredientPrice(
+      selectedRecipe,
+      updatedPrices,
+      targetMarginRatio
+    );
+  }, [selectedRecipe, updatedPrices, targetMarginRatio]);
+
+  // BOM 자동 소모 및 재고 부족 검증
+  const bomDeduction = useMemo(() => {
+    return executeBomStockDeduction({
+      orders: [{ recipeId: selectedRecipe.id, quantity: simulatedQuantity }],
+      recipes: recipes.length > 0 ? recipes : DEFAULT_RECIPES,
+      stockLevels,
+    });
+  }, [selectedRecipe, simulatedQuantity, recipes, stockLevels]);
+
+  const handlePriceChange = (itemId: string, newPrice: number) => {
+    setUpdatedPrices((prev) => ({
+      ...prev,
+      [itemId]: newPrice,
+    }));
+  };
+
+  const handleResetPrices = () => {
+    setUpdatedPrices({});
+    showToast('원자재 매입단가를 기본값으로 초기화했습니다.', 'info');
+  };
+
+  const handleExecuteDeduction = () => {
+    if (bomDeduction.hasShortage) {
+      showToast('일부 원자재의 재고가 부족합니다. 안전재고를 확인하세요.', 'warning');
+    }
+    // 재고 반영
+    setStockLevels((prev) => {
+      const next = { ...prev };
+      for (const item of bomDeduction.items) {
+        next[item.inventoryItemId] = item.remainingStock;
+      }
+      return next;
+    });
+    showToast(
+      `[BOM 자동 소모] ${selectedRecipe.menuName} ${simulatedQuantity}건 원자재 재고가 일괄 차감되었습니다.`,
+      'success'
+    );
+  };
 
   const simulationResult = useMemo(() => {
     return calculateBatchConsumption(
       [{ recipeId: selectedRecipe.id, quantity: simulatedQuantity }],
-      recipes
+      recipes.length > 0 ? recipes : DEFAULT_RECIPES
     );
   }, [selectedRecipe, simulatedQuantity, recipes]);
 
   const overallAnalysis = useMemo(() => {
-    const analyses = recipes.map((r) => calculateMenuCost(r));
+    const listToAnalyze = recipes.length > 0 ? recipes : DEFAULT_RECIPES;
+    const analyses = listToAnalyze.map((r) => calculateMenuCost(r));
     const totalCost = analyses.reduce((acc, a) => acc + a.totalCostPrice, 0);
     const totalSales = analyses.reduce((acc, a) => acc + a.sellingPrice, 0);
     const avgMargin =
       totalSales > 0 ? Math.round(((totalSales - totalCost) / totalSales) * 1000) / 10 : 0;
     return {
-      menuCount: recipes.length,
+      menuCount: listToAnalyze.length,
       averageMarginRatio: avgMargin,
     };
   }, [recipes]);
 
   const filteredRecipes = useMemo(() => {
-    if (!searchQuery.trim()) return recipes;
+    const sourceList = recipes.length > 0 ? recipes : DEFAULT_RECIPES;
+    if (!searchQuery.trim()) return sourceList;
     const q = searchQuery.toLowerCase();
-    return recipes.filter(
+    return sourceList.filter(
       (r) => r.menuName.toLowerCase().includes(q) || r.menuCode.toLowerCase().includes(q)
     );
   }, [recipes, searchQuery]);
@@ -308,7 +369,13 @@ export const RecipeBomManagementView: React.FC = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {selectedRecipe.ingredients.map((ing) => {
-                      const ingCost = Math.round(ing.requiredQuantity * ing.costPerUnit);
+                      const currentUnitPrice =
+                        updatedPrices[ing.inventoryItemId] !== undefined
+                          ? updatedPrices[ing.inventoryItemId]
+                          : ing.costPerUnit;
+                      const ingCost = Math.round(ing.requiredQuantity * currentUnitPrice);
+                      const isPriceChanged = updatedPrices[ing.inventoryItemId] !== undefined;
+
                       return (
                         <tr key={ing.inventoryItemId} className="hover:bg-gray-50">
                           <td className="py-2.5 px-3 font-medium text-gray-900">
@@ -318,7 +385,22 @@ export const RecipeBomManagementView: React.FC = () => {
                             {ing.requiredQuantity} {ing.unit}
                           </td>
                           <td className="py-2.5 px-3 text-right text-gray-500">
-                            {ing.costPerUnit}원/{ing.unit}
+                            <div className="inline-flex items-center gap-1">
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={currentUnitPrice}
+                                onChange={(e) =>
+                                  handlePriceChange(ing.inventoryItemId, Number(e.target.value) || 0)
+                                }
+                                className={`w-18 px-1.5 py-0.5 text-right font-mono text-xs border rounded ${
+                                  isPriceChanged
+                                    ? 'border-amber-400 bg-amber-50 text-amber-900 font-bold'
+                                    : 'border-gray-200'
+                                }`}
+                              />
+                              <span>원/{ing.unit}</span>
+                            </div>
                           </td>
                           <td className="py-2.5 px-3 text-right font-semibold text-gray-900">
                             {ingCost.toLocaleString()}원
@@ -331,36 +413,136 @@ export const RecipeBomManagementView: React.FC = () => {
               </div>
             </div>
 
-            {/* 주문 시뮬레이터 및 자동 소모 차감량 */}
-            <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-200">
+            {/* 원자재 매입단가 변동 시뮬레이터 & 권장 판매가 제안 카드 */}
+            <div className="p-4 bg-gradient-to-r from-amber-50/80 to-orange-50/80 rounded-xl border border-amber-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>주문 수량별 식자재 자동 소모 시뮬레이션</span>
+                <span className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                  <Percent className="w-4 h-4 text-amber-600" />
+                  <span>원자재 매입단가 변동 및 권장 판매가 시뮬레이터</span>
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">주문량:</span>
+                  <span className="text-[11px] text-amber-700">목표 마진율:</span>
                   <input
                     type="number"
-                    min={1}
-                    max={500}
-                    value={simulatedQuantity}
-                    onChange={(e) => setSimulatedQuantity(Number(e.target.value) || 1)}
-                    className="w-16 px-2 py-1 text-xs border rounded bg-white font-bold text-center"
+                    min="30"
+                    max="95"
+                    value={targetMarginRatio}
+                    onChange={(e) => setTargetMarginRatio(Number(e.target.value) || 75)}
+                    className="w-12 px-1 py-0.5 text-xs text-center border border-amber-300 rounded bg-white font-bold"
                   />
-                  <span className="text-xs text-slate-500">잔 판매 시</span>
+                  <span className="text-[11px] text-amber-700">%</span>
+                  {Object.keys(updatedPrices).length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleResetPrices}
+                      className="ml-2 text-[10px] text-amber-800 underline hover:text-amber-950"
+                    >
+                      단가 초기화
+                    </button>
+                  )}
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100">
+                  <div className="text-[10px] text-gray-500">예상 제조원가</div>
+                  <div className="text-sm font-black text-gray-900">
+                    {priceSimulation.updatedCostPrice.toLocaleString()}원
+                  </div>
+                  <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
+                    {priceSimulation.deltaCost >= 0
+                      ? `+${priceSimulation.deltaCost.toLocaleString()}원 인상`
+                      : `${priceSimulation.deltaCost.toLocaleString()}원 절감`}
+                  </div>
+                </div>
+
+                <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100">
+                  <div className="text-[10px] text-gray-500">예상 마진율</div>
+                  <div className="text-sm font-black text-emerald-700">
+                    {priceSimulation.updatedMarginRatioPercent}%
+                  </div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">
+                    기존 대비 {priceSimulation.deltaMarginRatioPercent >= 0 ? '+' : ''}
+                    {priceSimulation.deltaMarginRatioPercent}%p
+                  </div>
+                </div>
+
+                <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100 col-span-2">
+                  <div className="text-[10px] text-gray-500">
+                    목표 마진율({targetMarginRatio}%) 달성 권장 판매가
+                  </div>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-base font-black text-amber-900">
+                      {priceSimulation.suggestedSellingPrice.toLocaleString()}원
+                    </span>
+                    <span className="text-[10px] text-gray-500">
+                      (현재가 대비 +{(priceSimulation.suggestedSellingPrice - selectedRecipe.sellingPrice).toLocaleString()}원 조정 필요)
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 주문 시뮬레이터 및 자동 소모 차감량 (BOM Explosion) */}
+            <div className="bg-slate-50 p-4 rounded-xl space-y-3 border border-slate-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>주문 수량별 식자재 자동 소모 & 재고 차감 (BOM Explosion)</span>
+                </span>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-slate-500">주문량:</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={500}
+                      value={simulatedQuantity}
+                      onChange={(e) => setSimulatedQuantity(Number(e.target.value) || 1)}
+                      className="w-16 px-2 py-1 text-xs border rounded bg-white font-bold text-center"
+                    />
+                    <span className="text-xs text-slate-500">잔</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExecuteDeduction}
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition"
+                  >
+                    BOM 즉시 재고 차감
+                  </button>
+                </div>
+              </div>
+
+              {bomDeduction.hasShortage && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-800 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>
+                    일부 원자재의 재고가 부족합니다! 주문 제작 전 발주(Supply Restock)가 필요합니다.
+                  </span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {simulationResult.ingredientDeductions.map((d) => (
-                  <div key={d.inventoryItemId} className="bg-white p-2.5 rounded-lg border text-xs">
-                    <div className="text-gray-500 truncate">{d.ingredientName}</div>
-                    <div className="font-bold text-emerald-700 text-sm mt-0.5">
-                      -{d.totalDeductedQuantity.toLocaleString()} {d.unit}
+                {bomDeduction.items.map((item) => (
+                  <div
+                    key={item.inventoryItemId}
+                    className={`p-2.5 rounded-lg border text-xs ${
+                      item.isShortage
+                        ? 'bg-rose-50 border-rose-200 text-rose-900'
+                        : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div className="font-semibold truncate">{item.ingredientName}</div>
+                    <div className="font-black text-emerald-700 text-sm mt-0.5">
+                      소모: -{item.requiredQuantity.toLocaleString()} {item.unit}
                     </div>
-                    <div className="text-gray-400 text-[11px] mt-0.5">
-                      원가 {d.totalCost.toLocaleString()}원
+                    <div className="text-[11px] text-gray-500 mt-0.5 flex justify-between">
+                      <span>잔여재고: {item.remainingStock.toLocaleString()} {item.unit}</span>
+                      {item.isShortage && (
+                        <span className="font-bold text-rose-600">
+                          {item.shortageQuantity} {item.unit} 부족
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}

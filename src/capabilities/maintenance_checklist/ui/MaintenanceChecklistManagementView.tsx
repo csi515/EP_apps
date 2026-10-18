@@ -11,13 +11,19 @@ import {
   ShieldAlert,
   X,
   Sliders,
+  Printer,
+  Wrench,
+  FileCheck2,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   calculateChecklistProgress,
   evaluateChecklistUrgency,
+  evaluateToleranceResult,
+  generateCapaTicketFromInspectionFail,
   type ChecklistItem,
+  type CapaTicketDraft,
 } from '../domain/maintenanceChecklistEngine';
 
 const STORAGE_KEY_CHECKLISTS = 'moa_maintenance_checklist_items';
@@ -44,21 +50,26 @@ const SAMPLE_ITEMS: ChecklistItem[] = [
   },
   {
     id: 'chk-003',
+    title: '식약처 냉장 쇼케이스 보관 온도 (-2℃ ~ 4℃)',
+    isRequired: true,
+    isCompleted: true,
+    numericValue: 6.8, // 공차 이탈 (FAIL)
+    minThreshold: -2.0,
+    maxThreshold: 4.0,
+  },
+  {
+    id: 'chk-004',
     title: '무인 스터디카페 키오스크 영수증 용지 및 카드 리더기 점검',
     isRequired: true,
     isCompleted: false,
   },
   {
-    id: 'chk-004',
-    title: '남/여 탈의실 공용 드라이기 및 빗 청결 상태 확인',
-    isRequired: false,
-    isCompleted: false,
-  },
-  {
     id: 'chk-005',
-    title: '비상구 유도등 점등 및 소화기 압력 게이지 확인',
+    title: '비상구 유도등 점등 및 소화기 압력 게이지 확인 (10 ~ 15 bar)',
     isRequired: true,
     isCompleted: false,
+    minThreshold: 10.0,
+    maxThreshold: 15.0,
   },
 ];
 
@@ -66,6 +77,8 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
   const [localItems, setLocalItems] = useState<ChecklistItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [isHaccpPrintOpen, setIsHaccpPrintOpen] = useState(false);
+  const [selectedCapaTicket, setSelectedCapaTicket] = useState<CapaTicketDraft | null>(null);
   const storageKey = getTenantStorageKey(STORAGE_KEY_CHECKLISTS);
 
   // Refine 데이터 바인딩
@@ -221,6 +234,23 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
     return items.filter((i) => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [items, searchTerm]);
 
+  // CAPA 긴급 정비 티켓 발행 처리
+  const handleTriggerCapa = (item: ChecklistItem) => {
+    const ticket = generateCapaTicketFromInspectionFail(
+      {
+        itemId: item.id,
+        itemTitle: item.title,
+        numericValue: item.numericValue || 0,
+        minAllowed: item.minThreshold,
+        maxAllowed: item.maxThreshold,
+        unit: '℃/bar',
+      },
+      '시설 관리자'
+    );
+    setSelectedCapaTicket(ticket);
+    showToast(`[${ticket.ticketNumber}] 시정조치(CAPA) 긴급 티켓이 발행되었습니다.`, 'warning');
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 pt-2 pb-12">
       {/* 상단 헤더 */}
@@ -228,22 +258,33 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-semibold mb-1.5">
             <ClipboardList className="w-3.5 h-3.5" />
-            <span>시설 안전 및 일일 루틴</span>
+            <span>시설 안전, 공차(Tolerance) 및 CAPA 연계 관제</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">시설 점검 체크리스트</h1>
           <p className="text-xs text-slate-500 mt-1">
-            사우나 수온, 헬스장 방역, 무인 키오스크, 위생·안전 점검 루틴을 실시간 확인합니다.
+            정량 수치 공차 판정, 이상치 발생 시 CAPA 티켓 자동 연계 및 식약처 HACCP 법정 서식 인쇄
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsNewModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>점검 항목 추가</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-colors shadow-xs"
+          >
+            <Printer className="w-4 h-4 text-slate-600" />
+            <span>HACCP/소방 법정 서식 인쇄</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsNewModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>점검 항목 추가</span>
+          </button>
+        </div>
       </div>
 
       {/* 진행률 & 긴급도 지표 카드 */}
@@ -379,36 +420,110 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
               </div>
 
               {/* 수치 입력형 점검 (있을 경우) */}
-              {item.minThreshold !== undefined && item.maxThreshold !== undefined && (
-                <div className="flex items-center gap-2 pl-8 sm:pl-0">
-                  <span className="text-[11px] text-slate-500 font-medium">측정값:</span>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={item.numericValue ?? ''}
-                    onChange={(e) => updateNumericValue(item, parseFloat(e.target.value) || 0)}
-                    placeholder="수치"
-                    className="w-20 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-800 font-bold focus:ring-2 focus:ring-teal-500"
-                  />
-                  <span
-                    className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                      item.numericValue !== undefined &&
-                      (item.numericValue < item.minThreshold || item.numericValue > item.maxThreshold)
-                        ? 'bg-rose-50 text-rose-600'
-                        : 'bg-emerald-50 text-emerald-700'
-                    }`}
-                  >
-                    {item.numericValue !== undefined &&
-                    (item.numericValue < item.minThreshold || item.numericValue > item.maxThreshold)
-                      ? '기준치 벗어남'
-                      : '정상 범위'}
-                  </span>
-                </div>
-              )}
+              {item.minThreshold !== undefined && item.maxThreshold !== undefined && (() => {
+                const tol = item.numericValue !== undefined
+                  ? evaluateToleranceResult({
+                      itemId: item.id,
+                      itemTitle: item.title,
+                      numericValue: item.numericValue,
+                      minAllowed: item.minThreshold,
+                      maxAllowed: item.maxThreshold,
+                      unit: '℃/bar',
+                    })
+                  : null;
+
+                const isFail = tol && !tol.isPassed;
+
+                return (
+                  <div className="flex flex-wrap items-center gap-2 pl-8 sm:pl-0">
+                    <span className="text-[11px] text-slate-500 font-medium">측정값:</span>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={item.numericValue ?? ''}
+                      onChange={(e) => updateNumericValue(item, parseFloat(e.target.value) || 0)}
+                      placeholder="수치"
+                      className="w-20 px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-800 font-bold focus:ring-2 focus:ring-teal-500"
+                    />
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        isFail ? 'bg-rose-100 text-rose-800' : 'bg-emerald-50 text-emerald-700'
+                      }`}
+                    >
+                      {isFail ? `공차 이탈 (FAIL: ${tol.deviation > 0 ? `+${tol.deviation}` : tol.deviation})` : '공차 합격 (PASS)'}
+                    </span>
+
+                    {isFail && (
+                      <button
+                        type="button"
+                        onClick={() => handleTriggerCapa(item)}
+                        className="px-2 py-1 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] inline-flex items-center gap-1 shadow-xs"
+                      >
+                        <Wrench className="w-3 h-3" />
+                        <span>CAPA 티켓 발행</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           ))}
         </div>
       </div>
+
+      {/* CAPA 티켓 확인 모달 */}
+      {selectedCapaTicket && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-rose-100 text-rose-700 rounded-xl">
+                  <ShieldAlert className="w-5 h-5" />
+                </span>
+                <div>
+                  <span className="text-[11px] font-mono font-bold text-rose-600">{selectedCapaTicket.ticketNumber}</span>
+                  <h3 className="text-base font-bold text-slate-900">시정조치(CAPA) 긴급 발행 티켓</h3>
+                </div>
+              </div>
+              <button type="button" onClick={() => setSelectedCapaTicket(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="p-3 bg-slate-50 rounded-xl space-y-1">
+                <span className="text-slate-400 block font-medium">대상 점검 설비</span>
+                <span className="font-bold text-slate-900 block">{selectedCapaTicket.checklistItemTitle}</span>
+                <span className="text-rose-600 font-semibold block">{selectedCapaTicket.failureReason}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2.5 bg-slate-50 rounded-xl">
+                  <span className="text-slate-400 block text-[11px]">우선순위</span>
+                  <span className="font-bold text-rose-700">{selectedCapaTicket.priority}</span>
+                </div>
+                <div className="p-2.5 bg-slate-50 rounded-xl">
+                  <span className="text-slate-400 block text-[11px]">배정 조직</span>
+                  <span className="font-bold text-slate-800">{selectedCapaTicket.assignedTeam}</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-amber-900">
+                <span className="font-bold block mb-1">시정 계획 (CAPA Plan)</span>
+                <p className="text-[11px] leading-relaxed">{selectedCapaTicket.correctiveActionPlan}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedCapaTicket(null)}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl"
+              >
+                확인 및 관제 등록 완료
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 신규 항목 등록 모달 */}
       {isNewModalOpen && (

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { usePermissions } from '@/core/auth/usePermissions';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import { StorageService } from '@/services/storage';
 import type { Booking } from '@/core/types/schedule';
 import type {
@@ -17,10 +18,55 @@ function isStudentInStaffScope(student: Student, staffId: string, myClassIds: Se
   return (student.classIds || []).some((classId) => myClassIds.has(classId));
 }
 
+/** 팀장(manager)은 부서 스코프 격리 대상 */
+export function isDepartmentScoped(role: string | null | undefined): boolean {
+  return role === 'manager';
+}
+
+/** 부서 스코프에 따른 아이템 필터링 (최고 관리자 등은 전체 허용) */
+export function filterByDepartmentScope<T extends { department_id?: string | null }>(
+  items: T[],
+  isScopedToDepartment: boolean,
+  scopedDepartmentId: string | null | undefined
+): T[] {
+  if (!isScopedToDepartment) {
+    return items;
+  }
+  if (!scopedDepartmentId) {
+    return [];
+  }
+  return items.filter((item) => item.department_id === scopedDepartmentId);
+}
+
+/** 팀장의 타 직원 업무 재배정 가능 여부 검사 */
+export function checkCanReassignTask(
+  isScopedToDepartment: boolean,
+  scopedDepartmentId: string | null | undefined,
+  targetStaffDepartmentId?: string | null
+): boolean {
+  // 최고 관리자(super_admin, director, owner)는 전사 재배정 가능
+  if (!isScopedToDepartment) {
+    return true;
+  }
+  // 팀장은 본인 부서 소속인 경우에만 재배정 가능
+  if (!scopedDepartmentId || !targetStaffDepartmentId) {
+    return false;
+  }
+  return scopedDepartmentId === targetStaffDepartmentId;
+}
+
 export interface StaffScopeState {
   isStaff: boolean;
   staffId: string | null | undefined;
   isScoped: boolean;
+
+  // 부서 단위 스코프 격리 (6단계 역할 체계 중 manager 대응)
+  isScopedToDepartment: boolean;
+  scopedDepartmentId: string | null;
+  filterStaffByScope: <T extends { department_id?: string | null }>(items: T[]) => T[];
+  filterRequestsByScope: <T extends { department_id?: string | null }>(items: T[]) => T[];
+  canReassignTask: (targetStaffDepartmentId?: string | null) => boolean;
+
   scopeStudents: (students: Student[]) => Student[];
   scopeClasses: (classes: ClassItem[]) => ClassItem[];
   scopeBookings: (bookings: Booking[], students?: Student[]) => Booking[];
@@ -34,9 +80,33 @@ export interface StaffScopeState {
 }
 
 export function useStaffScope(): StaffScopeState {
-  const { isStaff, staffId } = usePermissions();
+  const { role, isStaff, staffId } = usePermissions();
+  const activeUser = useActiveUser();
 
   const isScoped = isStaff && !!staffId;
+  const isScopedToDepartment = isDepartmentScoped(role);
+  const scopedDepartmentId = activeUser.department_id ?? activeUser.team_id ?? null;
+
+  const filterStaffByScope = useCallback(
+    <T extends { department_id?: string | null }>(items: T[]): T[] => {
+      return filterByDepartmentScope(items, isScopedToDepartment, scopedDepartmentId);
+    },
+    [isScopedToDepartment, scopedDepartmentId]
+  );
+
+  const filterRequestsByScope = useCallback(
+    <T extends { department_id?: string | null }>(items: T[]): T[] => {
+      return filterByDepartmentScope(items, isScopedToDepartment, scopedDepartmentId);
+    },
+    [isScopedToDepartment, scopedDepartmentId]
+  );
+
+  const canReassignTask = useCallback(
+    (targetStaffDepartmentId?: string | null): boolean => {
+      return checkCanReassignTask(isScopedToDepartment, scopedDepartmentId, targetStaffDepartmentId);
+    },
+    [isScopedToDepartment, scopedDepartmentId]
+  );
 
   const myClassIds = useMemo(() => {
     if (!isScoped || !staffId) return new Set<string>();
@@ -159,6 +229,11 @@ export function useStaffScope(): StaffScopeState {
     isStaff,
     staffId,
     isScoped,
+    isScopedToDepartment,
+    scopedDepartmentId,
+    filterStaffByScope,
+    filterRequestsByScope,
+    canReassignTask,
     scopeStudents,
     scopeClasses,
     scopeBookings,

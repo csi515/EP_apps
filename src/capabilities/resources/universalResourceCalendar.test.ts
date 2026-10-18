@@ -212,6 +212,13 @@ function run() {
       vehicle_model: '카니발 9인승',
       fuel_type: '디젤',
       parking_location: '지하 2층 B-04',
+      fuel_card_number: '9410-1234-5678-9999',
+      initial_odometer_km: 42500,
+      inspection_checklist: {
+        exterior_damage_checked: true,
+        fuel_level_percent: 85,
+        cleanliness_checked: true,
+      },
       require_approval: true,
       approver_type: 'staff',
       approver_id: 'driver-01',
@@ -219,19 +226,32 @@ function run() {
     };
     assert.equal(vehicleMeta.category, 'vehicle');
     assert.equal(vehicleMeta.plate_number, '12가 3456');
+    assert.equal(vehicleMeta.fuel_card_number, '9410-1234-5678-9999');
+    assert.equal(vehicleMeta.initial_odometer_km, 42500);
+    assert.equal(vehicleMeta.inspection_checklist?.exterior_damage_checked, true);
 
-    // 4-2) 회의실 (meeting_room) 메타데이터
+    // 4-2) 회의실 및 IT 장비 (meeting_room) 메타데이터
     const meetingRoomMeta: UniversalResourceMetadata = {
       category: 'meeting_room',
       has_projector: true,
       has_video_conference: true,
       max_occupancy: 12,
+      serial_number: 'SN-2026-IT-9821',
+      asset_tag: 'AST-MOA-0042',
+      accessories_checklist: {
+        power_adapter: true,
+        remote_controller: true,
+        hdmi_cable: true,
+      },
       require_approval: false,
     };
     assert.equal(meetingRoomMeta.category, 'meeting_room');
     assert.equal(meetingRoomMeta.has_projector, true);
     assert.equal(meetingRoomMeta.has_video_conference, true);
     assert.equal(meetingRoomMeta.max_occupancy, 12);
+    assert.equal(meetingRoomMeta.serial_number, 'SN-2026-IT-9821');
+    assert.equal(meetingRoomMeta.asset_tag, 'AST-MOA-0042');
+    assert.equal(meetingRoomMeta.accessories_checklist?.hdmi_cable, true);
 
     // 4-3) 보건실/상담실 (health_room) 메타데이터
     const healthRoomMeta: UniversalResourceMetadata = {

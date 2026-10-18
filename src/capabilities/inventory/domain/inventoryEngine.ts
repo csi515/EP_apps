@@ -618,4 +618,218 @@ export function allocateStockLotsFefo(
   };
 }
 
+// ============================================================================
+// 로트 및 유효기간 검증 & 선입선출(FIFO/FEFO) 출고 추천
+// ============================================================================
+
+export interface StockInLotParams {
+  lotNumber: string;
+  expiryDate: string; // YYYY-MM-DD
+  shelfLifeDays?: number;
+  quantity: number;
+}
+
+/**
+ * 입고 시 로트 번호 및 유통기한 필수 입력 검증 (순수 함수)
+ */
+export function validateStockInLot(params: StockInLotParams): { isValid: boolean; error?: string } {
+  if (!params.lotNumber || !params.lotNumber.trim()) {
+    return { isValid: false, error: '로트 번호(Lot Number)는 필수 입력 항목입니다.' };
+  }
+
+  if (!params.expiryDate || !/^\d{4}-\d{2}-\d{2}$/.test(params.expiryDate)) {
+    return { isValid: false, error: '유효기간(Expiry Date)을 올바른 형식(YYYY-MM-DD)으로 입력해주세요.' };
+  }
+
+  if (params.quantity <= 0) {
+    return { isValid: false, error: '입고 수량은 0보다 커야 합니다.' };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * 선입선출(FIFO) / 유효기간 기준(FEFO) 출고 로트 자동 배분 추천
+ */
+export const recommendFifoLotsForStockOut = allocateStockLotsFefo;
+
+export type ExpiryAlertStatus = 'EXPIRED' | 'CRITICAL_7_DAYS' | 'WARNING_30_DAYS' | 'NORMAL';
+
+/**
+ * 유효기간 기준 임박 경보 상태 판정 (순수 함수)
+ * - 만료일 당일 및 이전: EXPIRED
+ * - 7일 이내: CRITICAL_7_DAYS
+ * - 30일 이내: WARNING_30_DAYS
+ * - 30일 초과: NORMAL
+ */
+export function evaluateInventoryExpiryStatus(
+  expiryDate: string,
+  referenceDate?: string
+): ExpiryAlertStatus {
+  const refDateStr = referenceDate || new Date().toISOString().slice(0, 10);
+  const refTime = new Date(refDateStr).getTime();
+  const expTime = new Date(expiryDate).getTime();
+
+  const diffMs = expTime - refTime;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) {
+    return 'EXPIRED';
+  }
+  if (diffDays <= 7) {
+    return 'CRITICAL_7_DAYS';
+  }
+  if (diffDays <= 30) {
+    return 'WARNING_30_DAYS';
+  }
+  return 'NORMAL';
+}
+
+// ============================================================================
+// 창고 내 세부 구역 (Zone / Rack / Bin) 위치 관리
+// ============================================================================
+
+export interface WarehouseLocation {
+  zoneId: string; // e.g. "ZONE-A" (상온 식자재), "ZONE-C" (냉동고)
+  rackNo: string; // e.g. "RACK-03"
+  binNo: string; // e.g. "BIN-12"
+}
+
+/**
+ * 피킹(Picking) 동선 최적화를 위한 물리적 위치 텍스트 포맷터
+ */
+export function formatPickingLocation(loc?: WarehouseLocation): string {
+  if (!loc || (!loc.zoneId && !loc.rackNo && !loc.binNo)) {
+    return '위치 미지정 (기본 창고)';
+  }
+  const parts = [loc.zoneId, loc.rackNo, loc.binNo].filter(Boolean);
+  return parts.join(' / ');
+}
+
+// ============================================================================
+// 정기 재고 실사 대사표 (Stock Audit) & 감모손실 승인 전표
+// ============================================================================
+
+export interface StockAuditItem {
+  itemId: string;
+  itemName: string;
+  sku: string;
+  bookQuantity: number; // 전산 상 현재고
+  actualQuantity: number; // 현장 실사 수량
+  unitPrice: number; // 단가
+  location?: WarehouseLocation;
+}
+
+export interface StockAuditDiscrepancy {
+  itemId: string;
+  itemName: string;
+  sku: string;
+  bookQuantity: number;
+  actualQuantity: number;
+  diffQuantity: number; // actual - book (음수면 감모/부족, 양수면 초과)
+  diffAmount: number; // diffQuantity * unitPrice
+  status: 'MATCH' | 'SHORTAGE' | 'SURPLUS';
+}
+
+export interface StockAuditAnalysisResult {
+  discrepancies: StockAuditDiscrepancy[];
+  totalShortageAmount: number; // 총 감모손실액 (절댓값)
+  totalSurplusAmount: number; // 총 재고잉여액
+  netVarianceAmount: number; // 순 차이액
+  hasDiscrepancies: boolean;
+}
+
+/**
+ * 전산 재고와 현장 실사 재고 대조 및 차이(Discrepancy) 산출 (순수 함수)
+ */
+export function calculateStockAuditDiscrepancy(
+  items: StockAuditItem[]
+): StockAuditAnalysisResult {
+  const discrepancies: StockAuditDiscrepancy[] = [];
+  let totalShortageAmount = 0;
+  let totalSurplusAmount = 0;
+
+  for (const item of items) {
+    const diffQuantity = item.actualQuantity - item.bookQuantity;
+    const diffAmount = diffQuantity * item.unitPrice;
+
+    let status: 'MATCH' | 'SHORTAGE' | 'SURPLUS' = 'MATCH';
+    if (diffQuantity < 0) {
+      status = 'SHORTAGE';
+      totalShortageAmount += Math.abs(diffAmount);
+    } else if (diffQuantity > 0) {
+      status = 'SURPLUS';
+      totalSurplusAmount += diffAmount;
+    }
+
+    discrepancies.push({
+      itemId: item.itemId,
+      itemName: item.itemName,
+      sku: item.sku,
+      bookQuantity: item.bookQuantity,
+      actualQuantity: item.actualQuantity,
+      diffQuantity,
+      diffAmount,
+      status,
+    });
+  }
+
+  return {
+    discrepancies,
+    totalShortageAmount,
+    totalSurplusAmount,
+    netVarianceAmount: totalSurplusAmount - totalShortageAmount,
+    hasDiscrepancies: totalShortageAmount > 0 || totalSurplusAmount > 0,
+  };
+}
+
+export interface StockAuditSlip {
+  slipNumber: string;
+  auditId: string;
+  auditDate: string;
+  auditorName: string;
+  discrepancies: StockAuditDiscrepancy[];
+  totalShortageAmount: number;
+  totalSurplusAmount: number;
+  approvalRequired: boolean; // 감모손실 10만 원 이상 시 최고권한자 특약 승인 요구
+  status: 'DRAFT' | 'APPROVED' | 'REJECTED';
+}
+
+/**
+ * 감모손실/잉여 승인 전표 생성 (순수 함수)
+ */
+export function createStockAuditSlip(
+  auditId: string,
+  discrepancies: StockAuditDiscrepancy[],
+  auditorName: string,
+  options: { auditDate?: string; approvalThreshold?: number } = {}
+): StockAuditSlip {
+  const auditDate = options.auditDate || new Date().toISOString().slice(0, 10);
+  const threshold = options.approvalThreshold ?? 100000; // 기본 10만 원
+
+  const nonMatchList = discrepancies.filter((d) => d.status !== 'MATCH');
+  const totalShortageAmount = nonMatchList
+    .filter((d) => d.status === 'SHORTAGE')
+    .reduce((sum, d) => sum + Math.abs(d.diffAmount), 0);
+  const totalSurplusAmount = nonMatchList
+    .filter((d) => d.status === 'SURPLUS')
+    .reduce((sum, d) => sum + d.diffAmount, 0);
+
+  const approvalRequired = totalShortageAmount >= threshold;
+
+  const slipNumber = `AUDIT-SLIP-${auditDate.replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
+
+  return {
+    slipNumber,
+    auditId,
+    auditDate,
+    auditorName,
+    discrepancies: nonMatchList,
+    totalShortageAmount,
+    totalSurplusAmount,
+    approvalRequired,
+    status: 'DRAFT',
+  };
+}
+
 

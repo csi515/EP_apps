@@ -5,7 +5,23 @@ import {
   PayrollSlip,
   verifyAttendanceCheckIn,
   generatePayrollSlip,
+  generateBankBulkTransferCsv,
+  generateTaxAccountantPayrollLedgerCsv,
+  BankFormatCode,
 } from '../domain/workAttendancePayrollEngine';
+import { useOptionalOrganization } from '@/core/organizations/OrganizationProvider';
+
+function triggerCsvDownload(filename: string, csvContent: string) {
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 const INITIAL_STAFF_PROFILES: StaffEmploymentProfile[] = [
   {
@@ -111,7 +127,11 @@ export const WorkAttendancePayrollView: React.FC = () => {
     }
   };
 
-  // 급여명세서 사전 계산 목록 생성
+  const org = useOptionalOrganization();
+  const orgName = org?.currentOrganization?.name || '사업장';
+  const [selectedBank, setSelectedBank] = useState<BankFormatCode>('KB');
+
+  // 급여명세서 사전 계산 목록 생성 (비과세 식대 20만, 자가운전 20만 한도 소득공제 적용)
   const payrollSlips: PayrollSlip[] = staffList.map((staff) => {
     // 4주 주차별 근무시간 가상 분배
     const weeklyHours =
@@ -124,8 +144,38 @@ export const WorkAttendancePayrollView: React.FC = () => {
     const overtime = staff.employmentType === 'salaried_regular' ? 4 : 2;
     const night = staff.employmentType === 'salaried_regular' ? 0 : 3;
 
-    return generatePayrollSlip(staff, '2026-10', weeklyHours, overtime, night);
+    // 식대 20만원 전 직원 비과세 기본 지급, 정규직 매니저는 자가운전 20만원 추가
+    const allowances = {
+      mealAllowance: 200000,
+      drivingAllowance: staff.employmentType === 'salaried_regular' ? 200000 : 0,
+    };
+
+    const slip = generatePayrollSlip(staff, '2026-10', weeklyHours, overtime, night, allowances);
+    slip.bankName = staff.staffId === 'staff-1' ? '국민은행' : staff.staffId === 'staff-2' ? '신한은행' : '기업은행';
+    slip.accountNumber = `110-${staff.staffId.replace('staff-', '')}92-882910`;
+    return slip;
   });
+
+  const handleDownloadTaxLedgerCsv = () => {
+    const csv = generateTaxAccountantPayrollLedgerCsv(payrollSlips, {
+      organizationName: orgName,
+      periodYearMonth: '2026-10',
+    });
+    triggerCsvDownload(`급여대장_세무사회계사제출용_2026-10_${orgName}.csv`, csv);
+  };
+
+  const handleDownloadBankTransferCsv = () => {
+    const entries = payrollSlips.map((s) => ({
+      staffId: s.staffId,
+      staffName: s.staffName,
+      bankName: s.bankName || '국민은행',
+      accountNumber: s.accountNumber || '123-456-789012',
+      amount: s.netPay,
+      memo: '10월급여',
+    }));
+    const csv = generateBankBulkTransferCsv(entries, selectedBank);
+    triggerCsvDownload(`급여대량이체_${selectedBank}_2026-10_${orgName}.csv`, csv);
+  };
 
   const totalMonthlyPayroll = payrollSlips.reduce((sum, s) => sum + s.statutoryPay.totalGrossPay, 0);
   const totalWeeklyHolidaySum = payrollSlips.reduce((sum, s) => sum + s.statutoryPay.weeklyHolidayPay, 0);
@@ -336,68 +386,150 @@ export const WorkAttendancePayrollView: React.FC = () => {
       {/* 탭 3: 월간 법정 급여명세서 마감 */}
       {activeTab === 'payroll_slips' && (
         <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>2026년 10월 급여 정산 대장</span>
-            <span style={{ fontSize: '13px', color: '#6b7280' }}>근로기준법 제48조 준수 전자 급여명세서 자동 생성</span>
+          <div style={{ padding: '16px 20px', background: '#f9fafb', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '15px', color: '#111827' }}>2026년 10월 급여 정산 대장</div>
+              <div style={{ fontSize: '12px', color: '#059669', marginTop: '2px' }}>
+                ✓ 식대(월 20만) 및 자가운전보조금(월 20만) 비과세 소득공제 자동 적용 완료
+              </div>
+            </div>
+
+            {/* 은행 대량이체 및 세무사 제출용 엑셀 다운로드 버튼 그룹 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <select
+                value={selectedBank}
+                onChange={(e) => setSelectedBank(e.target.value as BankFormatCode)}
+                style={{
+                  padding: '7px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '13px',
+                  background: '#fff',
+                  color: '#374151',
+                  fontWeight: 500,
+                }}
+              >
+                <option value="KB">KB국민은행 대량이체 양식</option>
+                <option value="SHINHAN">신한은행 대량이체 양식</option>
+                <option value="IBK">IBK기업은행 대량이체 양식</option>
+                <option value="NH">NH농협은행 대량이체 양식</option>
+                <option value="STANDARD">표준 계좌이체 양식</option>
+              </select>
+
+              <button
+                type="button"
+                onClick={handleDownloadBankTransferCsv}
+                style={{
+                  background: '#059669',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                📥 급여 대량이체 파일
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadTaxLedgerCsv}
+                style={{
+                  background: '#4f46e5',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '7px 12px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                📄 세무사 제출용 급여대장
+              </button>
+            </div>
           </div>
 
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
             <thead>
               <tr style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', color: '#4b5563' }}>
-                <th style={{ padding: '12px 16px' }}>직원명</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>총 근로시간</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>기본급</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>주휴수당</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>연장·야간가산</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>세전 총급여</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>4대보험 등 공제</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>실수령액</th>
-                <th style={{ padding: '12px 16px', textAlign: 'center' }}>명세서 교부</th>
+                <th style={{ padding: '12px 14px' }}>직원명</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>총 근로시간</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>기본급</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>주휴수당</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>연장·야간</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right', color: '#059669' }}>비과세 소득</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>세전 총급여</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right', color: '#4b5563' }}>과세 대상액</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>4대보험 등 공제</th>
+                <th style={{ padding: '12px 14px', textAlign: 'right' }}>실수령액</th>
+                <th style={{ padding: '12px 14px', textAlign: 'center' }}>명세서 교부</th>
               </tr>
             </thead>
             <tbody>
-              {payrollSlips.map((slip) => (
-                <tr key={slip.staffId} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ fontWeight: 600, color: '#111827' }}>{slip.staffName}</div>
-                    <div style={{ fontSize: '12px', color: '#6b7280' }}>시급 {slip.hourlyRate.toLocaleString()}원</div>
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right' }}>{slip.statutoryPay.totalWorkedHours}시간</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right' }}>{slip.statutoryPay.regularPay.toLocaleString()}원</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right', color: '#2563eb', fontWeight: 600 }}>
-                    {slip.statutoryPay.weeklyHolidayPay > 0 ? `${slip.statutoryPay.weeklyHolidayPay.toLocaleString()}원` : '-'}
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right', color: '#d97706' }}>
-                    {(slip.statutoryPay.overtimePay + slip.statutoryPay.nightPay).toLocaleString()}원
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
-                    {slip.statutoryPay.totalGrossPay.toLocaleString()}원
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right', color: '#dc2626' }}>
-                    -{slip.deductions.totalDeductions.toLocaleString()}원
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right', fontWeight: 'bold', color: '#059669', fontSize: '15px' }}>
-                    {slip.netPay.toLocaleString()}원
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center' }}>
-                    <button
-                      onClick={() => setSelectedStaffForSlip(slip)}
-                      style={{
-                        background: '#2563eb',
-                        color: '#fff',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      명세서 보기
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {payrollSlips.map((slip) => {
+                const nonTax = slip.nonTaxable?.totalNonTaxable ?? 0;
+                const taxable = slip.taxableGrossPay ?? (slip.statutoryPay.totalGrossPay - nonTax);
+
+                return (
+                  <tr key={slip.staffId} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <td style={{ padding: '14px 14px' }}>
+                      <div style={{ fontWeight: 600, color: '#111827' }}>{slip.staffName}</div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                        {slip.bankName} {slip.accountNumber}
+                      </div>
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right' }}>{slip.statutoryPay.totalWorkedHours}시간</td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right' }}>{slip.statutoryPay.regularPay.toLocaleString()}원</td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', color: '#2563eb', fontWeight: 600 }}>
+                      {slip.statutoryPay.weeklyHolidayPay > 0 ? `${slip.statutoryPay.weeklyHolidayPay.toLocaleString()}원` : '-'}
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', color: '#d97706' }}>
+                      {(slip.statutoryPay.overtimePay + slip.statutoryPay.nightPay).toLocaleString()}원
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', color: '#059669', fontWeight: 600 }}>
+                      {nonTax > 0 ? `-${nonTax.toLocaleString()}원` : '-'}
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', fontWeight: 600, color: '#111827' }}>
+                      {slip.statutoryPay.totalGrossPay.toLocaleString()}원
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', color: '#4b5563' }}>
+                      {taxable.toLocaleString()}원
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', color: '#dc2626' }}>
+                      -{slip.deductions.totalDeductions.toLocaleString()}원
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'right', fontWeight: 'bold', color: '#059669', fontSize: '15px' }}>
+                      {slip.netPay.toLocaleString()}원
+                    </td>
+                    <td style={{ padding: '14px 14px', textAlign: 'center' }}>
+                      <button
+                        onClick={() => setSelectedStaffForSlip(slip)}
+                        style={{
+                          background: '#2563eb',
+                          color: '#fff',
+                          border: 'none',
+                          padding: '6px 12px',
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        명세서 보기
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -444,6 +576,35 @@ export const WorkAttendancePayrollView: React.FC = () => {
                 <span>{selectedStaffForSlip.statutoryPay.totalGrossPay.toLocaleString()}원</span>
               </div>
             </div>
+
+            {/* 비과세 소득 공제 내역 */}
+            {selectedStaffForSlip.nonTaxable && selectedStaffForSlip.nonTaxable.totalNonTaxable > 0 && (
+              <div style={{ marginTop: '12px', background: '#ecfdf5', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ fontWeight: 600, fontSize: '14px', color: '#065f46', marginBottom: '8px' }}>[비과세 소득 공제]</div>
+                {selectedStaffForSlip.nonTaxable.mealAllowance > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#047857' }}>
+                    <span>식대 비과세 (월 최대 20만)</span>
+                    <span>{selectedStaffForSlip.nonTaxable.mealAllowance.toLocaleString()}원</span>
+                  </div>
+                )}
+                {selectedStaffForSlip.nonTaxable.drivingAllowance > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#047857' }}>
+                    <span>자가운전보조금 비과세 (월 최대 20만)</span>
+                    <span>{selectedStaffForSlip.nonTaxable.drivingAllowance.toLocaleString()}원</span>
+                  </div>
+                )}
+                {selectedStaffForSlip.nonTaxable.researchAllowance > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#047857' }}>
+                    <span>연구보조비 비과세 (월 최대 20만)</span>
+                    <span>{selectedStaffForSlip.nonTaxable.researchAllowance.toLocaleString()}원</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, marginTop: '4px', borderTop: '1px solid #a7f3d0', paddingTop: '4px', color: '#065f46' }}>
+                  <span>과세 대상 급여 (4대보험/소득세 과표)</span>
+                  <span>{selectedStaffForSlip.taxableGrossPay?.toLocaleString()}원</span>
+                </div>
+              </div>
+            )}
 
             {/* 공제 항목 */}
             <div style={{ marginTop: '12px', background: '#fef2f2', padding: '12px', borderRadius: '8px' }}>

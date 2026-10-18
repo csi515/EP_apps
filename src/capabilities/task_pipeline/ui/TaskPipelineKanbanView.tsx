@@ -14,12 +14,19 @@ import {
   Search,
   Filter,
   Package,
+  Users,
+  Flame,
+  BarChart3,
+  Calendar,
+  Layers,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   transitionTaskPipelineStage,
   evaluateStageSla,
+  calculateStaffWorkload,
+  detectStageBottlenecks,
   type PipelineStage,
   type TaskOrder,
 } from '../domain/taskPipelineEngine';
@@ -191,6 +198,16 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
     }
   };
 
+  const [viewMode, setViewMode] = useState<'kanban' | 'gantt'>('kanban');
+
+  // 팀원별 업무 부하(Workload Clumping) & 공정 병목 실시간 계산
+  const staffWorkloads = useMemo(() => calculateStaffWorkload(orders), [orders]);
+  const stageBottlenecks = useMemo(() => detectStageBottlenecks(orders), [orders]);
+  const currentBottleneck = useMemo(
+    () => stageBottlenecks.find((b) => b.isBottleneck && b.activeTaskCount > 0),
+    [stageBottlenecks]
+  );
+
   const filteredOrders = useMemo(() => {
     if (!searchTerm.trim()) return orders;
     const term = searchTerm.toLowerCase();
@@ -199,7 +216,8 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
         o.orderNumber.toLowerCase().includes(term) ||
         o.title.toLowerCase().includes(term) ||
         (o.customerName && o.customerName.toLowerCase().includes(term)) ||
-        (o.customerId && o.customerId.toLowerCase().includes(term))
+        (o.customerId && o.customerId.toLowerCase().includes(term)) ||
+        (o.assignedStaffName && o.assignedStaffName.toLowerCase().includes(term))
     );
   }, [orders, searchTerm]);
 
@@ -210,20 +228,130 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold mb-1.5">
             <Workflow className="w-3.5 h-3.5" />
-            <span>단계별 작업 공정 관리</span>
+            <span>엔터프라이즈 작업 공정 & 워크로드 관제</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h1>
           <p className="text-xs text-slate-500 mt-1">{subtitle}</p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsNewModalOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
-        >
-          <Plus className="w-4 h-4" />
-          <span>신규 작업 주문 접수</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* 듀얼 뷰 모드 토글 (칸반 vs 간트) */}
+          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setViewMode('kanban')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'kanban'
+                  ? 'bg-white text-blue-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>칸반 보드</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('gantt')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                viewMode === 'gantt'
+                  ? 'bg-white text-blue-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>간트 타임라인</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsNewModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+          >
+            <Plus className="w-4 h-4" />
+            <span>신규 작업 주문 접수</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 팀원별 업무 부하(Workload Clumping) & 병목 공정 위젯 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 병목 공정 안내 배너 */}
+        <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200 flex items-start gap-3">
+          <div className="p-2 bg-amber-100 text-amber-700 rounded-xl shrink-0 mt-0.5">
+            <Flame className="w-5 h-5" />
+          </div>
+          <div>
+            <h4 className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+              <span>실시간 병목(Bottleneck) 공정 진단</span>
+            </h4>
+            {currentBottleneck ? (
+              <p className="text-xs text-amber-800 mt-1">
+                현재 <strong>[{currentBottleneck.stage}]</strong> 단계에{' '}
+                <strong className="text-rose-600">{currentBottleneck.activeTaskCount}건</strong>의
+                과업이 체류 중입니다.{' '}
+                {currentBottleneck.breachedTaskCount > 0 && (
+                  <span className="text-rose-600 font-bold">
+                    ({currentBottleneck.breachedTaskCount}건 SLA 초과 지연)
+                  </span>
+                )}
+              </p>
+            ) : (
+              <p className="text-xs text-amber-700 mt-1">전 공정이 지연 없이 원활하게 진행 중입니다.</p>
+            )}
+          </div>
+        </div>
+
+        {/* 팀원별 업무 집중도 (Workload Clumping Alert) */}
+        <div className="md:col-span-2 p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-blue-600" />
+              <span>팀원별 업무 부하 집중도 (Workload Clumping)</span>
+            </span>
+            <span className="text-[11px] text-slate-400">주의: 4건 이상 | 위험: 5건 이상</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {staffWorkloads.length === 0 ? (
+              <span className="text-xs text-slate-400">진행 중인 과업이 없습니다.</span>
+            ) : (
+              staffWorkloads.map((sw) => {
+                const isCritical = sw.alertLevel === 'CRITICAL';
+                const isWarning = sw.alertLevel === 'WARNING';
+
+                return (
+                  <div
+                    key={sw.staffId}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs transition-all ${
+                      isCritical
+                        ? 'bg-rose-50 border-rose-300 text-rose-900 shadow-xs'
+                        : isWarning
+                        ? 'bg-amber-50 border-amber-300 text-amber-900'
+                        : 'bg-slate-50 border-slate-200 text-slate-700'
+                    }`}
+                  >
+                    <span className="font-bold">{sw.staffName}</span>
+                    <span
+                      className={`px-1.5 py-0.2 rounded-md font-mono text-[11px] font-extrabold ${
+                        isCritical
+                          ? 'bg-rose-600 text-white'
+                          : isWarning
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {sw.activeTaskCount}건
+                    </span>
+                    {isCritical && (
+                      <span className="text-[10px] font-bold text-rose-600 animate-pulse">과부하</span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 검색 바 */}
@@ -234,7 +362,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="주문 번호, 의뢰 품목, 고객명 검색"
+            placeholder="주문 번호, 의뢰 품목, 고객명, 담당자 검색"
             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -243,168 +371,281 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
         </div>
       </div>
 
-      {/* 칸반 6단 컬럼 */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3.5 items-start">
-        {KANBAN_STAGES.map((col) => {
-          const colOrders = filteredOrders.filter((o) => o.currentStage === col.stage);
-          return (
-            <div
-              key={col.stage}
-              className={`rounded-2xl border ${col.color} p-3 min-h-[480px] flex flex-col space-y-3 bg-white/70 shadow-xs`}
-            >
-              {/* 컬럼 헤더 */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
-                <span className="text-xs font-extrabold text-slate-800">{col.label}</span>
-                <span className="px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700 text-[11px] font-bold">
-                  {colOrders.length}
-                </span>
-              </div>
+      {/* 뷰 모드 분기 (칸반 vs 간트 타임라인) */}
+      {viewMode === 'kanban' ? (
+        /* 칸반 6단 컬럼 */
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-3.5 items-start">
+          {KANBAN_STAGES.map((col) => {
+            const colOrders = filteredOrders.filter((o) => o.currentStage === col.stage);
+            return (
+              <div
+                key={col.stage}
+                className={`rounded-2xl border ${col.color} p-3 min-h-[480px] flex flex-col space-y-3 bg-white/70 shadow-xs`}
+              >
+                {/* 컬럼 헤더 */}
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                  <span className="text-xs font-extrabold text-slate-800">{col.label}</span>
+                  <span className="px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-700 text-[11px] font-bold">
+                    {colOrders.length}
+                  </span>
+                </div>
 
-              {/* 주문 카드 목록 */}
-              <div className="flex-1 space-y-3 overflow-y-auto max-h-[600px] pr-0.5">
-                {colOrders.length === 0 ? (
-                  <div className="py-12 text-center text-[11px] text-slate-400">진행 건 없음</div>
-                ) : (
-                  colOrders.map((order) => {
-                    const slaHours = order.slaHoursPerStage?.[col.stage] || order.slaHours || 24;
-                    const sla = evaluateStageSla({
-                      stageEnteredAt: order.stageEnteredAt,
-                      slaHours,
-                      currentTime: new Date().toISOString(),
-                    });
+                {/* 주문 카드 목록 */}
+                <div className="flex-1 space-y-3 overflow-y-auto max-h-[600px] pr-0.5">
+                  {colOrders.length === 0 ? (
+                    <div className="py-12 text-center text-[11px] text-slate-400">진행 건 없음</div>
+                  ) : (
+                    colOrders.map((order) => {
+                      const slaHours = order.slaHoursPerStage?.[col.stage] || order.slaHours || 24;
+                      const sla = evaluateStageSla({
+                        stageEnteredAt: order.stageEnteredAt,
+                        slaHours,
+                        currentTime: new Date().toISOString(),
+                      });
 
-                    return (
-                      <div
-                        key={order.id}
-                        className="bg-white rounded-xl border border-slate-200 p-3 space-y-2.5 shadow-xs hover:shadow-md transition-shadow"
-                      >
-                        {/* 주문 번호 & SLA 배지 */}
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="font-mono text-[11px] font-bold text-slate-500">
-                            {order.orderNumber}
-                          </span>
-                          {col.stage !== 'COMPLETED' && (
-                            <span
-                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
-                                sla.isBreached
-                                  ? 'bg-rose-50 text-rose-600 border border-rose-200'
-                                  : 'bg-slate-100 text-slate-600'
-                              }`}
-                            >
-                              <Clock className="w-2.5 h-2.5" />
-                              {sla.isBreached
-                                ? `지연 (${Math.abs(sla.remainingHours)}h)`
-                                : `${sla.remainingHours}h`}
+                      return (
+                        <div
+                          key={order.id}
+                          className="bg-white rounded-xl border border-slate-200 p-3 space-y-2.5 shadow-xs hover:shadow-md transition-shadow"
+                        >
+                          {/* 주문 번호 & SLA 배지 */}
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="font-mono text-[11px] font-bold text-slate-500">
+                              {order.orderNumber}
                             </span>
-                          )}
-                        </div>
-
-                        {/* 작업명 */}
-                        <p className="text-xs font-bold text-slate-900 leading-snug">{order.title}</p>
-
-                        {/* 고객 정보 및 품목 */}
-                        <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-100">
-                          <span>{order.customerName || (order.customerId || '').replace('cust-', '')}</span>
-                          <span className="text-[10px] text-slate-400">
-                            {new Date(order.stageEnteredAt).toLocaleTimeString('ko-KR', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                        </div>
-
-                        {/* 단계 전이 액션 버튼들 */}
-                        <div className="flex flex-col gap-1 pt-1">
-                          {col.stage === 'RECEIVED' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
-                              className="w-full py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center gap-1"
-                            >
-                              <span>작업 착수</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </button>
-                          )}
-
-                          {col.stage === 'IN_PROGRESS' && (
-                            <div className="grid grid-cols-2 gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleStageTransition(order, 'PARTS_WAITING')}
-                                className="py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                            {col.stage !== 'COMPLETED' && (
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+                                  sla.isBreached
+                                    ? 'bg-rose-50 text-rose-600 border border-rose-200'
+                                    : 'bg-slate-100 text-slate-600'
+                                }`}
                               >
-                                <Package className="w-2.5 h-2.5" />
-                                <span>부품 대기</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleStageTransition(order, 'INSPECTION')}
-                                className="py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
-                              >
-                                <span>검수 요청</span>
-                                <ChevronRight className="w-2.5 h-2.5" />
-                              </button>
-                            </div>
-                          )}
+                                <Clock className="w-2.5 h-2.5" />
+                                {sla.isBreached
+                                  ? `지연 (${Math.abs(sla.remainingHours)}h)`
+                                  : `${sla.remainingHours}h`}
+                              </span>
+                            )}
+                          </div>
 
-                          {col.stage === 'PARTS_WAITING' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
-                              className="w-full py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center gap-1"
-                            >
-                              <span>작업 재개</span>
-                              <ChevronRight className="w-3 h-3" />
-                            </button>
-                          )}
+                          {/* 작업명 */}
+                          <p className="text-xs font-bold text-slate-900 leading-snug">{order.title}</p>
 
-                          {col.stage === 'INSPECTION' && (
-                            <div className="grid grid-cols-2 gap-1">
+                          {/* 고객 정보 및 품목 */}
+                          <div className="text-[11px] text-slate-500 flex items-center justify-between pt-1 border-t border-slate-100">
+                            <span>{order.customerName || (order.customerId || '').replace('cust-', '')}</span>
+                            <span className="text-[10px] text-slate-400">
+                              {new Date(order.stageEnteredAt).toLocaleTimeString('ko-KR', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                          </div>
+
+                          {/* 단계 전이 액션 버튼들 */}
+                          <div className="flex flex-col gap-1 pt-1">
+                            {col.stage === 'RECEIVED' && (
                               <button
                                 type="button"
                                 onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
-                                className="py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                className="w-full py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center gap-1"
                               >
-                                <RotateCcw className="w-2.5 h-2.5" />
-                                <span>재작업</span>
+                                <span>작업 착수</span>
+                                <ChevronRight className="w-3 h-3" />
                               </button>
+                            )}
+
+                            {col.stage === 'IN_PROGRESS' && (
+                              <div className="grid grid-cols-2 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStageTransition(order, 'PARTS_WAITING')}
+                                  className="py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                >
+                                  <Package className="w-2.5 h-2.5" />
+                                  <span>부품 대기</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStageTransition(order, 'INSPECTION')}
+                                  className="py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                >
+                                  <span>검수 요청</span>
+                                  <ChevronRight className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
+                            )}
+
+                            {col.stage === 'PARTS_WAITING' && (
                               <button
                                 type="button"
-                                onClick={() => handleStageTransition(order, 'READY_FOR_PICKUP')}
-                                className="py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
+                                className="w-full py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold flex items-center justify-center gap-1"
                               >
-                                <span>검수 합격</span>
-                                <ChevronRight className="w-2.5 h-2.5" />
+                                <span>작업 재개</span>
+                                <ChevronRight className="w-3 h-3" />
                               </button>
-                            </div>
-                          )}
+                            )}
 
-                          {col.stage === 'READY_FOR_PICKUP' && (
-                            <button
-                              type="button"
-                              onClick={() => handleStageTransition(order, 'COMPLETED')}
-                              className="w-full py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center gap-1"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              <span>고객 인도 완료</span>
-                            </button>
-                          )}
+                            {col.stage === 'INSPECTION' && (
+                              <div className="grid grid-cols-2 gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleStageTransition(order, 'IN_PROGRESS')}
+                                  className="py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                >
+                                  <RotateCcw className="w-2.5 h-2.5" />
+                                  <span>재작업</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleStageTransition(order, 'READY_FOR_PICKUP')}
+                                  className="py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-bold flex items-center justify-center gap-0.5"
+                                >
+                                  <span>검수 합격</span>
+                                  <ChevronRight className="w-2.5 h-2.5" />
+                                </button>
+                              </div>
+                            )}
 
-                          {col.stage === 'COMPLETED' && (
-                            <span className="w-full text-center py-1 text-[11px] font-bold text-slate-400">
-                              공정 마감
-                            </span>
-                          )}
+                            {col.stage === 'READY_FOR_PICKUP' && (
+                              <button
+                                type="button"
+                                onClick={() => handleStageTransition(order, 'COMPLETED')}
+                                className="w-full py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 text-[11px] font-bold flex items-center justify-center gap-1"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>고객 인도 완료</span>
+                              </button>
+                            )}
+
+                            {col.stage === 'COMPLETED' && (
+                              <span className="w-full text-center py-1 text-[11px] font-bold text-slate-400">
+                                공정 마감
+                              </span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* 간트 타임라인 뷰 */
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-blue-600" />
+              <span className="text-xs font-bold text-slate-800">
+                공정별 진행 타임라인 및 마일스톤 현황
+              </span>
             </div>
-          );
-        })}
-      </div>
+            <div className="flex items-center gap-4 text-[11px] text-slate-500">
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></span>
+                진행 중
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                부품 대기
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                출고 대기
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block"></span>
+                완료
+              </span>
+            </div>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {filteredOrders.length === 0 ? (
+              <div className="py-12 text-center text-xs text-slate-400">표시할 과업이 없습니다.</div>
+            ) : (
+              filteredOrders.map((order) => {
+                const stageProgressMap: Record<PipelineStage, { pct: number; label: string; color: string }> = {
+                  RECEIVED: { pct: 15, label: '접수', color: 'bg-slate-400' },
+                  IN_PROGRESS: { pct: 40, label: '작업 중', color: 'bg-blue-600' },
+                  PARTS_WAITING: { pct: 55, label: '부품 대기', color: 'bg-amber-500' },
+                  INSPECTION: { pct: 75, label: '검수', color: 'bg-indigo-600' },
+                  READY_FOR_PICKUP: { pct: 90, label: '출고 대기', color: 'bg-emerald-600' },
+                  COMPLETED: { pct: 100, label: '완료', color: 'bg-purple-600' },
+                  ON_HOLD: { pct: 50, label: '보류', color: 'bg-amber-600' },
+                  CANCELLED: { pct: 0, label: '취소', color: 'bg-rose-600' },
+                };
+
+                const currentProg = stageProgressMap[order.currentStage] || { pct: 0, label: '', color: 'bg-slate-300' };
+                const slaHours = order.slaHoursPerStage?.[order.currentStage] || order.slaHours || 24;
+                const sla = evaluateStageSla({
+                  stageEnteredAt: order.stageEnteredAt,
+                  slaHours,
+                  currentTime: new Date().toISOString(),
+                });
+
+                return (
+                  <div key={order.id} className="p-4 hover:bg-slate-50/50 transition-colors space-y-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
+                          {order.orderNumber}
+                        </span>
+                        <h4 className="text-xs font-bold text-slate-900">{order.title}</h4>
+                        <span className="text-[11px] text-slate-400">|</span>
+                        <span className="text-xs text-slate-600">
+                          고객: <strong>{order.customerName || (order.customerId || '').replace('cust-', '')}</strong>
+                        </span>
+                        {order.assignedStaffName && (
+                          <span className="text-xs text-slate-500">
+                            (담당: {order.assignedStaffName})
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {order.currentStage !== 'COMPLETED' && (
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${
+                              sla.isBreached
+                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            <Clock className="w-3 h-3" />
+                            {sla.isBreached ? `SLA 지연 (${Math.abs(sla.remainingHours)}h)` : `SLA 잔여 ${sla.remainingHours}h`}
+                          </span>
+                        )}
+                        <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
+                          {currentProg.label} ({currentProg.pct}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 간트 프로그레스 바 */}
+                    <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+                      <div
+                        className={`h-full ${currentProg.color} transition-all duration-300 rounded-full`}
+                        style={{ width: `${currentProg.pct}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-0.5">
+                      <span>접수일: {new Date(order.createdAt || order.stageEnteredAt).toLocaleDateString('ko-KR')}</span>
+                      <span>현재 공정 진입: {new Date(order.stageEnteredAt).toLocaleString('ko-KR', { hour12: false })}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 신규 작업 접수 모달 */}
       {isNewModalOpen && (

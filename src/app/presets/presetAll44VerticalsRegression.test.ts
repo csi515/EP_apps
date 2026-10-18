@@ -24,8 +24,8 @@ console.log('[REGRESSION TEST] 44-Verticals Comprehensive Audit Starting...\n');
 const allPresets = listIndustryPresets();
 const allPresetIds = Object.keys(INDUSTRY_PRESETS);
 
-// 50개 프리셋 전수 정의 확인
-assert.equal(allPresetIds.length, 50, '전체 프리셋 수는 정확히 50개여야 합니다.');
+// 51개 프리셋 전수 정의 확인
+assert.equal(allPresetIds.length, 51, '전체 프리셋 수는 정확히 51개여야 합니다.');
 
 const EXPECTED_VERTICAL_GROUPS = {
   education: [
@@ -37,6 +37,7 @@ const EXPECTED_VERTICAL_GROUPS = {
     'dance_academy',
     'coding_academy',
     'exam_tutoring',
+    'culture_center',
   ],
   fitness: [
     'pilates',
@@ -104,10 +105,10 @@ for (const [groupName, ids] of Object.entries(EXPECTED_VERTICAL_GROUPS)) {
     );
   }
 }
-assert.equal(totalGroupCount, 50, '8대 그룹의 총 업종 수는 50개여야 합니다.');
-console.log('✓ [PASS] 50개 전 업종 프리셋 ID 및 8개 그룹 정합성 검증 완료 (50/50)');
+assert.equal(totalGroupCount, 51, '8대 그룹의 총 업종 수는 51개여야 합니다.');
+console.log('✓ [PASS] 51개 전 업종 프리셋 ID 및 8개 그룹 정합성 검증 완료 (51/51)');
 
-// 2. 49개 프리셋 전수 assemblePreset 및 Onboarding 검증
+// 2. 51개 프리셋 전수 assemblePreset 및 Onboarding 검증
 let assembledCount = 0;
 for (const presetId of allPresetIds) {
   const preset = getIndustryPreset(presetId);
@@ -122,7 +123,7 @@ for (const presetId of allPresetIds) {
 
   assembledCount++;
 }
-console.log(`✓ [PASS] 49개 전 업종 assemblePreset, setupSchemas & 리소스 조립 검증 완료 (${assembledCount}/49)`);
+console.log(`✓ [PASS] 51개 전 업종 assemblePreset, setupSchemas & 리소스 조립 검증 완료 (${assembledCount}/51)`);
 
 // 3. Capability와 Generic 탭 매핑 검증
 // 1단계~3단계에서 구현된 6대 핵심 확장 뷰:
@@ -192,6 +193,66 @@ assert.equal(
 
 console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAllowedForCapabilities) 검증 완료');
 
+// 5. 엔터프라이즈 프리셋 4종 핵심 Capability 보강 정합성 검증
+{
+  const ge = INDUSTRY_PRESETS.general_enterprise;
+  assert.ok(ge.capabilities.includes('resources'), 'general_enterprise에 resources 포함되어야 함');
+  assert.ok(ge.capabilities.includes('leave_management'), 'general_enterprise에 leave_management 포함되어야 함');
+  assert.ok(ge.capabilities.includes('supply_restock'), 'general_enterprise에 supply_restock 포함되어야 함');
+
+  const mfg = INDUSTRY_PRESETS.manufacturing_light;
+  assert.ok(mfg.capabilities.includes('leave_management'), 'manufacturing_light에 leave_management 포함되어야 함');
+  assert.ok(mfg.capabilities.includes('vehicle_shuttle'), 'manufacturing_light에 vehicle_shuttle 포함되어야 함');
+  assert.ok(mfg.capabilities.includes('resources'), 'manufacturing_light에 resources 포함되어야 함');
+
+  const rnd = INDUSTRY_PRESETS.rnd_lab_management;
+  assert.ok(rnd.capabilities.includes('leave_management'), 'rnd_lab_management에 leave_management 포함되어야 함');
+  assert.ok(rnd.capabilities.includes('vehicle_shuttle'), 'rnd_lab_management에 vehicle_shuttle 포함되어야 함');
+
+  const iso = INDUSTRY_PRESETS.iso_human_capital;
+  assert.ok(iso.capabilities.includes('leave_management'), 'iso_human_capital에 leave_management 포함되어야 함');
+
+  const ims = INDUSTRY_PRESETS.iso_ims_enterprise;
+  assert.ok(ims.capabilities.includes('resources'), 'iso_ims_enterprise에 resources 포함되어야 함');
+  assert.ok(ims.capabilities.includes('leave_management'), 'iso_ims_enterprise에 leave_management 포함되어야 함');
+
+  // corporate_general_affairs 별칭 해석 검증
+  const cga = getIndustryPreset('corporate_general_affairs');
+  assert.ok(cga, 'corporate_general_affairs 별칭 조회가 성공해야 함');
+  assert.equal(cga?.id, 'general_enterprise', 'corporate_general_affairs는 general_enterprise로 해석되어야 함');
+}
+console.log('✓ [PASS] 엔터프라이즈 프리셋 및 corporate_general_affairs 별칭 무결성 검증 완료');
+
+// 6. 문화센터·평생교육원 (culture_center) 프리셋 무결성 검증
+{
+  const cc = INDUSTRY_PRESETS.culture_center;
+  assert.ok(cc, 'culture_center 프리셋이 등록되어 있어야 합니다.');
+  assert.equal(cc.category, 'education', 'culture_center의 카테고리는 education이어야 합니다.');
+  assert.ok(cc.capabilities.includes('scheduling'), 'culture_center에 scheduling 포함');
+  assert.ok(cc.capabilities.includes('instructor_match'), 'culture_center에 instructor_match 포함');
+  assert.ok(cc.capabilities.includes('seat_room'), 'culture_center에 seat_room 포함');
+  assert.ok(cc.capabilities.includes('commission_payroll'), 'culture_center에 commission_payroll 포함');
+  assert.ok(cc.capabilities.includes('digital_contract'), 'culture_center에 digital_contract 포함');
+  assert.ok(cc.capabilities.includes('passes'), 'culture_center에 passes 포함');
+  assert.ok(cc.capabilities.includes('attendance'), 'culture_center에 attendance 포함');
+  assert.ok(cc.capabilities.includes('billing_invoicing'), 'culture_center에 billing_invoicing 포함');
+  assert.ok(cc.capabilities.includes('feedbacks'), 'culture_center에 feedbacks 포함');
+
+  // 역할 템플릿 검증
+  const roleNames = cc.roles?.map((r) => r.name) || [];
+  assert.ok(roleNames.includes('센터장'), '센터장 역할 정의 필요');
+  assert.ok(roleNames.includes('강좌매니저'), '강좌매니저 역할 정의 필요');
+  assert.ok(roleNames.includes('전임강사'), '전임강사 역할 정의 필요');
+  assert.ok(roleNames.includes('파트강사'), '파트강사 역할 정의 필요');
+
+  // 조립 결과 검증
+  const assembledCC = assemblePreset('culture_center');
+  assert.ok(assembledCC.resources.length >= 5, 'culture_center 조립 리소스 확인');
+  assert.ok(assembledCC.setupSchemas.length >= 5, 'culture_center 온보딩 스키마 확인');
+}
+console.log('✓ [PASS] 문화센터(culture_center) 프리셋 및 9대 Capability 조립 무결성 검증 완료');
+
 console.log('\n===============================================================');
 console.log('🎉 [44-VERTICALS AUDIT SUCCESS] 44개 전 업종 통합 회귀 검증 100% 통과!');
 console.log('===============================================================');
+

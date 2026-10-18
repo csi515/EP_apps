@@ -155,6 +155,86 @@ import { patentIpAssetSetupSchema } from '@/capabilities/patent_ip_asset/setupSc
 import { patentIpAssetResources } from '@/capabilities/patent_ip_asset/resources';
 import { leaveManagementSetupSchema } from '@/capabilities/leave_management/setupSchema';
 import { leaveManagementResources } from '@/capabilities/leave_management/resources';
+import { promotionalDealSetupSchema } from '@/capabilities/promotional_deal/setupSchema';
+import { promotionalDealResources } from '@/capabilities/promotional_deal/resources';
+
+// 30개 외부 연동 없는 독립 신규 Capability 스키마 & 리소스
+import { dailyPosReconciliationSetupSchema } from '@/capabilities/daily_pos_reconciliation/setupSchema';
+import { dailyPosReconciliationResources } from '@/capabilities/daily_pos_reconciliation/resources';
+import { lostCardRfidSetupSchema } from '@/capabilities/lost_card_rfid/setupSchema';
+import { lostCardRfidResources } from '@/capabilities/lost_card_rfid/resources';
+import { valetKeyCustodySetupSchema } from '@/capabilities/valet_key_custody/setupSchema';
+import { valetKeyCustodyResources } from '@/capabilities/valet_key_custody/resources';
+import { coatroomBaggageSetupSchema } from '@/capabilities/coatroom_baggage/setupSchema';
+import { coatroomBaggageResources } from '@/capabilities/coatroom_baggage/resources';
+import { lockerEmergencyOverrideSetupSchema } from '@/capabilities/locker_emergency_override/setupSchema';
+import { lockerEmergencyOverrideResources } from '@/capabilities/locker_emergency_override/resources';
+import { soundBroadcastScheduleSetupSchema } from '@/capabilities/sound_broadcast_schedule/setupSchema';
+import { soundBroadcastScheduleResources } from '@/capabilities/sound_broadcast_schedule/resources';
+import { certificateIssuanceSetupSchema } from '@/capabilities/certificate_issuance/setupSchema';
+import { certificateIssuanceResources } from '@/capabilities/certificate_issuance/resources';
+import { customerBlacklistGuardSetupSchema } from '@/capabilities/customer_blacklist_guard/setupSchema';
+import { customerBlacklistGuardResources } from '@/capabilities/customer_blacklist_guard/resources';
+import { franchiseSupervisionSetupSchema } from '@/capabilities/franchise_supervision/setupSchema';
+import { franchiseSupervisionResources } from '@/capabilities/franchise_supervision/resources';
+import { ndaPrivacyAuditSetupSchema } from '@/capabilities/nda_privacy_audit/setupSchema';
+import { ndaPrivacyAuditResources } from '@/capabilities/nda_privacy_audit/resources';
+import { subleaseSpaceContractSetupSchema } from '@/capabilities/sublease_space_contract/setupSchema';
+import { subleaseSpaceContractResources } from '@/capabilities/sublease_space_contract/resources';
+import { calibrationMeteringSetupSchema } from '@/capabilities/calibration_metering/setupSchema';
+import { calibrationMeteringResources } from '@/capabilities/calibration_metering/resources';
+import { keyAccessControlSetupSchema } from '@/capabilities/key_access_control/setupSchema';
+import { keyAccessControlResources } from '@/capabilities/key_access_control/resources';
+import { hazardousWasteLogSetupSchema } from '@/capabilities/hazardous_waste_log/setupSchema';
+import { hazardousWasteLogResources } from '@/capabilities/hazardous_waste_log/resources';
+import { consumableDispenserSetupSchema } from '@/capabilities/consumable_dispenser/setupSchema';
+import { consumableDispenserResources } from '@/capabilities/consumable_dispenser/resources';
+import { energyUtilityMeterSetupSchema } from '@/capabilities/energy_utility_meter/setupSchema';
+import { energyUtilityMeterResources } from '@/capabilities/energy_utility_meter/resources';
+import { onboardingChecklistSetupSchema } from '@/capabilities/onboarding_checklist/setupSchema';
+import { onboardingChecklistResources } from '@/capabilities/onboarding_checklist/resources';
+import { skillsMatrixCertSetupSchema } from '@/capabilities/skills_matrix_cert/setupSchema';
+import { skillsMatrixCertResources } from '@/capabilities/skills_matrix_cert/resources';
+import { whistleblowerGrievanceSetupSchema } from '@/capabilities/whistleblower_grievance/setupSchema';
+import { whistleblowerGrievanceResources } from '@/capabilities/whistleblower_grievance/resources';
+import { uniformSafetyGearSetupSchema } from '@/capabilities/uniform_safety_gear/setupSchema';
+import { uniformSafetyGearResources } from '@/capabilities/uniform_safety_gear/resources';
+import { pettyCashExpenseSetupSchema } from '@/capabilities/petty_cash_expense/setupSchema';
+import { pettyCashExpenseResources } from '@/capabilities/petty_cash_expense/resources';
+import { prepaidTaxWithholdingSetupSchema } from '@/capabilities/prepaid_tax_withholding/setupSchema';
+import { prepaidTaxWithholdingResources } from '@/capabilities/prepaid_tax_withholding/resources';
+import { royaltyProfitShareSetupSchema } from '@/capabilities/royalty_profit_share/setupSchema';
+import { royaltyProfitShareResources } from '@/capabilities/royalty_profit_share/resources';
+import { serviceWarrantyClaimSetupSchema } from '@/capabilities/service_warranty_claim/setupSchema';
+import { serviceWarrantyClaimResources } from '@/capabilities/service_warranty_claim/resources';
+import { customOrderCraftSetupSchema } from '@/capabilities/custom_order_craft/setupSchema';
+import { customOrderCraftResources } from '@/capabilities/custom_order_craft/resources';
+import { mediaAssetDamSetupSchema } from '@/capabilities/media_asset_dam/setupSchema';
+import { mediaAssetDamResources } from '@/capabilities/media_asset_dam/resources';
+import { exhibitionArtCurationSetupSchema } from '@/capabilities/exhibition_art_curation/setupSchema';
+import { exhibitionArtCurationResources } from '@/capabilities/exhibition_art_curation/resources';
+import { vipConciergePreferenceSetupSchema } from '@/capabilities/vip_concierge_preference/setupSchema';
+import { vipConciergePreferenceResources } from '@/capabilities/vip_concierge_preference/resources';
+import { studyGroupStudyHallSetupSchema } from '@/capabilities/study_group_study_hall/setupSchema';
+import { studyGroupStudyHallResources } from '@/capabilities/study_group_study_hall/resources';
+import { mentorMenteeMatchSetupSchema } from '@/capabilities/mentor_mentee_match/setupSchema';
+import { mentorMenteeMatchResources } from '@/capabilities/mentor_mentee_match/resources';
+
+// 전문 ERP 벤치마킹 7대 신규 Capability
+import { simplePlCashflowSetupSchema } from '@/capabilities/simple_pl_cashflow/setupSchema';
+import { simplePlCashflowResources } from '@/capabilities/simple_pl_cashflow/resources';
+import { fixedAssetDepreciationSetupSchema } from '@/capabilities/fixed_asset_depreciation/setupSchema';
+import { fixedAssetDepreciationResources } from '@/capabilities/fixed_asset_depreciation/resources';
+import { procurement3WayMatchSetupSchema } from '@/capabilities/procurement_3way_match/setupSchema';
+import { procurement3WayMatchResources } from '@/capabilities/procurement_3way_match/resources';
+import { fefoLotTrackerSetupSchema } from '@/capabilities/fefo_lot_tracker/setupSchema';
+import { fefoLotTrackerResources } from '@/capabilities/fefo_lot_tracker/resources';
+import { budgetCeilingQuotaSetupSchema } from '@/capabilities/budget_ceiling_quota/setupSchema';
+import { budgetCeilingQuotaResources } from '@/capabilities/budget_ceiling_quota/resources';
+import { fieldAuditTrailSetupSchema } from '@/capabilities/field_audit_trail/setupSchema';
+import { fieldAuditTrailResources } from '@/capabilities/field_audit_trail/resources';
+import { vendorScorecardSetupSchema } from '@/capabilities/vendor_scorecard/setupSchema';
+import { vendorScorecardResources } from '@/capabilities/vendor_scorecard/resources';
 
 
 /**
@@ -605,6 +685,200 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: leaveManagementSetupSchema,
     resources: leaveManagementResources,
   },
+
+  // 범주 BC: 기간 한정 특가 & 이벤트 스케줄러
+  promotional_deal: {
+    capabilityId: 'promotional_deal',
+    setupSchema: promotionalDealSetupSchema,
+    resources: promotionalDealResources,
+  },
+
+  // 30개 외부 연동 없는 독립 신규 Capability
+  daily_pos_reconciliation: {
+    capabilityId: 'daily_pos_reconciliation',
+    setupSchema: dailyPosReconciliationSetupSchema,
+    resources: dailyPosReconciliationResources,
+  },
+  lost_card_rfid: {
+    capabilityId: 'lost_card_rfid',
+    setupSchema: lostCardRfidSetupSchema,
+    resources: lostCardRfidResources,
+  },
+  valet_key_custody: {
+    capabilityId: 'valet_key_custody',
+    setupSchema: valetKeyCustodySetupSchema,
+    resources: valetKeyCustodyResources,
+  },
+  coatroom_baggage: {
+    capabilityId: 'coatroom_baggage',
+    setupSchema: coatroomBaggageSetupSchema,
+    resources: coatroomBaggageResources,
+  },
+  locker_emergency_override: {
+    capabilityId: 'locker_emergency_override',
+    setupSchema: lockerEmergencyOverrideSetupSchema,
+    resources: lockerEmergencyOverrideResources,
+  },
+  sound_broadcast_schedule: {
+    capabilityId: 'sound_broadcast_schedule',
+    setupSchema: soundBroadcastScheduleSetupSchema,
+    resources: soundBroadcastScheduleResources,
+  },
+  certificate_issuance: {
+    capabilityId: 'certificate_issuance',
+    setupSchema: certificateIssuanceSetupSchema,
+    resources: certificateIssuanceResources,
+  },
+  customer_blacklist_guard: {
+    capabilityId: 'customer_blacklist_guard',
+    setupSchema: customerBlacklistGuardSetupSchema,
+    resources: customerBlacklistGuardResources,
+  },
+  franchise_supervision: {
+    capabilityId: 'franchise_supervision',
+    setupSchema: franchiseSupervisionSetupSchema,
+    resources: franchiseSupervisionResources,
+  },
+  nda_privacy_audit: {
+    capabilityId: 'nda_privacy_audit',
+    setupSchema: ndaPrivacyAuditSetupSchema,
+    resources: ndaPrivacyAuditResources,
+  },
+  sublease_space_contract: {
+    capabilityId: 'sublease_space_contract',
+    setupSchema: subleaseSpaceContractSetupSchema,
+    resources: subleaseSpaceContractResources,
+  },
+  calibration_metering: {
+    capabilityId: 'calibration_metering',
+    setupSchema: calibrationMeteringSetupSchema,
+    resources: calibrationMeteringResources,
+  },
+  key_access_control: {
+    capabilityId: 'key_access_control',
+    setupSchema: keyAccessControlSetupSchema,
+    resources: keyAccessControlResources,
+  },
+  hazardous_waste_log: {
+    capabilityId: 'hazardous_waste_log',
+    setupSchema: hazardousWasteLogSetupSchema,
+    resources: hazardousWasteLogResources,
+  },
+  consumable_dispenser: {
+    capabilityId: 'consumable_dispenser',
+    setupSchema: consumableDispenserSetupSchema,
+    resources: consumableDispenserResources,
+  },
+  energy_utility_meter: {
+    capabilityId: 'energy_utility_meter',
+    setupSchema: energyUtilityMeterSetupSchema,
+    resources: energyUtilityMeterResources,
+  },
+  onboarding_checklist: {
+    capabilityId: 'onboarding_checklist',
+    setupSchema: onboardingChecklistSetupSchema,
+    resources: onboardingChecklistResources,
+  },
+  skills_matrix_cert: {
+    capabilityId: 'skills_matrix_cert',
+    setupSchema: skillsMatrixCertSetupSchema,
+    resources: skillsMatrixCertResources,
+  },
+  whistleblower_grievance: {
+    capabilityId: 'whistleblower_grievance',
+    setupSchema: whistleblowerGrievanceSetupSchema,
+    resources: whistleblowerGrievanceResources,
+  },
+  uniform_safety_gear: {
+    capabilityId: 'uniform_safety_gear',
+    setupSchema: uniformSafetyGearSetupSchema,
+    resources: uniformSafetyGearResources,
+  },
+  petty_cash_expense: {
+    capabilityId: 'petty_cash_expense',
+    setupSchema: pettyCashExpenseSetupSchema,
+    resources: pettyCashExpenseResources,
+  },
+  prepaid_tax_withholding: {
+    capabilityId: 'prepaid_tax_withholding',
+    setupSchema: prepaidTaxWithholdingSetupSchema,
+    resources: prepaidTaxWithholdingResources,
+  },
+  royalty_profit_share: {
+    capabilityId: 'royalty_profit_share',
+    setupSchema: royaltyProfitShareSetupSchema,
+    resources: royaltyProfitShareResources,
+  },
+  service_warranty_claim: {
+    capabilityId: 'service_warranty_claim',
+    setupSchema: serviceWarrantyClaimSetupSchema,
+    resources: serviceWarrantyClaimResources,
+  },
+  custom_order_craft: {
+    capabilityId: 'custom_order_craft',
+    setupSchema: customOrderCraftSetupSchema,
+    resources: customOrderCraftResources,
+  },
+  media_asset_dam: {
+    capabilityId: 'media_asset_dam',
+    setupSchema: mediaAssetDamSetupSchema,
+    resources: mediaAssetDamResources,
+  },
+  exhibition_art_curation: {
+    capabilityId: 'exhibition_art_curation',
+    setupSchema: exhibitionArtCurationSetupSchema,
+    resources: exhibitionArtCurationResources,
+  },
+  vip_concierge_preference: {
+    capabilityId: 'vip_concierge_preference',
+    setupSchema: vipConciergePreferenceSetupSchema,
+    resources: vipConciergePreferenceResources,
+  },
+  study_group_study_hall: {
+    capabilityId: 'study_group_study_hall',
+    setupSchema: studyGroupStudyHallSetupSchema,
+    resources: studyGroupStudyHallResources,
+  },
+  mentor_mentee_match: {
+    capabilityId: 'mentor_mentee_match',
+    setupSchema: mentorMenteeMatchSetupSchema,
+    resources: mentorMenteeMatchResources,
+  },
+  simple_pl_cashflow: {
+    capabilityId: 'simple_pl_cashflow',
+    setupSchema: simplePlCashflowSetupSchema,
+    resources: simplePlCashflowResources,
+  },
+  fixed_asset_depreciation: {
+    capabilityId: 'fixed_asset_depreciation',
+    setupSchema: fixedAssetDepreciationSetupSchema,
+    resources: fixedAssetDepreciationResources,
+  },
+  procurement_3way_match: {
+    capabilityId: 'procurement_3way_match',
+    setupSchema: procurement3WayMatchSetupSchema,
+    resources: procurement3WayMatchResources,
+  },
+  fefo_lot_tracker: {
+    capabilityId: 'fefo_lot_tracker',
+    setupSchema: fefoLotTrackerSetupSchema,
+    resources: fefoLotTrackerResources,
+  },
+  budget_ceiling_quota: {
+    capabilityId: 'budget_ceiling_quota',
+    setupSchema: budgetCeilingQuotaSetupSchema,
+    resources: budgetCeilingQuotaResources,
+  },
+  field_audit_trail: {
+    capabilityId: 'field_audit_trail',
+    setupSchema: fieldAuditTrailSetupSchema,
+    resources: fieldAuditTrailResources,
+  },
+  vendor_scorecard: {
+    capabilityId: 'vendor_scorecard',
+    setupSchema: vendorScorecardSetupSchema,
+    resources: vendorScorecardResources,
+  },
 };
 
 
@@ -773,6 +1047,57 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     readinessLevel: 'basic_ui',
   },
 
+  culture_center: {
+    id: 'culture_center',
+    name: '문화센터·평생교육원',
+    description: '강의실-강사-시간표 스케줄링, 강사료 수강매출 배분(RS %) 위탁계약서 및 강사 스펙 인쇄 포스터 관리',
+    category: 'education',
+    capabilities: [
+      'booking',
+      'instructor_match',
+      'seat_room',
+      'commission_payroll',
+      'digital_contract',
+      'passes',
+      'attendance',
+      'billing_invoicing',
+      'feedbacks',
+    ] as const,
+    requiredCapabilities: [
+      'booking',
+      'instructor_match',
+      'seat_room',
+      'commission_payroll',
+      'digital_contract',
+    ] as const,
+    optionalCapabilities: [
+      'passes',
+      'attendance',
+      'billing_invoicing',
+      'feedbacks',
+    ] as const,
+    businessRules: {
+      defaultRevenueShareRate: 0.50,
+      materialCostDeduction: true,
+      cardFeeRate: 0.03,
+      withholdingTaxRate: 0.033,
+    },
+    resourceTypes: [
+      { name: '301호 조리실습실', type: 'room', capacity: 16 },
+      { name: '201호 무용실', type: 'room', capacity: 25 },
+      { name: '202호 미술실', type: 'room', capacity: 20 },
+      { name: '101호 대강의실', type: 'room', capacity: 60 },
+    ],
+    roles: [
+      { name: '센터장', rank_order: 1, permissions: ['*'], description: '센터 운영 총괄 및 위탁 계약/매출 정산 승인' },
+      { name: '강좌매니저', rank_order: 2, permissions: ['scheduling:*', 'seat_room:*', 'instructor_match:*', 'passes:*', 'attendance:*'], description: '학기별 강좌 개설, 강의실 배정 및 수강생 접수' },
+      { name: '전임강사', rank_order: 3, permissions: ['instructor_match:view', 'attendance:*', 'feedbacks:view'], description: '강좌 강의 진행, 출결 확인 및 피드백 열람' },
+      { name: '파트강사', rank_order: 4, permissions: ['attendance:checkin'], description: '수업 출결 확인 보조' },
+    ],
+    onboardingSteps: ['강의실 및 실습실 등록', '강좌 개설 및 시간표 편성', '강사 위탁계약 체결', '수강생 모집'],
+    readinessLevel: 'verified',
+  },
+
   // ==========================================
   // Group 2: 체육·피트니스 (Fitness & Sports) - 8종
   // ==========================================
@@ -781,9 +1106,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '필라테스 스튜디오',
     description: '리포머/체어 그룹 및 개인레슨 예약, 횟수권 차감, 강사 배정 및 락커 관리',
     category: 'fitness',
-    capabilities: ['booking', 'passes', 'instructor_match', 'seat_room', 'locker', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree'] as const,
+    capabilities: ['booking', 'passes', 'instructor_match', 'seat_room', 'locker', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree', 'promotional_deal'] as const,
     requiredCapabilities: ['booking', 'passes', 'instructor_match'] as const,
-    optionalCapabilities: ['seat_room', 'locker', 'treatment_chart', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree'] as const,
+    optionalCapabilities: ['seat_room', 'locker', 'treatment_chart', 'diet_body_log', 'commission_payroll', 'digital_contract', 'equipment_lifecycle', 'membership_referral_tree', 'promotional_deal'] as const,
     businessRules: { cancelCutoffHours: 6, maxGroupCapacity: 6 },
     resourceTypes: [
       { name: '리포머룸', type: 'room', capacity: 6 },
@@ -804,9 +1129,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '요가 스튜디오',
     description: '수련 타임테이블 예약, 기간제/횟수제 이용권, 출결 체크인 및 락커 관리',
     category: 'fitness',
-    capabilities: ['booking', 'passes', 'attendance', 'locker', 'seat_room', 'diet_body_log'] as const,
+    capabilities: ['booking', 'passes', 'attendance', 'locker', 'seat_room', 'diet_body_log', 'promotional_deal'] as const,
     requiredCapabilities: ['booking', 'passes', 'attendance'] as const,
-    optionalCapabilities: ['locker', 'seat_room', 'diet_body_log'] as const,
+    optionalCapabilities: ['locker', 'seat_room', 'diet_body_log', 'promotional_deal'] as const,
     businessRules: { allowWalkInCheckIn: true },
     resourceTypes: [{ name: '메인 수련실', type: 'room', capacity: 18 }],
     roles: [
@@ -821,9 +1146,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '헬스장 / 피트니스 센터',
     description: '회원권 기간 관리, 입장 바코드/PIN 출결, 개인 락커 배정, 운동복 대여',
     category: 'fitness',
-    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll'] as const,
+    capabilities: ['passes', 'attendance', 'locker', 'rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll', 'promotional_deal'] as const,
     requiredCapabilities: ['passes', 'attendance', 'locker'] as const,
-    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll'] as const,
+    optionalCapabilities: ['rental_equipment', 'ledger_simple', 'retention_marketing', 'diet_body_log', 'lost_found', 'digital_contract', 'equipment_lifecycle', 'package_split_billing', 'sop_risk_assessment', 'work_attendance_payroll', 'promotional_deal'] as const,
     businessRules: { membershipHoldMaxDays: 30 },
     resourceTypes: [
       { name: '헬스존', type: 'room', capacity: 100 },
@@ -842,9 +1167,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '1:1 피트니스 / PT 샵',
     description: 'PT 세션 차감권, 트레이너 배정, 고객 체형 상담 일지 및 락커 관리',
     category: 'fitness',
-    capabilities: ['passes', 'booking', 'instructor_match', 'consultation_crm', 'locker', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree'] as const,
+    capabilities: ['passes', 'booking', 'instructor_match', 'consultation_crm', 'locker', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree', 'promotional_deal'] as const,
     requiredCapabilities: ['passes', 'booking', 'instructor_match'] as const,
-    optionalCapabilities: ['consultation_crm', 'locker', 'treatment_chart', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree'] as const,
+    optionalCapabilities: ['consultation_crm', 'locker', 'treatment_chart', 'curriculum_progress', 'retention_marketing', 'diet_body_log', 'commission_payroll', 'digital_contract', 'deposit_escrow', 'membership_referral_tree', 'promotional_deal'] as const,
     businessRules: { ptSessionDurationMinutes: 50 },
     resourceTypes: [{ name: 'PT 세션존', type: 'room', capacity: 3 }],
     roles: [
@@ -1448,9 +1773,27 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     name: '일반 기업 / 경영관리',
     description: '전사 다단계 전자결재, 부서별 업무 칸반 파이프라인, MBO 성과관리, 사규 및 피드백 중심',
     category: 'other',
-    capabilities: ['approval_workflow', 'task_pipeline', 'workplace_policy', 'mbo', 'feedbacks', 'billing_invoicing'] as const,
+    capabilities: [
+      'approval_workflow',
+      'task_pipeline',
+      'workplace_policy',
+      'mbo',
+      'feedbacks',
+      'billing_invoicing',
+      'seat_room',
+      'leave_management',
+      'supply_restock',
+    ] as const,
     requiredCapabilities: ['approval_workflow', 'task_pipeline'] as const,
-    optionalCapabilities: ['workplace_policy', 'mbo', 'feedbacks', 'billing_invoicing'] as const,
+    optionalCapabilities: [
+      'workplace_policy',
+      'mbo',
+      'feedbacks',
+      'billing_invoicing',
+      'seat_room',
+      'leave_management',
+      'supply_restock',
+    ] as const,
     roles: [
       { name: '대표이사/임원', rank_order: 1, permissions: ['*'] },
       { name: '팀장/관리자', rank_order: 2, permissions: ['approval_workflow:*', 'task_pipeline:*', 'mbo:*'] },
@@ -1478,6 +1821,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'supply_restock',
       'change_management',
       'approval_workflow',
+      'leave_management',
+      'vehicle_shuttle',
+      'seat_room',
     ] as const,
     requiredCapabilities: ['task_pipeline', 'recipe_bom', 'inventory'] as const,
     optionalCapabilities: [
@@ -1491,6 +1837,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'supply_restock',
       'change_management',
       'approval_workflow',
+      'leave_management',
+      'vehicle_shuttle',
+      'seat_room',
     ] as const,
     roles: [
       { name: '공장장/관리자', rank_order: 1, permissions: ['*'], description: '공장 총괄 및 최종 승인권자' },
@@ -1545,6 +1894,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'workplace_policy',
       'mbo',
       'inventory',
+      'seat_room',
+      'leave_management',
     ] as const,
     requiredCapabilities: [
       'quality_inspection',
@@ -1558,6 +1909,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'workplace_policy',
       'mbo',
       'inventory',
+      'seat_room',
+      'leave_management',
     ] as const,
     roles: [
       { name: 'QEHS 최고경영자/총괄책임', rank_order: 1, permissions: ['*'] },
@@ -1578,6 +1931,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'workplace_policy',
       'feedbacks',
       'approval_workflow',
+      'leave_management',
     ] as const,
     requiredCapabilities: [
       'mbo',
@@ -1588,6 +1942,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'shift_schedule',
       'feedbacks',
       'approval_workflow',
+      'leave_management',
     ] as const,
     roles: [
       { name: '대표이사/총괄임원', rank_order: 1, permissions: ['*'] },
@@ -1620,7 +1975,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     category: 'other',
     capabilities: [
       'task_pipeline',
-      'resources',
+      'seat_room',
       'patent_ip_asset',
       'equipment_lifecycle',
       'facility_incident_report',
@@ -1628,10 +1983,12 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'supply_restock',
       'mbo',
       'approval_workflow',
+      'leave_management',
+      'vehicle_shuttle',
     ] as const,
     requiredCapabilities: [
       'task_pipeline',
-      'resources',
+      'seat_room',
       'patent_ip_asset',
       'sop_risk_assessment',
     ] as const,
@@ -1641,6 +1998,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'supply_restock',
       'mbo',
       'approval_workflow',
+      'leave_management',
+      'vehicle_shuttle',
     ] as const,
     roles: [
       { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
@@ -1670,6 +2029,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 };
 
 export const PRESET_ALIASES: Record<string, string> = {
+  corporate_general_affairs: 'general_enterprise',
+  general_affairs: 'general_enterprise',
   rnd_lab: 'rnd_lab_management',
   rnd: 'rnd_lab_management',
   gym: 'gym_fitness',

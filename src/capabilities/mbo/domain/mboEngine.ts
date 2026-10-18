@@ -18,7 +18,7 @@ export type MboLevel = 'company' | 'department' | 'individual' | 'project';
 
 export type MboEvaluationGrade = 'S' | 'A' | 'B' | 'C' | 'D';
 
-export type MboEvaluationType = 'self' | 'peer' | 'manager' | 'final';
+export type MboEvaluationType = 'self' | 'peer' | 'manager' | 'executive' | 'final';
 
 export interface MboObjectiveItem {
   id: string;
@@ -258,7 +258,7 @@ export function validateEvaluationPayload(payload: MboEvaluationPayload): {
     errors.push('정성 평가 의견은 필수 입력 항목입니다.');
   }
 
-  const validTypes: MboEvaluationType[] = ['self', 'peer', 'manager', 'final'];
+  const validTypes: MboEvaluationType[] = ['self' as const, 'peer' as const, 'manager' as const, 'executive' as const, 'final' as const];
   if (!validTypes.includes(payload.evaluationType)) {
     errors.push(`유효하지 않은 평가 유형입니다: ${payload.evaluationType}`);
   }
@@ -304,4 +304,143 @@ export function canAccessEvaluation(params: {
 
   // 타 직원의 비공개 평가는 열람 차단
   return false;
+}
+
+export interface WeightValidationResult {
+  valid: boolean;
+  totalWeight: number;
+  difference: number;
+  message: string;
+}
+
+/**
+ * 개인별 MBO 목표 가중치 합계 100% 실시간 유효성 검사
+ */
+export function validateMboObjectiveWeights(
+  objectives: Array<{ weight?: number; title?: string }>
+): WeightValidationResult {
+  const totalWeight = objectives.reduce((sum, item) => sum + (Number(item.weight) || 0), 0);
+  const difference = 100 - totalWeight;
+  const valid = totalWeight === 100;
+  const message = valid
+    ? '목표 가중치 합계가 100%로 유효합니다.'
+    : difference > 0
+      ? `목표 가중치 합계가 100%가 되어야 합니다. (${difference}% 추가 필요, 현재: ${totalWeight}%)`
+      : `목표 가중치 합계가 100%를 초과했습니다. (${Math.abs(difference)}% 초과, 현재: ${totalWeight}%)`;
+
+  return { valid, totalWeight, difference, message };
+}
+
+export interface MultiStageEvaluationScores {
+  selfScore?: number | null;
+  managerScore?: number | null;
+  executiveScore?: number | null;
+  weights?: {
+    self?: number;
+    manager?: number;
+    executive?: number;
+  };
+}
+
+export interface MultiStageEvaluationResult {
+  totalScore: number;
+  grade: MboEvaluationGrade;
+  breakdown: {
+    self: { score: number; weight: number; weightedScore: number };
+    manager: { score: number; weight: number; weightedScore: number };
+    executive: { score: number; weight: number; weightedScore: number };
+  };
+  isFullyCompleted: boolean;
+}
+
+/**
+ * 3단계 다면평가(본인 자기평가 -> 1차 팀장평가 -> 2차 임원평가) 가중합산 종합 점수 산출
+ */
+export function calculateMultiStageMboEvaluationScore(
+  stages: MultiStageEvaluationScores
+): MultiStageEvaluationResult {
+  const wSelf = stages.weights?.self ?? 20;
+  const wManager = stages.weights?.manager ?? 50;
+  const wExecutive = stages.weights?.executive ?? 30;
+
+  const sSelf = Math.max(0, Math.min(100, stages.selfScore ?? 0));
+  const sManager = Math.max(0, Math.min(100, stages.managerScore ?? 0));
+  const sExecutive = Math.max(0, Math.min(100, stages.executiveScore ?? 0));
+
+  const wsSelf = Number(((sSelf * wSelf) / 100).toFixed(2));
+  const wsManager = Number(((sManager * wManager) / 100).toFixed(2));
+  const wsExecutive = Number(((sExecutive * wExecutive) / 100).toFixed(2));
+
+  const totalScore = Math.round(wsSelf + wsManager + wsExecutive);
+  const grade = calculateGradeFromScore(totalScore);
+
+  const isFullyCompleted =
+    stages.selfScore !== undefined && stages.selfScore !== null &&
+    stages.managerScore !== undefined && stages.managerScore !== null &&
+    stages.executiveScore !== undefined && stages.executiveScore !== null;
+
+  return {
+    totalScore,
+    grade,
+    breakdown: {
+      self: { score: sSelf, weight: wSelf, weightedScore: wsSelf },
+      manager: { score: sManager, weight: wManager, weightedScore: wsManager },
+      executive: { score: sExecutive, weight: wExecutive, weightedScore: wsExecutive },
+    },
+    isFullyCompleted,
+  };
+}
+
+export interface MboDistributionComplianceResult {
+  totalCount: number;
+  counts: Record<MboEvaluationGrade, number>;
+  percentages: Record<MboEvaluationGrade, number>;
+  isCompliant: boolean;
+  warnings: string[];
+}
+
+/**
+ * S(10%)/A(20%)/B(60%)/C+D(10%) 평가 등급 정규분포 가이드라인 준수율 판정
+ */
+export function evaluateMboDistributionCompliance(
+  items: Array<MboEvaluationGrade | { grade: MboEvaluationGrade }>
+): MboDistributionComplianceResult {
+  const counts: Record<MboEvaluationGrade, number> = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+  for (const item of items) {
+    const grade = typeof item === 'string' ? item : item.grade;
+    if (counts[grade] !== undefined) {
+      counts[grade]++;
+    }
+  }
+
+  const totalCount = items.length;
+  const percentages: Record<MboEvaluationGrade, number> = {
+    S: totalCount > 0 ? Number(((counts.S / totalCount) * 100).toFixed(1)) : 0,
+    A: totalCount > 0 ? Number(((counts.A / totalCount) * 100).toFixed(1)) : 0,
+    B: totalCount > 0 ? Number(((counts.B / totalCount) * 100).toFixed(1)) : 0,
+    C: totalCount > 0 ? Number(((counts.C / totalCount) * 100).toFixed(1)) : 0,
+    D: totalCount > 0 ? Number(((counts.D / totalCount) * 100).toFixed(1)) : 0,
+  };
+
+  const warnings: string[] = [];
+
+  if (totalCount > 0) {
+    if (percentages.S > 10) {
+      warnings.push(`S등급 배분 비율(${percentages.S}%)이 권장 상한선(10%)을 초과했습니다.`);
+    }
+    if (percentages.S + percentages.A > 30) {
+      warnings.push(`우수 등급(S+A) 합산 비율(${Number((percentages.S + percentages.A).toFixed(1))}%)이 권장 상한선(30%)을 초과했습니다.`);
+    }
+    if (totalCount >= 10 && percentages.C + percentages.D < 10) {
+      warnings.push(`하위 등급(C+D) 비율(${Number((percentages.C + percentages.D).toFixed(1))}%)이 최소 권장 기준(10%)에 미달합니다.`);
+    }
+  }
+
+  return {
+    totalCount,
+    counts,
+    percentages,
+    isCompliant: warnings.length === 0,
+    warnings,
+  };
 }

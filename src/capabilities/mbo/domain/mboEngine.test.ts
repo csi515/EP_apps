@@ -11,6 +11,9 @@ import {
   calculateGradeFromScore,
   validateEvaluationPayload,
   canAccessEvaluation,
+  validateMboObjectiveWeights,
+  calculateMultiStageMboEvaluationScore,
+  evaluateMboDistributionCompliance,
 } from './mboEngine';
 
 console.log('=== [1] MBO State Machine Transition Invariants ===');
@@ -152,5 +155,93 @@ assert.equal(canAccessEvaluation({ ...confidentialParams, isOrgAdmin: true }), t
 // 5.5 비공개 평가가 아닌 경우 타 직원도 열람 가능
 assert.equal(canAccessEvaluation({ ...confidentialParams, isConfidential: false }), true);
 console.log('  -> 비공개 성과 평가 권한 격리 검증 성공');
+
+console.log('=== [6] Objective Weights 100% Interlock Validation ===');
+
+// 6.1 정확히 100%인 경우
+const perfectWeights = validateMboObjectiveWeights([
+  { weight: 40, title: '매출 성장' },
+  { weight: 35, title: '고객 유지' },
+  { weight: 25, title: '프로세스 혁신' },
+]);
+assert.equal(perfectWeights.valid, true);
+assert.equal(perfectWeights.totalWeight, 100);
+assert.equal(perfectWeights.difference, 0);
+
+// 6.2 100% 미달인 경우 (80%)
+const deficientWeights = validateMboObjectiveWeights([
+  { weight: 50, title: '매출 성장' },
+  { weight: 30, title: '고객 유지' },
+]);
+assert.equal(deficientWeights.valid, false);
+assert.equal(deficientWeights.totalWeight, 80);
+assert.equal(deficientWeights.difference, 20);
+assert.match(deficientWeights.message, /20% 추가 필요/);
+
+// 6.3 100% 초과인 경우 (115%)
+const excessiveWeights = validateMboObjectiveWeights([
+  { weight: 60, title: '매출 성장' },
+  { weight: 40, title: '고객 유지' },
+  { weight: 15, title: '팀 빌딩' },
+]);
+assert.equal(excessiveWeights.valid, false);
+assert.equal(excessiveWeights.totalWeight, 115);
+assert.equal(excessiveWeights.difference, -15);
+assert.match(excessiveWeights.message, /15% 초과/);
+console.log('  -> 개인별 목표 가중치 합계 100% 인터락 검증 성공');
+
+console.log('=== [7] Multi-Stage MBO Evaluation Scoring (Self 20% / Manager 50% / Exec 30%) ===');
+
+// 7.1 표준 가중치 종합 점수 산출
+const multiEval = calculateMultiStageMboEvaluationScore({
+  selfScore: 90,    // 90 * 0.20 = 18.0
+  managerScore: 80, // 80 * 0.50 = 40.0
+  executiveScore: 85, // 85 * 0.30 = 25.5
+  // total = 18 + 40 + 25.5 = 83.5 => round 84 ('A')
+});
+assert.equal(multiEval.totalScore, 84);
+assert.equal(multiEval.grade, 'A');
+assert.equal(multiEval.isFullyCompleted, true);
+assert.equal(multiEval.breakdown.self.weightedScore, 18);
+assert.equal(multiEval.breakdown.manager.weightedScore, 40);
+assert.equal(multiEval.breakdown.executive.weightedScore, 25.5);
+
+// 7.2 임원 평가 미완료 상태 산출
+const partialEval = calculateMultiStageMboEvaluationScore({
+  selfScore: 95,
+  managerScore: 90,
+  executiveScore: null,
+});
+assert.equal(partialEval.isFullyCompleted, false);
+assert.equal(partialEval.totalScore, 64); // 19 + 45 + 0 = 64 ('C')
+console.log('  -> 3단계 다면평가 가중합산 종합 점수 산출 검증 성공');
+
+console.log('=== [8] Grade Distribution Compliance (S 10% / A 20% / B 60% / CD 10%) ===');
+
+// 8.1 정상 정규분포 준수 샘플 (총 10명: S 1명(10%), A 2명(20%), B 6명(60%), C 1명(10%))
+const compliantGrades = [
+  'S' as const,
+  'A' as const, 'A' as const,
+  'B' as const, 'B' as const, 'B' as const, 'B' as const, 'B' as const, 'B' as const,
+  'C' as const,
+];
+const complianceResult = evaluateMboDistributionCompliance(compliantGrades);
+assert.equal(complianceResult.isCompliant, true);
+assert.equal(complianceResult.warnings.length, 0);
+assert.equal(complianceResult.percentages.S, 10);
+assert.equal(complianceResult.percentages.A, 20);
+assert.equal(complianceResult.percentages.B, 60);
+
+// 8.2 S등급 과다 (총 10명 중 S 2명(20%))
+const excessSGrades = [
+  'S' as const, 'S' as const,
+  'A' as const,
+  'B' as const, 'B' as const, 'B' as const, 'B' as const, 'B' as const,
+  'C' as const, 'D' as const,
+];
+const excessResult = evaluateMboDistributionCompliance(excessSGrades);
+assert.equal(excessResult.isCompliant, false);
+assert.equal(excessResult.warnings.some((w) => w.includes('S등급 배분 비율(20%)이 권장 상한선(10%)을 초과')), true);
+console.log('  -> 상대평가 정규분포 가이드라인 및 준수율 판정 검증 성공');
 
 console.log('\n[PASS] mboEngine.test.ts: 모든 도메인 불변식 검증 완료');

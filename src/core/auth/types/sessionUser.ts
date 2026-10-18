@@ -9,6 +9,8 @@ export interface User {
   role: UserRole;
   staffId?: string | null;
   parentCustomerId?: string | null;
+  department_id?: string | null;
+  team_id?: string | null;
   email: string;
   permissions?: string[];
   customRole?: {

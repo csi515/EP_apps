@@ -5,6 +5,7 @@ import {
   calculateStaffPayroll,
   summarizePayrollBatch,
   formatKoreanWon,
+  calculateCourseRevenueShare,
 } from './commissionPayrollEngine';
 
 function runTests() {
@@ -171,7 +172,45 @@ function runTests() {
   if (!formatted.includes('1,250,000원')) {
     throw new Error(`Expected 1,250,000원, got ${formatted}`);
   }
-  console.log('✅ Test 4 passed: Currency formatting');
+  // Test 5: 문화센터 수강료 매출 배분(RS %) 및 원천징수 정산
+  const courseShare = calculateCourseRevenueShare({
+    courseId: 'crs-101',
+    courseName: '정통 이탈리안 파스타 마스터 클래스',
+    instructorId: 'inst-01',
+    instructorName: '김민지',
+    totalEnrolled: 12,
+    tuitionFeePerPerson: 180000,
+    instructorShareRate: 0.50,
+    materialCostPerPerson: 30000,
+    cardFeeRate: 0.03,
+    withholdingTax: true,
+  });
+
+  if (courseShare.totalGrossSales !== 2160000) {
+    throw new Error(`Expected total gross 2,160,000, got ${courseShare.totalGrossSales}`);
+  }
+  if (courseShare.totalMaterialCostDeduction !== 360000) {
+    throw new Error(`Expected material deduction 360,000, got ${courseShare.totalMaterialCostDeduction}`);
+  }
+  if (courseShare.totalCardFeeDeduction !== 64800) {
+    throw new Error(`Expected card fee 64,800, got ${courseShare.totalCardFeeDeduction}`);
+  }
+  if (courseShare.netRevenueToShare !== 1735200) {
+    throw new Error(`Expected net revenue 1,735,200, got ${courseShare.netRevenueToShare}`);
+  }
+  if (courseShare.instructorGrossPay !== 867600) {
+    throw new Error(`Expected instructor gross 867,600, got ${courseShare.instructorGrossPay}`);
+  }
+  if (courseShare.incomeTax !== 26028) {
+    throw new Error(`Expected income tax 26,028, got ${courseShare.incomeTax}`);
+  }
+  if (courseShare.localIncomeTax !== 2603) {
+    throw new Error(`Expected local income tax 2,603, got ${courseShare.localIncomeTax}`);
+  }
+  if (courseShare.instructorNetPayout !== 838969) {
+    throw new Error(`Expected instructor net payout 838,969, got ${courseShare.instructorNetPayout}`);
+  }
+  console.log('✅ Test 5 passed: Course revenue share calculation with 3.3% tax');
 
   console.log('🎉 All commissionPayrollEngine tests passed!');
 }

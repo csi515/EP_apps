@@ -25,6 +25,12 @@ export {
   isOrgAdminRole,
   isOrgStaffActorRole,
   isStaffLikeRole,
+  isSuperAdmin,
+  isDirector,
+  isManager,
+  isStaff,
+  isDriver,
+  isWorker,
   ORG_ADMIN_ROLES,
   ORG_STAFF_ACTOR_ROLES,
   roleHasDefaultPermission,
@@ -41,7 +47,7 @@ export {
   scopeTargetId,
 } from './scopes';
 export { evaluateCustomPermission } from './permissions';
-export { AUTH_SCOPE_TYPES } from './types';
+export { AUTH_SCOPE_TYPES, SIX_LEVEL_USER_ROLES } from './types';
 export type {
   AuthorizationGrant,
   AuthScope,
@@ -49,4 +55,5 @@ export type {
   EvaluatePermissionInput,
   Permission,
   PermissionDefinition,
+  SixLevelUserRole,
 } from './types';

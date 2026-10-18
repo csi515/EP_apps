@@ -108,11 +108,26 @@ export interface UniversalResourceMetadata {
   vehicle_model?: string;
   fuel_type?: string;
   parking_location?: string;
+  fuel_card_number?: string; // 전용 주유카드 번호
+  initial_odometer_km?: number; // 불출 시 주행거리(km)
+  return_odometer_km?: number; // 반납 시 최종 주행거리(km)
+  inspection_checklist?: {
+    exterior_damage_checked?: boolean; // 외관 파손 점검
+    fuel_level_percent?: number; // 주유 잔량 (%)
+    cleanliness_checked?: boolean; // 실내 청결 점검
+  };
 
-  // 2) 회의실 (meeting_room)
+  // 2) 회의실 & IT 장비 (meeting_room / equipment)
   has_projector?: boolean;
   has_video_conference?: boolean;
   max_occupancy?: number;
+  serial_number?: string; // 시리얼 번호
+  asset_tag?: string; // 고유 자산번호
+  accessories_checklist?: {
+    power_adapter?: boolean; // 전원 어댑터 누락 여부
+    remote_controller?: boolean; // 리모컨 누락 여부
+    hdmi_cable?: boolean; // HDMI/디스플레이 케이블 누락 여부
+  };
 
   // 3) 보건실 (health_room)
   slot_duration_minutes?: number;

@@ -75,6 +75,44 @@ import { qualityInspectionCapability } from './quality_inspection/manifest';
 import { change_managementCapability } from './change_management/manifest';
 import { patent_ip_assetCapability } from './patent_ip_asset/manifest';
 import { leave_managementCapability } from './leave_management/manifest';
+import { promotional_dealCapability } from './promotional_deal/manifest';
+import { daily_pos_reconciliationCapability } from './daily_pos_reconciliation/manifest';
+import { lost_card_rfidCapability } from './lost_card_rfid/manifest';
+import { valet_key_custodyCapability } from './valet_key_custody/manifest';
+import { coatroom_baggageCapability } from './coatroom_baggage/manifest';
+import { locker_emergency_overrideCapability } from './locker_emergency_override/manifest';
+import { sound_broadcast_scheduleCapability } from './sound_broadcast_schedule/manifest';
+import { certificate_issuanceCapability } from './certificate_issuance/manifest';
+import { customer_blacklist_guardCapability } from './customer_blacklist_guard/manifest';
+import { franchise_supervisionCapability } from './franchise_supervision/manifest';
+import { nda_privacy_auditCapability } from './nda_privacy_audit/manifest';
+import { sublease_space_contractCapability } from './sublease_space_contract/manifest';
+import { calibration_meteringCapability } from './calibration_metering/manifest';
+import { key_access_controlCapability } from './key_access_control/manifest';
+import { hazardous_waste_logCapability } from './hazardous_waste_log/manifest';
+import { consumable_dispenserCapability } from './consumable_dispenser/manifest';
+import { energy_utility_meterCapability } from './energy_utility_meter/manifest';
+import { onboarding_checklistCapability } from './onboarding_checklist/manifest';
+import { skills_matrix_certCapability } from './skills_matrix_cert/manifest';
+import { whistleblower_grievanceCapability } from './whistleblower_grievance/manifest';
+import { uniform_safety_gearCapability } from './uniform_safety_gear/manifest';
+import { petty_cash_expenseCapability } from './petty_cash_expense/manifest';
+import { prepaid_tax_withholdingCapability } from './prepaid_tax_withholding/manifest';
+import { royalty_profit_shareCapability } from './royalty_profit_share/manifest';
+import { service_warranty_claimCapability } from './service_warranty_claim/manifest';
+import { custom_order_craftCapability } from './custom_order_craft/manifest';
+import { media_asset_damCapability } from './media_asset_dam/manifest';
+import { exhibition_art_curationCapability } from './exhibition_art_curation/manifest';
+import { vip_concierge_preferenceCapability } from './vip_concierge_preference/manifest';
+import { study_group_study_hallCapability } from './study_group_study_hall/manifest';
+import { mentor_mentee_matchCapability } from './mentor_mentee_match/manifest';
+import { simple_pl_cashflowCapability } from './simple_pl_cashflow/manifest';
+import { fixed_asset_depreciationCapability } from './fixed_asset_depreciation/manifest';
+import { procurement_3way_matchCapability } from './procurement_3way_match/manifest';
+import { fefo_lot_trackerCapability } from './fefo_lot_tracker/manifest';
+import { budget_ceiling_quotaCapability } from './budget_ceiling_quota/manifest';
+import { field_audit_trailCapability } from './field_audit_trail/manifest';
+import { vendor_scorecardCapability } from './vendor_scorecard/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -163,6 +201,44 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   change_managementCapability,
   patent_ip_assetCapability,
   leave_managementCapability,
+  promotional_dealCapability,
+  daily_pos_reconciliationCapability,
+  lost_card_rfidCapability,
+  valet_key_custodyCapability,
+  coatroom_baggageCapability,
+  locker_emergency_overrideCapability,
+  sound_broadcast_scheduleCapability,
+  certificate_issuanceCapability,
+  customer_blacklist_guardCapability,
+  franchise_supervisionCapability,
+  nda_privacy_auditCapability,
+  sublease_space_contractCapability,
+  calibration_meteringCapability,
+  key_access_controlCapability,
+  hazardous_waste_logCapability,
+  consumable_dispenserCapability,
+  energy_utility_meterCapability,
+  onboarding_checklistCapability,
+  skills_matrix_certCapability,
+  whistleblower_grievanceCapability,
+  uniform_safety_gearCapability,
+  petty_cash_expenseCapability,
+  prepaid_tax_withholdingCapability,
+  royalty_profit_shareCapability,
+  service_warranty_claimCapability,
+  custom_order_craftCapability,
+  media_asset_damCapability,
+  exhibition_art_curationCapability,
+  vip_concierge_preferenceCapability,
+  study_group_study_hallCapability,
+  mentor_mentee_matchCapability,
+  simple_pl_cashflowCapability,
+  fixed_asset_depreciationCapability,
+  procurement_3way_matchCapability,
+  fefo_lot_trackerCapability,
+  budget_ceiling_quotaCapability,
+  field_audit_trailCapability,
+  vendor_scorecardCapability,
 ];
 
 export * from './trial_funnel';
@@ -188,6 +264,44 @@ export * from './quality_inspection';
 export * from './change_management';
 export * from './patent_ip_asset';
 export * from './leave_management';
+export * from './promotional_deal';
+export * from './daily_pos_reconciliation';
+export * from './lost_card_rfid';
+export * from './valet_key_custody';
+export * from './coatroom_baggage';
+export * from './locker_emergency_override';
+export * from './sound_broadcast_schedule';
+export * from './certificate_issuance';
+export * from './customer_blacklist_guard';
+export * from './franchise_supervision';
+export * from './nda_privacy_audit';
+export * from './sublease_space_contract';
+export * from './calibration_metering';
+export * from './key_access_control';
+export * from './hazardous_waste_log';
+export * from './consumable_dispenser';
+export * from './energy_utility_meter';
+export * from './onboarding_checklist';
+export * from './skills_matrix_cert';
+export * from './whistleblower_grievance';
+export * from './uniform_safety_gear';
+export * from './petty_cash_expense';
+export * from './prepaid_tax_withholding';
+export * from './royalty_profit_share';
+export * from './service_warranty_claim';
+export * from './custom_order_craft';
+export * from './media_asset_dam';
+export * from './exhibition_art_curation';
+export * from './vip_concierge_preference';
+export * from './study_group_study_hall';
+export * from './mentor_mentee_match';
+export * from './simple_pl_cashflow';
+export * from './fixed_asset_depreciation';
+export * from './procurement_3way_match';
+export * from './fefo_lot_tracker';
+export * from './budget_ceiling_quota';
+export * from './field_audit_trail';
+export * from './vendor_scorecard';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

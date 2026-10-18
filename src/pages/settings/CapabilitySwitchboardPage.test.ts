@@ -25,6 +25,7 @@ import '@/capabilities/mbo/domain/workloadCapacityEngine.test';
 import '@/capabilities/leave_management/domain/leaveManagementEngine.test';
 import '@/capabilities/vehicle_shuttle/domain/shuttleCommuteEngine.test';
 import '@/app/presets/presetRecommendationEngine.test';
+import '@/hooks/useStaffScope.test';
 
 console.log('[test:switchboard-store] starting test suite...');
 

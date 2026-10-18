@@ -3,3 +3,6 @@ export { instructor_matchCapability as instructorMatchCapability } from './manif
 export * from './domain/instructorMatchEngine';
 export { instructorMatchSetupSchema } from './setupSchema';
 export { instructorMatchResources } from './resources';
+export { InstructorProfileModal } from './ui/InstructorProfileModal';
+export { InstructorPrintableLeaflet } from './ui/InstructorPrintableLeaflet';
+export { InstructorMatchManagementView } from './ui/InstructorMatchManagementView';

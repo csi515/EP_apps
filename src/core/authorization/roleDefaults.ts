@@ -34,12 +34,42 @@ export const STAFF_DEFAULT_PERMISSIONS: readonly Permission[] = [
 
 const STAFF_DEFAULT_SET = new Set<string>(STAFF_DEFAULT_PERMISSIONS);
 
+export function isSuperAdmin(role: string | null | undefined): boolean {
+  return role === 'super_admin';
+}
+
+export function isDirector(role: string | null | undefined): boolean {
+  return role === 'director' || role === 'owner';
+}
+
+export function isManager(role: string | null | undefined): boolean {
+  return role === 'manager';
+}
+
+export function isStaff(role: string | null | undefined): boolean {
+  return role === 'staff' || role === 'instructor';
+}
+
+export function isDriver(role: string | null | undefined): boolean {
+  return role === 'driver';
+}
+
+export function isWorker(role: string | null | undefined): boolean {
+  return role === 'worker';
+}
+
 export function isOrgAdminRole(role: string | null | undefined): boolean {
-  return role === 'owner' || role === 'admin' || role === 'manager';
+  return (
+    role === 'owner' ||
+    role === 'director' ||
+    role === 'admin' ||
+    role === 'manager' ||
+    role === 'super_admin'
+  );
 }
 
 export function isStaffLikeRole(role: string | null | undefined): boolean {
-  return role === 'staff' || role === 'instructor';
+  return role === 'staff' || role === 'instructor' || role === 'driver' || role === 'worker';
 }
 
 export function isOrgStaffActorRole(role: string | null | undefined): boolean {

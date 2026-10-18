@@ -57,3 +57,15 @@ export type EvaluatePermissionInput = {
   assignedResourceIds?: readonly string[] | null;
   extraGrants?: readonly AuthorizationGrant[] | null;
 };
+
+/** 6단계 확장 사용자 역할 체계 */
+export const SIX_LEVEL_USER_ROLES = [
+  'super_admin',
+  'director',
+  'manager',
+  'staff',
+  'driver',
+  'worker',
+] as const;
+
+export type SixLevelUserRole = (typeof SIX_LEVEL_USER_ROLES)[number];

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {
   calculateChecklistProgress,
   evaluateChecklistUrgency,
+  evaluateToleranceResult,
+  generateCapaTicketFromInspectionFail,
   type ChecklistItem,
 } from './maintenanceChecklistEngine';
 
@@ -86,7 +88,51 @@ function run() {
   assert.deepEqual(outOfRangeCheck.outOfRangeItemIds, ['chk-1']);
   assert.equal(outOfRangeCheck.alertLevel, 'CRITICAL');
 
-  console.log('maintenanceChecklistEngine.test.ts: ok');
+  // 5. 정량 수치 허용 공차(Tolerance) 판정 검증
+  // 냉장고 온도: -2℃ ~ 4℃ (정상치: 1.5℃)
+  const passCheck = evaluateToleranceResult({
+    itemId: 'chk-fridge',
+    itemTitle: '냉장고 보관 온도',
+    numericValue: 1.5,
+    minAllowed: -2,
+    maxAllowed: 4,
+    unit: '℃',
+  });
+  assert.equal(passCheck.isPassed, true);
+  assert.equal(passCheck.status, 'PASS');
+
+  // 상한 초과: 6.8℃ -> FAIL_HIGH
+  const failHighCheck = evaluateToleranceResult({
+    itemId: 'chk-fridge',
+    itemTitle: '냉장고 보관 온도',
+    numericValue: 6.8,
+    minAllowed: -2,
+    maxAllowed: 4,
+    unit: '℃',
+  });
+  assert.equal(failHighCheck.isPassed, false);
+  assert.equal(failHighCheck.status, 'FAIL_HIGH');
+  assert.equal(failHighCheck.deviation, 2.8);
+
+  // 6. 점검 실패 시 CAPA 긴급 티켓 자동 생성 검증
+  const capaTicket = generateCapaTicketFromInspectionFail(
+    {
+      itemId: 'chk-fridge',
+      itemTitle: '냉장고 보관 온도',
+      numericValue: 8.5, // 4도 초과 + 심각
+      minAllowed: -2,
+      maxAllowed: 4,
+      unit: '℃',
+    },
+    '김철수 점검원'
+  );
+  assert.equal(capaTicket.status, 'OPEN');
+  assert.equal(capaTicket.priority, 'CRITICAL');
+  assert.match(capaTicket.ticketNumber, /CAPA-/);
+  assert.match(capaTicket.failureReason, /초과/);
+  assert.match(capaTicket.correctiveActionPlan || '', /긴급 점검/);
+
+  console.log('maintenanceChecklistEngine.test.ts: ok (with Tolerance & CAPA Auto-Ticket)');
 }
 
 run();

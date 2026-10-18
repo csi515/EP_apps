@@ -2,6 +2,8 @@ import {
   RecipeItem,
   calculateMenuCost,
   calculateBatchConsumption,
+  executeBomStockDeduction,
+  recalculateRecipeCostWithUpdatedIngredientPrice,
 } from './recipeBomEngine';
 
 function runTests() {
@@ -106,6 +108,67 @@ function runTests() {
   }
 
   console.log('✅ Test 2 passed: Batch orders BOM explosion and inventory deduction');
+
+  // Test 3: 완제품 출하 시 원자재 재고 차감 및 재고 부족(Shortage) 검증
+  const stockLevels = {
+    'ing-coffee': 100, // 90g 필요 -> 10g 남음
+    'ing-milk': 300,   // 400ml 필요 -> 100ml 부족!
+    'ing-syrup': 100,  // 60ml 필요 -> 40ml 남음
+  };
+
+  const deductionResult = executeBomStockDeduction({
+    orders,
+    recipes: [vanillaLatte, americano],
+    stockLevels,
+  });
+
+  if (!deductionResult.hasShortage) {
+    throw new Error('Expected shortage to be detected due to insufficient milk');
+  }
+
+  const milkItem = deductionResult.items.find((i) => i.inventoryItemId === 'ing-milk');
+  if (!milkItem || !milkItem.isShortage || milkItem.shortageQuantity !== 100) {
+    throw new Error(`Expected 100ml milk shortage, got ${milkItem?.shortageQuantity}`);
+  }
+
+  const coffeeItem = deductionResult.items.find((i) => i.inventoryItemId === 'ing-coffee');
+  if (!coffeeItem || coffeeItem.isShortage || coffeeItem.remainingStock !== 10) {
+    throw new Error(`Expected 10g remaining coffee, got ${coffeeItem?.remainingStock}`);
+  }
+
+  if (deductionResult.stockMovementPayloads.length !== 3) {
+    throw new Error(`Expected 3 stock movement payloads, got ${deductionResult.stockMovementPayloads.length}`);
+  }
+  console.log('✅ Test 3 passed: BOM stock deduction and shortage detection');
+
+  // Test 4: 원자재 매입단가 인상 시 원가/마진율 실시간 시뮬레이션 및 권장 판매가 제안
+  // 원두 25원 -> 35원 (+10원), 우유 2.5원 -> 3.5원 (+1원), 시럽 10원 유지
+  // 신규 원가: (18 * 35) + (200 * 3.5) + (30 * 10) = 630 + 700 + 300 = 1630원 (기존 1250원에서 +380원 인상)
+  const simulation = recalculateRecipeCostWithUpdatedIngredientPrice(
+    vanillaLatte,
+    {
+      'ing-coffee': 35,
+      'ing-milk': 3.5,
+    },
+    75 // 목표 마진율 75%
+  );
+
+  if (simulation.updatedCostPrice !== 1630) {
+    throw new Error(`Expected updated cost 1,630, got ${simulation.updatedCostPrice}`);
+  }
+  if (simulation.deltaCost !== 380) {
+    throw new Error(`Expected delta cost +380, got ${simulation.deltaCost}`);
+  }
+  // 신규 마진율: (5500 - 1630) / 5500 * 100 = 3870 / 5500 = 70.4%
+  if (simulation.updatedMarginRatioPercent !== 70.4) {
+    throw new Error(`Expected updated margin ratio 70.4%, got ${simulation.updatedMarginRatioPercent}`);
+  }
+  // 목표 마진율 75%를 달성하기 위한 권장 판매가 = 1630 / (1 - 0.75) = 1630 / 0.25 = 6520 -> 100원 올림 6600원
+  if (simulation.suggestedSellingPrice !== 6600) {
+    throw new Error(`Expected suggested price 6,600, got ${simulation.suggestedSellingPrice}`);
+  }
+  console.log('✅ Test 4 passed: Ingredient price update simulation & suggested price');
+
   console.log('🎉 All recipeBomEngine tests passed!');
 }
 

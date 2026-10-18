@@ -7,10 +7,13 @@ import {
   createPurchaseContractPackage,
   issueContractPurchaseOrder,
   syncPurchaseOrderToInventoryReceipt,
+  evaluateStockPreRelease,
+  checkDepartmentBudgetCeiling,
   type ItemProcurementHistory,
   type StockInventoryItem,
   type BiddingVendorQuote,
   type SoleSourceDetails,
+  type DepartmentBudgetCeiling,
 } from './procurementPipelineEngine';
 
 function run() {
@@ -403,6 +406,83 @@ function run() {
     assert.equal(inventoryReceipts[0].pendingQuantity, 10);
     assert.equal(inventoryReceipts[0].status, 'pending_receipt');
     assert.equal(inventoryReceipts[0].poNumber, po.poNumber);
+  }
+
+  // 6. 사내 가용 재고 선불출 권고 (evaluateStockPreRelease)
+  {
+    const reqItems = [
+      {
+        id: 'ri-1',
+        sku: 'BOLT-M8-100',
+        itemName: '고장력 육각볼트 M8',
+        quantity: 50,
+        unit: 'EA',
+        estimatedUnitPrice: 500,
+        estimatedSubtotal: 25000,
+      },
+      {
+        id: 'ri-2',
+        sku: 'OIL-VG46-20L',
+        itemName: '유압 작동유 VG46',
+        quantity: 2,
+        unit: 'EA',
+        estimatedUnitPrice: 60000,
+        estimatedSubtotal: 120000,
+      },
+    ];
+
+    const currentStock: StockInventoryItem[] = [
+      { sku: 'BOLT-M8-100', itemName: '고장력 육각볼트 M8', availableQuantity: 100 }, // 재고 충분
+      { sku: 'OIL-VG46-20L', itemName: '유압 작동유 VG46', availableQuantity: 0 }, // 재고 없음
+    ];
+
+    const preRelease = evaluateStockPreRelease(reqItems, currentStock);
+    assert.equal(preRelease.canAvoidExternalPurchase, false); // 오일은 외부 구매 필요
+    assert.equal(preRelease.totalSavingsPotential, 25000); // 볼트 50개 * 500원 절감
+
+    const boltAction = preRelease.recommendedActions.find((a) => a.sku === 'BOLT-M8-100');
+    assert.ok(boltAction);
+    assert.equal(boltAction.recommendedAction, 'INTERNAL_TRANSFER_PREFERRED');
+    assert.ok(boltAction.instruction.includes('사내 창고 재고 선불출'));
+  }
+
+  // 7. 부서별 구매 예산 한도(Budget Ceiling) 인터락
+  {
+    const budget: DepartmentBudgetCeiling = {
+      department: '품질관리팀',
+      periodYearMonth: '2026-10',
+      allocatedBudget: 5000000, // 500만원
+      spentBudget: 4200000, // 420만원 기집행
+      remainingBudget: 800000, // 잔여 80만원
+    };
+
+    // 7-1) 잔여 예산 이내 요청 (정상 승인)
+    const withinResult = checkDepartmentBudgetCeiling({
+      budget,
+      requestedAmount: 500000, // 50만원
+    });
+    assert.equal(withinResult.isWithinBudget, true);
+    assert.equal(withinResult.requiresExecutiveOverride, false);
+    assert.equal(withinResult.deficitAmount, 0);
+
+    // 7-2) 잔여 예산 초과 요청 (특약 승인 요구)
+    const overResult = checkDepartmentBudgetCeiling({
+      budget,
+      requestedAmount: 1200000, // 120만원 (40만원 초과)
+    });
+    assert.equal(overResult.isWithinBudget, false);
+    assert.equal(overResult.requiresExecutiveOverride, true);
+    assert.equal(overResult.deficitAmount, 400000);
+    assert.ok(overResult.message.includes('예산 초과 경고'));
+
+    // 7-3) 최고권한자 특약 승인 시 조건부 허용
+    const overrideResult = checkDepartmentBudgetCeiling({
+      budget,
+      requestedAmount: 1200000,
+      hasExecutiveApproval: true,
+    });
+    assert.equal(overrideResult.requiresExecutiveOverride, false);
+    assert.ok(overrideResult.message.includes('최고책임자 특약 결재'));
   }
 
   console.log('procurementPipelineEngine.test.ts: all assertions passed!');

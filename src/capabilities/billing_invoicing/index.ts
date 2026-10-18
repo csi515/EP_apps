@@ -3,3 +3,4 @@ export { billing_invoicingCapability as billingInvoicingCapability } from './man
 export * from './domain/billingInvoicingEngine';
 export { billingInvoicingSetupSchema } from './setupSchema';
 export { billingInvoicingResources } from './resources';
+export { BillingInvoicingView, type BillingInvoicingViewProps } from './ui/BillingInvoicingView';

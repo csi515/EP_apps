@@ -110,12 +110,33 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
   const [parkingLocation, setParkingLocation] = useState<string>(
     initialData?.metadata?.parking_location || ''
   );
+  const [fuelCardNumber, setFuelCardNumber] = useState<string>(
+    initialData?.metadata?.fuel_card_number || ''
+  );
+  const [initialOdometerKm, setInitialOdometerKm] = useState<number>(
+    initialData?.metadata?.initial_odometer_km || 0
+  );
 
   const [hasProjector, setHasProjector] = useState<boolean>(
     initialData?.metadata?.has_projector ?? true
   );
   const [hasVideoConference, setHasVideoConference] = useState<boolean>(
     initialData?.metadata?.has_video_conference ?? true
+  );
+  const [serialNumber, setSerialNumber] = useState<string>(
+    initialData?.metadata?.serial_number || ''
+  );
+  const [assetTag, setAssetTag] = useState<string>(
+    initialData?.metadata?.asset_tag || ''
+  );
+  const [hasPowerAdapter, setHasPowerAdapter] = useState<boolean>(
+    initialData?.metadata?.accessories_checklist?.power_adapter ?? true
+  );
+  const [hasRemoteController, setHasRemoteController] = useState<boolean>(
+    initialData?.metadata?.accessories_checklist?.remote_controller ?? true
+  );
+  const [hasHdmiCable, setHasHdmiCable] = useState<boolean>(
+    initialData?.metadata?.accessories_checklist?.hdmi_cable ?? true
   );
 
   const [slotDurationMinutes, setSlotDurationMinutes] = useState<number>(
@@ -178,11 +199,20 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
         vehicle_model: vehicleModel.trim(),
         fuel_type: fuelType,
         parking_location: parkingLocation.trim(),
+        fuel_card_number: fuelCardNumber.trim(),
+        initial_odometer_km: Number(initialOdometerKm) || 0,
       }),
       ...(category === 'meeting_room' && {
         has_projector: hasProjector,
         has_video_conference: hasVideoConference,
         max_occupancy: capacity,
+        serial_number: serialNumber.trim(),
+        asset_tag: assetTag.trim(),
+        accessories_checklist: {
+          power_adapter: hasPowerAdapter,
+          remote_controller: hasRemoteController,
+          hdmi_cable: hasHdmiCable,
+        },
       }),
       ...(category === 'health_room' && {
         slot_duration_minutes: slotDurationMinutes,
@@ -509,6 +539,26 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
                     className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
                   />
                 </div>
+                <div>
+                  <label className="block text-[11px] text-slate-600 mb-1">전용 주유카드 번호</label>
+                  <input
+                    type="text"
+                    value={fuelCardNumber}
+                    onChange={(e) => setFuelCardNumber(e.target.value)}
+                    placeholder="예: 9410-****-****-1234"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-600 mb-1">현재 주행거리 (km)</label>
+                  <input
+                    type="number"
+                    value={initialOdometerKm}
+                    onChange={(e) => setInitialOdometerKm(Number(e.target.value) || 0)}
+                    placeholder="예: 42500"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -517,9 +567,31 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
               <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                 <DoorOpen className="w-4 h-4 text-indigo-600" />
-                회의실 설비
+                회의실 및 IT 장비 설비
               </h4>
-              <div className="flex items-center gap-6 text-xs text-slate-700">
+              <div className="grid grid-cols-2 gap-3 mb-2">
+                <div>
+                  <label className="block text-[11px] text-slate-600 mb-1">시리얼 번호 (S/N)</label>
+                  <input
+                    type="text"
+                    value={serialNumber}
+                    onChange={(e) => setSerialNumber(e.target.value)}
+                    placeholder="예: SN-2026-IT-9821"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-600 mb-1">고유 자산 번호 (Asset Tag)</label>
+                  <input
+                    type="text"
+                    value={assetTag}
+                    onChange={(e) => setAssetTag(e.target.value)}
+                    placeholder="예: AST-MOA-0042"
+                    className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-700 pt-1 border-t border-slate-200/60">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -527,7 +599,7 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
                     onChange={(e) => setHasProjector(e.target.checked)}
                     className="rounded text-indigo-600"
                   />
-                  빔프로젝터 / 대형 스크린 구비
+                  빔프로젝터 / 대형 스크린
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -536,7 +608,34 @@ export const ResourceMasterSettingsModal: React.FC<ResourceMasterSettingsModalPr
                     onChange={(e) => setHasVideoConference(e.target.checked)}
                     className="rounded text-indigo-600"
                   />
-                  화상회의 전용 카메라 및 마이크
+                  화상회의 카메라·마이크
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasPowerAdapter}
+                    onChange={(e) => setHasPowerAdapter(e.target.checked)}
+                    className="rounded text-indigo-600"
+                  />
+                  전원 어댑터 구비
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasRemoteController}
+                    onChange={(e) => setHasRemoteController(e.target.checked)}
+                    className="rounded text-indigo-600"
+                  />
+                  리모컨 구비
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={hasHdmiCable}
+                    onChange={(e) => setHasHdmiCable(e.target.checked)}
+                    className="rounded text-indigo-600"
+                  />
+                  HDMI 케이블 구비
                 </label>
               </div>
             </div>

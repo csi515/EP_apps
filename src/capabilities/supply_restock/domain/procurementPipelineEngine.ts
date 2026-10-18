@@ -292,6 +292,145 @@ export function checkInternalInventoryAvailability(
 }
 
 /**
+ * 3-1. 사내 가용 재고 선불출 권고 (Stock Pre-release & Internal Transfer Recommendation)
+ * - 사내 다른 창고에 재고가 이미 존재할 경우, 불필요한 신규 외부 구매를 방지하고 사내 전배/불출을 유도
+ */
+export interface StockPreReleaseRecommendation {
+  canAvoidExternalPurchase: boolean;
+  recommendedActions: Array<{
+    sku: string;
+    itemName: string;
+    requestedQuantity: number;
+    inStockQuantity: number;
+    recommendedAction: 'INTERNAL_TRANSFER_PREFERRED' | 'PARTIAL_PURCHASE_ALLOWED' | 'EXTERNAL_PURCHASE_REQUIRED';
+    instruction: string;
+    savingAmount: number;
+  }>;
+  totalSavingsPotential: number;
+}
+
+export function evaluateStockPreRelease(
+  requestedItems: RequisitionItem[],
+  inventoryStock: StockInventoryItem[]
+): StockPreReleaseRecommendation {
+  let totalSavings = 0;
+  let canAvoidAll = requestedItems.length > 0;
+
+  const actions = requestedItems.map((reqItem) => {
+    const stock = inventoryStock.find(
+      (s) => s.sku.toLowerCase() === reqItem.sku.toLowerCase()
+    );
+    const inStock = stock?.availableQuantity ?? 0;
+    const unitPrice = reqItem.estimatedUnitPrice || 0;
+
+    if (inStock >= reqItem.quantity) {
+      const saving = reqItem.quantity * unitPrice;
+      totalSavings += saving;
+      return {
+        sku: reqItem.sku,
+        itemName: reqItem.itemName,
+        requestedQuantity: reqItem.quantity,
+        inStockQuantity: inStock,
+        recommendedAction: 'INTERNAL_TRANSFER_PREFERRED' as const,
+        instruction: `사내 창고에 충분한 재고(${inStock}개)가 있습니다. 신규 발주를 차단하고 [사내 창고 재고 선불출]로 처리하세요. (절감액: ${saving.toLocaleString()}원)`,
+        savingAmount: saving,
+      };
+    } else if (inStock > 0) {
+      canAvoidAll = false;
+      const saving = inStock * unitPrice;
+      totalSavings += saving;
+      return {
+        sku: reqItem.sku,
+        itemName: reqItem.itemName,
+        requestedQuantity: reqItem.quantity,
+        inStockQuantity: inStock,
+        recommendedAction: 'PARTIAL_PURCHASE_ALLOWED' as const,
+        instruction: `사내 창고에 ${inStock}개 보유 중입니다. ${inStock}개는 사내 선불출하고 잔여 ${reqItem.quantity - inStock}개만 신규 구매하세요.`,
+        savingAmount: saving,
+      };
+    } else {
+      canAvoidAll = false;
+      return {
+        sku: reqItem.sku,
+        itemName: reqItem.itemName,
+        requestedQuantity: reqItem.quantity,
+        inStockQuantity: 0,
+        recommendedAction: 'EXTERNAL_PURCHASE_REQUIRED' as const,
+        instruction: '사내 창고에 재고가 없으므로 정규 외부 구매 발주를 진행합니다.',
+        savingAmount: 0,
+      };
+    }
+  });
+
+  return {
+    canAvoidExternalPurchase: canAvoidAll && requestedItems.length > 0,
+    recommendedActions: actions,
+    totalSavingsPotential: totalSavings,
+  };
+}
+
+/**
+ * 3-2. 부서별 구매 예산 한도(Budget Ceiling) 인터락
+ */
+export interface DepartmentBudgetCeiling {
+  department: string;
+  periodYearMonth: string; // YYYY-MM
+  allocatedBudget: number; // 배정 예산
+  spentBudget: number; // 기집행 예산
+  remainingBudget: number; // 잔여 예산
+}
+
+export interface BudgetCeilingCheckResult {
+  isWithinBudget: boolean;
+  requiresExecutiveOverride: boolean; // 최고권한자 특약 승인 요구 여부
+  department: string;
+  requestedAmount: number;
+  allocatedBudget: number;
+  spentBudget: number;
+  remainingBudget: number;
+  deficitAmount: number; // 초과 결손액
+  message: string;
+}
+
+export function checkDepartmentBudgetCeiling(params: {
+  budget: DepartmentBudgetCeiling;
+  requestedAmount: number;
+  hasExecutiveApproval?: boolean;
+}): BudgetCeilingCheckResult {
+  const remaining = Math.max(0, params.budget.allocatedBudget - params.budget.spentBudget);
+  const isWithin = params.requestedAmount <= remaining;
+  const deficit = Math.max(0, params.requestedAmount - remaining);
+
+  if (isWithin) {
+    return {
+      isWithinBudget: true,
+      requiresExecutiveOverride: false,
+      department: params.budget.department,
+      requestedAmount: params.requestedAmount,
+      allocatedBudget: params.budget.allocatedBudget,
+      spentBudget: params.budget.spentBudget,
+      remainingBudget: remaining,
+      deficitAmount: 0,
+      message: `당월 부서 예산 한도 내 정상 승인 가능 (잔여 예산: ${remaining.toLocaleString()}원)`,
+    };
+  }
+
+  return {
+    isWithinBudget: false,
+    requiresExecutiveOverride: !params.hasExecutiveApproval,
+    department: params.budget.department,
+    requestedAmount: params.requestedAmount,
+    allocatedBudget: params.budget.allocatedBudget,
+    spentBudget: params.budget.spentBudget,
+    remainingBudget: remaining,
+    deficitAmount: deficit,
+    message: params.hasExecutiveApproval
+      ? `당월 예산 초과(${deficit.toLocaleString()}원) - 최고책임자 특약 결재로 조건부 승인됨`
+      : `[예산 초과 경고] 당월 잔여 예산(${remaining.toLocaleString()}원)을 ${deficit.toLocaleString()}원 초과했습니다. 자동 반려되거나 최고권한자(임원/대표) 특약 승인이 필요합니다.`,
+  };
+}
+
+/**
  * 4. 구매부서의 타당성 검수 (Vetting)
  */
 export function vetPurchaseRequisition(

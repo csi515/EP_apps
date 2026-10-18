@@ -4,17 +4,35 @@
  */
 import type { UserRole } from '@/types';
 
-/** owner/admin/manager — 사업장 운영 전체 */
+/** owner/admin/manager/director/super_admin — 사업장 운영 전체 */
 export function isOrgAdmin(role: UserRole | string | null | undefined): boolean {
-  return role === 'owner' || role === 'admin' || role === 'manager';
+  return (
+    role === 'owner' ||
+    role === 'director' ||
+    role === 'admin' ||
+    role === 'manager' ||
+    role === 'super_admin'
+  );
 }
 
 export function isOrgOwner(role: UserRole | string | null | undefined): boolean {
-  return role === 'owner';
+  return role === 'owner' || role === 'director';
 }
 
 export function isStaffRole(role: UserRole | string | null | undefined): boolean {
-  return role === 'staff' || role === 'instructor';
+  return role === 'staff' || role === 'instructor' || role === 'driver' || role === 'worker';
+}
+
+export function isDriverRole(role: UserRole | string | null | undefined): boolean {
+  return role === 'driver';
+}
+
+export function isWorkerRole(role: UserRole | string | null | undefined): boolean {
+  return role === 'worker';
+}
+
+export function isSuperAdminRole(role: UserRole | string | null | undefined): boolean {
+  return role === 'super_admin';
 }
 
 export function isParentRole(role: UserRole | string | null | undefined): boolean {

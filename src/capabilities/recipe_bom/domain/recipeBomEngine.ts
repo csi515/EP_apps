@@ -146,3 +146,144 @@ export function calculateBatchConsumption(
     ingredientDeductions: Array.from(deductionMap.values()),
   };
 }
+
+export interface BomStockDeductionItem {
+  inventoryItemId: string;
+  ingredientName: string;
+  unit: string;
+  requiredQuantity: number;
+  currentStock: number;
+  remainingStock: number;
+  isShortage: boolean;
+  shortageQuantity: number;
+  cost: number;
+}
+
+export interface BomStockDeductionResult {
+  hasShortage: boolean;
+  totalCost: number;
+  items: BomStockDeductionItem[];
+  stockMovementPayloads: Array<{
+    inventoryItemId: string;
+    changeQuantity: number;
+    reason: string;
+  }>;
+}
+
+/**
+ * 3. 완제품 생산/출하 시 원자재 재고 일괄 차감(BOM Explosion) 및 재고 부족 검증
+ */
+export function executeBomStockDeduction(params: {
+  orders: readonly { recipeId: string; quantity: number }[];
+  recipes: readonly RecipeItem[];
+  stockLevels: Record<string, number>;
+}): BomStockDeductionResult {
+  const batchResult = calculateBatchConsumption(params.orders, params.recipes);
+  const items: BomStockDeductionItem[] = [];
+  const stockMovementPayloads: Array<{
+    inventoryItemId: string;
+    changeQuantity: number;
+    reason: string;
+  }> = [];
+
+  let hasShortage = false;
+
+  for (const deduction of batchResult.ingredientDeductions) {
+    const currentStock = params.stockLevels[deduction.inventoryItemId] ?? 0;
+    const required = deduction.totalDeductedQuantity;
+    const remainingStock = currentStock - required;
+    const isShortage = remainingStock < 0;
+    const shortageQuantity = isShortage ? Math.abs(remainingStock) : 0;
+
+    if (isShortage) {
+      hasShortage = true;
+    }
+
+    items.push({
+      inventoryItemId: deduction.inventoryItemId,
+      ingredientName: deduction.ingredientName,
+      unit: deduction.unit,
+      requiredQuantity: required,
+      currentStock,
+      remainingStock,
+      isShortage,
+      shortageQuantity,
+      cost: deduction.totalCost,
+    });
+
+    stockMovementPayloads.push({
+      inventoryItemId: deduction.inventoryItemId,
+      changeQuantity: -required,
+      reason: 'BOM_PRODUCTION_CONSUMPTION',
+    });
+  }
+
+  return {
+    hasShortage,
+    totalCost: batchResult.totalCostAmount,
+    items,
+    stockMovementPayloads,
+  };
+}
+
+export interface CostSimulationResult {
+  recipeId: string;
+  menuName: string;
+  sellingPrice: number;
+  originalCostPrice: number;
+  updatedCostPrice: number;
+  deltaCost: number;
+  originalMarginRatioPercent: number;
+  updatedMarginRatioPercent: number;
+  deltaMarginRatioPercent: number;
+  suggestedSellingPrice: number;
+}
+
+/**
+ * 4. 원자재 매입단가 변동 시 완제품 원가/마진율 실시간 시뮬레이션 및 권장 판매가 산출
+ */
+export function recalculateRecipeCostWithUpdatedIngredientPrice(
+  recipe: RecipeItem,
+  updatedPrices: Record<string, number>,
+  targetMarginRatioPercent: number = 75
+): CostSimulationResult {
+  const originalCost = calculateMenuCost(recipe);
+
+  let updatedCostPrice = 0;
+  for (const ing of recipe.ingredients) {
+    const unitPrice =
+      updatedPrices[ing.inventoryItemId] !== undefined
+        ? updatedPrices[ing.inventoryItemId]
+        : ing.costPerUnit;
+    updatedCostPrice += ing.requiredQuantity * unitPrice;
+  }
+  updatedCostPrice = Math.round(updatedCostPrice);
+
+  const updatedMarginAmount = Math.max(0, recipe.sellingPrice - updatedCostPrice);
+  const updatedMarginRatioPercent =
+    recipe.sellingPrice > 0
+      ? Math.round((updatedMarginAmount / recipe.sellingPrice) * 1000) / 10
+      : 0;
+
+  const deltaCost = updatedCostPrice - originalCost.totalCostPrice;
+  const deltaMarginRatioPercent =
+    Math.round((updatedMarginRatioPercent - originalCost.marginRatioPercent) * 10) / 10;
+
+  const marginFraction = Math.max(0.01, Math.min(0.99, targetMarginRatioPercent / 100));
+  const rawSuggestedPrice = updatedCostPrice / (1 - marginFraction);
+  const suggestedSellingPrice = Math.ceil(rawSuggestedPrice / 100) * 100;
+
+  return {
+    recipeId: recipe.id,
+    menuName: recipe.menuName,
+    sellingPrice: recipe.sellingPrice,
+    originalCostPrice: originalCost.totalCostPrice,
+    updatedCostPrice,
+    deltaCost,
+    originalMarginRatioPercent: originalCost.marginRatioPercent,
+    updatedMarginRatioPercent,
+    deltaMarginRatioPercent,
+    suggestedSellingPrice,
+  };
+}
+

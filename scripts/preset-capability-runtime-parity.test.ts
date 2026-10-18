@@ -43,7 +43,7 @@ const mockI18n: MoaI18nProvider = {
 function run(): void {
   console.log('=== [1] Preset Registry & Aliases Coverage ===');
   const presets = listIndustryPresets();
-  assert.equal(presets.length, 50, `프리셋 총 개수는 정확히 50개여야 합니다. 현재: ${presets.length}`);
+  assert.equal(presets.length, 51, `프리셋 총 개수는 정확히 51개여야 합니다. 현재: ${presets.length}`);
 
   for (const preset of presets) {
     assert.ok(preset.id, '프리셋 ID 누락');
@@ -57,9 +57,9 @@ function run(): void {
     assert.equal(resolved?.id, preset.id);
   }
 
-  // 15개 별칭(Alias) 전수 검증
+  // 17개 별칭(Alias) 전수 검증
   const aliasKeys = Object.keys(PRESET_ALIASES);
-  assert.equal(aliasKeys.length, 15, `프리셋 별칭은 15개여야 합니다. 현재: ${aliasKeys.length}`);
+  assert.equal(aliasKeys.length, 17, `프리셋 별칭은 17개여야 합니다. 현재: ${aliasKeys.length}`);
 
   for (const [alias, targetPresetId] of Object.entries(PRESET_ALIASES)) {
     assert.ok(INDUSTRY_PRESETS[targetPresetId], `별칭 [${alias}]의 대상 프리셋 [${targetPresetId}]가 미존재`);
@@ -70,7 +70,7 @@ function run(): void {
 
   // 미등록 프리셋 안전성
   assert.equal(getIndustryPreset('non_existent_preset'), undefined);
-  console.log('  -> 44개 프리셋 및 13개 별칭 정상 매핑 확인 완료');
+  console.log('  -> 44개 프리셋 및 17개 별칭 정상 매핑 확인 완료');
 
   console.log('=== [2] Preset Assembly Integrity (전수 조립 검증) ===');
   for (const preset of presets) {
@@ -303,6 +303,7 @@ function run(): void {
     'dance_academy',
     'coding_academy',
     'exam_tutoring',
+    'culture_center',
     'yoga_studio',
     'pt_fitness',
     'indoor_golf',

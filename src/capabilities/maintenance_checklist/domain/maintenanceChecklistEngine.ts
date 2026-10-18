@@ -114,3 +114,124 @@ export function evaluateChecklistUrgency(
     alertLevel,
   };
 }
+
+// ============================================================================
+// 정량 수치 허용 공차(Tolerance) 판정 & CAPA 자동 연계 엔진
+// ============================================================================
+
+export interface ToleranceCheckParams {
+  itemId: string;
+  itemTitle: string;
+  numericValue: number;
+  minAllowed?: number;
+  maxAllowed?: number;
+  targetValue?: number;
+  unit?: string; // e.g. "℃", "bar", "ppm"
+}
+
+export interface ToleranceCheckResult {
+  itemId: string;
+  isPassed: boolean;
+  status: 'PASS' | 'FAIL_LOW' | 'FAIL_HIGH';
+  deviation: number;
+  message: string;
+}
+
+/**
+ * 정량적 측정 항목의 허용 공차(Tolerance) 자동 판정 (순수 함수)
+ */
+export function evaluateToleranceResult(
+  params: ToleranceCheckParams
+): ToleranceCheckResult {
+  const { itemId, numericValue, minAllowed, maxAllowed, targetValue, unit = '' } = params;
+
+  if (minAllowed !== undefined && numericValue < minAllowed) {
+    const deviation = Math.round((numericValue - minAllowed) * 100) / 100;
+    return {
+      itemId,
+      isPassed: false,
+      status: 'FAIL_LOW',
+      deviation,
+      message: `허용 하한값(${minAllowed}${unit}) 미달 (측정치: ${numericValue}${unit}, 편차: ${deviation}${unit})`,
+    };
+  }
+
+  if (maxAllowed !== undefined && numericValue > maxAllowed) {
+    const deviation = Math.round((numericValue - maxAllowed) * 100) / 100;
+    return {
+      itemId,
+      isPassed: false,
+      status: 'FAIL_HIGH',
+      deviation,
+      message: `허용 상한값(${maxAllowed}${unit}) 초과 (측정치: ${numericValue}${unit}, 편차: +${deviation}${unit})`,
+    };
+  }
+
+  const deviation = targetValue !== undefined ? Math.round((numericValue - targetValue) * 100) / 100 : 0;
+  return {
+    itemId,
+    isPassed: true,
+    status: 'PASS',
+    deviation,
+    message: `허용 공차 기준 합격 (${numericValue}${unit})`,
+  };
+}
+
+export interface CapaTicketDraft {
+  ticketNumber: string;
+  checklistItemId: string;
+  checklistItemTitle: string;
+  failureReason: string;
+  priority: 'CRITICAL' | 'HIGH';
+  status: 'OPEN' | 'INVESTIGATING' | 'RESOLVED';
+  assignedTeam: string;
+  inspectorName: string;
+  reportedAt: string;
+  correctiveActionPlan?: string;
+}
+
+/**
+ * 점검 공차 이탈(FAIL) 시 CAPA(시정조치 및 예방조치) 긴급 정비 티켓 자동 생성 (순수 함수)
+ */
+export function generateCapaTicketFromInspectionFail(
+  failedParam: ToleranceCheckParams,
+  inspectorName: string,
+  options: { assignedTeam?: string; reportedAt?: string } = {}
+): CapaTicketDraft {
+  const checkRes = evaluateToleranceResult(failedParam);
+  const reportedAt = options.reportedAt || new Date().toISOString();
+  const dateStr = reportedAt.slice(2, 10).replace(/-/g, '');
+  const ticketNumber = `CAPA-${dateStr}-${Math.floor(100 + Math.random() * 900)}`;
+
+  const isSevere =
+    (failedParam.minAllowed !== undefined &&
+      failedParam.numericValue < failedParam.minAllowed - 3) ||
+    (failedParam.maxAllowed !== undefined &&
+      failedParam.numericValue > failedParam.maxAllowed + 3);
+
+  return {
+    ticketNumber,
+    checklistItemId: failedParam.itemId,
+    checklistItemTitle: failedParam.itemTitle,
+    failureReason: checkRes.message,
+    priority: isSevere ? 'CRITICAL' : 'HIGH',
+    status: 'OPEN',
+    assignedTeam: options.assignedTeam || '시설안전/유지보수팀',
+    inspectorName,
+    reportedAt,
+    correctiveActionPlan: `1차 조치: 현장 설비 즉시 격리 및 가동 중단 후 엔지니어 긴급 점검 요망 (${failedParam.itemTitle})`,
+  };
+}
+
+export interface HaccpDailyLogRecord {
+  checkDate: string; // YYYY-MM-DD
+  managerSignature: string;
+  directorApproval: boolean;
+  items: {
+    itemTitle: string;
+    targetValue: string;
+    actualValue: string;
+    isPassed: boolean;
+    note?: string;
+  }[];
+}

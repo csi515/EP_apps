@@ -11,6 +11,8 @@ import {
   filterExpiringQualifications,
   evaluateTrainingEffectiveness,
   calculateTrainingMetrics,
+  generateBankBulkTransferCsv,
+  generateTaxAccountantPayrollLedgerCsv,
   type StaffEmploymentProfile,
 } from './workAttendancePayrollEngine';
 
@@ -251,4 +253,115 @@ console.log('--- Testing workAttendancePayrollEngine ---');
   console.log('✅ Test 7 passed: Training effectiveness evaluation and metrics aggregation');
 }
 
+// Test 8: 식대 및 자가운전보조금 비과세 소득 공제 및 세전/과세표준 절감 검증
+{
+  const profile: StaffEmploymentProfile = {
+    staffId: 'STAFF-100',
+    staffName: '홍길동',
+    employmentType: 'salaried_regular',
+    hourlyRate: 15000,
+    baseSalaryMonthly: 3000000, // 300만원
+    contractWeeklyHours: 40,
+    enrollSocialInsurance: true,
+  };
+
+  // 비과세 적용 전
+  const slipNoAllowance = generatePayrollSlip(profile, '2026-10', [40, 40, 40, 40], 0, 0);
+  assert.equal(slipNoAllowance.statutoryPay.totalGrossPay, 3000000);
+  assert.equal(slipNoAllowance.deductions.nationalPension, Math.round(3000000 * 0.045)); // 135,000
+
+  // 식대 25만원(한도 20만원), 자가운전 20만원(한도 20만원) 신청
+  const slipWithAllowance = generatePayrollSlip(
+    profile,
+    '2026-10',
+    [40, 40, 40, 40],
+    0,
+    0,
+    { mealAllowance: 250000, drivingAllowance: 200000, researchAllowance: 200000 }
+  );
+
+  assert.equal(slipWithAllowance.nonTaxable?.mealAllowance, 200000, '식대 한도는 20만원으로 제한');
+  assert.equal(slipWithAllowance.nonTaxable?.drivingAllowance, 200000, '자가운전 한도는 20만원으로 제한');
+  assert.equal(slipWithAllowance.nonTaxable?.researchAllowance, 200000, '연구보조비 한도는 20만원으로 제한');
+  assert.equal(slipWithAllowance.nonTaxable?.totalNonTaxable, 600000, '총 비과세 60만원');
+  assert.equal(slipWithAllowance.taxableGrossPay, 2400000, '과세 대상 급여는 300만 - 60만 = 240만원');
+
+  // 국민연금: 240만원 * 4.5% = 108,000원
+  assert.equal(slipWithAllowance.deductions.nationalPension, Math.round(2400000 * 0.045));
+  assert.ok(slipWithAllowance.netPay > slipNoAllowance.netPay, '비과세 적용 시 실수령액이 증가해야 함');
+
+  console.log('✅ Test 8 passed: Non-taxable allowance limits and taxable wage deductions');
+}
+
+// Test 9: 시중은행 대량이체 CSV 및 세무사 제출용 급여대장 CSV 원장 생성
+{
+  const sampleEntries = [
+    {
+      staffId: 'STAFF-1',
+      staffName: '김철수',
+      bankName: '국민은행',
+      accountNumber: '123-456-789012',
+      amount: 2750000,
+      memo: '10월급여',
+    },
+    {
+      staffId: 'STAFF-2',
+      staffName: '이영희',
+      bankName: '신한은행',
+      accountNumber: '987-654-321098',
+      amount: 3120000,
+      memo: '10월급여',
+    },
+    {
+      staffId: 'STAFF-3',
+      staffName: '박농협',
+      bankName: '농협은행',
+      accountNumber: '302-1234-5678-01',
+      amount: 2500000,
+      memo: '10월급여',
+    },
+  ];
+
+  // KB 양식
+  const kbCsv = generateBankBulkTransferCsv(sampleEntries, 'KB');
+  assert.ok(kbCsv.includes('입금은행,입금계좌번호,예금주성명,이체금액(원)'));
+  assert.ok(kbCsv.includes('"국민은행"'));
+  assert.ok(kbCsv.includes('2750000'));
+
+  // 신한 양식
+  const shinhanCsv = generateBankBulkTransferCsv(sampleEntries, 'SHINHAN');
+  assert.ok(shinhanCsv.includes('입금은행명,계좌번호,이체금액,수취인성명'));
+
+  // 농협 양식
+  const nhCsv = generateBankBulkTransferCsv(sampleEntries, 'NH');
+  assert.ok(nhCsv.includes('입금은행,입금계좌번호,이체금액(원),예금주성명,입금통장메모,출금통장메모'));
+  assert.ok(nhCsv.includes('"농협은행"'));
+  assert.ok(nhCsv.includes('2500000'));
+
+  // 세무사 제출용 전사 급여대장 CSV 원장
+  const profile: StaffEmploymentProfile = {
+    staffId: 'STAFF-1',
+    staffName: '김철수',
+    employmentType: 'salaried_regular',
+    hourlyRate: 15000,
+    baseSalaryMonthly: 3000000,
+    contractWeeklyHours: 40,
+    enrollSocialInsurance: true,
+  };
+  const slip = generatePayrollSlip(profile, '2026-10', [40, 40, 40, 40], 0, 0, { mealAllowance: 200000 });
+  const taxLedgerCsv = generateTaxAccountantPayrollLedgerCsv([slip], {
+    organizationName: '테스트연구소',
+    periodYearMonth: '2026-10',
+  });
+
+  assert.ok(taxLedgerCsv.includes('전사 월별 법정 급여대장 (세무사/회계법인 제출용)'));
+  assert.ok(taxLedgerCsv.includes('식대(비과세)'));
+  assert.ok(taxLedgerCsv.includes('비과세총액'));
+  assert.ok(taxLedgerCsv.includes('과세대상급여'));
+  assert.ok(taxLedgerCsv.includes('"김철수"'));
+
+  console.log('✅ Test 9 passed: Bank bulk transfer CSV and tax accountant payroll ledger CSV');
+}
+
 console.log('🎉 All workAttendancePayrollEngine tests passed successfully!');
+

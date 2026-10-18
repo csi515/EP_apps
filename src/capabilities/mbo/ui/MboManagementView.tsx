@@ -14,6 +14,7 @@ import {
 import {
   canTransitionMboStatus,
   calculateGradeFromScore,
+  validateMboObjectiveWeights,
   type MboStatus,
   type MboLevel,
   type MboEvaluationGrade,
@@ -231,6 +232,11 @@ export const MboManagementView: React.FC = () => {
 
   const selectedObjective = objectives.find((o) => o.id === selectedObjectiveId) || objectives[0];
 
+  // 목표 가중치 100% 인터락 검증
+  const weightValidation = useMemo(() => {
+    return validateMboObjectiveWeights(objectives);
+  }, [objectives]);
+
   // 목표 상태 전이 액션
   const handleTransitionStatus = (id: string, targetStatus: MboStatus, reason?: string) => {
     const target = objectives.find((o) => o.id === id);
@@ -428,6 +434,25 @@ export const MboManagementView: React.FC = () => {
             <span>캐퍼시티 예측</span>
           </button>
         </div>
+      </div>
+
+      {/* 목표 가중치 합계 실시간 인터락 배너 */}
+      <div className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between ${
+        weightValidation.valid
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          : 'bg-amber-50 border-amber-200 text-amber-800'
+      }`}>
+        <div className="flex items-center gap-2">
+          <Target className="w-4 h-4" />
+          <span className="font-bold">
+            {weightValidation.valid
+              ? `전사/부서 목표 가중치 합계: 100% (정상 정렬)`
+              : `목표 가중치 합계 조정 필요: 현재 ${weightValidation.totalWeight}% (${weightValidation.difference > 0 ? `${weightValidation.difference}% 추가 필요` : `${Math.abs(weightValidation.difference)}% 초과`})`}
+          </span>
+        </div>
+        <span className="text-[11px] font-medium opacity-80">
+          모든 목표 항목의 가중치 합은 정확히 100%로 수렴해야 공정한 성과 보상이 보장됩니다.
+        </span>
       </div>
 
       {/* 탭 1: 목표 트리 뷰 */}
