@@ -176,6 +176,8 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   budget_ceiling_quota: ['budget-ceilings', 'budget-quotas'],
   field_audit_trail: ['audit-trails', 'audit-logs'],
   vendor_scorecard: ['vendor-scorecards', 'vendor-evaluations'],
+  field_dispatch: ['dispatch', 'field-dispatch'],
+  waitlist_queue: ['waitlist', 'waitlist-queue'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

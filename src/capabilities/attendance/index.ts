@@ -28,4 +28,5 @@ export {
   PIN_ATTENDANCE_SCENARIO_CHECKLIST,
 } from './domain/pinAttendanceValidation';
 export * from './domain/unifiedAttendancePipeline';
+export * from './application/attendanceEventPublisher';
 export * from './notifications';

@@ -35,3 +35,6 @@ export {
   listIndustryDefinitions,
   getIndustryPlugin,
 } from './industryCatalog';
+export { generatePresetFeatureGuide, initPresetManualEngine } from '@/app/presets/presetManualEngine';
+export { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
+

@@ -113,6 +113,8 @@ import { fefo_lot_trackerCapability } from './fefo_lot_tracker/manifest';
 import { budget_ceiling_quotaCapability } from './budget_ceiling_quota/manifest';
 import { field_audit_trailCapability } from './field_audit_trail/manifest';
 import { vendor_scorecardCapability } from './vendor_scorecard/manifest';
+import { field_dispatchCapability } from './field_dispatch/manifest';
+import { waitlist_queueCapability } from './waitlist_queue/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -239,6 +241,8 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   budget_ceiling_quotaCapability,
   field_audit_trailCapability,
   vendor_scorecardCapability,
+  field_dispatchCapability,
+  waitlist_queueCapability,
 ];
 
 export * from './trial_funnel';
@@ -302,6 +306,8 @@ export * from './fefo_lot_tracker';
 export * from './budget_ceiling_quota';
 export * from './field_audit_trail';
 export * from './vendor_scorecard';
+export * from './field_dispatch';
+export * from './waitlist_queue';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

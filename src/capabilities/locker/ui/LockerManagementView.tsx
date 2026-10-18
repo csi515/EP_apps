@@ -9,6 +9,7 @@ import {
   X,
   Filter,
 } from 'lucide-react';
+import { EmptyStateHero } from '@/shared/components/ui/EmptyStateHero';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
   fetchLockers,
@@ -279,10 +280,28 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
           <p className="mt-2 text-xs text-slate-500">사물함 목록을 불러오는 중...</p>
         </div>
       ) : filteredLockers.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <Lock className="mx-auto h-12 w-12 text-slate-300" />
-          <p className="mt-3 text-sm font-bold text-slate-700">등록된 사물함이 없습니다</p>
-          <p className="mt-1 text-xs text-slate-400">우측 상단 버튼을 눌러 첫 사물함을 등록하세요.</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-8">
+          <EmptyStateHero
+            icon={<Lock className="w-8 h-8 text-indigo-600" />}
+            title="등록된 사물함이 없습니다"
+            description="구역별(남탕, 여탕, 1구역 등) 번호 사물함을 등록하고 회원 배정 현황을 한눈에 파악하세요."
+            action={{
+              label: '첫 사물함 등록하기',
+              onClick: () => setIsAddModalOpen(true),
+              icon: <Plus className="w-4 h-4 mr-1" />,
+            }}
+            guide={{
+              badge: '사물함 운영 가이드',
+              title: '3단계로 끝내는 사물함·락커 관리',
+              steps: [
+                { stepNumber: 1, title: '사물함 구역 및 번호 등록', detail: '사우나, 헬스장, 독서실 등 구역별 번호 사물함 추가' },
+                { stepNumber: 2, title: '빈 사물함 클릭 후 회원 배정', detail: '타일을 터치해 회원 정보와 대여 기간을 즉시 입력' },
+                { stepNumber: 3, title: '만료 알림 및 원클릭 반납', detail: '만료 7일 전 경고 표시 및 원터치 반납/연장 처리' },
+              ],
+              tip: '💡 회색은 빈 사물함, 초록색은 사용 중, 노란색은 7일 내 만료 임박을 나타냅니다.',
+            }}
+            defaultGuideOpen={false}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">

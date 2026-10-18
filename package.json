@@ -58,6 +58,8 @@
     "test:operation-bundles": "tsx src/core/presets/operationBundles.test.ts",
     "test:switchboard-store": "tsx src/pages/settings/CapabilitySwitchboardPage.test.ts",
     "test:roles-permissions": "tsx src/pages/settings/RolesPage.test.ts",
+    "test:domain-event-bus": "tsx src/core/events/domainEventBus.test.ts",
+    "test:capability-listener": "tsx src/capabilities/passes/listeners/passAttendanceListener.test.ts",
     "test:handover-engine": "tsx src/capabilities/feedbacks/domain/handoverEngine.test.ts",
     "test:pass-holding": "tsx src/capabilities/passes/domain/passHoldingEngine.test.ts",
     "test:trial-funnel": "tsx src/capabilities/trial_funnel/domain/trialFunnelEngine.test.ts",

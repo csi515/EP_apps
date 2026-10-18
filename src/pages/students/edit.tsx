@@ -5,6 +5,7 @@ import { useCan, useNavigation } from "@refinedev/core";
 import { ArrowLeft, Save, AlertCircle, ShieldAlert } from "lucide-react";
 import { useTerminology } from "@/core/terminology";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
+import { applyFormErrors } from "@/core/utils/formErrorAdapter";
 import type { CustomerRecord } from "./list";
 import { customerSchema, type CustomerFormValues } from "./customerSchema";
 
@@ -26,12 +27,23 @@ export const StudentEditPage: React.FC = () => {
     refineCore: { onFinish, formLoading, query, id },
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<CustomerRecord, any, CustomerFormValues>({
     refineCoreProps: {
       resource: "customers",
       action: "edit",
       redirect: "show",
+      onMutationError: (error: any) => {
+        applyFormErrors(
+          {
+            success: false,
+            error: error?.message || "수정 중 오류가 발생했습니다.",
+            errors: error?.errors,
+          },
+          setError as any
+        );
+      },
     },
     resolver: zodResolver(customerSchema) as any,
   });

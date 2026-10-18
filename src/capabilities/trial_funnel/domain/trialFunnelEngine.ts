@@ -231,3 +231,19 @@ export function buildCustomerFromLead(lead: TrialLead) {
     },
   };
 }
+
+/**
+ * 리드가 정규 회원으로 전환(converted) 가능한 상태인지 검사하는 순수 함수
+ * - 상담 완료/예약(CONSULTED, consult_scheduled) 또는 체험 참석(VISITED, trial_attended) 상태일 때 전환 가능
+ * - 이미 전환 완료(CONVERTED, converted) 또는 이탈(LOST, dropped), 미상담 단순 접수(APPLIED, new_inquiry) 상태는 전환 불가
+ */
+export function canConvertLead(status: string): boolean {
+  if (!status) return false;
+  const s = status.trim().toLowerCase();
+  return (
+    s === 'trial_attended' ||
+    s === 'consult_scheduled' ||
+    s === 'visited' ||
+    s === 'consulted'
+  );
+}

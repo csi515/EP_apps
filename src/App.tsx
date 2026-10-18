@@ -17,6 +17,7 @@ import { SupabaseAppGate } from "@/SupabaseAppGate";
 import { AppBootstrapGate } from "@/core/application/AppBootstrapGate";
 import { IndustryAppRouter } from "@/app/industry/IndustryAppRouter";
 import { provisionIndustryResources } from "@/app/industry/resourceProvisioner";
+import "@/app/presets/presetManualEngine";
 import { registerQueryClientClear } from "@/core/auth/services/signOutCoordinator";
 import { setTenantQueryClient } from "@/core/query/tenantQueryKeys";
 
@@ -140,6 +141,12 @@ const CAPABILITY_ROUTE_PATHS = [
   "turn-queue",
   "work-payroll",
   "work-orders",
+  "dispatch",
+  "promotions",
+  "promotional-deals",
+  "turnaround",
+  "waitlist",
+  "leads",
 ] as const;
 
 const RefineApp: React.FC = () => {
@@ -267,6 +274,8 @@ const RefineApp: React.FC = () => {
             <Route path="/lockers" element={<LockersGridPage />} />
             <Route path="/settings/roles" element={<RolesPage />} />
             <Route path="/onboarding/quick" element={<QuickSetupPage />} />
+            <Route path="/workspace" element={<IndustryAppRouter />} />
+            <Route path="/workspace/*" element={<IndustryAppRouter />} />
 
             {/* Capability 동적 리소스 경로 선언적 라우트 매핑 (Refine 사이드바 연동) */}
             {CAPABILITY_ROUTE_PATHS.map((path) => (

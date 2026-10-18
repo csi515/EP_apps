@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Filter,
 } from 'lucide-react';
+import { EmptyStateHero } from '@/shared/components/ui/EmptyStateHero';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import {
@@ -376,10 +377,28 @@ export const PassesManagementView: React.FC = () => {
             <p className="mt-2 text-xs text-slate-500">이용권 목록을 불러오는 중...</p>
           </div>
         ) : filteredPasses.length === 0 ? (
-          <div className="p-12 text-center">
-            <Ticket className="mx-auto h-12 w-12 text-slate-300" />
-            <p className="mt-3 text-sm font-bold text-slate-700">발급된 이용권이 없습니다</p>
-            <p className="mt-1 text-xs text-slate-400">우측 상단 버튼을 눌러 새 이용권을 발급하세요.</p>
+          <div className="p-4 sm:p-8">
+            <EmptyStateHero
+              icon={<Ticket className="w-8 h-8 text-indigo-600" />}
+              title="아직 발급된 이용권이 없습니다"
+              description="회원에게 횟수제 또는 기간제 이용권을 발급하고 편리하게 차감 출결을 관리해보세요."
+              action={{
+                label: '첫 이용권 발급하기',
+                onClick: () => setIsIssueModalOpen(true),
+                icon: <Plus className="w-4 h-4 mr-1" />,
+              }}
+              guide={{
+                badge: '이용권 운영 가이드',
+                title: '3단계로 끝내는 이용권 운영',
+                steps: [
+                  { stepNumber: 1, title: '이용권 종류 선택', detail: '횟수 차감형(10회/20회) 또는 기간 자유이용권 중 선택' },
+                  { stepNumber: 2, title: '유효기간 및 횟수 설정', detail: '회원 정책에 맞는 만료일과 잔여 횟수를 지정' },
+                  { stepNumber: 3, title: '회원 배정 후 간편 차감', detail: '출석 시 [입장 -1] 버튼 또는 키오스크로 즉시 차감' },
+                ],
+                tip: '💡 이용권 잔여가 0회가 되면 자동으로 소진 상태로 전환됩니다.',
+              }}
+              defaultGuideOpen={false}
+            />
           </div>
         ) : (
           <div className="divide-y divide-slate-100">

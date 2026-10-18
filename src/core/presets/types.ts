@@ -172,6 +172,8 @@ export type BundledPresetCapabilityId =
   | 'budget_ceiling_quota'
   | 'field_audit_trail'
   | 'vendor_scorecard'
+  | 'field_dispatch'
+  | 'waitlist_queue'
   // 향후 지속적인 신규 Capability 추가를 위한 Open Union 확장 (자동완성 유지 + 유연한 확장)
   | (string & {});
 
@@ -201,7 +203,14 @@ export const CAPABILITY_ALIASES: Partial<Record<PresetCapabilityId, BundledPrese
   resources: 'seat_room',
   enrollment: 'attendance',
   roster: 'attendance',
+  parent: 'learning_journal',
   transport: 'vehicle_shuttle',
+  time_block_rental: 'seat_timer_billing',
+  dormitory_bed: 'seat_room',
+  laundry_drycleaning: 'work_order_kanban',
+  pet_grooming_hotel: 'booking',
+  photo_shoot_project: 'task_pipeline',
+  qr_smart_stamp: 'loyalty_stamp',
 };
 
 export type SetupFieldType =

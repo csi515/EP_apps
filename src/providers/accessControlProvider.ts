@@ -94,6 +94,12 @@ export function resolveMoaPermission(resource?: string, action?: string): Permis
     case "sales":
     case "billing":
     case "payments":
+    case "settlement":
+    case "unpaid_customers":
+    case "revenue_summary":
+    case "ledger_simple":
+    case "billing_invoices":
+    case "simple_ledgers":
       if (act === "delete" || act === "refund") {
         return "sales.refund";
       }
@@ -285,6 +291,45 @@ export function createAccessControlProvider(
       if (Array.isArray(userPermissions) && userPermissions.length > 0) {
         if (evaluateCustomPermission(userPermissions, requiredActionStr, role)) {
           return { can: true };
+        }
+      }
+
+      // 2.6 Guard Sensitive Financial / Ledger Resources for Non-Owner/Non-Admin Staff
+      const isFinancialResource = [
+        "tuition_invoices",
+        "sales",
+        "billing",
+        "payments",
+        "finance",
+        "settlement",
+        "unpaid_customers",
+        "revenue_summary",
+        "ledger_simple",
+        "billing_invoices",
+        "simple_ledgers",
+      ].includes((resource || "").trim().toLowerCase());
+
+      if (isFinancialResource && role !== "owner" && role !== "admin") {
+        const hasFinancialPerm = Array.isArray(userPermissions) && userPermissions.some((p) => {
+          const perm = String(p).toLowerCase().trim();
+          return (
+            perm === "settlement:*" ||
+            perm === "settlement:view" ||
+            perm === "billing:*" ||
+            perm === "billing:invoice" ||
+            perm === "billing:collect" ||
+            perm === "finance:*" ||
+            perm === "finance:read" ||
+            perm === "sales:*" ||
+            perm === "*"
+          );
+        });
+
+        if (!hasFinancialPerm) {
+          return {
+            can: false,
+            reason: "민감 재무 정보(수납 장부/매출 요약/미납 명부)에 접근할 수 있는 권한(settlement:*, billing:*)이 없습니다.",
+          };
         }
       }
 

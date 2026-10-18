@@ -24,11 +24,21 @@ async function runTests() {
   // 2. Cache eviction coordinator
   let clearCallCount = 0;
   let clientClearCalled = false;
+  let clientCancelCalled = false;
+  let mutationClearCalled = false;
 
   const mockQueryClient = {
     clear: () => {
       clientClearCalled = true;
     },
+    cancelQueries: async () => {
+      clientCancelCalled = true;
+    },
+    getMutationCache: () => ({
+      clear: () => {
+        mutationClearCalled = true;
+      },
+    }),
   } as any;
 
   setTenantQueryClient(mockQueryClient);
@@ -40,6 +50,8 @@ async function runTests() {
   evictTenantMemoryCache();
   assert.equal(clearCallCount, 1, 'Clear handler must be triggered');
   assert.equal(clientClearCalled, true, 'queryClient.clear() must be triggered');
+  assert.equal(clientCancelCalled, true, 'queryClient.cancelQueries() must be triggered');
+  assert.equal(mutationClearCalled, true, 'mutationCache.clear() must be triggered');
 
   // After unregistering
   unregister();

@@ -67,7 +67,7 @@ export function handlePreloadError(
 }
 
 /**
- * 브라우저 환경에서 vite:preloadError 리스너 등록
+ * 브라우저 환경에서 vite:preloadError 및 동적 청크 로딩 실패 리스너 등록
  */
 export function setupVitePreloadErrorRecovery(): () => void {
   if (typeof window === 'undefined') return () => {};
@@ -79,8 +79,24 @@ export function setupVitePreloadErrorRecovery(): () => void {
     handlePreloadError(payload);
   };
 
+  const rejectionListener = (event: PromiseRejectionEvent) => {
+    const reason = event.reason;
+    const msg = (reason instanceof Error ? reason.message : String(reason || '')).toLowerCase();
+    if (
+      msg.includes('failed to fetch dynamically imported module') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('loading chunk')
+    ) {
+      event.preventDefault();
+      handlePreloadError(reason);
+    }
+  };
+
   window.addEventListener('vite:preloadError', listener);
+  window.addEventListener('unhandledrejection', rejectionListener);
+
   return () => {
     window.removeEventListener('vite:preloadError', listener);
+    window.removeEventListener('unhandledrejection', rejectionListener);
   };
 }

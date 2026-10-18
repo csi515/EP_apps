@@ -493,9 +493,10 @@ export const StudentListView: React.FC = () => {
 
       {isTrulyEmpty ? (
         <EmptyState
-          icon={<Users className="w-12 h-12" />}
-          title={`등록된 ${labels.customer.singular}이 없습니다`}
-          description={`상단 '${labels.customer.add}'으로 첫 ${labels.customer.singular}을 등록하세요.`}
+          variant="hero"
+          icon={<Users className="w-8 h-8" />}
+          title={`아직 등록된 ${labels.customer.singular}이 없습니다`}
+          description={`첫 ${labels.customer.singular}을 등록하고 수업 배정, 출결, 수강권 관리를 시작해보세요.`}
           action={
             !isScoped ? (
               <button
@@ -504,12 +505,31 @@ export const StudentListView: React.FC = () => {
                   setEditingStudent(null);
                   setIsFormModalOpen(true);
                 }}
-                className="px-4 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl"
+                className="px-5 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors"
               >
-                {labels.customer.add}
+                + 첫 {labels.customer.singular} 등록하기
               </button>
             ) : undefined
           }
+          guide={{
+            badge: '💡 30초 시작 가이드',
+            title: `첫 ${labels.customer.singular} 등록 추천 순서`,
+            steps: [
+              {
+                title: '기본 인적사항 입력',
+                detail: '이름과 연락처만 먼저 입력해도 바로 등록됩니다.',
+              },
+              {
+                title: '맞춤 특이사항 및 수강 목적 메모',
+                detail: '상담 내용이나 희망 사항, 주의사항을 메모해두면 응대에 큰 도움이 됩니다.',
+              },
+              {
+                title: '이용권 또는 수강반 연결',
+                detail: '등록 후 이용권 탭이나 수강반 탭에서 즉시 연결할 수 있습니다.',
+              },
+            ],
+            tip: `엑셀 파일로 많은 ${labels.customer.plural}을 한 번에 등록하시려면 상단의 '일괄 등록' 버튼을 활용하세요.`,
+          }}
         />
       ) : isFilterEmpty ? (
         <EmptyState

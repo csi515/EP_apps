@@ -13,6 +13,7 @@ import {
   assembleAdHocCapabilities,
 } from './presetAssembler';
 import type { PresetCapabilityId } from '@/core/presets/types';
+import { PRESET_DEFINITIONS } from '@/core/presets/definitions';
 
 function run() {
   const presets = listIndustryPresets();
@@ -149,6 +150,22 @@ function run() {
   assert.ok(schemaCapIds.includes('booking'), 'scheduling -> booking 번들 조립 실패');
   assert.ok(schemaCapIds.includes('seat_room'), 'resources -> seat_room 번들 조립 실패');
   assert.ok(aliasAssembly.resources.length >= 5, '리소스 병합 실패');
+
+  // 9. 30대 확장 프리셋 정의 무결성 검증 (definitions.ts)
+  assert.equal(PRESET_DEFINITIONS.length, 30, '30대 업종 프리셋 정의가 정확히 30개여야 합니다.');
+  const VALID_CATEGORIES = new Set(['SPORTS', 'BEAUTY', 'SPACE', 'CRAFT', 'FIELD', 'CORP']);
+  for (const p of PRESET_DEFINITIONS) {
+    assert.ok(p.id, '프리셋 ID 필수');
+    assert.ok(p.name, '프리셋 이름 필수');
+    assert.ok(VALID_CATEGORIES.has(p.category), `유효하지 않은 카테고리: ${p.category}`);
+    assert.ok(p.recommendedCapabilities.length > 0, `추천 기능 1개 이상 필수: ${p.id}`);
+    assert.ok(p.defaultTerms.customer, `기본 고객 호칭 필수: ${p.id}`);
+
+    // 추천 Capability가 모두 실제로 조립 가능한지 검증
+    const assembled = assembleAdHocCapabilities(p.recommendedCapabilities);
+    assert.ok(assembled.setupSchemas.length > 0, `${p.id}의 추천 기능 조립 실패`);
+  }
+  console.log(`✓ 30대 업종 프리셋 레시피 무결성 검증 완료 (${PRESET_DEFINITIONS.length}개 프리셋 전수 검증)`);
 
   console.log(`presetAssembler.test.ts: ok (${presets.length} industry presets verified successfully)`);
 }

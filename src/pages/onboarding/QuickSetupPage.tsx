@@ -89,11 +89,71 @@ const INDUSTRY_CARDS = [
   },
   {
     id: 'custom',
-    title: '직접 설정 (빈 화면)',
-    subtitle: '업종 프리셋 없이 관리자 직급부터 백지 상태에서 시작합니다.',
-    badge: '자유형',
+    title: '[직접 선택하기 (자유 업종)]',
+    subtitle: '업종 제약 없이 필요한 매장 운영 도구들을 직접 골라 담아 나만의 맞춤 매장을 만듭니다.',
+    badge: '자유 커스텀',
     icon: Sparkles,
-    color: 'slate',
+    color: 'indigo',
+  },
+];
+
+const CUSTOM_MODE_CATEGORIES: Array<{
+  categoryName: string;
+  description: string;
+  tools: Array<{ id: string; label: string; desc: string }>;
+}> = [
+  {
+    categoryName: '출결 / 회원 관리',
+    description: '고객 출결 체크인, 이용권 및 회원 정보 관리',
+    tools: [
+      { id: 'attendance', label: '출결 체크인', desc: '키오스크 및 번호 입력 출결 기록' },
+      { id: 'passes', label: '이용권 / 회원권', desc: '횟수제, 기간제 수강권 및 패스' },
+      { id: 'consultation_crm', label: '고객 상담 CRM', desc: '신규 문의 및 고객 상담 이력' },
+      { id: 'trial_funnel', label: '체험 및 상담 리드', desc: '무료 체험 유입 및 전환 파이프라인' },
+      { id: 'parent', label: '학부모 / 보호자 알림', desc: '출결 및 활동 알림장 연동' },
+    ],
+  },
+  {
+    categoryName: '시간표 / 수업 / 예약',
+    description: '수업 예약, 스케줄표 및 마감 취소 대기열',
+    tools: [
+      { id: 'booking', label: '시간표 예약 관리', desc: '수업 및 레슨 타임테이블 예약' },
+      { id: 'waitlist_queue', label: '마감 취소 대기열 FIFO', desc: '취소 발생 시 선착순 제안 발송' },
+      { id: 'instructor_match', label: '강사 / 담당자 매칭', desc: '고객별 1:1 담당자 배정' },
+      { id: 'shift_schedule', label: '직원 교대 근무', desc: '스태프 근무 스케줄 배정' },
+    ],
+  },
+  {
+    categoryName: '공간 / 좌석 / 시설 정비',
+    description: '룸·타석·좌석 배정, 정비 버퍼 및 시간제 과금',
+    tools: [
+      { id: 'seat_room', label: '좌석 / 룸 배정', desc: '타석, 연습실, 스튜디오 공간 배정' },
+      { id: 'space_turnaround', label: '공간 정비/청소 버퍼', desc: '이용 종료 후 15분 환기/청소 버퍼' },
+      { id: 'seat_timer_billing', label: '시간제 공간 타이머', desc: '분/시간 단위 이용료 및 초과 과금' },
+      { id: 'locker', label: '사물함 / 락커', desc: '고정 락커 및 일일 락커 관리' },
+      { id: 'maintenance_checklist', label: '시설 점검 체크리스트', desc: '매장 일일 위생/안전 점검표' },
+    ],
+  },
+  {
+    categoryName: '판매 / 수납 / 매출 관리',
+    description: '결제 청구서, 재고 관리 및 특가 이벤트',
+    tools: [
+      { id: 'billing_invoicing', label: '청구 / 수납 인보이스', desc: '이용료 청구서 및 수납 영수증' },
+      { id: 'inventory', label: '상품 판매 및 재고', desc: '소매 제품 입출고 및 바코드 재고' },
+      { id: 'promotional_deal', label: '기간 한정 특가 & 이벤트', desc: '얼리버드 및 시즌 할인 스케줄러' },
+      { id: 'ledger_simple', label: '간편 매출 장부', desc: '일일 수납액 및 간편 손익 집계' },
+      { id: 'credit_wallet', label: '선불 충전금 크레딧', desc: '선불 적립금 충전 및 차감' },
+    ],
+  },
+  {
+    categoryName: '현장 파견 / 고객 만족',
+    description: '출장 방문 관리, 안전 서약 및 고객 소통',
+    tools: [
+      { id: 'field_dispatch', label: '출장 및 방문 파견', desc: '방문 일정, 이동 버퍼 및 지도 길안내' },
+      { id: 'safety_consent', label: '전자 동의 / 안전 서약', desc: '터치패드 전자 서명 및 면책 동의' },
+      { id: 'loyalty_stamp', label: '모바일 전자 스탬프', desc: '방문 칭찬 스탬프 및 쿠폰' },
+      { id: 'feedbacks', label: '고객 건의 / 소통함', desc: '고객 피드백 수집 및 인수인계' },
+    ],
   },
 ];
 
@@ -224,6 +284,17 @@ export const QuickSetupPage: React.FC = () => {
   const [aiQuery, setAiQuery] = useState('');
   const [aiResult, setAiResult] = useState<RecommendationResult | null>(null);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+
+  // 세부 커스텀 (직급, 룸, 운영시간, 도구세트) 접힘/펼침 상태
+  const [isAdvancedCustomOpen, setIsAdvancedCustomOpen] = useState(false);
+  // [자유 커스텀 모드] 사장님이 직접 선택한 도구 목록
+  const [customCapabilities, setCustomCapabilities] = useState<string[]>([
+    'attendance',
+    'booking',
+    'passes',
+    'billing_invoicing',
+  ]);
 
   // Refine / React Hook Form
   const {
@@ -272,6 +343,7 @@ export const QuickSetupPage: React.FC = () => {
     if (!aiQuery.trim()) return;
 
     setIsAiAnalyzing(true);
+    setIsAiPanelOpen(true);
     setTimeout(() => {
       const result = recommendIndustryPreset(aiQuery);
       setAiResult(result);
@@ -371,6 +443,11 @@ export const QuickSetupPage: React.FC = () => {
         (id) => !presetCaps.includes(id)
       );
 
+      const activeCapabilitiesPayload =
+        selectedIndustry === 'custom'
+          ? Array.from(new Set([...customCapabilities, ...additionalCaps]))
+          : additionalCaps;
+
       const payload = buildPresetPayload(selectedIndustry, {
         ...data,
         name: trimmedName,
@@ -378,7 +455,7 @@ export const QuickSetupPage: React.FC = () => {
         rooms,
         locker_count: selectedIndustry === 'sauna' ? lockerCount : undefined,
         operating_hours: operatingHours,
-        active_capabilities: additionalCaps,
+        active_capabilities: activeCapabilitiesPayload,
       });
 
       const { data: rpcResult, error } = await getCoreClient().rpc(
@@ -440,126 +517,139 @@ export const QuickSetupPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* AI 기반 사업장 맞춤 프리셋 자동 진단 섹션 */}
-          <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 text-white p-6 sm:p-7 rounded-3xl shadow-xl border border-indigo-800/60 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300">
+          {/* AI 기반 사업장 맞춤 추천 섹션 (경량화 & 접이식 컴팩트 카드) */}
+          <div className="bg-gradient-to-r from-indigo-50/90 via-white to-indigo-50/90 text-slate-800 rounded-3xl shadow-xs border border-indigo-100 overflow-hidden transition-all">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-white flex items-center gap-2">
-                    <span>AI 맞춤 업종 프리셋 자동 진단</span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/20">
-                      지능형 추천
+                  <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span>내 매장에 딱 맞는 업종이 고민되시나요?</span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                      AI 스마트 추천
                     </span>
                   </h2>
-                  <p className="text-xs text-indigo-200/80">
-                    운영하시는 사업장의 특징이나 필요한 기능을 자연어로 편하게 적어주시면 가장 적합한 프리셋을 찾아드립니다.
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    매장 특징이나 제공 서비스를 자유롭게 적어주시면 가장 알맞은 도구와 운영 방식을 제안해 드립니다.
                   </p>
                 </div>
               </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={aiQuery}
-                  onChange={(e) => setAiQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleRunAiRecommendation();
-                    }
-                  }}
-                  placeholder="예: 판교에서 20명 규모 성인 피아노 학원을 운영하고 연습실 대여와 주차 등록이 필요해요"
-                  className="w-full h-12 pl-4 pr-10 rounded-xl bg-slate-800/80 border border-indigo-500/30 text-sm text-white placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-400 transition"
-                />
-                {aiQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAiQuery('');
-                      setAiResult(null);
-                    }}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
               <button
                 type="button"
-                onClick={() => handleRunAiRecommendation()}
-                disabled={isAiAnalyzing || !aiQuery.trim()}
-                className="h-12 px-6 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-sm rounded-xl shadow-md transition-all flex items-center justify-center gap-2 shrink-0"
+                onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+                className="self-start sm:self-center px-3.5 py-2 rounded-xl bg-white hover:bg-indigo-50 border border-indigo-200 text-xs font-bold text-indigo-600 transition flex items-center gap-1.5 shrink-0 shadow-2xs"
               >
-                {isAiAnalyzing ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Sparkles className="w-4 h-4" />
-                )}
-                <span>{isAiAnalyzing ? 'AI 분석 중...' : '맞춤 프리셋 진단'}</span>
+                <span>{isAiPanelOpen ? '추천창 닫기' : '✨ AI에게 추천받기'}</span>
+                {isAiPanelOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
             </div>
 
-            {/* AI 추천 결과 카드 */}
-            {aiResult?.topRecommendation && (
-              <div className="bg-indigo-950/60 border border-indigo-400/30 p-4 rounded-2xl space-y-3 animate-in fade-in">
-                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-800/50">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs text-indigo-200">추천 1순위:</span>
-                    <span className="text-sm font-bold text-white">
-                      {aiResult.topRecommendation.presetName}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      일치도 {aiResult.topRecommendation.score}%
-                    </span>
+            {/* 펼쳐졌을 때만 입력창 및 결과 표시 */}
+            {isAiPanelOpen && (
+              <div className="px-4 pb-5 sm:px-5 space-y-4 border-t border-indigo-100 pt-4 animate-in fade-in duration-200">
+                <div className="flex flex-col sm:flex-row gap-2.5">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={aiQuery}
+                      onChange={(e) => setAiQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleRunAiRecommendation();
+                        }
+                      }}
+                      placeholder="예: 판교에서 20명 규모 성인 피아노 학원을 운영하고 연습실 대여와 주차 등록이 필요해요"
+                      className="w-full h-11 pl-4 pr-10 rounded-xl bg-white border border-indigo-200 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition shadow-2xs"
+                    />
+                    {aiQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAiQuery('');
+                          setAiResult(null);
+                        }}
+                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
-                  <span className="text-xs text-indigo-300">
-                    ✓ 추천 설정이 아래 폼에 자동 적용되었습니다
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRunAiRecommendation()}
+                    disabled={isAiAnalyzing || !aiQuery.trim()}
+                    className="h-11 px-5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 shrink-0 min-h-[44px]"
+                  >
+                    {isAiAnalyzing ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-4 h-4" />
+                    )}
+                    <span>{isAiAnalyzing ? '분석 중...' : '추천 진단하기'}</span>
+                  </button>
                 </div>
 
-                <p className="text-xs text-indigo-100/90 leading-relaxed">
-                  {aiResult.topRecommendation.explanation}
-                </p>
-
-                {/* 추가 추천 Add-on 배지 */}
-                {aiResult.topRecommendation.recommendedAddons.length > 0 && (
-                  <div className="pt-2 flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-indigo-300 font-semibold">
-                      함께 추천하는 부가기능:
-                    </span>
-                    {aiResult.topRecommendation.recommendedAddons.map((addon) => (
-                      <span
-                        key={addon.capabilityId}
-                        className="text-xs px-2.5 py-1 rounded-lg bg-indigo-800/80 text-indigo-200 border border-indigo-600/40 flex items-center gap-1.5"
-                        title={addon.reason}
-                      >
-                        <Tag className="w-3 h-3 text-indigo-400" />
-                        <span>{addon.name}</span>
+                {/* AI 추천 결과 카드 */}
+                {aiResult?.topRecommendation && (
+                  <div className="bg-indigo-50/70 border border-indigo-200/80 p-4 rounded-2xl space-y-3 animate-in fade-in">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-100">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span className="text-xs text-slate-500">추천 1순위:</span>
+                        <span className="text-sm font-bold text-slate-900">
+                          {aiResult.topRecommendation.presetName}
+                        </span>
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                          일치도 {aiResult.topRecommendation.score}%
+                        </span>
+                      </div>
+                      <span className="text-xs text-indigo-700 font-medium">
+                        ✓ 추천 설정이 아래 폼에 자동 적용되었습니다
                       </span>
-                    ))}
-                  </div>
-                )}
+                    </div>
 
-                {/* 대안 추천 */}
-                {aiResult.alternativeRecommendations.length > 0 && (
-                  <div className="pt-2 flex items-center gap-2 text-xs text-indigo-300">
-                    <span>다른 후보:</span>
-                    {aiResult.alternativeRecommendations.map((alt) => (
-                      <button
-                        key={alt.presetId}
-                        type="button"
-                        onClick={() => applyIndustryDefaults(alt.presetId)}
-                        className="underline hover:text-white"
-                      >
-                        {alt.presetName} ({alt.score}%)
-                      </button>
-                    ))}
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {aiResult.topRecommendation.explanation}
+                    </p>
+
+                    {/* 추가 추천 Add-on 배지 */}
+                    {aiResult.topRecommendation.recommendedAddons.length > 0 && (
+                      <div className="pt-2 flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-slate-600 font-semibold">
+                          함께 추천하는 [매장 도구]:
+                        </span>
+                        {aiResult.topRecommendation.recommendedAddons.map((addon) => (
+                          <span
+                            key={addon.capabilityId}
+                            className="text-xs px-2.5 py-1 rounded-lg bg-white text-indigo-700 border border-indigo-200 flex items-center gap-1.5 shadow-2xs"
+                            title={addon.reason}
+                          >
+                            <Tag className="w-3 h-3 text-indigo-500" />
+                            <span>{addon.name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* 대안 추천 */}
+                    {aiResult.alternativeRecommendations.length > 0 && (
+                      <div className="pt-2 flex items-center gap-2 text-xs text-slate-500">
+                        <span>다른 후보:</span>
+                        {aiResult.alternativeRecommendations.map((alt) => (
+                          <button
+                            key={alt.presetId}
+                            type="button"
+                            onClick={() => applyIndustryDefaults(alt.presetId)}
+                            className="underline text-indigo-600 hover:text-indigo-800 font-medium"
+                          >
+                            {alt.presetName} ({alt.score}%)
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -792,114 +882,278 @@ export const QuickSetupPage: React.FC = () => {
                 )}
               </div>
 
-            </div>
-          </div>
-
-          {/* Step 1.5: [우리 매장 맞춤 세트] 자동 추천 및 선택 */}
-          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                  <h2 className="text-base font-bold text-slate-900">
-                    [우리 매장 맞춤 세트] 선택
-                  </h2>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  선택하신 업종에 가장 필요한 기본 도구 세트가 자동 체크되었습니다. 필요한 세트를 자유롭게 추가·해제하세요.
-                </p>
-              </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
-                {selectedToolSetIds.length}개 세트 선택됨
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              {OPERATION_TOOL_SETS.map((set) => {
-                const isSelected = selectedToolSetIds.includes(set.id);
-                const isRecommended = set.recommendedFor.includes('*') || set.recommendedFor.includes(selectedIndustry);
-
-                return (
-                  <button
-                    key={set.id}
-                    type="button"
-                    onClick={() => handleToggleToolSetOption(set.id)}
-                    className={`p-4 text-left rounded-2xl border-2 transition-all flex flex-col justify-between ${
-                      isSelected
-                        ? 'border-indigo-600 bg-indigo-50/30 shadow-xs'
-                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
-                    }`}
-                  >
+              {/* [자유 커스텀 모드] 카테고리별 매장 운영 도구 직접 선택 체크박스 리스트 */}
+              {selectedIndustry === 'custom' && (
+                <div className="mt-4 p-6 rounded-2xl bg-white border-2 border-indigo-200 shadow-sm space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
                     <div>
-                      <div className="flex items-start justify-between gap-2 mb-2">
-                        <span className="font-bold text-sm text-slate-900">
-                          {set.displayName}
-                        </span>
-                        <div
-                          className={`w-5 h-5 rounded-md flex items-center justify-center border transition ${
-                            isSelected
-                              ? 'bg-indigo-600 border-indigo-600 text-white'
-                              : 'bg-white border-slate-300'
-                          }`}
-                        >
-                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-indigo-600" />
+                        <h3 className="text-base font-bold text-slate-900">
+                          [나만의 맞춤 매장] 운영 도구 직접 선택
+                        </h3>
                       </div>
-                      <p className="text-xs text-slate-500 leading-relaxed mb-3">
-                        {set.description}
+                      <p className="text-xs text-slate-500 mt-1">
+                        사업주 매장 운영에 꼭 필요한 기능들을 카테고리별로 자유롭게 선택하세요.
                       </p>
                     </div>
+                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                      {customCapabilities.length}개 도구 선택됨
+                    </span>
+                  </div>
 
-                    <div className="pt-2 border-t border-slate-100 space-y-2">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {isRecommended && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                            추천 세트
-                          </span>
-                        )}
-                        {set.badge && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
-                            {set.badge}
-                          </span>
-                        )}
+                  <div className="space-y-5">
+                    {CUSTOM_MODE_CATEGORIES.map((cat) => (
+                      <div key={cat.categoryName} className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                            <span>{cat.categoryName}</span>
+                          </h4>
+                          <span className="text-[11px] text-slate-400">{cat.description}</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                          {cat.tools.map((tool) => {
+                            const checked = customCapabilities.includes(tool.id);
+                            return (
+                              <label
+                                key={tool.id}
+                                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-2.5 ${
+                                  checked
+                                    ? 'border-indigo-600 bg-indigo-50/40 shadow-xs'
+                                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      setCustomCapabilities((prev) => [...prev, tool.id]);
+                                    } else {
+                                      setCustomCapabilities((prev) =>
+                                        prev.filter((id) => id !== tool.id)
+                                      );
+                                    }
+                                  }}
+                                  className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                                    <span>{tool.label}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                                    {tool.desc}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {set.capabilities.slice(0, 3).map((capId) => (
-                          <span
-                            key={capId}
-                            className="text-[10px] px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200/80 shadow-2xs"
-                          >
-                            {formatCapabilityLabel(capId)}
-                          </span>
-                        ))}
-                        {set.capabilities.length > 3 && (
-                          <span className="text-[10px] text-slate-400">
-                            +{set.capabilities.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
-          {/* Step 2: 동적 Pre-fill 추천 설정 검토 & 커스텀 */}
+          {/* Step 2: 완료 & 검토 (2단계 점진적 정보 공개 위자드) */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="text-base font-bold text-slate-900">
-                  추천 기본값 (즉시 수정 가능)
-                </h2>
-                <p className="text-xs text-slate-500">
-                  선택하신 업종 표준으로 미리 채워졌습니다. 필요한 항목을 현장에 맞게 변경하세요.
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg border border-emerald-100 shrink-0">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                      {activePreset ? `${activePreset.name} 추천 설정 준비 완료` : '맞춤 매장 설정 준비 완료'}
+                    </h2>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      10초 셋업
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    업종 표준 직급, 공간, 운영시간 및 추천 [매장 도구]가 자동으로 최적 세팅되었습니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 빠른 검토 요약 카드 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                  <Shield className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>직급 ({roles.length}개)</span>
+                </div>
+                <p className="text-xs text-slate-500 truncate">
+                  {roles.map((r) => r.name).join(', ') || '기본 직급'}
                 </p>
               </div>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100">
-                Pre-fill 활성화
-              </span>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{selectedIndustry === 'sauna' ? '사물함' : '공간/룸'}</span>
+                </div>
+                <p className="text-xs text-slate-500 truncate">
+                  {selectedIndustry === 'sauna'
+                    ? `락커 ${lockerCount}개`
+                    : rooms.length > 0
+                    ? `${rooms.map((r) => r.name).slice(0, 3).join(', ')}${rooms.length > 3 ? ' 외' : ''}`
+                    : '1개 기본 룸'}
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                  <Clock className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>운영 시간</span>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {operatingHours.start_time} ~ {operatingHours.end_time} ({operatingHours.slot_minutes}분 단위)
+                </p>
+              </div>
             </div>
+
+            {/* 메인 원클릭 시작 버튼 */}
+            <div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-base shadow-lg shadow-indigo-100 flex items-center justify-center space-x-2 transition disabled:opacity-50 min-h-[44px]"
+              >
+                {submitting ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>맞춤 매장 및 리소스 생성 중...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>이 추천 설정으로 바로 시작하기 (10초 완료)</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+              <p className="text-center text-xs text-slate-400 mt-2.5">
+                단 1회의 원자적 트랜잭션으로 사업장, 소유자 권한, 직급, 룸/락커, 운영시간이 구축됩니다.
+              </p>
+            </div>
+
+            {/* 세부 커스텀 아코디언 토글 */}
+            <div className="pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsAdvancedCustomOpen(!isAdvancedCustomOpen)}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100/80 transition text-xs sm:text-sm font-semibold text-slate-700"
+              >
+                <div className="flex items-center gap-2">
+                  <Settings2 className="w-4 h-4 text-indigo-600" />
+                  <span>매장 세부 설정 직접 조정하기 (직급·공간·운영시간·도구)</span>
+                </div>
+                {isAdvancedCustomOpen ? (
+                  <ChevronUp className="w-4 h-4 text-slate-500" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-slate-500" />
+                )}
+              </button>
+            </div>
+
+            {/* 아코디언 접힘/펼침 세부 설정 영역 */}
+            {isAdvancedCustomOpen && (
+              <div className="space-y-6 pt-4 border-t border-slate-100 animate-in fade-in duration-200">
+                {/* [우리 매장 맞춤 세트] */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        <h3 className="text-sm font-bold text-slate-900">
+                          [추천 운영 기능] 세트 선택
+                        </h3>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        필요한 도구 세트를 자유롭게 추가·해제하세요.
+                      </p>
+                    </div>
+                    <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100">
+                      {selectedToolSetIds.length}개 세트 선택됨
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {OPERATION_TOOL_SETS.map((set) => {
+                      const isSelected = selectedToolSetIds.includes(set.id);
+                      const isRecommended = set.recommendedFor.includes('*') || set.recommendedFor.includes(selectedIndustry);
+
+                      return (
+                        <button
+                          key={set.id}
+                          type="button"
+                          onClick={() => handleToggleToolSetOption(set.id)}
+                          className={`p-3.5 text-left rounded-2xl border-2 transition-all flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-indigo-600 bg-indigo-50/30 shadow-2xs'
+                              : 'border-slate-200 bg-slate-50/50 hover:border-slate-300'
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <span className="font-bold text-xs sm:text-sm text-slate-900">
+                                {set.displayName}
+                              </span>
+                              <div
+                                className={`w-5 h-5 rounded-md flex items-center justify-center border transition shrink-0 ${
+                                  isSelected
+                                    ? 'bg-indigo-600 border-indigo-600 text-white'
+                                    : 'bg-white border-slate-300'
+                                }`}
+                              >
+                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              </div>
+                            </div>
+                            <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
+                              {set.description}
+                            </p>
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {isRecommended && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                  추천
+                                </span>
+                              )}
+                              {set.badge && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">
+                                  {set.badge}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {set.capabilities.slice(0, 3).map((capId) => (
+                                <span
+                                  key={capId}
+                                  className="text-[10px] px-1.5 py-0.5 rounded bg-white text-slate-600 border border-slate-200/80"
+                                >
+                                  {formatCapabilityLabel(capId)}
+                                </span>
+                              ))}
+                              {set.capabilities.length > 3 && (
+                                <span className="text-[10px] text-slate-400">
+                                  +{set.capabilities.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
             {/* A. 직급 구성 칩 */}
             <div>
@@ -1178,6 +1432,8 @@ export const QuickSetupPage: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
               </div>
             )}
           </div>

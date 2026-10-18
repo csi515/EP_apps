@@ -1,4 +1,4 @@
-export type { FeatureGuideItem, FeatureGuideSection } from './featureGuides';
-export { getAdultStudentPortalGuide, getIndustryFeatureGuide } from './featureGuides';
+export type { FeatureGuideItem, FeatureGuideSection, PresetGuideResolver } from './featureGuides';
+export { getAdultStudentPortalGuide, getIndustryFeatureGuide, registerPresetGuideResolver } from './featureGuides';
 export { AdultStudentGuidePanel } from './components/AdultStudentGuidePanel';
 export { IndustryFeatureGuidePanel } from './components/IndustryFeatureGuidePanel';

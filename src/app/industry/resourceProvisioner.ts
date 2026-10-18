@@ -34,6 +34,7 @@ import {
   ShieldAlert,
   Clock,
   Box,
+  Tag,
 } from 'lucide-react';
 import type { IndustryType } from '@/core/industry/catalog';
 import { getIndustryCapabilities } from './industryCapabilityMap';
@@ -83,6 +84,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldAlert,
   Clock,
   Box,
+  Tag,
 };
 
 export interface ProvisionResourcesOptions {

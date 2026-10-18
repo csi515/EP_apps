@@ -115,6 +115,165 @@ export interface Database {
           }
         ];
       };
+      dispatch_orders: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          customer_id: string | null;
+          staff_id: string | null;
+          service_name: string;
+          service_address: string;
+          address_detail: string | null;
+          scheduled_at: string;
+          estimated_duration_min: number;
+          travel_buffer_min: number;
+          status: 'BOOKED' | 'ASSIGNED' | 'EN_ROUTE' | 'WORKING' | 'COMPLETED' | 'CANCELLED';
+          before_photo_url: string | null;
+          after_photo_url: string | null;
+          memo: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          customer_id?: string | null;
+          staff_id?: string | null;
+          service_name: string;
+          service_address: string;
+          address_detail?: string | null;
+          scheduled_at: string;
+          estimated_duration_min?: number;
+          travel_buffer_min?: number;
+          status?: 'BOOKED' | 'ASSIGNED' | 'EN_ROUTE' | 'WORKING' | 'COMPLETED' | 'CANCELLED';
+          before_photo_url?: string | null;
+          after_photo_url?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          customer_id?: string | null;
+          staff_id?: string | null;
+          service_name?: string;
+          service_address?: string;
+          address_detail?: string | null;
+          scheduled_at?: string;
+          estimated_duration_min?: number;
+          travel_buffer_min?: number;
+          status?: 'BOOKED' | 'ASSIGNED' | 'EN_ROUTE' | 'WORKING' | 'COMPLETED' | 'CANCELLED';
+          before_photo_url?: string | null;
+          after_photo_url?: string | null;
+          memo?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_orders_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      space_cleanings: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          resource_id: string;
+          turnaround_min: number;
+          status: 'DIRTY' | 'CLEANING' | 'READY';
+          cleaned_by: string | null;
+          cleaned_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          resource_id: string;
+          turnaround_min?: number;
+          status?: 'DIRTY' | 'CLEANING' | 'READY';
+          cleaned_by?: string | null;
+          cleaned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          resource_id?: string;
+          turnaround_min?: number;
+          status?: 'DIRTY' | 'CLEANING' | 'READY';
+          cleaned_by?: string | null;
+          cleaned_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "space_cleanings_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      booking_waitlists: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          booking_slot_id: string;
+          customer_id: string;
+          pass_id: string | null;
+          queue_order: number;
+          status: 'WAITING' | 'OFFERED' | 'EXPIRED' | 'CONVERTED';
+          offered_at: string | null;
+          expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          booking_slot_id: string;
+          customer_id: string;
+          pass_id?: string | null;
+          queue_order?: number;
+          status?: 'WAITING' | 'OFFERED' | 'EXPIRED' | 'CONVERTED';
+          offered_at?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          booking_slot_id?: string;
+          customer_id?: string;
+          pass_id?: string | null;
+          queue_order?: number;
+          status?: 'WAITING' | 'OFFERED' | 'EXPIRED' | 'CONVERTED';
+          offered_at?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "booking_waitlists_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "organizations";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       bookable_resource_reservations: {
         Row: {
           id: string;

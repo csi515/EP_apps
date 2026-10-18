@@ -65,4 +65,16 @@ function functionBlock(name: string): string {
   assert.match(body, /SET used_at = now\(\)/);
 }
 
+// 4) safe_transfer_customer_identity conflict hardening migration
+{
+  const hardeningSql = read('supabase/migrations/20261018223000_safe_transfer_conflict_hardening.sql');
+  const hardeningCode = stripComments(hardeningSql);
+  assert.match(hardeningCode, /ALREADY_BOUND_TO_ANOTHER_USER/);
+  assert.match(hardeningCode, /ERR_PHONE_DUPLICATE_IN_TENANT/);
+  assert.match(hardeningCode, /WHEN unique_violation THEN/);
+  assert.match(hardeningCode, /user_id IS NOT NULL/);
+  assert.match(hardeningCode, /user_id <> v_caller_uid/);
+}
+
 console.log('safe-transfer-customer-identity test passed');
+

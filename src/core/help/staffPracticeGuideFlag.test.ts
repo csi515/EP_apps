@@ -19,7 +19,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const srcRoot = join(here, '../..');
 
 function readSrc(rel: string): string {
-  return readFileSync(join(srcRoot, rel), 'utf8');
+  return readFileSync(join(srcRoot, rel), 'utf8').replace(/\r\n/g, '\n');
 }
 
 function readFlag(rel: string): boolean {

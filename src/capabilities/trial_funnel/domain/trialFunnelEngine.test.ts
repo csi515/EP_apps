@@ -5,6 +5,7 @@ import {
   groupLeadsByStatus,
   buildConsultationFromLead,
   buildCustomerFromLead,
+  canConvertLead,
   type TrialLead,
 } from './trialFunnelEngine';
 
@@ -144,5 +145,20 @@ console.log('✓ 2. 퍼널 전환율 지표 산출 및 그룹화 검증 통과')
   assert.match(customerPayload.memo, /리드 파이프라인 전환/);
 }
 console.log('✓ 3. 상담 CRM 및 고객 전환 브릿지 생성 검증 통과');
+
+// 4. canConvertLead 검증
+{
+  assert.equal(canConvertLead('trial_attended'), true);
+  assert.equal(canConvertLead('consult_scheduled'), true);
+  assert.equal(canConvertLead('VISITED'), true);
+  assert.equal(canConvertLead('CONSULTED'), true);
+  assert.equal(canConvertLead('new_inquiry'), false);
+  assert.equal(canConvertLead('APPLIED'), false);
+  assert.equal(canConvertLead('converted'), false);
+  assert.equal(canConvertLead('CONVERTED'), false);
+  assert.equal(canConvertLead('dropped'), false);
+  assert.equal(canConvertLead('LOST'), false);
+}
+console.log('✓ 4. canConvertLead 상태 판정 검증 통과');
 
 console.log('[test:trial-funnel] ALL TESTS PASSED! (100%)');

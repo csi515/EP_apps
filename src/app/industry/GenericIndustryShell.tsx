@@ -31,6 +31,7 @@ import { useTabGuard } from '@/shared/navigation/useTabGuard';
 import { WorkplaceSettingsView } from '@/core/organizations/components/WorkplaceSettingsView';
 import { accountViewEntry, financeViewEntries } from '@/core/industry/commonViewEntries';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
+import { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
 
 const AttendanceView = lazy(() =>
   import('@/capabilities/attendance').then((m) => ({ default: m.AttendanceManagementView }))
@@ -218,6 +219,15 @@ const LeaveManagementDashboardView = lazy(() =>
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
+const DispatchListPage = lazy(() =>
+  import('@/capabilities/field_dispatch').then((m) => ({ default: m.DispatchListPage }))
+);
+const PromotionListPage = lazy(() =>
+  import('@/capabilities/promotional_deal').then((m) => ({ default: m.PromotionListPage }))
+);
+const WaitlistPage = lazy(() =>
+  import('@/capabilities/waitlist_queue').then((m) => ({ default: m.WaitlistPage }))
+);
 
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
@@ -251,9 +261,10 @@ export {
 
 interface GenericDashboardViewProps {
   onNavigate: (tab: any) => void;
+  enabledCaps?: string[];
 }
 
-function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
+function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboardViewProps) {
   const { currentOrganization } = useOrganization();
   const { industry } = usePermissions();
   const { t } = useTerminology(currentOrganization?.industry_type || industry);
@@ -265,6 +276,13 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
 
   const allCustomers = StorageService.getStudents();
   const activeCustomers = allCustomers.filter((c) => c.status === 'active');
+
+  const hasPasses = enabledCaps.includes('passes');
+  const hasBookings = enabledCaps.includes('booking') || enabledCaps.includes('seat_room');
+  const showRiskWidget =
+    enabledCaps.includes('facility_incident_report') ||
+    enabledCaps.includes('sop_risk_assessment') ||
+    Boolean((currentOrganization?.settings as any)?.show_risk_dashboard);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pt-2 sm:pt-4" data-testid="director-home">
@@ -283,6 +301,16 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
           </p>
         </div>
       </div>
+
+      {/* 사업장 맞춤형 첫걸음 퀘스트(Getting Started) 위젯 */}
+      <GettingStartedQuestWidget
+        onNavigate={onNavigate}
+        organizationId={currentOrganization?.id}
+        industryType={currentOrganization?.industry_type || industry}
+        customerWord={customerWord}
+        placeWord={placeWord}
+        onOpenCustomerModal={() => setIsFormOpen(true)}
+      />
 
       {/* 핵심 지표 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -317,8 +345,8 @@ function GenericDashboardView({ onNavigate }: GenericDashboardViewProps) {
         </div>
       </div>
 
-      {/* 전사 통합 경영 리스크 지수 위젯 */}
-      <ExecutiveRiskDashboardWidget />
+      {/* 전사 통합 경영 리스크 지수 위젯 (안전사고/위험평가 기능 활성화 시에만 노출) */}
+      {showRiskWidget && <ExecutiveRiskDashboardWidget />}
 
       {/* 빠른 작업 */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-4 shadow-xs">
@@ -586,7 +614,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const location = useLocation();
 
   const defaultViewMap: Record<string, () => ReactNode> = {
-    dashboard: () => <GenericDashboardView onNavigate={setActiveTab} />,
+    dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
     students: () => <StudentListView />,
     bookings: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>
@@ -933,6 +961,46 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
         <CapabilitySwitchboardView />
       </Suspense>
     ),
+    dispatch: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">출장 파견 일정을 불러오는 중...</div>}>
+        <DispatchListPage />
+      </Suspense>
+    ),
+    'field-dispatch': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">출장 파견 일정을 불러오는 중...</div>}>
+        <DispatchListPage />
+      </Suspense>
+    ),
+    promotions: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">특가 프로모션을 불러오는 중...</div>}>
+        <PromotionListPage />
+      </Suspense>
+    ),
+    'promotional-deals': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">특가 프로모션을 불러오는 중...</div>}>
+        <PromotionListPage />
+      </Suspense>
+    ),
+    turnaround: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공간 턴어라운드를 불러오는 중...</div>}>
+        <SpaceTurnaroundView />
+      </Suspense>
+    ),
+    waitlist: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">취소 대기열을 불러오는 중...</div>}>
+        <WaitlistPage />
+      </Suspense>
+    ),
+    'waitlist-queue': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">취소 대기열을 불러오는 중...</div>}>
+        <WaitlistPage />
+      </Suspense>
+    ),
+    leads: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">체험·상담 리드 파이프라인을 불러오는 중...</div>}>
+        <TrialFunnelKanbanView />
+      </Suspense>
+    ),
     ...financeViewEntries,
     settings: () => <WorkplaceSettingsView />,
     ...accountViewEntry,
@@ -941,8 +1009,16 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const viewMap = externalViewMap || defaultViewMap;
 
   useEffect(() => {
-    const candidateTab = urlTab || location.pathname.replace(/^\//, '').split('/')[0];
-    if (candidateTab && candidateTab !== 'workspace') {
+    let candidateTab = urlTab;
+    if (!candidateTab) {
+      const parts = location.pathname.replace(/^\//, '').split('/');
+      if (parts[0] === 'workspace' && parts[1]) {
+        candidateTab = parts[1];
+      } else if (parts[0] && parts[0] !== 'workspace') {
+        candidateTab = parts[0];
+      }
+    }
+    if (candidateTab) {
       setActiveTab(candidateTab);
     }
   }, [urlTab, location.pathname, setActiveTab]);

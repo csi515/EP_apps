@@ -30,6 +30,9 @@ import {
 import { provisionIndustryResources } from '../src/app/industry/resourceProvisioner';
 import { MODULE_INDUSTRY_IDS } from '../src/core/industry/catalog';
 import type { MoaI18nProvider } from '../src/providers/i18nProvider';
+import { getIndustryFeatureGuide } from '../src/core/help/featureGuides';
+import { getPresetQuests } from '../src/app/onboarding/questEngine';
+import '../src/app/presets/presetManualEngine';
 
 const mockI18n: MoaI18nProvider = {
   translate: (key: string, options?: any, defaultMessage?: string) =>
@@ -363,6 +366,29 @@ function run(): void {
   }
 
   console.log('  -> 44개 프리셋 4대 티어 단일 분류 및 검증 완료');
+  console.log('=== [8] Declarative Feature Guide & Getting Started Quest Integrity ===');
+  for (const preset of presets) {
+    // 1. 선언적 기능 설명서 검증
+    const guide = getIndustryFeatureGuide(preset.id);
+    assert.ok(guide, `${preset.id}: 기능 설명서가 생성되어야 함`);
+    assert.ok(guide.intro.title.length > 0, `${preset.id}: 설명서 제목 누락`);
+    assert.ok(guide.sections.length >= 2, `${preset.id}: 최소 2개 이상의 섹션 필요`);
+    for (const section of guide.sections) {
+      assert.ok(section.title.length > 0, `${preset.id}: 섹션 제목 누락`);
+      assert.ok(section.items.length > 0, `${preset.id}: 섹션 내 아이템 누락`);
+    }
+
+    // 2. 첫걸음 퀘스트 검증
+    const quests = getPresetQuests(preset.id);
+    assert.ok(quests.length >= 3, `${preset.id}: 최소 3개 이상의 첫걸음 퀘스트가 생성되어야 함`);
+    for (const q of quests) {
+      assert.ok(q.id, `${preset.id}: 퀘스트 ID 누락`);
+      assert.ok(q.title, `${preset.id}: 퀘스트 제목 누락`);
+      assert.ok(q.targetTab, `${preset.id}: 퀘스트 대상 탭 누락`);
+      assert.ok(q.actionText, `${preset.id}: 퀘스트 액션 버튼 누락`);
+    }
+  }
+  console.log('  -> 44개 전 업종 선언적 기능 설명서 및 첫걸음 퀘스트 검증 완료');
   console.log('\n[PASS] preset-capability-runtime-parity.test.ts: 모든 검증 성공');
 }
 

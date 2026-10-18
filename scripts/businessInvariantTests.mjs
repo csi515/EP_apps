@@ -232,6 +232,8 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:policy-engine': 'workplace policy pure domain engine & compliance unit',
   'test:operation-bundles': 'operation tool sets catalog & DAG transitive resolution unit',
   'test:switchboard-store': 'settings store & toolset toggle unit',
+  'test:domain-event-bus': 'core in-app domain event bus unit & fault-boundary test',
+  'test:capability-listener': 'capability decoupled event listeners integration test',
   'test:handover-engine': 'handover and feedbacks domain engine unit',
   'test:pass-holding': 'pass holding & family pool sharing domain engine unit',
   'test:trial-funnel': 'trial lead funnel and conversion domain engine unit',

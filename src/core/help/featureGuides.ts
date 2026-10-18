@@ -1,4 +1,4 @@
-﻿import {
+import {
   PIN_ATTENDANCE_DIRECTOR_COPY,
   PIN_ATTENDANCE_PARENT_COPY,
 } from '@/core/attendance/attendanceNotifyCopy';
@@ -540,11 +540,35 @@ function withStaffPracticeRoomsGuide(sections: FeatureGuideSection[]): FeatureGu
   });
 }
 
+export type PresetGuideResolver = (industry: string) => {
+  intro: { title: string; body: string };
+  sections: FeatureGuideSection[];
+} | undefined;
+
+let dynamicPresetGuideResolver: PresetGuideResolver | null = null;
+
+export function registerPresetGuideResolver(resolver: PresetGuideResolver): void {
+  dynamicPresetGuideResolver = resolver;
+}
+
 export function getIndustryFeatureGuide(industry: IndustryType | string | null | undefined): {
   intro: { title: string; body: string };
   sections: FeatureGuideSection[];
 } {
   const type = normalizeIndustryType(industry);
+  const rawKey = typeof industry === 'string' ? industry.trim() : '';
+
+  if (dynamicPresetGuideResolver && (rawKey || type)) {
+    const resolved = dynamicPresetGuideResolver(rawKey || (type as string));
+    if (resolved) {
+      const base = resolved.sections;
+      return {
+        intro: resolved.intro,
+        sections: showsStaffPracticeGuide(industry) ? withStaffPracticeRoomsGuide(base) : base,
+      };
+    }
+  }
+
   const base = (type && GUIDE_BY_INDUSTRY[type]) || GENERIC_GUIDE;
   return {
     intro: (type && INTRO_BY_INDUSTRY[type]) || GENERIC_INTRO,

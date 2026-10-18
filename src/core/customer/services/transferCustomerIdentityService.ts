@@ -129,15 +129,49 @@ export async function safeTransferCustomerIdentity(
       if (msg.includes('TOKEN_ALREADY_USED')) {
         return { success: false, error: '이미 사용된 인증 토큰입니다.' };
       }
+      if (msg.includes('ALREADY_BOUND_TO_ANOTHER_USER')) {
+        return { success: false, error: '해당 연락처는 이미 다른 사용자 계정에 연동되어 있어 신원을 인계할 수 없습니다.' };
+      }
+      if (msg.includes('ERR_PHONE_DUPLICATE_IN_TENANT')) {
+        return { success: false, error: '동일한 전화번호를 가진 고객 레코드와 충돌이 발생했습니다. 기존 임시 고객 정보를 확인해 주세요.' };
+      }
       return { success: false, error: msg || '신원 인계에 실패했습니다.' };
     }
 
-    const payload = data as { success: boolean; customer_id: string; merged_count?: number };
+    const payload = data as {
+      ok?: boolean;
+      code?: string;
+      message?: string;
+      customer_id?: string;
+      merged_from_id?: string;
+    } | null;
+
+    if (!payload || payload.ok === false) {
+      const code = payload?.code || '';
+      const message = payload?.message;
+      if (code === 'TOKEN_EXPIRED') {
+        return { success: false, error: '인증 토큰 유효시간(5분)이 만료되었습니다. 다시 발급받아주세요.' };
+      }
+      if (code === 'NAME_MISMATCH') {
+        return { success: false, error: '고객 성명이 일치하지 않아 신원 인계가 거부되었습니다 (보안).' };
+      }
+      if (code === 'TOKEN_ALREADY_USED') {
+        return { success: false, error: '이미 사용된 인증 토큰입니다.' };
+      }
+      if (code === 'ALREADY_BOUND_TO_ANOTHER_USER') {
+        return { success: false, error: '해당 연락처는 이미 다른 사용자 계정에 연동되어 있어 신원을 인계할 수 없습니다.' };
+      }
+      if (code === 'ERR_PHONE_DUPLICATE_IN_TENANT') {
+        return { success: false, error: '동일한 전화번호를 가진 고객 레코드와 충돌이 발생했습니다. 기존 임시 고객 정보를 확인해 주세요.' };
+      }
+      return { success: false, error: message || '신원 인계에 실패했습니다.' };
+    }
+
     return {
       success: true,
       customerId: payload.customer_id,
-      mergedCount: payload.merged_count,
-      message: '회원 계정 및 수강권·출결 데이터가 안전하게 인계되었습니다.',
+      mergedCount: payload.merged_from_id ? 1 : 0,
+      message: payload.message || '회원 계정 및 수강권·출결 데이터가 안전하게 인계되었습니다.',
     };
   } catch (err: unknown) {
     return {

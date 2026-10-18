@@ -235,6 +235,10 @@ import { fieldAuditTrailSetupSchema } from '@/capabilities/field_audit_trail/set
 import { fieldAuditTrailResources } from '@/capabilities/field_audit_trail/resources';
 import { vendorScorecardSetupSchema } from '@/capabilities/vendor_scorecard/setupSchema';
 import { vendorScorecardResources } from '@/capabilities/vendor_scorecard/resources';
+import { fieldDispatchSetupSchema } from '@/capabilities/field_dispatch/setupSchema';
+import { fieldDispatchResources } from '@/capabilities/field_dispatch/resources';
+import { waitlistQueueSetupSchema } from '@/capabilities/waitlist_queue/setupSchema';
+import { waitlistQueueResources } from '@/capabilities/waitlist_queue/resources';
 
 
 /**
@@ -878,6 +882,16 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'vendor_scorecard',
     setupSchema: vendorScorecardSetupSchema,
     resources: vendorScorecardResources,
+  },
+  field_dispatch: {
+    capabilityId: 'field_dispatch',
+    setupSchema: fieldDispatchSetupSchema,
+    resources: fieldDispatchResources,
+  },
+  waitlist_queue: {
+    capabilityId: 'waitlist_queue',
+    setupSchema: waitlistQueueSetupSchema,
+    resources: waitlistQueueResources,
   },
 };
 

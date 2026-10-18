@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
+  QrCode,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import {
@@ -37,6 +38,7 @@ export const CustomerTransferModal: React.FC<CustomerTransferModalProps> = ({
   const [tokenInput, setTokenInput] = useState('');
   const [issuedToken, setIssuedToken] = useState<string | null>(null);
   const [remainingSeconds, setRemainingSeconds] = useState(300); // 5분 TTL
+  const [isIdentityMatched, setIsIdentityMatched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -48,6 +50,7 @@ export const CustomerTransferModal: React.FC<CustomerTransferModalProps> = ({
       setTokenInput('');
       setIssuedToken(null);
       setRemainingSeconds(300);
+      setIsIdentityMatched(false);
       setErrorMessage(null);
     }
   }, [isOpen, initialCustomerName]);
@@ -218,14 +221,24 @@ export const CustomerTransferModal: React.FC<CustomerTransferModalProps> = ({
         {/* 2단계: 토큰 검증 및 인계 실행 */}
         {step === 'verify' && (
           <div className="space-y-4">
-            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center space-y-1">
-              <p className="text-[11px] text-indigo-700 font-bold">발급된 6자리 인증 토큰</p>
-              <p className="text-3xl font-black font-mono tracking-widest text-indigo-900">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center space-y-2">
+              <div className="flex items-center justify-between border-b border-indigo-100/70 pb-2">
+                <span className="text-[11px] text-indigo-700 font-bold flex items-center gap-1.5">
+                  <QrCode className="w-3.5 h-3.5 text-indigo-600" />
+                  카운터 1회용 인증 QR 및 토큰
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                  5분 TTL
+                </span>
+              </div>
+
+              <p className="text-3xl font-black font-mono tracking-widest text-indigo-900 py-1">
                 {issuedToken}
               </p>
-              <div className="flex items-center justify-center gap-1 text-[11px] text-indigo-600 font-bold pt-1">
+
+              <div className="flex items-center justify-center gap-1 text-[11px] text-indigo-600 font-bold">
                 <Clock className="w-3.5 h-3.5" />
-                <span>남은 시간: {formatTimer(remainingSeconds)}</span>
+                <span>만료까지 남은 시간: {formatTimer(remainingSeconds)}</span>
               </div>
             </div>
 
@@ -245,6 +258,19 @@ export const CustomerTransferModal: React.FC<CustomerTransferModalProps> = ({
               />
             </div>
 
+            {/* 수강생 이름/보호자 매칭 2차 확인 체크박스 */}
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer text-left transition hover:bg-slate-100/80">
+              <input
+                type="checkbox"
+                checked={isIdentityMatched}
+                onChange={(e) => setIsIdentityMatched(e.target.checked)}
+                className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-xs text-slate-700 font-medium leading-snug">
+                <strong>[2차 확인]</strong> 회원 성명(<strong>{customerName}</strong>) 및 수강·출결 인계 대상 명의가 일치함을 현장 카운터에서 확인했습니다.
+              </span>
+            </label>
+
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
@@ -255,7 +281,7 @@ export const CustomerTransferModal: React.FC<CustomerTransferModalProps> = ({
               </button>
               <button
                 type="button"
-                disabled={loading || tokenInput.length < 6 || remainingSeconds <= 0}
+                disabled={loading || tokenInput.length < 6 || remainingSeconds <= 0 || !isIdentityMatched}
                 onClick={handleExecuteTransfer}
                 className="flex-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all min-h-[48px] disabled:opacity-50"
               >

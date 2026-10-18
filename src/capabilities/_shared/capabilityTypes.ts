@@ -124,6 +124,8 @@ export const CAPABILITY_IDS = [
   'budget_ceiling_quota',
   'field_audit_trail',
   'vendor_scorecard',
+  'field_dispatch',
+  'waitlist_queue',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

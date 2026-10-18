@@ -9,6 +9,7 @@
 
 import { useMemo } from 'react';
 import { useModuleLabels } from '../labels/ModuleLabelsProvider';
+import { useOrganization } from '../organizations/OrganizationProvider';
 import type { ModuleLabels } from '../labels/types';
 import {
   DEFAULT_TERMINOLOGY_DICTIONARY,
@@ -26,6 +27,73 @@ export interface UseTerminologyResult {
   labels: ModuleLabels;
 }
 
+function applyCustomTermsToDictionary(
+  base: TerminologyDictionary,
+  customTerms?: Record<string, string>
+): TerminologyDictionary {
+  if (!customTerms || Object.keys(customTerms).length === 0) {
+    return base;
+  }
+
+  const customerSingular = customTerms['term.customer'] || customTerms['customer.singular'];
+  const staffSingular = customTerms['term.staff'] || customTerms['staff.singular'];
+  const serviceSingular = customTerms['term.service'] || customTerms['service.singular'];
+  const scheduleSingular = customTerms['term.schedule'] || customTerms['schedule.singular'];
+  const feeTerm = customTerms['term.pass'] || customTerms['billing.fee'];
+  const roomTerm = customTerms['term.space'] || customTerms['facility.room'];
+
+  return {
+    ...base,
+    customer: customerSingular
+      ? {
+          ...base.customer,
+          singular: customerSingular,
+          plural: customerSingular,
+          management: `${customerSingular} 관리`,
+          section: customerSingular,
+          add: `${customerSingular} 등록`,
+          search: `${customerSingular} 검색`,
+        }
+      : base.customer,
+    staff: staffSingular
+      ? {
+          ...base.staff,
+          singular: staffSingular,
+          plural: staffSingular,
+          management: `${staffSingular} 관리`,
+        }
+      : base.staff,
+    service: serviceSingular
+      ? {
+          ...base.service,
+          singular: serviceSingular,
+          plural: serviceSingular,
+          management: `${serviceSingular} 관리`,
+        }
+      : base.service,
+    schedule: scheduleSingular
+      ? {
+          ...base.schedule,
+          singular: scheduleSingular,
+          plural: scheduleSingular,
+          management: `${scheduleSingular} 관리`,
+        }
+      : base.schedule,
+    billing: feeTerm
+      ? {
+          ...base.billing,
+          fee: feeTerm,
+        }
+      : base.billing,
+    facility: roomTerm
+      ? {
+          ...base.facility,
+          room: roomTerm,
+        }
+      : base.facility,
+  };
+}
+
 /**
  * 용어 사전 훅.
  * @param industryOverride 명시적으로 특정 업종의 용어를 사용하고자 할 때 전달. 미전달 시 컨텍스트 라벨 활용.
@@ -36,18 +104,24 @@ export function useTerminology(
 ): UseTerminologyResult {
   const contextLabels = useModuleLabels();
 
+  let orgCustomTerms: Record<string, string> | undefined;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const org = useOrganization();
+    orgCustomTerms = org?.customTerms;
+  } catch {
+    // outside OrganizationProvider
+  }
+
   const terms = useMemo<TerminologyDictionary>(() => {
+    let resolved: TerminologyDictionary;
+
     if (localeOverride === 'en') {
-      return getTerminologyDictionary(industryOverride, 'en');
-    }
-
-    if (industryOverride) {
-      return getTerminologyDictionary(industryOverride, 'ko');
-    }
-
-    // contextLabels에 billing 및 facility가 이미 제공된 경우 그대로 사용
-    if (contextLabels.billing && contextLabels.facility) {
-      return {
+      resolved = getTerminologyDictionary(industryOverride, 'en');
+    } else if (industryOverride) {
+      resolved = getTerminologyDictionary(industryOverride, 'ko');
+    } else if (contextLabels.billing && contextLabels.facility) {
+      resolved = {
         customer: contextLabels.customer,
         contact: contextLabels.contact,
         staff: contextLabels.staff,
@@ -56,19 +130,20 @@ export function useTerminology(
         billing: contextLabels.billing,
         facility: contextLabels.facility,
       };
+    } else {
+      resolved = {
+        customer: contextLabels.customer ?? DEFAULT_TERMINOLOGY_DICTIONARY.customer,
+        contact: contextLabels.contact ?? DEFAULT_TERMINOLOGY_DICTIONARY.contact,
+        staff: contextLabels.staff ?? DEFAULT_TERMINOLOGY_DICTIONARY.staff,
+        service: contextLabels.service ?? DEFAULT_TERMINOLOGY_DICTIONARY.service,
+        schedule: contextLabels.schedule ?? DEFAULT_TERMINOLOGY_DICTIONARY.schedule,
+        billing: contextLabels.billing ?? DEFAULT_TERMINOLOGY_DICTIONARY.billing,
+        facility: contextLabels.facility ?? DEFAULT_TERMINOLOGY_DICTIONARY.facility,
+      };
     }
 
-    // contextLabels(고객/강사/수업 등)을 우선하고, 누락된 billing/facility는 기본 사전에서 병합
-    return {
-      customer: contextLabels.customer ?? DEFAULT_TERMINOLOGY_DICTIONARY.customer,
-      contact: contextLabels.contact ?? DEFAULT_TERMINOLOGY_DICTIONARY.contact,
-      staff: contextLabels.staff ?? DEFAULT_TERMINOLOGY_DICTIONARY.staff,
-      service: contextLabels.service ?? DEFAULT_TERMINOLOGY_DICTIONARY.service,
-      schedule: contextLabels.schedule ?? DEFAULT_TERMINOLOGY_DICTIONARY.schedule,
-      billing: contextLabels.billing ?? DEFAULT_TERMINOLOGY_DICTIONARY.billing,
-      facility: contextLabels.facility ?? DEFAULT_TERMINOLOGY_DICTIONARY.facility,
-    };
-  }, [contextLabels, industryOverride]);
+    return applyCustomTermsToDictionary(resolved, orgCustomTerms);
+  }, [contextLabels, industryOverride, localeOverride, orgCustomTerms]);
 
   const t = useMemo(() => {
     return (key: TermKey, fallback?: string) => translateTerm(terms, key, fallback);

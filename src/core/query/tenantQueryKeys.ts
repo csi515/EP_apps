@@ -47,24 +47,32 @@ export function registerTenantQueryClear(handler: QueryClearHandler): () => void
 }
 
 /**
- * 테넌트 전환 시 인메모리 캐시를 원자적으로 파기
+ * 테넌트 전환 시 인메모리 캐시를 원자적으로 파기 (Tenant Leaking 원천 방어)
  */
 export function evictTenantMemoryCache(): void {
   try {
     if (registeredQueryClient) {
-      registeredQueryClient.clear();
+      if (typeof registeredQueryClient.cancelQueries === 'function') {
+        void registeredQueryClient.cancelQueries();
+      }
+      if (typeof registeredQueryClient.clear === 'function') {
+        registeredQueryClient.clear();
+      }
+      if (typeof registeredQueryClient.getMutationCache === 'function') {
+        registeredQueryClient.getMutationCache()?.clear?.();
+      }
     }
   } catch (err) {
     console.error('[TenantQuery] Failed to clear queryClient cache:', err);
   }
 
-    for (const handler of clearHandlers) {
-      try {
-        handler();
-      } catch (err) {
-        console.error('[TenantQuery] Error in clear handler:', err);
-      }
+  for (const handler of clearHandlers) {
+    try {
+      handler();
+    } catch (err) {
+      console.error('[TenantQuery] Error in clear handler:', err);
     }
+  }
 }
 
 /**
