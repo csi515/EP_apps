@@ -21,6 +21,12 @@ import {
   type MboEvaluationType,
 } from '../domain/mboEngine';
 import {
+  DEFAULT_MBO_CYCLE,
+  areGoalsLocked,
+  isReviewWindowOpen,
+  type MboCycleSettings,
+} from '../domain/mboCycle';
+import {
   DEFAULT_WORKLOAD_THRESHOLDS,
   type WorkloadThresholds,
 } from '../domain/workloadCapacityEngine';
@@ -30,6 +36,7 @@ import { MboQuarterlyReviewForm, type ProgressLogItem, type FeedbackItem } from 
 import { MboEvaluationMatrixView, type EvaluationItem } from './MboEvaluationMatrixView';
 import { TeamWeeklyWorkloadView } from './TeamWeeklyWorkloadView';
 import { MboYearlyCapacityForecastView } from './MboYearlyCapacityForecastView';
+import { MboCycleSettingsCard } from './MboCycleSettingsCard';
 
 // 로컬 폴백 샘플 데이터
 const INITIAL_OBJECTIVES: ObjectiveNode[] = [
@@ -100,8 +107,8 @@ const INITIAL_FEEDBACKS: FeedbackItem[] = [
   {
     id: 'fb-1',
     projectId: 'obj-1',
-    authorName: '김원장',
-    authorRole: '대표관리자',
+    authorName: '김사업주',
+    authorRole: '사업주',
     feedbackType: 'praise',
     content: '복귀율이 목표치를 크게 상회했습니다. 야간 알림톡 선제 대응도 훌륭합니다.',
     createdAt: '2026-03-26 10:15',
@@ -113,7 +120,7 @@ const INITIAL_EVALUATIONS: EvaluationItem[] = [
     id: 'eval-1',
     projectId: 'obj-1',
     targetUserName: '박상담 실장',
-    evaluatorName: '김원장',
+    evaluatorName: '김사업주',
     evaluationType: 'manager',
     score: 95,
     grade: 'S',
@@ -129,6 +136,9 @@ export const MboManagementView: React.FC = () => {
   >('objectives');
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
+  const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
+  const goalsLocked = areGoalsLocked(cycleSettings, new Date());
+  const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
 
   // 로컬 폴백 상태
   const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>(INITIAL_OBJECTIVES);
@@ -451,9 +461,17 @@ export const MboManagementView: React.FC = () => {
           </span>
         </div>
         <span className="text-[11px] font-medium opacity-80">
-          모든 목표 항목의 가중치 합은 정확히 100%로 수렴해야 공정한 성과 보상이 보장됩니다.
+          모든 목표 항목의 가중치 합은 정확히 100%로 맞춰야 공정한 평가가 가능합니다.
         </span>
       </div>
+
+      <MboCycleSettingsCard onChange={setCycleSettings} />
+
+      {goalsLocked ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
+          목표 잠금이 적용되었습니다. 목표 문장과 핵심 지표는 수정할 수 없습니다. 분기 진척 기록은 계속 작성할 수 있습니다.
+        </div>
+      ) : null}
 
       {/* 탭 1: 목표 트리 뷰 */}
       {activeTab === 'objectives' && (
@@ -461,7 +479,13 @@ export const MboManagementView: React.FC = () => {
           objectives={objectives}
           selectedObjectiveId={selectedObjectiveId}
           onSelectObjective={(id) => setSelectedObjectiveId(id)}
-          onOpenCreateModal={() => setShowCreateModal(true)}
+          onOpenCreateModal={() => {
+            if (goalsLocked) {
+              showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
+              return;
+            }
+            setShowCreateModal(true);
+          }}
           onRequestApproval={(id) => handleTransitionStatus(id, 'submitted')}
           onApprove={(id) => handleTransitionStatus(id, 'approved')}
           onOpenRejectModal={(id) => setShowRejectModal(id)}
@@ -495,22 +519,32 @@ export const MboManagementView: React.FC = () => {
 
       {/* 탭 3: 다면 성과평가표 뷰 */}
       {activeTab === 'evaluations' && (
-        <MboEvaluationMatrixView
-          projectId={selectedObjective?.id || 'obj-1'}
-          projectTitle={selectedObjective?.title || '선택된 목표'}
-          targetUserName={selectedObjective?.ownerName || '담당자'}
-          evaluations={evaluations}
-          onCreateEvaluation={(newEval) => {
-            const grade = calculateGradeFromScore(newEval.score);
-            const createdEval: EvaluationItem = {
-              ...newEval,
-              id: `eval-${Date.now()}`,
-              grade,
-              createdAt: new Date().toLocaleDateString(),
-            };
-            setLocalEvaluations((prev) => [...prev, createdEval]);
-          }}
-        />
+        reviewOpen ? (
+          <MboEvaluationMatrixView
+            projectId={selectedObjective?.id || 'obj-1'}
+            projectTitle={selectedObjective?.title || '선택된 목표'}
+            targetUserName={selectedObjective?.ownerName || '담당자'}
+            evaluations={evaluations}
+            onCreateEvaluation={(newEval) => {
+              const grade = calculateGradeFromScore(newEval.score);
+              const createdEval: EvaluationItem = {
+                ...newEval,
+                id: `eval-${Date.now()}`,
+                grade,
+                createdAt: new Date().toLocaleDateString(),
+              };
+              setLocalEvaluations((prev) => [...prev, createdEval]);
+            }}
+          />
+        ) : (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <Award className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+            <p className="text-base font-bold text-slate-900">평가 기간이 아닙니다</p>
+            <p className="mt-2 text-sm text-slate-500">
+              사업주가 설정한 연말 평가 기간에만 평가를 작성·제출할 수 있습니다. 분기 진척 기록은 연중 작성할 수 있습니다.
+            </p>
+          </div>
+        )
       )}
 
       {/* 탭 4: 주간 팀 부하 모니터링 */}

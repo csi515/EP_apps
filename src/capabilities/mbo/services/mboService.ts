@@ -16,6 +16,8 @@ import {
   type MboStatus,
   type MboLevel,
 } from '../domain/mboEngine';
+import { areGoalsLocked, isReviewWindowOpen } from '../domain/mboCycle';
+import { getMboCycleSettings } from './mboCycleService';
 
 export type MboObjectiveRow = Database['core']['Tables']['mbo_objectives']['Row'];
 export type MboObjectiveInsert = Database['core']['Tables']['mbo_objectives']['Insert'];
@@ -69,6 +71,10 @@ export class MboService {
     payload: MboObjectiveInsert
   ): Promise<MboObjectiveRow> {
     const client = getCoreClient();
+    const cycle = await getMboCycleSettings(payload.organization_id);
+    if (areGoalsLocked(cycle, new Date())) {
+      throw new Error('목표 잠금 기간입니다. 새 목표를 등록할 수 없습니다.');
+    }
     if (payload.parent_id) {
       const all = await this.listObjectives(payload.organization_id);
       const isCycle = detectHierarchyCycle(
@@ -123,6 +129,19 @@ export class MboService {
       if (isCycle) {
         throw new Error('목표 계층 간 순환 참조가 발생하여 변경할 수 없습니다.');
       }
+    }
+
+    const cycle = await getMboCycleSettings(organizationId);
+    const goalFieldsChanging =
+      payload.title !== undefined ||
+      payload.description !== undefined ||
+      payload.success_criteria !== undefined ||
+      payload.weight !== undefined ||
+      payload.start_date !== undefined ||
+      payload.target_date !== undefined ||
+      payload.parent_id !== undefined;
+    if (goalFieldsChanging && areGoalsLocked(cycle, new Date())) {
+      throw new Error('목표 잠금 기간입니다. 목표 문장과 핵심 지표는 수정할 수 없습니다.');
     }
 
     // 상태 전이 검사
@@ -401,6 +420,11 @@ export class MboService {
 
     if (!validation.valid) {
       throw new Error(`평가 유효성 검증 실패: ${validation.errors.join(', ')}`);
+    }
+
+    const cycle = await getMboCycleSettings(payload.organization_id);
+    if (!isReviewWindowOpen(cycle, new Date())) {
+      throw new Error('연말 평가 기간이 아닙니다. 평가를 작성할 수 없습니다.');
     }
 
     // 등급 자동 보정 (제공되지 않았거나 재계산 필요 시)
