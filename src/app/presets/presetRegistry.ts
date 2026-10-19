@@ -1816,6 +1816,83 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     readinessLevel: 'basic_ui',
   },
 
+  personal_plant_ops: {
+    id: 'personal_plant_ops',
+    name: '개인용 현장·공용자원',
+    description:
+      '소규모 현장용: 결재·안전·품질·자재·공용차량 예약·노경 건의. 인사평가·급여·장부는 포함하지 않습니다.',
+    category: 'manufacturing',
+    capabilities: [
+      'approval_workflow',
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'safety_consent',
+      'maintenance_checklist',
+      'quality_inspection',
+      'inventory',
+      'recipe_bom',
+      'supply_restock',
+      'booking',
+      'rental_equipment',
+      'whistleblower_grievance',
+    ] as const,
+    requiredCapabilities: [
+      'approval_workflow',
+      'inventory',
+      'booking',
+      'whistleblower_grievance',
+    ] as const,
+    optionalCapabilities: [
+      'sop_risk_assessment',
+      'facility_incident_report',
+      'safety_consent',
+      'maintenance_checklist',
+      'quality_inspection',
+      'recipe_bom',
+      'supply_restock',
+      'rental_equipment',
+    ] as const,
+    roles: [
+      {
+        name: '사업주/공장장',
+        rank_order: 1,
+        permissions: ['*'],
+        description: '전체 권한. 직급 설정에서 resources_manage·grievances_manage 포함',
+      },
+      {
+        name: '총무',
+        rank_order: 2,
+        permissions: ['booking:*', 'inventory:*', 'rental_equipment:*', 'supply_restock:*'],
+        description: '공용차량·자원 등록(resources_manage) 및 예약·자재',
+      },
+      {
+        name: '노경 담당',
+        rank_order: 2,
+        permissions: ['whistleblower_grievance:*'],
+        description: '건의 전체 조회·처리(grievances_manage)',
+      },
+      {
+        name: '일반 직원',
+        rank_order: 3,
+        permissions: ['booking:book', 'whistleblower_grievance:create'],
+        description: '예약만, 건의는 본인 건만',
+      },
+    ],
+    resourceTypes: [
+      { name: '1호 업무용 차량', type: 'vehicle', capacity: 1 },
+      { name: '회의실', type: 'room', capacity: 8 },
+    ],
+    defaultSettings: {
+      fleet_catalog_kind: 'vehicle',
+      grievances_named_default: true,
+    },
+    businessRules: {
+      exclude_payroll: true,
+      exclude_mbo: true,
+    },
+    readinessLevel: 'basic_ui',
+  },
+
   manufacturing_light: {
     id: 'manufacturing_light',
     name: '제조·가공업 (공정/BOM/품질 관리)',

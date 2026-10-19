@@ -49,6 +49,7 @@ export { UniversalResourceCalendarView } from './ui/UniversalResourceCalendarVie
 export { ResourceMasterSettingsModal } from './ui/ResourceMasterSettingsModal';
 export { ResourceApprovalInboxView } from './ui/ResourceApprovalInboxView';
 export { ResourceReservationRequestModal } from './ui/ResourceReservationRequestModal';
+export { SharedVehicleCatalogView, VEHICLE_RESOURCE_KIND } from './ui/SharedVehicleCatalogView';
 
 export * from './domain/equipmentLogbookEngine';
 

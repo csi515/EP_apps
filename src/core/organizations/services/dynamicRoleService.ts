@@ -1,5 +1,9 @@
 import { getCoreClient } from '@/lib/supabase';
-import { EMPTY_ROLE_PERMISSIONS, isRolePermissionMap, type RolePermissionMap } from '@/domain/permissions';
+import {
+  EMPTY_ROLE_PERMISSIONS,
+  normalizeRolePermissions,
+  type RolePermissionMap,
+} from '@/domain/permissions';
 
 export type DynamicRoleRow = {
   id: string;
@@ -22,7 +26,7 @@ export async function listDynamicRoles(organizationId: string): Promise<DynamicR
   if (roleRes.error) throw new Error(roleRes.error.message);
   return ((roleRes.data ?? []) as unknown as DynamicRoleRow[]).map((row) => ({
     ...row,
-    permissions: isRolePermissionMap(row.permissions) ? row.permissions : EMPTY_ROLE_PERMISSIONS,
+    permissions: normalizeRolePermissions(row.permissions) ?? EMPTY_ROLE_PERMISSIONS,
   }));
 }
 

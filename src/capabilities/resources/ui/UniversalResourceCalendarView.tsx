@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { evaluateMemberAccess } from '@/domain/permissions';
+import { StorageService } from '@/services/storage';
 import type {
   Resource,
   ResourceReservation,
@@ -36,6 +38,22 @@ import {
 import { ResourceMasterSettingsModal } from './ResourceMasterSettingsModal';
 import { ResourceReservationRequestModal } from './ResourceReservationRequestModal';
 import { ResourceApprovalInboxView } from './ResourceApprovalInboxView';
+
+function canManageResources(): boolean {
+  try {
+    const active = StorageService.getActiveUser();
+    return evaluateMemberAccess(
+      {
+        role: active?.role === 'owner' ? 'owner' : 'staff',
+        customRole: { permissions: active?.customRole?.permissions ?? null },
+      },
+      'resources_manage',
+      'write'
+    );
+  } catch {
+    return false;
+  }
+}
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -61,6 +79,7 @@ export const UniversalResourceCalendarView: React.FC = () => {
   const { currentOrganization, currentStaffId, currentRole } = useOrganization();
   const { user } = useAuth();
   const orgId = currentOrganization?.id || '';
+  const allowResourceWrite = canManageResources();
 
   const [activeTab, setActiveTab] = useState<'calendar' | 'inbox'>('calendar');
   const [viewMode, setViewMode] = useState<ViewMode>('day');
@@ -209,7 +228,8 @@ export const UniversalResourceCalendarView: React.FC = () => {
             </button>
           </div>
 
-          {/* 자원 마스터 등록 버튼 (관리자/총무) */}
+          {/* 자원 마스터 등록 버튼 — resources_manage 또는 사업주 */}
+          {allowResourceWrite ? (
           <button
             onClick={() => setIsMasterModalOpen(true)}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
@@ -217,6 +237,7 @@ export const UniversalResourceCalendarView: React.FC = () => {
             <Plus className="w-4 h-4" />
             새 자원 등록
           </button>
+          ) : null}
         </div>
       </div>
 

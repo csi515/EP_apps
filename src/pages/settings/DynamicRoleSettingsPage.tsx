@@ -13,7 +13,7 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import {
   EMPTY_ROLE_PERMISSIONS,
-  isRolePermissionMap,
+  normalizeRolePermissions,
   type RolePermissionMap,
 } from '@/domain/permissions';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
@@ -34,7 +34,7 @@ export function FinanceRouteGate({ children }: { children: ReactNode }) {
   let flags = null;
   try {
     const stored = StorageService.getActiveUser()?.customRole?.permissions;
-    flags = isRolePermissionMap(stored) ? stored : null;
+    flags = normalizeRolePermissions(stored);
   } catch {
     flags = null;
   }

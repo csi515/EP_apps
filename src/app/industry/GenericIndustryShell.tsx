@@ -217,6 +217,12 @@ const PatentAssetManagementView = lazy(() =>
 const LeaveManagementDashboardView = lazy(() =>
   import('@/capabilities/leave_management').then((m) => ({ default: m.LeaveManagementDashboardView }))
 );
+const SharedVehicleCatalogView = lazy(() =>
+  import('@/capabilities/resources').then((m) => ({ default: m.SharedVehicleCatalogView }))
+);
+const GrievanceListPage = lazy(() =>
+  import('@/capabilities/whistleblower_grievance').then((m) => ({ default: m.GrievanceListPage }))
+);
 const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
@@ -242,7 +248,7 @@ import { getIndustryLabel, shouldUseGenericShell } from '@/core/industry/types';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import type { NavMenuItem, NavMenuSection } from '@/core/auth/navUtils';
 import { filterNavSections } from '@/core/auth/navUtils';
-import { isNavTabAllowed, isRolePermissionMap } from '@/domain/permissions';
+import { isNavTabAllowed, normalizeRolePermissions } from '@/domain/permissions';
 import { useTerminology } from '@/core/terminology';
 import { StudentListView, StudentFormModal } from '@/capabilities/roster';
 import { StorageService } from '@/services/storage';
@@ -465,6 +471,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
     if (enabledCaps.includes('booking') || enabledCaps.includes('seat_room')) {
       items.push({ tab: 'bookings', label: '예약·공간', icon: <Calendar className="w-4 h-4" /> });
+      items.push({ tab: 'fleet', label: '공용차량·자원', icon: <Car className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('attendance')) {
       items.push({ tab: 'attendance', label: '출결 관리', icon: <CheckCircle2 className="w-4 h-4" /> });
@@ -590,6 +597,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('leave_management')) {
       extendedItems.push({ tab: 'leave-management', label: '휴가·연차 관리', icon: <Calendar className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('whistleblower_grievance')) {
+      extendedItems.push({ tab: 'grievances', label: '노경 건의함', icon: <MessageSquare className="w-4 h-4" /> });
+    }
 
     const sections: NavMenuSection[] = [
       {
@@ -623,7 +633,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     let flags = null;
     try {
       const stored = StorageService.getActiveUser()?.customRole?.permissions;
-      flags = isRolePermissionMap(stored) ? stored : null;
+      flags = normalizeRolePermissions(stored);
     } catch {
       flags = null;
     }
@@ -648,6 +658,16 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     bookings: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>
         <BookingView />
+      </Suspense>
+    ),
+    fleet: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공용차량 목록을 불러오는 중...</div>}>
+        <SharedVehicleCatalogView />
+      </Suspense>
+    ),
+    grievances: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">노경 건의함을 불러오는 중...</div>}>
+        <GrievanceListPage />
       </Suspense>
     ),
     'seat-rooms': () => (

@@ -24,6 +24,13 @@ const GROUPS: { title: string; items: { key: RolePermissionKey; label: string }[
       { key: 'policies', label: '매장 내규 관리' },
     ],
   },
+  {
+    title: '공용 자원 및 노경',
+    items: [
+      { key: 'resources_manage', label: '공용차량·자원 등록/수정' },
+      { key: 'grievances_manage', label: '노경 건의 전체 조회·처리' },
+    ],
+  },
 ];
 
 type Props = {

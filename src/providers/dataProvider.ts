@@ -90,6 +90,7 @@ export const TENANT_SCOPED_RESOURCES = [
   "quality_inspection_records",
   "change_orders",
   "change_order_evaluations",
+  "anonymous_grievances",
 ] as const;
 
 export const TENANT_COLUMN_MAP: Record<string, string> = {

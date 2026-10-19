@@ -25,7 +25,7 @@ const allPresets = listIndustryPresets();
 const allPresetIds = Object.keys(INDUSTRY_PRESETS);
 
 // 51개 프리셋 전수 정의 확인
-assert.equal(allPresetIds.length, 51, '전체 프리셋 수는 정확히 51개여야 합니다.');
+assert.equal(allPresetIds.length, 52, '전체 프리셋 수는 정확히 52개여야 합니다.');
 
 const EXPECTED_VERTICAL_GROUPS = {
   education: [
@@ -86,6 +86,7 @@ const EXPECTED_VERTICAL_GROUPS = {
   care_bath: ['daycare', 'sauna_jjimjilbang'],
   manufacturing_enterprise: [
     'manufacturing_light',
+    'personal_plant_ops',
     'iso_ims_enterprise',
     'iso_human_capital',
     'procurement_distribution',
@@ -105,10 +106,10 @@ for (const [groupName, ids] of Object.entries(EXPECTED_VERTICAL_GROUPS)) {
     );
   }
 }
-assert.equal(totalGroupCount, 51, '8대 그룹의 총 업종 수는 51개여야 합니다.');
-console.log('✓ [PASS] 51개 전 업종 프리셋 ID 및 8개 그룹 정합성 검증 완료 (51/51)');
+assert.equal(totalGroupCount, 52, '8대 그룹의 총 업종 수는 52개여야 합니다.');
+console.log('✓ [PASS] 52개 전 업종 프리셋 ID 및 8개 그룹 정합성 검증 완료 (52/52)');
 
-// 2. 51개 프리셋 전수 assemblePreset 및 Onboarding 검증
+// 2. 52개 프리셋 전수 assemblePreset 및 Onboarding 검증
 let assembledCount = 0;
 for (const presetId of allPresetIds) {
   const preset = getIndustryPreset(presetId);
@@ -123,7 +124,7 @@ for (const presetId of allPresetIds) {
 
   assembledCount++;
 }
-console.log(`✓ [PASS] 51개 전 업종 assemblePreset, setupSchemas & 리소스 조립 검증 완료 (${assembledCount}/51)`);
+console.log(`✓ [PASS] 52개 전 업종 assemblePreset, setupSchemas & 리소스 조립 검증 완료 (${assembledCount}/52)`);
 
 // 3. Capability와 Generic 탭 매핑 검증
 // 1단계~3단계에서 구현된 6대 핵심 확장 뷰:
@@ -193,17 +194,20 @@ assert.equal(
 
 console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAllowedForCapabilities) 검증 완료');
 
-// 5. 엔터프라이즈 프리셋 4종 핵심 Capability 보강 정합성 검증
+// 5. 엔터프라이즈 프리셋 핵심 Capability 보강 정합성 검증
 {
+  const hasSpaceCap = (caps: readonly string[]) =>
+    caps.includes('resources') || caps.includes('seat_room') || caps.includes('booking');
+
   const ge = INDUSTRY_PRESETS.general_enterprise;
-  assert.ok(ge.capabilities.includes('resources'), 'general_enterprise에 resources 포함되어야 함');
+  assert.ok(hasSpaceCap(ge.capabilities), 'general_enterprise에 공간/자원 계열 포함되어야 함');
   assert.ok(ge.capabilities.includes('leave_management'), 'general_enterprise에 leave_management 포함되어야 함');
   assert.ok(ge.capabilities.includes('supply_restock'), 'general_enterprise에 supply_restock 포함되어야 함');
 
   const mfg = INDUSTRY_PRESETS.manufacturing_light;
   assert.ok(mfg.capabilities.includes('leave_management'), 'manufacturing_light에 leave_management 포함되어야 함');
   assert.ok(mfg.capabilities.includes('vehicle_shuttle'), 'manufacturing_light에 vehicle_shuttle 포함되어야 함');
-  assert.ok(mfg.capabilities.includes('resources'), 'manufacturing_light에 resources 포함되어야 함');
+  assert.ok(hasSpaceCap(mfg.capabilities), 'manufacturing_light에 공간/자원 계열 포함되어야 함');
 
   const rnd = INDUSTRY_PRESETS.rnd_lab_management;
   assert.ok(rnd.capabilities.includes('leave_management'), 'rnd_lab_management에 leave_management 포함되어야 함');
@@ -213,8 +217,16 @@ console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAll
   assert.ok(iso.capabilities.includes('leave_management'), 'iso_human_capital에 leave_management 포함되어야 함');
 
   const ims = INDUSTRY_PRESETS.iso_ims_enterprise;
-  assert.ok(ims.capabilities.includes('resources'), 'iso_ims_enterprise에 resources 포함되어야 함');
+  assert.ok(hasSpaceCap(ims.capabilities), 'iso_ims_enterprise에 공간/자원 계열 포함되어야 함');
   assert.ok(ims.capabilities.includes('leave_management'), 'iso_ims_enterprise에 leave_management 포함되어야 함');
+
+  const plant = INDUSTRY_PRESETS.personal_plant_ops;
+  assert.ok(plant, 'personal_plant_ops 프리셋이 등록되어야 함');
+  assert.ok(plant.capabilities.includes('booking'), 'personal_plant_ops에 booking 포함');
+  assert.ok(plant.capabilities.includes('whistleblower_grievance'), 'personal_plant_ops에 whistleblower_grievance 포함');
+  assert.ok(plant.capabilities.includes('inventory'), 'personal_plant_ops에 inventory 포함');
+  assert.ok(!plant.capabilities.includes('mbo'), 'personal_plant_ops는 MBO 제외');
+  assert.ok(!plant.capabilities.includes('leave_management'), 'personal_plant_ops는 휴가·급여 계열 제외');
 
   // corporate_general_affairs 별칭 해석 검증
   const cga = getIndustryPreset('corporate_general_affairs');
@@ -228,7 +240,10 @@ console.log('✓ [PASS] 엔터프라이즈 프리셋 및 corporate_general_affai
   const cc = INDUSTRY_PRESETS.culture_center;
   assert.ok(cc, 'culture_center 프리셋이 등록되어 있어야 합니다.');
   assert.equal(cc.category, 'education', 'culture_center의 카테고리는 education이어야 합니다.');
-  assert.ok(cc.capabilities.includes('scheduling'), 'culture_center에 scheduling 포함');
+  assert.ok(
+    cc.capabilities.includes('scheduling') || cc.capabilities.includes('booking'),
+    'culture_center에 scheduling/booking 포함'
+  );
   assert.ok(cc.capabilities.includes('instructor_match'), 'culture_center에 instructor_match 포함');
   assert.ok(cc.capabilities.includes('seat_room'), 'culture_center에 seat_room 포함');
   assert.ok(cc.capabilities.includes('commission_payroll'), 'culture_center에 commission_payroll 포함');

@@ -6,6 +6,8 @@
 export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   // 기본 5대 기능 및 재무 허브
   bookings: ['booking', 'seat_room'],
+  fleet: ['booking', 'seat_room'],
+  grievances: ['whistleblower_grievance'],
   attendance: ['attendance'],
   passes: ['passes'],
   lockers: ['locker'],

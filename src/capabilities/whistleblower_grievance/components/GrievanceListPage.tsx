@@ -1,32 +1,55 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useList, useCreate, useUpdate } from '@refinedev/core';
-import { HelpCircle, Plus, ShieldCheck, Key, Lock, CheckCircle2, MessageSquare } from 'lucide-react';
+import { HelpCircle, Plus, ShieldCheck, MessageSquare } from 'lucide-react';
 import {
   generateTicketCode,
   hashAccessPin,
-  verifyAccessPin,
   validateGrievanceSubmission,
   type AnonymousGrievanceRecord,
   type GrievanceCategory,
+  type GrievanceVisibility,
 } from '../domain/grievanceEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { evaluateMemberAccess } from '@/domain/permissions';
+import { StorageService } from '@/services/storage';
+import { useAuth } from '@/core/auth/AuthProvider';
+
+function canManageGrievances(): boolean {
+  try {
+    const active = StorageService.getActiveUser();
+    return evaluateMemberAccess(
+      {
+        role: active?.role === 'owner' ? 'owner' : 'staff',
+        customRole: { permissions: active?.customRole?.permissions ?? null },
+      },
+      'grievances_manage',
+      'read'
+    );
+  } catch {
+    return false;
+  }
+}
 
 export const GrievanceListPage: React.FC = () => {
+  const { user } = useAuth();
+  const isHandler = canManageGrievances();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [category, setCategory] = useState<GrievanceCategory>('WORKPLACE_HARASSMENT');
+  const [visibility, setVisibility] = useState<GrievanceVisibility>('named');
+  const [category, setCategory] = useState<GrievanceCategory>('GENERAL_GRIEVANCE');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [pin, setPin] = useState('');
 
-  // 답변 작성 모달 상태
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<AnonymousGrievanceRecord | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
 
   const { query } = useList<AnonymousGrievanceRecord>({
     resource: 'anonymous_grievances',
+    meta: { schema: 'core' },
     sorters: [{ field: 'submitted_at', order: 'desc' }],
-    pagination: { pageSize: 20 },
+    pagination: { pageSize: 50 },
   });
 
   const records = (query?.data?.data as AnonymousGrievanceRecord[]) || [];
@@ -36,38 +59,57 @@ export const GrievanceListPage: React.FC = () => {
   const { mutate: createRecord } = useCreate();
   const { mutate: updateRecord } = useUpdate();
 
+  const visibleRecords = useMemo(() => {
+    if (isHandler) return records;
+    const uid = user?.id;
+    return records.filter(
+      (r) => r.visibility !== 'anonymous' && r.author_user_id && uid && r.author_user_id === uid
+    );
+  }, [records, isHandler, user?.id]);
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    const val = validateGrievanceSubmission(title, content, pin);
+    const val = validateGrievanceSubmission(title, content, pin, visibility);
     if (!val.isValid) {
       showToast(val.error || '입력 오류', 'error');
       return;
     }
 
     const ticketCode = generateTicketCode(records.length + 1);
-    const pinHash = hashAccessPin(pin.trim());
+    const values: Record<string, unknown> = {
+      ticket_code: ticketCode,
+      category,
+      subject_title: title.trim(),
+      incident_content: content.trim(),
+      evidence_attached: false,
+      status: 'SUBMITTED',
+      submitted_at: new Date().toISOString(),
+      visibility,
+    };
+
+    if (visibility === 'named') {
+      values.author_user_id = user?.id ?? null;
+      values.access_pin_hash = null;
+    } else {
+      values.author_user_id = null;
+      values.access_pin_hash = hashAccessPin(pin.trim());
+    }
 
     createRecord(
-      {
-        resource: 'anonymous_grievances',
-        values: {
-          ticket_code: ticketCode,
-          access_pin_hash: pinHash,
-          category,
-          subject_title: title.trim(),
-          incident_content: content.trim(),
-          evidence_attached: false,
-          status: 'SUBMITTED',
-          submitted_at: new Date().toISOString(),
-        },
-      },
+      { resource: 'anonymous_grievances', values, meta: { schema: 'core' } },
       {
         onSuccess: () => {
-          showToast(`익명 제보가 접수되었습니다. (접수코드: ${ticketCode})`, 'success');
+          showToast(
+            visibility === 'named'
+              ? `건의가 접수되었습니다. (접수코드: ${ticketCode})`
+              : `익명 제보가 접수되었습니다. (접수코드: ${ticketCode})`,
+            'success'
+          );
           setIsModalOpen(false);
           setTitle('');
           setContent('');
           setPin('');
+          setVisibility('named');
           refetch();
         },
         onError: (err) => {
@@ -79,7 +121,7 @@ export const GrievanceListPage: React.FC = () => {
 
   const handleReply = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTicket || !feedbackText.trim()) return;
+    if (!selectedTicket || !feedbackText.trim() || !isHandler) return;
 
     updateRecord(
       {
@@ -90,6 +132,7 @@ export const GrievanceListPage: React.FC = () => {
           investigation_feedback: feedbackText.trim(),
           resolved_at: new Date().toISOString(),
         },
+        meta: { schema: 'core' },
       },
       {
         onSuccess: () => {
@@ -119,81 +162,104 @@ export const GrievanceListPage: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" data-testid="grievance-list-page">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-            <HelpCircle className="w-7 h-7 text-rose-600" />
-            사내 익명 고충 상담 및 윤리 제보함
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
+            <HelpCircle className="h-7 w-7 text-rose-600" aria-hidden />
+            {isHandler ? '노경 건의 접수함' : '내 건의함'}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            제보자 IP 및 인적 사항을 일체 저장하지 않는 완전 익명 비밀 제보 및 조사 관리 채널입니다.
+          <p className="mt-1 text-sm text-slate-500">
+            {isHandler
+              ? '기명·익명 건의를 조회하고 조치 회신을 등록합니다. 급여·승진과 연결되지 않습니다.'
+              : '본인이 접수한 기명 건의를 확인하고, 새 건의를 작성할 수 있습니다.'}
           </p>
         </div>
         <button
+          type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 font-medium"
+          className="flex min-h-11 items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
         >
-          <Plus className="w-4 h-4" />
-          신규 익명 제보 작성
+          <Plus className="h-4 w-4" aria-hidden />
+          새 건의
         </button>
       </div>
 
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-semibold border-b">
+          <thead className="border-b bg-slate-50 font-semibold text-slate-600">
             <tr>
               <th className="p-3">접수 번호</th>
+              <th className="p-3">유형</th>
               <th className="p-3">분류</th>
-              <th className="p-3">제보 제목</th>
-              <th className="p-3">접수 일시</th>
-              <th className="p-3">처리 상태</th>
-              <th className="p-3 text-right">조사 / 회신</th>
+              <th className="p-3">제목</th>
+              <th className="p-3">접수일</th>
+              <th className="p-3">상태</th>
+              {isHandler ? <th className="p-3 text-right">조사 / 회신</th> : null}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y divide-slate-200">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-400">불러오는 중...</td>
+                <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                  불러오는 중...
+                </td>
               </tr>
-            ) : records.length === 0 ? (
+            ) : visibleRecords.length === 0 ? (
               <tr>
-                <td colSpan={6} className="p-8 text-center text-slate-400">접수된 익명 제보가 없습니다.</td>
+                <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                  접수된 건의가 없습니다.
+                </td>
               </tr>
             ) : (
-              records.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+              visibleRecords.map((r) => (
+                <tr key={r.id} className="hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-rose-600">{r.ticket_code}</td>
+                  <td className="p-3 text-xs">{r.visibility === 'anonymous' ? '익명' : '기명'}</td>
                   <td className="p-3">
-                    <span className="px-2 py-0.5 rounded text-xs bg-rose-50 text-rose-700 font-medium border border-rose-200">
+                    <span className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
                       {getCategoryLabel(r.category)}
                     </span>
                   </td>
-                  <td className="p-3 font-medium max-w-sm truncate">{r.subject_title}</td>
-                  <td className="p-3 text-slate-500">{new Date(r.submitted_at).toLocaleDateString('ko-KR')}</td>
+                  <td className="max-w-sm truncate p-3 font-medium">{r.subject_title}</td>
+                  <td className="p-3 text-slate-500">
+                    {new Date(r.submitted_at).toLocaleDateString('ko-KR')}
+                  </td>
                   <td className="p-3">
                     {r.status === 'SUBMITTED' && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-amber-100 text-amber-800 font-semibold">접수 대기</span>
+                      <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                        접수 대기
+                      </span>
                     )}
                     {r.status === 'UNDER_INVESTIGATION' && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800 font-semibold">조사 진행중</span>
+                      <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
+                        조사 진행중
+                      </span>
                     )}
                     {r.status === 'RESOLVED' && (
-                      <span className="px-2 py-0.5 rounded text-xs bg-emerald-100 text-emerald-800 font-bold">조치 완료</span>
+                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
+                        조치 완료
+                      </span>
                     )}
+                    {r.investigation_feedback && !isHandler ? (
+                      <p className="mt-1 text-xs text-slate-500">{r.investigation_feedback}</p>
+                    ) : null}
                   </td>
-                  <td className="p-3 text-right">
-                    <button
-                      onClick={() => {
-                        setSelectedTicket(r);
-                        setFeedbackText(r.investigation_feedback || '');
-                        setReplyModalOpen(true);
-                      }}
-                      className="px-2.5 py-1 text-xs border rounded hover:bg-slate-100 font-medium inline-flex items-center gap-1 text-slate-700"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5" /> 회신 작성
-                    </button>
-                  </td>
+                  {isHandler ? (
+                    <td className="p-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTicket(r);
+                          setFeedbackText(r.investigation_feedback || '');
+                          setReplyModalOpen(true);
+                        }}
+                        className="inline-flex min-h-11 items-center gap-1 rounded border px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" aria-hidden /> 회신
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))
             )}
@@ -201,65 +267,78 @@ export const GrievanceListPage: React.FC = () => {
         </table>
       </div>
 
-      {/* 회신 모달 */}
-      {replyModalOpen && selectedTicket && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-lg w-full p-6 space-y-4">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-rose-700">
-              <MessageSquare className="w-5 h-5" />
-              [{selectedTicket.ticket_code}] 조사 결과 및 조치 회신
+      {replyModalOpen && selectedTicket && isHandler ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg space-y-4 rounded-xl bg-white p-6">
+            <h2 className="flex items-center gap-2 text-lg font-bold text-rose-700">
+              <MessageSquare className="h-5 w-5" aria-hidden />
+              [{selectedTicket.ticket_code}] 조치 회신
             </h2>
-            <div className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg text-xs space-y-1">
-              <p className="font-semibold text-slate-800 dark:text-slate-200">제목: {selectedTicket.subject_title}</p>
-              <p className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">{selectedTicket.incident_content}</p>
+            <div className="space-y-1 rounded-lg bg-slate-50 p-3 text-xs">
+              <p className="font-semibold text-slate-800">제목: {selectedTicket.subject_title}</p>
+              <p className="whitespace-pre-wrap text-slate-600">{selectedTicket.incident_content}</p>
             </div>
             <form onSubmit={handleReply} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">인사위원회 조치 회신문 *</label>
+              <label className="block text-xs font-semibold text-slate-600">
+                조치 회신문 *
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="예: 관련 부서 관리자 면담 및 재발 방지 조치가 완료되었습니다."
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
                   rows={4}
                   required
                 />
-              </div>
+              </label>
               <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setReplyModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg text-sm font-medium"
-                >
+                <button type="button" onClick={() => setReplyModalOpen(false)} className="min-h-11 rounded-lg border px-4 text-sm">
                   취소
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700"
-                >
+                <button type="submit" className="min-h-11 rounded-lg bg-emerald-600 px-4 text-sm font-medium text-white">
                   조치 완료 회신
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* 등록 모달 */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-md w-full p-6 space-y-4">
-            <h2 className="text-xl font-bold flex items-center gap-2 text-rose-600">
-              <ShieldCheck className="w-5 h-5" />
-              익명 고충 제보 작성 (안심 채널)
+      {isModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-6">
+            <h2 className="flex items-center gap-2 text-xl font-bold text-rose-600">
+              <ShieldCheck className="h-5 w-5" aria-hidden />
+              새 건의 작성
             </h2>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">제보 분류 *</label>
+              <fieldset>
+                <legend className="mb-1 text-xs font-semibold text-slate-600">접수 방식 *</legend>
+                <div className="flex gap-3">
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === 'named'}
+                      onChange={() => setVisibility('named')}
+                    />
+                    기명 (본인만·담당자 조회)
+                  </label>
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <input
+                      type="radio"
+                      name="visibility"
+                      checked={visibility === 'anonymous'}
+                      onChange={() => setVisibility('anonymous')}
+                    />
+                    익명 (PIN)
+                  </label>
+                </div>
+              </fieldset>
+              <label className="block text-xs font-semibold text-slate-600">
+                분류 *
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as GrievanceCategory)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
                 >
                   <option value="WORKPLACE_HARASSMENT">직장 내 괴롭힘</option>
                   <option value="SEXUAL_HARASSMENT">성희롱/성추행</option>
@@ -267,61 +346,51 @@ export const GrievanceListPage: React.FC = () => {
                   <option value="SAFETY_VIOLATION">안전 보건 위반</option>
                   <option value="GENERAL_GRIEVANCE">일반 근무조건 고충</option>
                 </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">제보 제목 *</label>
+              </label>
+              <label className="block text-xs font-semibold text-slate-600">
+                제목 *
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="예: 특정 관리자의 지속적인 인격 모독 발언 건"
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">구체적 내용 (10자 이상) *</label>
+              </label>
+              <label className="block text-xs font-semibold text-slate-600">
+                내용 (10자 이상) *
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="언제, 어디서, 어떤 일이 발생했는지 구체적인 정황을 작성해 주세요."
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  className="mt-1 w-full rounded-lg border px-3 py-2 text-sm"
                   rows={4}
                   required
                 />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  사후 조회용 비밀 PIN 번호 (4자리 이상 숫자) *
+              </label>
+              {visibility === 'anonymous' ? (
+                <label className="block text-xs font-semibold text-slate-600">
+                  사후 조회용 PIN (4자리 이상) *
+                  <input
+                    type="password"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    className="mt-1 w-full rounded-lg border px-3 py-2 font-mono text-sm tracking-widest"
+                    required
+                  />
                 </label>
-                <input
-                  type="password"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value)}
-                  placeholder="예: 7788"
-                  className="w-full px-3 py-2 border rounded-lg text-sm font-mono tracking-widest"
-                  required
-                />
-              </div>
+              ) : null}
               <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg text-sm font-medium"
-                >
+                <button type="button" onClick={() => setIsModalOpen(false)} className="min-h-11 rounded-lg border px-4 text-sm">
                   취소
                 </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700"
-                >
-                  익명 접수
+                <button type="submit" className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-medium text-white">
+                  접수
                 </button>
               </div>
             </form>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };
