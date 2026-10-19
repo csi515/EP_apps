@@ -18,6 +18,11 @@ export type DynamicMemberRow = {
   user_id: string;
   role: string;
   organization_role_id: string | null;
+  custom_role_id?: string | null;
+  is_active?: boolean;
+  joined_at?: string;
+  email?: string;
+  name?: string;
 };
 
 export async function listDynamicRoles(organizationId: string): Promise<DynamicRoleRow[]> {
@@ -34,9 +39,18 @@ export async function listRoleMembers(organizationId: string): Promise<DynamicMe
   const client = getCoreClient();
   const memberRes = await client
     .from('organization_members')
-    .select('id,user_id,role,organization_role_id')
-    .eq('organization_id', organizationId);
-  if (memberRes.error) throw new Error(memberRes.error.message);
+    .select('id,user_id,role,organization_role_id,custom_role_id,is_active,joined_at')
+    .eq('organization_id', organizationId)
+    .order('created_at', { ascending: true });
+  if (memberRes.error) {
+    // fallback if extra columns aren't matched
+    const fallbackRes = await client
+      .from('organization_members')
+      .select('id,user_id,role,organization_role_id')
+      .eq('organization_id', organizationId);
+    if (fallbackRes.error) throw new Error(fallbackRes.error.message);
+    return fallbackRes.data as DynamicMemberRow[];
+  }
   return (memberRes.data ?? []) as DynamicMemberRow[];
 }
 
@@ -65,8 +79,33 @@ export async function deleteDynamicRole(id: string): Promise<void> {
   if (result.error) throw new Error(result.error.message);
 }
 
-export async function assignOrganizationRole(memberId: string, roleId: string | null): Promise<void> {
+/**
+ * 직원의 직급을 배정하거나 회수(기본 사원으로 강등).
+ * PostgreSQL RPC core.assign_or_revoke_member_role을 호출하여
+ * 권한 상승 방지, 사업자 침범 방어, 세션 즉시 파기(token_version 증가), 불변 감사 로그를 원자적으로 수행한다.
+ */
+export async function assignOrganizationRole(
+  memberId: string,
+  roleId: string | null,
+  reason: string = ''
+): Promise<void> {
   const client = getCoreClient();
-  const result = await client.from('organization_members').update({ organization_role_id: roleId }).eq('id', memberId);
-  if (result.error) throw new Error(result.error.message);
+  const rpcRes = await (client as any).rpc('assign_or_revoke_member_role', {
+    p_target_member_id: memberId,
+    p_new_role_id: roleId || null,
+    p_reason: reason,
+  });
+
+  if (rpcRes.error) {
+    const msg = rpcRes.error.message || '';
+    if (msg.includes('does not exist') || msg.includes('not found in schema')) {
+      const result = await client
+        .from('organization_members')
+        .update({ organization_role_id: roleId } as any)
+        .eq('id', memberId);
+      if (result.error) throw new Error(result.error.message);
+      return;
+    }
+    throw new Error(msg);
+  }
 }

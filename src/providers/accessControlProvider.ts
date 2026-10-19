@@ -8,7 +8,7 @@ import type { AuthorizationGrant, AuthScopeType, Permission } from "@/core/autho
 import type { User } from "@/types";
 import { evaluateCustomPermission } from "@/core/authorization";
 import { hasStandardPermission, resolveStandardPermissionKey } from "@/core/authorization/standardPermissionKeys";
-import { evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
+import { canManageRoles, canTransferOwnership, evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
 
 /**
  * AccessControl Context Resolver.
@@ -284,6 +284,40 @@ export function createAccessControlProvider(
       const activeLocationId = resolver.getLocationId(organizationId) || null;
       const parentCustomerId = activeUser.parentCustomerId || null;
 
+      // 2.4 Delegated RBAC Management Check (resource: "members", action: "assign_role")
+      if (
+        (resource === "members" || resource === "staff" || resource === "roles") &&
+        (action === "assign_role" || action === "roles:assign" || action === "assign_roles")
+      ) {
+        const allowed = canManageRoles({
+          role,
+          permissions: activeUser.permissions,
+          customRole: activeUser.customRole,
+        });
+        return {
+          can: allowed,
+          reason: allowed ? undefined : "직원의 직급 및 권한을 부여하거나 회수할 권한이 없습니다.",
+        };
+      }
+
+      // 2.4.1 Organization Ownership Transfer Check (resource: "organization", action: "transfer_ownership")
+      if (
+        (resource === "organization" || resource === "organizations" || resource === "ownership") &&
+        (action === "transfer_ownership" || action === "transferOwnership")
+      ) {
+        const allowed = canTransferOwnership({
+          role,
+          permissions: activeUser.permissions,
+          customRole: activeUser.customRole,
+        });
+        return {
+          can: allowed,
+          reason: allowed
+            ? undefined
+            : "사업장의 소유권을 이전할 권한이 없습니다. 대표 사업자(owner) 또는 대표이사 변경 권한(ownership:transfer)을 위임받은 관리자만 실행할 수 있습니다.",
+        };
+      }
+
       // 2.5 Evaluate Tenant Custom Role Permissions with Wildcards (Hybrid RBAC)
       const flagMap = activeUser.customRole?.permissions;
       if (isRolePermissionMap(flagMap)) {
@@ -334,10 +368,16 @@ export function createAccessControlProvider(
         }
       }
 
+      // Fetch Extra Grants (세션 유저 기준)
+      const extraGrants = await getCachedGrants(
+        organizationId,
+        activeUser.id,
+        resolver.listAccessGrants
+      );
+
       // 2.6 Guard Sensitive Financial / Ledger Resources for Non-Owner/Non-Admin Staff
       const isFinancialResource = [
         "tuition_invoices",
-        "sales",
         "billing",
         "payments",
         "finance",
@@ -349,8 +389,11 @@ export function createAccessControlProvider(
         "simple_ledgers",
       ].includes((resource || "").trim().toLowerCase());
 
-      if (isFinancialResource && role !== "owner" && role !== "admin") {
-        const hasFinancialPerm = Array.isArray(userPermissions) && userPermissions.some((p) => {
+      if (isFinancialResource && role !== "owner" && role !== "admin" && role !== "manager") {
+        const hasFinancialGrant = extraGrants.some(
+          (g) => g.active && (g.permission === "finance.read" || g.permission === "sales.read" || g.permission === "sales.create")
+        );
+        const hasFinancialPerm = hasFinancialGrant || (Array.isArray(userPermissions) && userPermissions.some((p) => {
           const perm = String(p).toLowerCase().trim();
           return (
             perm === "settlement:*" ||
@@ -363,7 +406,7 @@ export function createAccessControlProvider(
             perm === "sales:*" ||
             perm === "*"
           );
-        });
+        }));
 
         if (!hasFinancialPerm) {
           return {
@@ -442,12 +485,7 @@ export function createAccessControlProvider(
         scopeId = activeLocationId;
       }
 
-      // 5. Fetch Extra Grants (세션 유저 기준)
-      const extraGrants = await getCachedGrants(
-        organizationId,
-        activeUser.id,
-        resolver.listAccessGrants
-      );
+
 
       // 6. Delegate to MOA Canonical Authorization API
       const authApi = createAuthorizationApi({

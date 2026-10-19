@@ -46,7 +46,7 @@ const mockI18n: MoaI18nProvider = {
 function run(): void {
   console.log('=== [1] Preset Registry & Aliases Coverage ===');
   const presets = listIndustryPresets();
-  assert.equal(presets.length, 51, `프리셋 총 개수는 정확히 51개여야 합니다. 현재: ${presets.length}`);
+  assert.equal(presets.length, 52, `프리셋 총 개수는 정확히 52개여야 합니다. 현재: ${presets.length}`);
 
   for (const preset of presets) {
     assert.ok(preset.id, '프리셋 ID 누락');
@@ -323,6 +323,7 @@ function run(): void {
     'locker_storage',
     'general_enterprise',
     'manufacturing_light',
+    'personal_plant_ops',
     'procurement_distribution',
     'iso_ims_enterprise',
     'iso_human_capital',

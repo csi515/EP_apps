@@ -33,6 +33,7 @@ import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/compon
 
 import { VehicleShuttleManagementView } from "@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView";
 import { DynamicRoleSettingsPage, FinanceRouteGate } from "@/pages/settings/DynamicRoleSettingsPage";
+import { MemberList } from "@/pages/members/MemberList";
 import { KioskAttendancePage } from "@/pages/kiosk/KioskAttendancePage";
 import { ScheduleCalendarPage } from "@/capabilities/booking/pages/ScheduleCalendarPage";
 import { MemberBookingView } from "@/capabilities/booking/pages/MemberBookingView";
@@ -260,7 +261,7 @@ const RefineApp: React.FC = () => {
           >
             <Route index element={<IndustryAppRouter />} />
             <Route path="/workspace/settings/roles" element={<DynamicRoleSettingsPage />} />
-            <Route path="/workspace/members" element={<DynamicRoleSettingsPage />} />
+            <Route path="/workspace/members" element={<MemberList />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
             <Route path="/dashboard" element={<DashboardPage />} />

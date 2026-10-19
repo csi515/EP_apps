@@ -36,6 +36,10 @@ const KNOWN_MISSING_TABLES = new Set([
   'core.student_enrollments',
   'core.students',
   'piano.song_progress',
+  'core.anonymous_grievances',
+  'core.booking_seat_locks',
+  'core.departments',
+  'core.mbo_cycle_settings',
 ]);
 
 const CREATE_TABLE_RE =

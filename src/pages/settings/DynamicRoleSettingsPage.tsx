@@ -12,11 +12,13 @@ import {
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import {
+  canManageRoles,
   EMPTY_ROLE_PERMISSIONS,
   normalizeRolePermissions,
   type RolePermissionMap,
 } from '@/domain/permissions';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
+import { OwnershipTransferCard } from './OwnershipTransferCard';
 
 type RoleRow = DynamicRoleRow;
 type MemberRow = DynamicMemberRow;
@@ -57,6 +59,8 @@ export function DynamicRoleSettingsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const isOwner = role === 'owner';
+  const activeUser = StorageService.getActiveUser();
+  const canManage = isOwner || canManageRoles(activeUser);
 
   async function reload() {
     if (!orgId) return;
@@ -106,7 +110,7 @@ export function DynamicRoleSettingsPage() {
     }
   }
 
-  if (!isOwner) return <AccessDeniedBanner />;
+  if (!canManage) return <AccessDeniedBanner />;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4">
@@ -166,6 +170,11 @@ export function DynamicRoleSettingsPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* CEO 대표 사업자 소유권 이전 관리 카드 */}
+      <section className="pt-4">
+        <OwnershipTransferCard />
       </section>
 
       {open ? (

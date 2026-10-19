@@ -469,6 +469,127 @@ async function testAccessControl() {
     bindAccessControlContextResolver(null);
   }
 
+  // ---------------------------------------------------------------------------
+  // 16. 기업 총무팀 위임 관리자 권한 부여/회수(Delegated RBAC) Refine can() 검증
+  // ---------------------------------------------------------------------------
+  {
+    // 1) 대표 사업자(owner): members:assign_role 허용
+    const ownerProvider = createAccessControlProvider({
+      getActiveUser: () => mockUser("owner"),
+      getOrganizationId: () => ORG_A,
+    });
+    const ownerRes = await ownerProvider.can({ resource: "members", action: "assign_role" });
+    assert.equal(ownerRes.can, true, "사업자는 members:assign_role 허용");
+
+    // 2) 총무팀 관리자 (roles:assign 권한 보유): members:assign_role 허용
+    const gaProvider = createAccessControlProvider({
+      getActiveUser: () =>
+        mockUser("staff", {
+          permissions: ["members:manage", "roles:assign"] as any,
+          customRole: {
+            permissions: { "members:manage": true, "roles:assign": true } as any,
+          },
+        }),
+      getOrganizationId: () => ORG_A,
+    });
+    const gaRes = await gaProvider.can({ resource: "members", action: "assign_role" });
+    assert.equal(gaRes.can, true, "총무팀 위임 관리자는 members:assign_role 허용");
+
+    // 3) 일반 직원 (roles:assign 권한 없음): members:assign_role 차단
+    const regularStaffProvider = createAccessControlProvider({
+      getActiveUser: () =>
+        mockUser("staff", {
+          permissions: ["attendance"],
+          customRole: null,
+        }),
+      getOrganizationId: () => ORG_A,
+    });
+    const staffRes = await regularStaffProvider.can({ resource: "members", action: "assign_role" });
+    assert.equal(staffRes.can, false, "일반 직원은 members:assign_role 차단");
+    assert.ok(staffRes.reason?.includes("권한이 없습니다"));
+
+    // 4) 강사 (roles:assign 권한 없음): members:assign_role 차단
+    const instructorProvider = createAccessControlProvider({
+      getActiveUser: () => mockUser("instructor"),
+      getOrganizationId: () => ORG_A,
+    });
+    const instructorRes = await instructorProvider.can({ resource: "members", action: "assign_role" });
+    assert.equal(instructorRes.can, false, "강사는 members:assign_role 차단");
+  }
+
+  // ---------------------------------------------------------------------------
+  // 17. Organization Ownership Transfer (CEO 소유권 이전: owner만 허용)
+  // ---------------------------------------------------------------------------
+  {
+    // 1) 사업자(owner): organization:transfer_ownership 허용
+    const ownerProvider = createAccessControlProvider({
+      getActiveUser: () => mockUser("owner"),
+      getOrganizationId: () => ORG_A,
+    });
+    const ownerTransferRes = await ownerProvider.can({
+      resource: "organization",
+      action: "transfer_ownership",
+    });
+    assert.equal(ownerTransferRes.can, true, "사업자는 organization:transfer_ownership 허용");
+
+    // 2) 인사팀 관리자 (ownership:transfer 권한 보유자): 소유권 이전 대행 허용
+    const hrProvider = createAccessControlProvider({
+      getActiveUser: () =>
+        mockUser("staff", {
+          permissions: ["members:manage", "ownership:transfer"] as any,
+          customRole: {
+            permissions: { "members:manage": true, "ownership:transfer": true } as any,
+          },
+        }),
+      getOrganizationId: () => ORG_A,
+    });
+    const hrTransferRes = await hrProvider.can({
+      resource: "organization",
+      action: "transfer_ownership",
+    });
+    assert.equal(hrTransferRes.can, true, "ownership:transfer 권한을 가진 인사팀 관리자는 소유권 이전 허용");
+
+    // 3) 일반 총무팀 관리자 (roles:assign만 있고 ownership:transfer는 미부여): 차단
+    const gaProvider = createAccessControlProvider({
+      getActiveUser: () =>
+        mockUser("staff", {
+          permissions: ["members:manage", "roles:assign"] as any,
+          customRole: {
+            permissions: { "members:manage": true, "roles:assign": true, "ownership:transfer": false } as any,
+          },
+        }),
+      getOrganizationId: () => ORG_A,
+    });
+    const gaTransferRes = await gaProvider.can({
+      resource: "organization",
+      action: "transfer_ownership",
+    });
+    assert.equal(gaTransferRes.can, false, "ownership:transfer 없는 총무팀 관리자는 소유권 이전 불가 (차단)");
+    assert.ok(gaTransferRes.reason?.includes("소유권을 이전할 권한이 없습니다"));
+
+    // 3) 일반 직원: 차단
+    const staffProvider = createAccessControlProvider({
+      getActiveUser: () => mockUser("staff"),
+      getOrganizationId: () => ORG_A,
+    });
+    const staffTransferRes = await staffProvider.can({
+      resource: "organization",
+      action: "transfer_ownership",
+    });
+    assert.equal(staffTransferRes.can, false, "일반 직원은 소유권 이전 불가 (차단)");
+
+    // 4) 강사: 차단
+    const instructorProvider = createAccessControlProvider({
+      getActiveUser: () => mockUser("instructor"),
+      getOrganizationId: () => ORG_A,
+    });
+    const instructorTransferRes = await instructorProvider.can({
+      resource: "organization",
+      action: "transfer_ownership",
+    });
+    assert.equal(instructorTransferRes.can, false, "강사는 소유권 이전 불가 (차단)");
+  }
+
   console.log("accessControlProvider.test.ts: all assertions passed");
 }
 

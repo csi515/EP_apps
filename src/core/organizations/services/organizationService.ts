@@ -415,3 +415,52 @@ export async function fetchOrganizationAddress(
     legacyAddress,
   };
 }
+
+/**
+ * CEO 대표자 소유권 원자적 이전 RPC 호출 함수
+ * - 신임 대표자에게 role='owner' 승격
+ * - 전임 대표자(호출자)는 role='member'로 전환 및 세션 즉시 파기 (token_version + 1)
+ * - 불변 감사 로그(core.audit_logs) 적재
+ */
+export async function transferOrganizationOwnership(
+  newOwnerMemberId: string,
+  reason: string
+): Promise<void> {
+  const client = getCoreClient();
+  const { error } = await (client.rpc as any)('transfer_organization_ownership', {
+    p_new_owner_member_id: newOwnerMemberId,
+    p_reason: reason.trim(),
+  });
+
+  if (error) {
+    throw new Error(userFacingErrorMessage(error) || error.message || '소유권 이전 처리에 실패했습니다.');
+  }
+}
+
+export interface InitialDepartmentInput {
+  name: string;
+  code?: string;
+}
+
+/**
+ * 기업/제조업 온보딩 시 다중 부서 초기 등록 함수
+ */
+export async function createInitialDepartments(
+  organizationId: string,
+  departments: InitialDepartmentInput[]
+): Promise<void> {
+  if (!organizationId || !departments || departments.length === 0) return;
+  const client = getCoreClient();
+  const rows = departments.map((d) => ({
+    organization_id: organizationId,
+    name: d.name.trim(),
+    code: d.code?.trim() || null,
+  }));
+
+  const { error } = await client.from('departments').insert(rows as any);
+  if (error) {
+    throw new Error(userFacingErrorMessage(error) || error.message || '부서 초기 등록에 실패했습니다.');
+  }
+}
+
+

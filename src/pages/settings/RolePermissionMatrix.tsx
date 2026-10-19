@@ -18,15 +18,19 @@ const GROUPS: { title: string; items: { key: RolePermissionKey; label: string }[
     ],
   },
   {
-    title: '매장 운영 및 인사',
+    title: '매장 운영 및 인사/권한 위임',
     items: [
-      { key: 'members_manage', label: '직원 초대/직급 부여' },
+      { key: 'members:manage', label: '직원 목록 및 정보 관리 (members:manage)' },
+      { key: 'roles:assign', label: '타 직원의 직급/권한 부여 및 회수 (roles:assign)' },
+      { key: 'ownership:transfer', label: '대표이사(CEO) 변경 및 소유권 이전 대행 (ownership:transfer) [이사회/인사 전용]' },
       { key: 'policies', label: '매장 내규 관리' },
     ],
   },
   {
-    title: '공용 자원 및 노경',
+    title: '공용 자원 및 시설/공간 관리',
     items: [
+      { key: 'seat_room', label: '좌석 및 회의실 공간 관리 (seat_room)' },
+      { key: 'rental_equipment', label: '대여 장비 및 비품 관리 (rental_equipment)' },
       { key: 'resources_manage', label: '공용차량·자원 등록/수정' },
       { key: 'grievances_manage', label: '노경 건의 전체 조회·처리' },
     ],
@@ -39,6 +43,16 @@ type Props = {
 };
 
 export function RolePermissionMatrix({ value, onChange }: Props) {
+  function handleToggle(key: RolePermissionKey, checked: boolean) {
+    const next = { ...value, [key]: checked };
+    if (key === 'members:manage') {
+      next.members_manage = checked;
+    } else if (key === 'members_manage') {
+      next['members:manage'] = checked;
+    }
+    onChange(next);
+  }
+
   return (
     <div className="space-y-4" data-testid="role-permission-matrix">
       {GROUPS.map((group) => (
@@ -50,8 +64,8 @@ export function RolePermissionMatrix({ value, onChange }: Props) {
                 <input
                   type="checkbox"
                   className="h-5 w-5"
-                  checked={value[item.key]}
-                  onChange={(event) => onChange({ ...value, [item.key]: event.target.checked })}
+                  checked={Boolean(value[item.key])}
+                  onChange={(event) => handleToggle(item.key, event.target.checked)}
                 />
                 <span>{item.label}</span>
               </label>

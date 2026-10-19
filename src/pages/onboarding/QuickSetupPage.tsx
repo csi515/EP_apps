@@ -28,6 +28,7 @@ import {
   Wrench,
 } from 'lucide-react';
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
+import { createInitialDepartments } from '@/core/organizations/services/organizationService';
 import { useTenant } from '@/core/auth/context/TenantContext';
 import { applyDomainErrorToForm } from '@/core/utils/formErrorAdapter';
 import {
@@ -296,6 +297,51 @@ export const QuickSetupPage: React.FC = () => {
     'billing_invoicing',
   ]);
 
+  // 기업/제조업 다중 부서 스코프 상태 (소상공인은 Auto-Skip)
+  const isEnterpriseOrManufacturing = useMemo(() => {
+    const cat = activePreset?.category;
+    const id = selectedIndustry.toLowerCase();
+    return (
+      cat === 'manufacturing' ||
+      cat === 'enterprise' ||
+      id.includes('enterprise') ||
+      id.includes('manufacturing') ||
+      id.includes('plant_ops') ||
+      id.includes('corp') ||
+      id === 'iso_ims_enterprise' ||
+      id === 'iso_human_capital' ||
+      id === 'rnd_lab_management' ||
+      id === 'general_enterprise' ||
+      id === 'manufacturing_light'
+    );
+  }, [activePreset, selectedIndustry]);
+
+  const [enableDepartments, setEnableDepartments] = useState<boolean>(true);
+  const [departments, setDepartments] = useState<Array<{ name: string; code?: string }>>([
+    { name: '생산라인', code: 'PROD' },
+    { name: '연구개발팀', code: 'RND' },
+    { name: '총무/운영팀', code: 'GA' },
+  ]);
+  const [newDeptName, setNewDeptName] = useState('');
+
+  const handleAddDepartment = () => {
+    const name = newDeptName.trim();
+    if (!name) return;
+    if (departments.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
+      setGeneralError('이미 등록된 부서명입니다.');
+      return;
+    }
+    setDepartments((prev) => [...prev, { name }]);
+    setNewDeptName('');
+  };
+
+  const handleRemoveDepartment = (index: number) => {
+    setDepartments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // 인사팀 CEO 변경/소유권 이전 대행 권한 부여 여부 초기 질문 상태 (기본값: false, 명시적 승인 필요)
+  const [grantHrCeoTransferPerm, setGrantHrCeoTransferPerm] = useState<boolean>(false);
+
   // Refine / React Hook Form
   const {
     register,
@@ -448,10 +494,24 @@ export const QuickSetupPage: React.FC = () => {
           ? Array.from(new Set([...customCapabilities, ...additionalCaps]))
           : additionalCaps;
 
+      const effectiveRoles = roles.map((r) => {
+        if (
+          grantHrCeoTransferPerm &&
+          (r.name.includes('총무') || r.name.includes('인사') || r.name.includes('관리') || r.name.includes('매니저'))
+        ) {
+          const perms = Array.isArray(r.permissions) ? [...r.permissions] : [];
+          if (!perms.includes('ownership:transfer')) {
+            perms.push('ownership:transfer');
+          }
+          return { ...r, permissions: perms };
+        }
+        return r;
+      });
+
       const payload = buildPresetPayload(selectedIndustry, {
         ...data,
         name: trimmedName,
-        roles,
+        roles: effectiveRoles,
         rooms,
         locker_count: selectedIndustry === 'sauna' ? lockerCount : undefined,
         operating_hours: operatingHours,
@@ -474,6 +534,15 @@ export const QuickSetupPage: React.FC = () => {
       const result = rpcResult as any;
       if (!result?.success || !result?.organization_id) {
         throw new Error('사업장 생성 결과가 올바르지 않습니다.');
+      }
+
+      // 기업/제조업 프리셋: 다중 부서 동시 인서트 (소상공인은 Auto-Skip)
+      if (isEnterpriseOrManufacturing && enableDepartments && departments.length > 0) {
+        try {
+          await createInitialDepartments(result.organization_id, departments);
+        } catch {
+          // 부서 인서트 실패 시 기본 사업장 생성은 유지 (Graceful fallback)
+        }
       }
 
       // 테넌트 즉시 전환 및 워크스페이스 이동
@@ -958,6 +1027,126 @@ export const QuickSetupPage: React.FC = () => {
 
             </div>
           </div>
+
+          {/* 기업/제조업 전용: 다중 부서/현장 분리 카드 (소상공인은 Auto-Skip) */}
+          {isEnterpriseOrManufacturing && (
+            <div
+              data-testid="department-setup-card"
+              className="bg-white p-6 sm:p-8 rounded-3xl border border-indigo-200/80 shadow-xs space-y-5 animate-in fade-in"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-50 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <Factory className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-slate-900">다중 부서/현장 분리 (Department Scope)</h2>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                        기업/제조 전용
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      생산라인, 연구소, 총무팀 등 부서별로 데이터와 자원 스코프를 격리하여 관리합니다.
+                    </p>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer self-start sm:self-auto">
+                  <input
+                    type="checkbox"
+                    checked={enableDepartments}
+                    onChange={(e) => setEnableDepartments(e.target.checked)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-xs font-semibold text-slate-700">부서 격리 활성화</span>
+                </label>
+              </div>
+
+              {enableDepartments && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap gap-2">
+                    {departments.map((dept, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 text-xs font-semibold text-indigo-800 border border-indigo-100"
+                      >
+                        <span>{dept.name}</span>
+                        {dept.code && <span className="text-[10px] text-indigo-500 font-mono">({dept.code})</span>}
+                        {departments.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDepartment(index)}
+                            className="p-0.5 hover:bg-indigo-100 rounded-full text-indigo-500 hover:text-indigo-800"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newDeptName}
+                      onChange={(e) => setNewDeptName(e.target.value)}
+                      placeholder="신규 부서/라인명 입력 (예: 조립라인, 품질관리팀)"
+                      className="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddDepartment();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddDepartment}
+                      className="px-4 h-10 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold transition"
+                    >
+                      부서 추가
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* 인사팀 CEO 소유권 이전 권한 위임 초기 질문 */}
+              <div className="pt-3 border-t border-indigo-100">
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-amber-950">
+                          인사/총무팀에 대표이사(CEO) 변경 대행 권한을 위임하시겠습니까?
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-800">
+                          선택 질문
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        {grantHrCeoTransferPerm
+                          ? '✅ 위임 활성화: 인사팀 관리자가 주총/이사회 결의 및 등기 절차에 따라 대표이사 변경 및 소유권 이관을 대행할 수 있습니다. (전임/신임 세션 즉시 만료 및 불변 감사 로그 적재)'
+                          : '🔒 안전 기본값: 대표이사 본인만 소유권을 이전할 수 있으며, 인사팀은 일반 직원 직급 배정/회수 권한만 가집니다.'}
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer shrink-0 mt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={grantHrCeoTransferPerm}
+                        onChange={(e) => setGrantHrCeoTransferPerm(e.target.checked)}
+                        className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500"
+                      />
+                      <span className="text-xs font-bold text-amber-900">
+                        {grantHrCeoTransferPerm ? '위임 허용됨' : '위임 안 함 (권장)'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Step 2: 완료 & 검토 (2단계 점진적 정보 공개 위자드) */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
