@@ -21,9 +21,16 @@ import {
   Download,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { ListLoadingSkeleton } from '@/components/common/LoadingSkeleton';
+import { ActionableEmptyState } from '@/components/common/ActionableEmptyState';
+import { commitOptimistic } from '@/core/feedback/optimisticStatus';
+import { celebrateSuccess, pulseError } from '@/core/feedback/sensoryFeedback';
 import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import {
   transitionInvoiceStatus,
+  filterMonthlyFees,
+  summarizeOpenFees,
+  type CounterFeeFilter,
   generateInvoiceShareText,
   generateHometaxTaxInvoiceCsv,
   calculateAccountsReceivableAging,
@@ -91,6 +98,47 @@ const DEFAULT_INVOICES: InvoiceRecord[] = [
   },
 ];
 
+function MonthlyFeeQuickBar({
+  invoices,
+  filter,
+  onFilter,
+  onPayFirstOpen,
+}: {
+  invoices: InvoiceRecord[];
+  filter: CounterFeeFilter;
+  onFilter: (next: CounterFeeFilter) => void;
+  onPayFirstOpen: () => void;
+}) {
+  const summary = summarizeOpenFees(invoices);
+  const tabs: { id: CounterFeeFilter; label: string }[] = [
+    { id: 'all', label: '전체' },
+    { id: 'open', label: `미납/연체만 보기 (${summary.people}명)` },
+    { id: 'paid', label: '완납' },
+  ];
+  return (
+    <section className="space-y-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+      <p className="text-sm font-bold text-amber-900">
+        미납 {summary.people}명 · 미수금 {summary.amount.toLocaleString('ko-KR')}원
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className={`min-h-12 rounded-xl px-3 text-sm font-bold ${filter === tab.id ? 'bg-slate-900 text-white' : 'bg-white'}`}
+            onClick={() => onFilter(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
+        <button type="button" className="min-h-12 rounded-xl bg-emerald-600 px-3 text-sm font-bold text-white" onClick={onPayFirstOpen}>
+          수납 완료 처리
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
   title = '정기 청구 & 미수금 에이징 원장',
   subtitle = '홈택스 세금계산서 일괄발행 및 거래처 미수금 연체 리스크 관제',
@@ -99,6 +147,7 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
   const [activeTab, setActiveTab] = useState<'invoices' | 'aging'>('invoices');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [feeFilter, setFeeFilter] = useState<CounterFeeFilter>('all');
   const [isNewInvoiceModalOpen, setIsNewInvoiceModalOpen] = useState(false);
 
   const storageKey = getTenantStorageKey(STORAGE_KEY_INVOICES);
@@ -116,6 +165,7 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
   const { mutate: mutateUpdate } = useUpdate();
 
   // 2. 로컬스토리지 폴백 상태
+  const [statusOverlay, setStatusOverlay] = useState<Record<string, InvoiceRecord>>({});
   const [localInvoices, setLocalInvoices] = useState<InvoiceRecord[]>(() => {
     try {
       const raw = localStorage.getItem(storageKey);
@@ -127,11 +177,9 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
   });
 
   const invoices = useMemo(() => {
-    if (refineRows && refineRows.length > 0) {
-      return refineRows;
-    }
-    return localInvoices;
-  }, [refineRows, localInvoices]);
+    const base = refineRows && refineRows.length > 0 ? refineRows : localInvoices;
+    return base.map((invoice) => statusOverlay[invoice.id] ?? invoice);
+  }, [refineRows, localInvoices, statusOverlay]);
 
   const saveLocalInvoices = (next: InvoiceRecord[]) => {
     setLocalInvoices(next);
@@ -163,7 +211,7 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
 
   // 필터링된 청구서 목록
   const filteredInvoices = useMemo(() => {
-    let result = invoices;
+    let result = filterMonthlyFees(invoices, feeFilter);
     if (statusFilter !== 'ALL') {
       result = result.filter((inv) => inv.status === statusFilter);
     }
@@ -177,43 +225,60 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
       );
     }
     return result;
-  }, [invoices, statusFilter, searchTerm]);
+  }, [invoices, statusFilter, searchTerm, feeFilter]);
 
   // 수납 처리 (PAY)
   const handlePay = (invoice: InvoiceRecord) => {
     const res = transitionInvoiceStatus(invoice, 'PAY');
     if (!res.success) {
+      pulseError();
       showToast(res.error || '수납 처리에 실패했습니다.', 'warning');
       return;
     }
-
-    if (refineRows && refineRows.length > 0) {
-      mutateUpdate(
-        {
-          resource: 'billing_invoices',
-          id: invoice.id,
-          values: {
-            status: 'PAID',
-            paid_at: res.updatedInvoice.paidAt,
-          },
-        },
-        {
-          onSuccess: () => {
-            refetch();
-            showToast(`[${invoice.memberName}] 수납 완료 처리되었습니다.`, 'success');
-          },
-          onError: () => {
-            const next = invoices.map((inv) => (inv.id === invoice.id ? res.updatedInvoice : inv));
-            saveLocalInvoices(next);
-            showToast(`[${invoice.memberName}] 로컬 수납 처리되었습니다.`, 'info');
-          },
-        }
-      );
-    } else {
-      const next = invoices.map((inv) => (inv.id === invoice.id ? res.updatedInvoice : inv));
-      saveLocalInvoices(next);
-      showToast(`[${invoice.memberName}] 수납 완료 처리되었습니다.`, 'success');
-    }
+    const next = invoices.map((inv) => (inv.id === invoice.id ? res.updatedInvoice : inv));
+    void commitOptimistic({
+      apply: () => {
+        setStatusOverlay((current) => ({ ...current, [invoice.id]: res.updatedInvoice }));
+        if (!refineRows || refineRows.length === 0) saveLocalInvoices(next);
+      },
+      rollback: () => {
+        setStatusOverlay((current) => {
+          const copy = { ...current };
+          delete copy[invoice.id];
+          return copy;
+        });
+        if (!refineRows || refineRows.length === 0) saveLocalInvoices(invoices);
+      },
+      persist: () =>
+        new Promise<void>((resolve, reject) => {
+          if (!refineRows || refineRows.length === 0) {
+            resolve();
+            return;
+          }
+          mutateUpdate(
+            {
+              resource: 'billing_invoices',
+              id: invoice.id,
+              values: { status: 'PAID', paid_at: res.updatedInvoice.paidAt },
+            },
+            {
+              onSuccess: () => {
+                refetch();
+                resolve();
+              },
+              onError: () => reject(new Error('수납 저장에 실패했습니다.')),
+            }
+          );
+        }),
+      onSuccess: () => {
+        celebrateSuccess();
+        showToast(`[${invoice.memberName}] 수납 완료 처리되었습니다.`, 'success');
+      },
+      onError: (message) => {
+        pulseError();
+        showToast(message, 'error');
+      },
+    });
   };
 
   // 청구 안내 텍스트 복사/공유 (Web Share API)
@@ -311,6 +376,15 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 pt-2 pb-12">
+      <MonthlyFeeQuickBar
+        invoices={invoices}
+        filter={feeFilter}
+        onFilter={setFeeFilter}
+        onPayFirstOpen={() => {
+          const first = filterMonthlyFees(invoices, 'open')[0];
+          if (first) handlePay(first);
+        }}
+      />
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -489,10 +563,20 @@ export const BillingInvoicingView: React.FC<BillingInvoicingViewProps> = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredInvoices.length === 0 ? (
+                  {query.isLoading ? (
                     <tr>
-                      <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
-                        조회된 청구 내역이 없습니다.
+                      <td colSpan={7} className="px-4 py-4">
+                        <ListLoadingSkeleton />
+                      </td>
+                    </tr>
+                  ) : filteredInvoices.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>
+                        <ActionableEmptyState
+                          iconName="check"
+                          title="미납된 청구서가 없습니다. 모든 수납이 완료되었습니다."
+                          description="새 청구가 생기면 이 목록에 바로 나타납니다."
+                        />
                       </td>
                     </tr>
                   ) : (

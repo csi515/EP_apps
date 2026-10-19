@@ -186,7 +186,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           data-testid="btn-kakao-login"
           onClick={onKakaoLogin}
           disabled={isLoading}
-          className="h-11 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
+          className="min-h-12 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
         >
           <MessageSquare className="w-3.5 h-3.5 fill-current shrink-0" />
           <span>카카오 로그인</span>
@@ -197,7 +197,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           data-testid="btn-naver-login"
           onClick={onNaverLogin}
           disabled={isLoading}
-          className="h-11 flex items-center justify-center space-x-1.5 rounded-xl bg-[#03C75A] hover:bg-[#02B150] text-white text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
+          className="min-h-12 flex items-center justify-center space-x-1.5 rounded-xl bg-[#03C75A] hover:bg-[#02B150] text-white text-xs font-semibold transition-all shadow-2xs disabled:opacity-50"
         >
           <span className="font-extrabold text-sm leading-none font-sans">N</span>
           <span>네이버 로그인</span>
@@ -238,7 +238,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@moa.app"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+              className="w-full min-h-12 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
             />
           </div>
         </div>
@@ -268,7 +268,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
+              className="w-full min-h-12 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all"
             />
           </div>
         </div>

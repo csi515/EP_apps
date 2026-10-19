@@ -80,6 +80,28 @@ export interface ConsentAuditRecord {
   };
 }
 
+export type ConsentStatus = 'REQUIRED' | 'SIGNED';
+
+export function nextConsentStatus(current: ConsentStatus, signed: boolean): ConsentStatus {
+  if (current === 'SIGNED') return 'SIGNED';
+  return signed ? 'SIGNED' : 'REQUIRED';
+}
+
+export function buildConsentSubmission(input: {
+  version: number;
+  signature: string;
+  signedAt?: string;
+}): { consented_at: string; consent_version: number; signature: string } {
+  if (input.signature.trim().length < 8) {
+    throw new Error('서명이 필요합니다.');
+  }
+  return {
+    consented_at: input.signedAt ?? new Date().toISOString(),
+    consent_version: input.version,
+    signature: input.signature,
+  };
+}
+
 export function generateConsentAuditRecord(params: {
   consentId: string;
   template: ConsentTemplate;

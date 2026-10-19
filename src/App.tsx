@@ -9,6 +9,8 @@ import { BrowserRouter, Route, Routes, Outlet } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Ticket, Lock } from "lucide-react";
 
+import { InPlaceReAuthModal } from "@/components/auth/InPlaceReAuthModal";
+import { installAuthInterceptor } from "@/providers/authInterceptor";
 import { AuthProvider } from "@/core/auth/AuthProvider";
 import { OrganizationProvider, useOrganization } from "@/core/organizations/OrganizationProvider";
 import { AppProvider } from "@/context/AppContext";
@@ -29,6 +31,12 @@ import { createI18nProvider } from "./providers/i18nProvider";
 import { liveProvider } from "./providers/liveProvider";
 import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/components";
 
+import { VehicleShuttleManagementView } from "@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView";
+import { DynamicRoleSettingsPage, FinanceRouteGate } from "@/pages/settings/DynamicRoleSettingsPage";
+import { KioskAttendancePage } from "@/pages/kiosk/KioskAttendancePage";
+import { ScheduleCalendarPage } from "@/capabilities/booking/pages/ScheduleCalendarPage";
+import { MemberBookingView } from "@/capabilities/booking/pages/MemberBookingView";
+import { ConsentSignatureModal } from "@/capabilities/safety_consent/ui/ConsentSignatureModal";
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
 import { DashboardPage } from "./pages/dashboard";
@@ -220,6 +228,7 @@ const RefineApp: React.FC = () => {
             </Authenticated>
           }
         >
+          <Route path="/kiosk/attendance" element={<KioskAttendancePage />} />
           {/* 사업장 업종 메인 워크스페이스 화면 */}
           
 
@@ -237,7 +246,7 @@ const RefineApp: React.FC = () => {
           <Route
             element={
               <AppErrorBoundary>
-                <div className="flex min-h-screen flex-col">
+                <div className="flex min-h-[100svh] h-dvh flex-col">
                   <ImpersonationFloatingBanner />
                   <Header />
                   <Layout>
@@ -250,6 +259,8 @@ const RefineApp: React.FC = () => {
             }
           >
             <Route index element={<IndustryAppRouter />} />
+            <Route path="/workspace/settings/roles" element={<DynamicRoleSettingsPage />} />
+            <Route path="/workspace/members" element={<DynamicRoleSettingsPage />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
             <Route path="/dashboard" element={<DashboardPage />} />
@@ -268,8 +279,10 @@ const RefineApp: React.FC = () => {
             <Route path="/roster/:id/edit" element={<StudentEditPage />} />
 
             <Route path="/schedules" element={<WeeklyTimetableView />} />
-            <Route path="/billing" element={<TuitionManagementView />} />
-            <Route path="/customer/pass" element={<MyPassView />} />
+            <Route path="/booking/week" element={<ScheduleCalendarPage />} />
+            <Route path="/billing" element={<FinanceRouteGate><TuitionManagementView /></FinanceRouteGate>} />
+            <Route path="/customer/pass" element={<><MyPassView /><ConsentSignatureModal /></>} />
+            <Route path="/customer/booking" element={<MemberBookingView />} />
             <Route path="/passes" element={<PassesListPage />} />
             <Route path="/lockers" element={<LockersGridPage />} />
             <Route path="/settings/roles" element={<RolesPage />} />
@@ -287,6 +300,9 @@ const RefineApp: React.FC = () => {
           </Route>
         </Route>
 
+        {import.meta.env.VITE_E2E === "1" ? (
+          <Route path="/e2e/shuttle" element={<VehicleShuttleManagementView />} />
+        ) : null}
         <Route path="/p/:slug" element={<PublicStoreLandingPage />} />
         <Route path="/claim/:token" element={<ClaimTokenPage />} />
         <Route path="/invite/staff/:token" element={<AcceptStaffInvitePage />} />
@@ -310,6 +326,9 @@ const RefineApp: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  React.useEffect(() => {
+    installAuthInterceptor();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -317,6 +336,7 @@ export const App: React.FC = () => {
           <OrganizationProvider>
             <AppProvider>
               <SupabaseRoleSync />
+              <InPlaceReAuthModal />
               <AppBootstrapGate>
                 <RefineApp />
               </AppBootstrapGate>

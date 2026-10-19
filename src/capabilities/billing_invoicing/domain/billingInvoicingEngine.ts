@@ -8,7 +8,30 @@
  *  3. Web Share API 청구서 텍스트 생성 (인프라 비용 0원 원칙)
  */
 
-export type InvoiceStatus = 'PENDING' | 'PAID' | 'OVERDUE' | 'WAIVED';
+export type InvoiceStatus = 'PENDING' | 'UNPAID' | 'PAID' | 'OVERDUE' | 'WAIVED';
+
+export type CounterFeeFilter = 'all' | 'open' | 'paid';
+
+const OPEN_FEE_STATUSES = new Set(['PENDING', 'UNPAID', 'OVERDUE']);
+
+export function filterMonthlyFees<T extends { status: string }>(
+  rows: T[],
+  filter: CounterFeeFilter
+): T[] {
+  if (filter === 'paid') return rows.filter((row) => row.status === 'PAID');
+  if (filter === 'open') return rows.filter((row) => OPEN_FEE_STATUSES.has(row.status));
+  return rows;
+}
+
+export function summarizeOpenFees<T extends { status: string; memberId: string; amount: number }>(
+  rows: T[]
+): { people: number; amount: number } {
+  const open = filterMonthlyFees(rows, 'open');
+  return {
+    people: new Set(open.map((row) => row.memberId)).size,
+    amount: open.reduce((sum, row) => sum + row.amount, 0),
+  };
+}
 
 export interface BillingMember {
   id: string;

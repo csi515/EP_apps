@@ -1,5 +1,7 @@
 import React from "react";
-import { ArrowUpDown, ChevronUp, ChevronDown, RefreshCw, Inbox } from "lucide-react";
+import { ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react";
+import { ListLoadingSkeleton } from "@/components/common/LoadingSkeleton";
+import { ActionableEmptyState } from "@/components/common/ActionableEmptyState";
 
 export interface ResponsiveColumn<T> {
   key: string;
@@ -32,23 +34,18 @@ export function ResponsiveTable<T>({
   className = "",
 }: ResponsiveTableProps<T>) {
   if (isLoading) {
-    return (
-      <div className="w-full py-16 flex flex-col items-center justify-center text-slate-400 bg-white rounded-2xl border border-slate-200">
-        <RefreshCw className="w-6 h-6 animate-spin text-indigo-600 mb-2" />
-        <span className="text-xs font-medium">데이터를 불러오는 중입니다...</span>
-      </div>
-    );
+    return <ListLoadingSkeleton />;
   }
 
   if (data.length === 0) {
     return (
       <div className="w-full py-16 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-dashed border-slate-200 p-6">
         {emptyState || (
-          <>
-            <Inbox className="w-10 h-10 text-slate-300 mb-2" />
-            <p className="text-sm font-semibold text-slate-700">표시할 데이터가 없습니다.</p>
-            <p className="text-xs text-slate-400 mt-1">새로운 데이터를 등록하거나 검색 조건을 변경해보세요.</p>
-          </>
+          <ActionableEmptyState
+            iconName="check"
+            title="표시할 항목이 없습니다."
+            description="조건을 바꾸거나 새 항목을 등록하면 이 자리에 나타납니다."
+          />
         )}
       </div>
     );

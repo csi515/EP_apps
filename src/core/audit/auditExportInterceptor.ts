@@ -41,7 +41,8 @@ export type AuditRpcCaller = (
   entityType: AuditableEntityType,
   entityId: string,
   action: string,
-  locationId?: string
+  locationId?: string,
+  afterData?: Record<string, unknown>
 ) => Promise<string | null>;
 
 /**
@@ -52,7 +53,8 @@ export const defaultSupabaseAuditCaller: AuditRpcCaller = async (
   entityType,
   entityId,
   action,
-  locationId
+  locationId,
+  afterData
 ) => {
   const { data, error } = await (supabase.rpc as any)('append_audit_log', {
     p_organization_id: organizationId,
@@ -60,6 +62,7 @@ export const defaultSupabaseAuditCaller: AuditRpcCaller = async (
     p_entity_id: entityId,
     p_action: action,
     p_location_id: locationId ?? null,
+    p_after_data: afterData ?? null,
   });
 
   if (error || !data) {
@@ -93,7 +96,8 @@ export async function interceptExportWithAudit<T>(
       payload.entityType,
       entityId,
       action,
-      payload.locationId
+      payload.locationId,
+      payload.metadata
     );
 
     if (!logId) {

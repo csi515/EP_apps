@@ -242,6 +242,7 @@ import { getIndustryLabel, shouldUseGenericShell } from '@/core/industry/types';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import type { NavMenuItem, NavMenuSection } from '@/core/auth/navUtils';
 import { filterNavSections } from '@/core/auth/navUtils';
+import { isNavTabAllowed, isRolePermissionMap } from '@/domain/permissions';
 import { useTerminology } from '@/core/terminology';
 import { StudentListView, StudentFormModal } from '@/capabilities/roster';
 import { StorageService } from '@/services/storage';
@@ -617,10 +618,24 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
   const mainTabs = useMemo(() => navSections[0].items, [navSections]);
 
-  const filteredSections = useMemo(
-    () => filterNavSections(navSections, allowedTabs),
-    [navSections, allowedTabs]
-  );
+  const filteredSections = useMemo(() => {
+    const sections = filterNavSections(navSections, allowedTabs);
+    let flags = null;
+    try {
+      const stored = StorageService.getActiveUser()?.customRole?.permissions;
+      flags = isRolePermissionMap(stored) ? stored : null;
+    } catch {
+      flags = null;
+    }
+    if (!flags) return sections;
+    const member = { role: isOwner ? 'owner' : 'staff', customRole: { permissions: flags } };
+    return sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => isNavTabAllowed(item.tab, member)),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [navSections, allowedTabs, isOwner]);
 
   useTabGuard();
 

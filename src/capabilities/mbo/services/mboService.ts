@@ -47,6 +47,7 @@ export class MboService {
       .from('mbo_objectives')
       .select('*')
       .eq('organization_id', organizationId)
+      .eq('is_sample', false)
       .order('created_at', { ascending: false });
 
     if (options.level) {
@@ -367,6 +368,7 @@ export class MboService {
       .select('*')
       .eq('organization_id', organizationId)
       .eq('project_id', projectId)
+      .eq('is_sample', false)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

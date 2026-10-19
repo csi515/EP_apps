@@ -7,6 +7,8 @@ import { isKnownPermission, isKnownScopeType } from "@/core/authorization/regist
 import type { AuthorizationGrant, AuthScopeType, Permission } from "@/core/authorization/types";
 import type { User } from "@/types";
 import { evaluateCustomPermission } from "@/core/authorization";
+import { hasStandardPermission, resolveStandardPermissionKey } from "@/core/authorization/standardPermissionKeys";
+import { evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
 
 /**
  * AccessControl Context Resolver.
@@ -283,10 +285,48 @@ export function createAccessControlProvider(
       const parentCustomerId = activeUser.parentCustomerId || null;
 
       // 2.5 Evaluate Tenant Custom Role Permissions with Wildcards (Hybrid RBAC)
+      const flagMap = activeUser.customRole?.permissions;
+      if (isRolePermissionMap(flagMap)) {
+        const resourceKey =
+          resource === "billing" || resource === "payments" || resource === "billing_invoices"
+            ? "billing_invoices"
+            : resource === "finance" || resource === "statistics"
+              ? "statistics"
+              : resource === "attendance" || resource === "attendance_records"
+                ? "attendance"
+                : resource === "schedules" || resource === "booking"
+                  ? "booking"
+                  : resource === "passes"
+                    ? "passes"
+                    : null;
+        if (
+          resourceKey &&
+          !evaluateMemberAccess(
+            { role, customRole: { permissions: flagMap } },
+            resourceKey,
+            action || "read"
+          )
+        ) {
+          return { can: false, reason: "이 직급에는 해당 업무 권한이 없습니다." };
+        }
+      }
+
       const userPermissions =
         activeUser.permissions ||
-        activeUser.customRole?.permissions ||
+        (Array.isArray(activeUser.customRole?.permissions) ? activeUser.customRole?.permissions : []) ||
         [];
+      const standardKey = resolveStandardPermissionKey(resource, action);
+      if (standardKey) {
+        const granted = hasStandardPermission(
+          Array.isArray(userPermissions) ? userPermissions.map(String) : [],
+          standardKey,
+          role
+        );
+        if (!granted) {
+          return { can: false, reason: "이 화면에 접근할 권한이 없습니다." };
+        }
+      }
+
       const requiredActionStr = `${resource}:${action || "view"}`;
       if (Array.isArray(userPermissions) && userPermissions.length > 0) {
         if (evaluateCustomPermission(userPermissions, requiredActionStr, role)) {

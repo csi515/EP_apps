@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {
   calculateBillingDueTargets,
   transitionInvoiceStatus,
+  filterMonthlyFees,
+  summarizeOpenFees,
   generateInvoiceShareText,
   generateHometaxTaxInvoiceCsv,
   calculateAccountsReceivableAging,
@@ -237,6 +239,16 @@ function run() {
 
   assert.equal(agingSummary.memberAgingList[3].memberOrCompanyName, 'A파트너스');
   assert.equal(agingSummary.memberAgingList[3].riskLevel, 'NORMAL');
+
+  const fees = [
+    { status: 'PENDING', memberId: 'a', amount: 1000 },
+    { status: 'UNPAID', memberId: 'a', amount: 500 },
+    { status: 'OVERDUE', memberId: 'b', amount: 2000 },
+    { status: 'PAID', memberId: 'c', amount: 9000 },
+  ];
+  assert.equal(filterMonthlyFees(fees, 'open').length, 3);
+  assert.equal(filterMonthlyFees(fees, 'paid').length, 1);
+  assert.deepEqual(summarizeOpenFees(fees), { people: 2, amount: 3500 });
 
   console.log('billingInvoicingEngine.test.ts: ok');
 }

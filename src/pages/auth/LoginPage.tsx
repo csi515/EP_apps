@@ -116,7 +116,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-slate-50">
+    <div className="min-h-[100svh] h-dvh w-full flex flex-col lg:flex-row bg-slate-50">
       {/* =========================================================================
           데스크톱 좌측 영역 (lg:flex, w-1/2): 슬레이트 다크톤 전문 SaaS 연출
           ========================================================================= */}
@@ -155,8 +155,7 @@ export const LoginPage: React.FC = () => {
             </span>
           </h1>
           <p className="text-sm xl:text-base text-slate-400 leading-relaxed max-w-lg">
-            학원, 뷰티, 스포츠, 스튜디오 등 모든 서비스 업종을 단 한 줄의 UI 개발 없이
-            26대 원자 엔진과 프리셋 조합으로 유연하게 운영하세요.
+            비용 0원으로 시작하는 올인원 매장 파트너. 출결, 회원권, 수납을 사업주 화면에서 바로 이어갑니다.
           </p>
         </div>
 
@@ -199,8 +198,8 @@ export const LoginPage: React.FC = () => {
       {/* =========================================================================
           우측 영역 (w-full lg:w-1/2): 중앙 정렬 로그인 폼 (모바일 단일 카드 뷰 전환)
           ========================================================================= */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl lg:shadow-none border border-slate-100 lg:border-none p-6 sm:p-10">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-8 lg:p-12">
+        <div className="w-full max-w-[420px] lg:max-w-md bg-white rounded-3xl shadow-xl lg:shadow-none border border-slate-100 lg:border-none p-6 sm:p-10">
           {/* 모바일 전용 로고 헤더 (< lg) */}
           <div className="lg:hidden text-center mb-8">
             <div className="inline-flex items-center justify-center w-13 h-13 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100 mb-3">

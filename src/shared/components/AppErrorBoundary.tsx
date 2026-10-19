@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 import { isStaleChunkError, reloadOnceForStaleAssets } from '@/shared/pwa/reloadOnStaleChunk';
+import { reloadAppWithoutCache } from '@/shared/pwa/reloadAppWithoutCache';
 
 interface Props {
   children: ReactNode;
@@ -71,9 +72,16 @@ export class AppErrorBoundary extends Component<Props, State> {
             <button
               type="button"
               onClick={this.handleRetry}
-              className="w-full py-3 min-h-[44px] bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700"
+              className="w-full py-3 min-h-12 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700"
             >
               {COPY.retry}
+            </button>
+            <button
+              type="button"
+              onClick={() => void reloadAppWithoutCache()}
+              className="mt-2 w-full py-3 min-h-12 rounded-xl border font-bold"
+            >
+              앱 다시 불러오기
             </button>
           </div>
         </div>

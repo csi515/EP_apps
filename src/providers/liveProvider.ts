@@ -80,7 +80,9 @@ export function createMoaLiveProvider(
 
       // Fail-closed: If resource requires tenant scoping but no active organization is resolved,
       // return a safe no-op channel rather than subscribing globally without filters.
-      if (isRealtimeTarget && !activeOrgId) {
+      const explicitFilter = (params as { filter?: string } | undefined)?.filter;
+      if (isRealtimeTarget && (!activeOrgId || (explicitFilter && !explicitFilter.includes(`eq.${activeOrgId}`)))) {
+        console.error("realtime subscription rejected: tenant filter missing");
         return {
           id: `unscoped-${resource}-noop-channel`,
           unsubscribe: () => {},

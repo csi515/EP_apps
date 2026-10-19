@@ -36,7 +36,7 @@ export function ModuleSidebar({
 
   return (
     <aside
-      className={`${className} w-64 bg-white text-slate-600 flex-col h-[calc(100vh-65px)] sticky top-[65px] border-r border-slate-200 select-none shrink-0 no-print`}
+      className={`${className} w-64 bg-white text-slate-600 flex-col h-[calc(100dvh-65px)] sticky top-[65px] border-r border-slate-200 select-none shrink-0 no-print`}
     >
       <div className="flex-1 overflow-y-auto px-3.5 py-3 space-y-3">
         {sections.map((section) => (

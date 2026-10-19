@@ -3,6 +3,8 @@ import {
   selectActiveConsentTemplate,
   validateSignatureMetadata,
   generateConsentAuditRecord,
+  nextConsentStatus,
+  buildConsentSubmission,
   type ConsentTemplate,
 } from './safetyConsentEngine';
 
@@ -89,6 +91,14 @@ function run() {
   assert.equal(auditSuccess.auditRecord.templateVersion, 2);
   assert.ok(auditSuccess.auditRecord.signatureProofHash.startsWith('PROOF-'));
   assert.equal(auditSuccess.auditRecord.clientEnvironment.ipAddress, '203.0.113.195');
+
+  assert.equal(nextConsentStatus('REQUIRED', false), 'REQUIRED');
+  assert.equal(nextConsentStatus('REQUIRED', true), 'SIGNED');
+  assert.equal(nextConsentStatus('SIGNED', false), 'SIGNED');
+  const saved = buildConsentSubmission({ version: 3, signature: 'data:image/png;base64,abc', signedAt: '2026-10-19T00:00:00Z' });
+  assert.equal(saved.consent_version, 3);
+  assert.equal(saved.consented_at, '2026-10-19T00:00:00Z');
+  assert.throws(() => buildConsentSubmission({ version: 1, signature: 'short' }));
 
   console.log('safetyConsentEngine.test.ts: ok');
 }

@@ -25,6 +25,7 @@ import {
   getParentPortalSecondaryTabs,
 } from './parentPortalNav';
 import { consumePendingPortalTab } from '@/core/push';
+import { FamilyMemberSwitcher } from '@/components/customer/FamilyMemberSwitcher';
 
 export interface ParentOrganizationPortalProps {
   student: Student;
@@ -110,6 +111,21 @@ export const ParentOrganizationPortal: React.FC<ParentOrganizationPortalProps> =
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col">
       {isSupabaseConfigured() && <SupabaseRoleSync />}
+      <div className="bg-white px-4 pt-3">
+        <FamilyMemberSwitcher
+          members={(children.length > 0 ? children : []).map((child) => ({
+            id: child.studentId,
+            name: child.displayName,
+            remainingPasses: 0,
+            todayAttendance: '조회 중',
+          }))}
+          selectedId={selectedStudent?.studentId || student.id}
+          onSelect={(id) => {
+            const child = children.find((item) => item.studentId === id);
+            if (child) switchChildInPortal(child);
+          }}
+        />
+      </div>
       <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-start gap-2">
           {onBack && (

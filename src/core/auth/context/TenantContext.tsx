@@ -1,6 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
-import { evictTenantMemoryCache } from '@/core/query/tenantQueryKeys';
+import { switchOrganization } from '@/core/contexts/TenantContext';
 
 export interface TenantContextType {
   switchTenant: (tenantId: string) => Promise<void>;
@@ -13,7 +13,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const { selectOrganization, currentOrganization } = useOrganization();
 
   const switchTenant = async (tenantId: string) => {
-    evictTenantMemoryCache();
+    await switchOrganization();
     await selectOrganization(tenantId);
   };
 
@@ -36,7 +36,7 @@ export const useTenant = (): TenantContextType => {
     const { selectOrganization, currentOrganization } = useOrganization();
     return {
       switchTenant: async (tenantId: string) => {
-        evictTenantMemoryCache();
+        await switchOrganization();
         await selectOrganization(tenantId);
       },
       currentTenantId: currentOrganization?.id ?? null,

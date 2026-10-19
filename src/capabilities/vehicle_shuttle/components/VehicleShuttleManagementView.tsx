@@ -95,6 +95,7 @@ export function VehicleShuttleManagementView() {
   });
 
   const [isDriving, setIsDriving] = useState(false);
+  const [dispatchDone, setDispatchDone] = useState(false);
   const [currentStopIndex, setCurrentStopIndex] = useState(1);
   const [elapsedMinutes, setElapsedMinutes] = useState(5);
 
@@ -149,11 +150,13 @@ export function VehicleShuttleManagementView() {
   const handleToggleDriving = () => {
     if (!isDriving) {
       setIsDriving(true);
+      setDispatchDone(false);
       setCurrentStopIndex(0);
       setElapsedMinutes(0);
       showToast(`${currentRoute.vehicleName} 운행이 시작되었습니다. 학부모 포털에 운행 중 상태가 노출됩니다.`, 'info');
     } else {
       setIsDriving(false);
+      setDispatchDone(true);
       showToast(`${currentRoute.vehicleName} 운행이 안전하게 종료되었습니다.`, 'success');
     }
   };
@@ -185,19 +188,30 @@ export function VehicleShuttleManagementView() {
                     isDriving ? 'bg-emerald-500 text-white animate-pulse' : 'bg-slate-200 text-slate-700'
                   }`}
                 >
-                  {isDriving ? '운행 중' : '대기 중'}
+                  <span data-testid="dispatch-status">{isDriving ? '운행 중' : dispatchDone ? '운행 완료' : '운행 대기'}</span>
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
                 기사용 실시간 승하차 체크, 정류장 도착 3분 전 학부모 자동 안내 및 운행 관제 보드
               </p>
+              <select
+                data-testid="shuttle-route-select"
+                className="mt-2 min-h-11 rounded-lg border border-slate-200 px-2 text-sm"
+                value={selectedRouteId}
+                onChange={(event) => setSelectedRouteId(event.target.value)}
+              >
+                {routes.map((route) => (
+                  <option key={route.id} value={route.id}>{route.vehicleName}</option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
+              data-testid="btn-dispatch-advance"
               onClick={handleToggleDriving}
-              className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
+              className={`inline-flex items-center gap-1.5 min-h-11 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs ${
                 isDriving
                   ? 'bg-rose-600 hover:bg-rose-700 text-white'
                   : 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -324,7 +338,7 @@ export function VehicleShuttleManagementView() {
                 {stop.assignedStudentIds.length === 0 ? (
                   <p className="text-xs text-slate-400 pt-2">탑승/하차 예정 원생이 없는 경유지입니다.</p>
                 ) : (
-                  <div className="space-y-2 pt-3">
+                  <div className="space-y-2 pt-3" data-testid="stop-roster">
                     {stop.assignedStudentIds.map((stdId) => {
                       const log = boardingLogs.find((l) => l.studentId === stdId && l.stopId === stop.id);
                       const currentStatus = log?.status || 'SCHEDULED';
@@ -345,8 +359,9 @@ export function VehicleShuttleManagementView() {
 
                           <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => handleCheckBoarding(stdId, stop.id, 'BOARDED')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                              data-testid="btn-board-toggle"
+                              onClick={() => handleCheckBoarding(stdId, stop.id, currentStatus === 'BOARDED' ? 'ABSENT' : 'BOARDED')}
+                              className={`min-h-11 min-w-11 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                                 currentStatus === 'BOARDED'
                                   ? 'bg-emerald-600 text-white shadow-xs'
                                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

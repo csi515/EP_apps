@@ -469,7 +469,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  원장님 성함 <span className="text-slate-400 font-normal">(선택)</span>
+                  사업주 성함 <span className="text-slate-400 font-normal">(선택)</span>
                 </label>
                 <input
                   type="text"

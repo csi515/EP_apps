@@ -16,6 +16,6 @@ export interface User {
   customRole?: {
     id?: string;
     name?: string;
-    permissions?: string[];
+    permissions?: string[] | import('@/domain/permissions').RolePermissionMap;
   } | null;
 }

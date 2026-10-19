@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { useTerminology } from "@/core/terminology";
+import { ActionableEmptyState } from "@/components/common/ActionableEmptyState";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { StoreClaimModal, CounterClaimScanner } from "@/core/auth";
 import { CustomerTransferModal } from "@/core/customer/components/CustomerTransferModal";
@@ -458,6 +459,14 @@ export const StudentListPage: React.FC = () => {
         renderMobileCard={renderMobileCard}
         keyExtractor={(student) => student.id}
         isLoading={isLoading}
+        emptyState={
+          <ActionableEmptyState
+            iconName="users"
+            title="아직 등록된 회원이 없습니다."
+            description="첫 회원을 등록하면 출결과 수납을 이어서 시작할 수 있습니다."
+            actionButton={{ label: '+ 첫 회원 등록하기', onClick: () => create('customers') }}
+          />
+        }
       />
 
       {/* 페이지네이션 바 */}

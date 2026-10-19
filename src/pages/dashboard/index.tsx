@@ -1,9 +1,20 @@
 import React from "react";
 import { Users, CalendarCheck, CreditCard, Sparkles } from "lucide-react";
+import { OnboardingQuestCard } from "@/components/dashboard/OnboardingQuestCard";
+import { ActionableEmptyState } from "@/components/common/ActionableEmptyState";
+import { useNavigate } from "react-router-dom";
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   return (
     <div className="space-y-6">
+      <OnboardingQuestCard memberCount={0} />
+      <ActionableEmptyState
+        iconName="users"
+        title="아직 등록된 회원이 없습니다."
+        description="첫 회원을 등록하면 출결과 수납을 이어서 시작할 수 있습니다."
+        actionButton={{ label: '+ 첫 회원 등록하기', onClick: () => navigate('/customers/create') }}
+      />
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">운영 대시보드</h1>
         <p className="text-sm text-slate-500">

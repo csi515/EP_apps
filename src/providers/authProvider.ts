@@ -218,7 +218,14 @@ export const authProvider: AuthProvider = {
   },
 
   onError: async (error) => {
-    if (error?.status === 401 || error?.status === 403) {
+    const message = String(error?.message ?? '');
+    const sessionExpired = error?.status === 401 || (/jwt/i.test(message) && /expired/i.test(message));
+    if (sessionExpired) {
+      const { openReAuthModal } = await import('./authInterceptor');
+      openReAuthModal();
+      return { error };
+    }
+    if (error?.status === 403) {
       return {
         logout: true,
         redirectTo: "/login",

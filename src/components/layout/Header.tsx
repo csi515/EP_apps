@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useGetIdentity, useLogout } from "@refinedev/core";
-import { LogOut, User, Bell, Building2, Ticket, ArrowLeftRight } from "lucide-react";
+import { LogOut, User, Bell, Building2, Ticket, ArrowLeftRight, Search } from "lucide-react";
+import { requestCommandPalette } from "@/components/common/GlobalCommandPalette";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { getIndustryLabel } from "@/core/industry/types";
 
@@ -88,6 +89,14 @@ export const Header: React.FC = () => {
           </button>
         )}
 
+        <button
+          type="button"
+          aria-label="검색"
+          className="flex min-h-12 min-w-12 items-center justify-center rounded-full text-slate-500 lg:hidden"
+          onClick={() => requestCommandPalette()}
+        >
+          <Search className="h-5 w-5" />
+        </button>
         <button
           type="button"
           className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700"

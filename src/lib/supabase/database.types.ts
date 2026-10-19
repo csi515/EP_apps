@@ -675,6 +675,7 @@ export interface Database {
           parent_customer_id: string | null;
           is_active: boolean;
           custom_role_id: string | null;
+          organization_role_id: string | null;
           token_version: number;
           joined_at: string;
           created_at: string;
@@ -689,6 +690,7 @@ export interface Database {
           parent_customer_id?: string | null;
           is_active?: boolean;
           custom_role_id?: string | null;
+          organization_role_id?: string | null;
           token_version?: number;
           joined_at?: string;
           created_at?: string;
@@ -703,6 +705,7 @@ export interface Database {
           parent_customer_id?: string | null;
           is_active?: boolean;
           custom_role_id?: string | null;
+          organization_role_id?: string | null;
           token_version?: number;
           joined_at?: string;
           created_at?: string;
@@ -722,6 +725,30 @@ export interface Database {
             referencedColumns: ['id'];
           },
         ];
+      };
+      organization_roles: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          description: string;
+          is_system: boolean;
+          permissions: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          description?: string;
+          is_system?: boolean;
+          permissions?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['organization_roles']['Insert']>;
+        Relationships: [];
       };
       parent_student_links: {
         Row: {
@@ -755,6 +782,8 @@ export interface Database {
           status: string;
           metadata: Json;
           memo: string | null;
+          deleted_at: string | null;
+          chosung: string | null;
           check_in_pin_hash: string | null;
           /** NULL = 비회원(전화 예약·원 등록). 로그인 User와 연결되면 UUID */
           user_id: string | null;
@@ -770,6 +799,8 @@ export interface Database {
           status?: string;
           metadata?: Json;
           memo?: string | null;
+          deleted_at?: string | null;
+          chosung?: string | null;
           check_in_pin_hash?: string | null;
           user_id?: string | null;
           created_at?: string;
@@ -784,6 +815,8 @@ export interface Database {
           status?: string;
           metadata?: Json;
           memo?: string | null;
+          deleted_at?: string | null;
+          chosung?: string | null;
           check_in_pin_hash?: string | null;
           user_id?: string | null;
           created_at?: string;
@@ -4471,6 +4504,7 @@ export interface Database {
           approved_by: string | null;
           approved_at: string | null;
           revision: number;
+          is_sample: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -4494,6 +4528,7 @@ export interface Database {
           approved_by?: string | null;
           approved_at?: string | null;
           revision?: number;
+          is_sample?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -4671,6 +4706,8 @@ export interface Database {
           grade: 'S' | 'A' | 'B' | 'C' | 'D';
           qualitative_feedback: string;
           is_confidential: boolean;
+          workflow_status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
+          is_sample: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -4686,6 +4723,8 @@ export interface Database {
           grade: 'S' | 'A' | 'B' | 'C' | 'D';
           qualitative_feedback: string;
           is_confidential?: boolean;
+          workflow_status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
+          is_sample?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -4704,6 +4743,58 @@ export interface Database {
             referencedColumns: ['id'];
           },
         ];
+      };
+      mbo_goals: {
+        Row: {
+          id: string;
+          organization_id: string;
+          author_id: string;
+          evaluator_id: string | null;
+          title: string;
+          key_results: Json;
+          status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
+          is_sample: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          author_id: string;
+          evaluator_id?: string | null;
+          title: string;
+          key_results?: Json;
+          status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
+          is_sample?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_goals']['Insert']>;
+        Relationships: [];
+      };
+      mbo_evaluation_history: {
+        Row: {
+          id: string;
+          organization_id: string;
+          evaluation_id: string;
+          action_type: 'CREATED' | 'SUBMITTED' | 'EVALUATED' | 'APPROVED';
+          actor_id: string;
+          score_payload: Json;
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          evaluation_id: string;
+          action_type: 'CREATED' | 'SUBMITTED' | 'EVALUATED' | 'APPROVED';
+          actor_id: string;
+          score_payload?: Json;
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_evaluation_history']['Insert']>;
+        Relationships: [];
       };
       approval_templates: {
         Row: {

@@ -23,6 +23,7 @@ import { StudentFormModal } from './StudentFormModal';
 import { StudentDetailModal } from './StudentDetailModal';
 import { getStudentStatusBadge } from '@/utils/formatters';
 import { FilterBar, SearchField, EmptyState } from '@/shared/components';
+import { ExportProtectionModal } from '@/components/security/ExportProtectionModal';
 import { DENSITY } from '@/shared/styles/density';
 import {
   Users,
@@ -83,6 +84,7 @@ export const StudentListView: React.FC = () => {
   const staffFilterName = rosterList.staffFilterLabel ?? labels.staff.singular;
   const controlMinClass = rosterList.controlMinHeight === 44 ? 'min-h-[44px]' : 'min-h-[36px]';
   const { isScoped, staffId, scopeStudents } = useStaffScope();
+  const [exportOpen, setExportOpen] = useState(false);
 
   const students = useMemo(
     () => scopeStudents(StudentService.getStudents()),
@@ -247,7 +249,7 @@ export const StudentListView: React.FC = () => {
     { value: 'ALL', label: '전체', count: students.length },
   ];
 
-  const handleExportAudited = async () => {
+  const handleExportAudited = async (reason: string) => {
     const orgId = getOrganizationId() || 'local-org';
     try {
       await interceptExportWithAudit(
@@ -255,6 +257,7 @@ export const StudentListView: React.FC = () => {
           organizationId: orgId,
           entityType: 'customer',
           action: 'customer_roster_excel_export',
+          metadata: { reason },
         },
         () => {
           const headers = ['이름', '연락처', '상태', '등록일자'];
@@ -287,11 +290,19 @@ export const StudentListView: React.FC = () => {
 
   return (
     <div className={DENSITY.pageStack}>
+      <ExportProtectionModal
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        onConfirm={(_pin, reason) => {
+          setExportOpen(false);
+          void handleExportAudited(reason);
+        }}
+      />
       {!isScoped && (
         <div className="flex justify-end gap-2 flex-wrap">
           <button
             type="button"
-            onClick={handleExportAudited}
+            onClick={() => setExportOpen(true)}
             className="px-4 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-700 text-xs sm:text-sm font-bold rounded-xl transition-all border border-slate-200 flex items-center justify-center gap-2 cursor-pointer"
             title="대량 개인정보 반출 시 불변 감사 로그(Audit Log)가 자동 기록됩니다."
           >

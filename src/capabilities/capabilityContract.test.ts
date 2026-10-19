@@ -11,6 +11,7 @@ import {
   CAPABILITY_MANIFESTS,
   assertCapabilityDefinition,
 } from './index';
+import { CAPABILITY_MATURITY } from './capabilityMaturity';
 
 function run() {
   assert.equal(CAPABILITY_MANIFESTS.length, CAPABILITY_IDS.length);
@@ -37,6 +38,14 @@ function run() {
     assert.equal(src.includes('@/app/'), false, `${id} manifest must not import Composition`);
     assert.match(src, /defineCapability/);
   }
+
+  assert.equal(CAPABILITY_MATURITY.mbo_management, 'B');
+  assert.equal(CAPABILITY_MATURITY.shuttle_dispatch, 'B-');
+  assert.equal(CAPABILITY_MATURITY.attendance_loop, 'A');
+  assert.equal(CAPABILITY_MATURITY.ticket_passes, 'B+');
+  assert.equal(CAPABILITY_MATURITY.workplace_policy, 'B');
+  assert.equal(CAPABILITY_MATURITY.retail_inventory, 'A-');
+  assert.equal(CAPABILITY_MATURITY.safety_consent, 'C+');
 
   console.log(`capabilityContract.test.ts: ok (${CAPABILITY_IDS.length} capabilities)`);
 }

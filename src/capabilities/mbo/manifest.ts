@@ -6,5 +6,5 @@ export const mboCapability = defineCapability({
   dependencies: [],
   configurable: true,
   defaultEnabled: false,
-  requiredPermissions: ['mbo:view', 'mbo:write', 'mbo:evaluate', 'mbo:approve'],
+  requiredPermissions: ['mbo:goals:write', 'mbo:goals:read', 'mbo:evaluations:approve', 'mbo:evaluations:read_all'],
 });

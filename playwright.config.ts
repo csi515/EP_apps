@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: '.',
+  testMatch: ['tests/e2e/**/*.spec.ts', 'e2e/**/*.spec.ts'],
   timeout: 60000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -15,7 +16,18 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /shuttle-ops-flow/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'mobile-chrome',
+      testMatch: /shuttle-ops-flow/,
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'mobile-safari',
+      testMatch: /shuttle-ops-flow/,
+      use: { ...devices['iPhone 12'] },
     },
   ],
   webServer: {
@@ -23,7 +35,8 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
     timeout: 60000,
-    env: {
+      env: {
+      VITE_E2E: '1',
       VITE_SUPABASE_URL: 'https://mock-supabase.moa.local',
       VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mock-anon-key',
     },

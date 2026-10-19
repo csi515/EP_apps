@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useMenu } from "@refinedev/core";
 import { LayoutDashboard } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
+import { MobileBottomDock } from "./MobileBottomDock";
+import { GlobalCommandPalette } from "@/components/common/GlobalCommandPalette";
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
@@ -63,11 +65,13 @@ export const Sidebar: React.FC = () => {
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <div className="flex flex-1">
+    <div className="flex min-h-[100svh] h-dvh flex-col bg-slate-50">
+      <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="flex-1 p-4 sm:p-6 md:p-8">{children}</main>
+        <main className="flex-1 overflow-auto p-4 pb-[max(5rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 lg:pb-8">{children}</main>
       </div>
+      <MobileBottomDock />
+      <GlobalCommandPalette />
     </div>
   );
 };
