@@ -5074,6 +5074,126 @@ export interface Database {
         Update: Partial<Database['core']['Tables']['sop_risk_assessment']['Insert']>;
         Relationships: [];
       };
+      risk_assessments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          department_id: string | null;
+          document_no: string;
+          title: string;
+          process_name: string;
+          current_version: number;
+          status: string;
+          created_by: string;
+          snapshot_payload: Json;
+          occasional_review_required: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          department_id?: string | null;
+          document_no: string;
+          title: string;
+          process_name: string;
+          current_version?: number;
+          status?: string;
+          created_by: string;
+          snapshot_payload?: Json;
+          occasional_review_required?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['risk_assessments']['Insert']>;
+        Relationships: [];
+      };
+      document_approval_lines: {
+        Row: {
+          id: string;
+          assessment_id: string;
+          organization_id: string;
+          step_order: number;
+          step_type: string;
+          assignee_id: string;
+          assignee_name: string | null;
+          action_status: string;
+          comment: string | null;
+          signature_data: string | null;
+          action_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          assessment_id: string;
+          organization_id: string;
+          step_order: number;
+          step_type: string;
+          assignee_id: string;
+          assignee_name?: string | null;
+          action_status?: string;
+          comment?: string | null;
+          signature_data?: string | null;
+          action_at?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['document_approval_lines']['Insert']>;
+        Relationships: [];
+      };
+      risk_assessment_revisions: {
+        Row: {
+          id: string;
+          assessment_id: string;
+          organization_id: string;
+          version: number;
+          revision_type: string;
+          revision_reason: string;
+          snapshot_payload: Json;
+          approved_by: string;
+          approved_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          assessment_id: string;
+          organization_id: string;
+          version: number;
+          revision_type: string;
+          revision_reason: string;
+          snapshot_payload: Json;
+          approved_by: string;
+          approved_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['risk_assessment_revisions']['Insert']>;
+        Relationships: [];
+      };
+      risk_assessment_worker_repledges: {
+        Row: {
+          id: string;
+          organization_id: string;
+          assessment_id: string;
+          department_id: string | null;
+          required_version: number;
+          worker_user_id: string;
+          pledged_at: string | null;
+          signature_data: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          assessment_id: string;
+          department_id?: string | null;
+          required_version: number;
+          worker_user_id: string;
+          pledged_at?: string | null;
+          signature_data?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['risk_assessment_worker_repledges']['Insert']>;
+        Relationships: [];
+      };
       mbo_evaluation_history: {
         Row: {
           id: string;

@@ -18,3 +18,5 @@ export * from './ui/MboCycleSettingsCard';
 export * from './ui/OrganizationMemberPickerModal';
 export * from './ui/MboRevisionTimelineModal';
 export * from './ui/MboReviseGoalModal';
+export * from './ui/MboProjectPortfolioView';
+export * from './domain/projectPortfolioEngine';

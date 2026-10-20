@@ -15,5 +15,23 @@ export const sopRiskAssessmentResources: CapabilityResourceDefinition = {
         order: 370,
       },
     },
+    {
+      name: 'risk_assessments',
+      list: '/sop-risk',
+      meta: {
+        label: '위험성평가 문서',
+        icon: 'ShieldAlert',
+        order: 371,
+      },
+    },
+    {
+      name: 'risk_assessment_approvals',
+      list: '/workspace/approvals',
+      meta: {
+        label: '내 결재 대기함',
+        icon: 'FileCheck',
+        order: 372,
+      },
+    },
   ],
 };

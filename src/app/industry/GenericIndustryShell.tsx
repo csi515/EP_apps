@@ -27,6 +27,7 @@ import {
   Wrench,
   LayoutGrid,
   ShieldAlert,
+  FileCheck,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -138,6 +139,14 @@ const HygieneHaccpLogView = lazy(() =>
 );
 const SopRiskAssessmentView = lazy(() =>
   import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.SopRiskAssessmentView }))
+);
+const RiskApprovalInboxView = lazy(() =>
+  import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.RiskApprovalInboxView }))
+);
+const WorkerRepledgeHost = lazy(() =>
+  import('@/capabilities/sop_risk_assessment/components/WorkerRepledgeHost').then((m) => ({
+    default: m.WorkerRepledgeHost,
+  }))
 );
 const VendorApInvoiceView = lazy(() =>
   import('@/capabilities/vendor_ap_invoice').then((m) => ({ default: m.VendorApInvoiceView }))
@@ -515,6 +524,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('sop_risk_assessment')) {
       extendedItems.push({ tab: 'sop-risk', label: 'SOP·위험성평가', icon: <ShieldAlert className="w-4 h-4" /> });
+      extendedItems.push({ tab: 'risk-approvals', label: '내 결재 대기함', icon: <FileCheck className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('maintenance_checklist')) {
       extendedItems.push({ tab: 'maintenance', label: '시설 점검', icon: <ClipboardList className="w-4 h-4" /> });
@@ -868,6 +878,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
         <SopRiskAssessmentView />
       </Suspense>
     ),
+    'risk-approvals': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">결재 대기함을 불러오는 중...</div>}>
+        <RiskApprovalInboxView />
+      </Suspense>
+    ),
     'vendor-ap': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">공급처 및 매입 전표 화면을 불러오는 중...</div>}>
         <VendorApInvoiceView />
@@ -1206,6 +1221,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     <div className="flex-1 p-3 sm:p-4 lg:p-5 max-w-full overflow-x-hidden">
       {isOwner && <DirectorFloatingFab />}
       {Overlays && <Overlays />}
+      {(enabledCaps.includes('sop_risk_assessment') || enabledCaps.includes('safety_consent')) && (
+        <Suspense fallback={null}>
+          <WorkerRepledgeHost />
+        </Suspense>
+      )}
       <PluginErrorBoundary pluginName={activeTab}>
         {renderViewContent()}
       </PluginErrorBoundary>

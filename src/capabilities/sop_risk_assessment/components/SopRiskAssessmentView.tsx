@@ -4,9 +4,9 @@ import {
   WorkStandardSOP,
   HazardRiskItem,
   calculateRiskLevel,
-  evaluateRiskReduction,
   calculateSafetyAuditSummary,
 } from '../domain/sopRiskAssessmentEngine';
+import { SopRiskApprovalPanel } from './SopRiskApprovalPanel';
 
 const INITIAL_SOPS: WorkStandardSOP[] = [
   {
@@ -150,7 +150,7 @@ export const SopRiskAssessmentView: React.FC = () => {
     }
   }, [rows.length]);
 
-  const [activeTab, setActiveTab] = useState<'sop' | 'matrix' | 'controls'>('sop');
+  const [activeTab, setActiveTab] = useState<'sop' | 'matrix' | 'controls' | 'approval'>('sop');
 
   // 신규 위험요인 입력 폼 상태
   const [newProcess, setNewProcess] = useState('');
@@ -254,9 +254,25 @@ export const SopRiskAssessmentView: React.FC = () => {
               color: activeTab === 'controls' ? '#ffffff' : '#374151',
               fontWeight: 600,
               cursor: 'pointer',
+              minHeight: 48,
             }}
           >
             개선대책 이행률 ({auditSummary.complianceRatePercent}%)
+          </button>
+          <button
+            onClick={() => setActiveTab('approval')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '6px',
+              border: '1px solid #d1d5db',
+              background: activeTab === 'approval' ? '#dc2626' : '#ffffff',
+              color: activeTab === 'approval' ? '#ffffff' : '#374151',
+              fontWeight: 600,
+              cursor: 'pointer',
+              minHeight: 48,
+            }}
+          >
+            결재선·개정
           </button>
         </div>
       </div>
@@ -308,7 +324,9 @@ export const SopRiskAssessmentView: React.FC = () => {
         </div>
       </div>
 
-      {activeTab === 'sop' ? (
+      {activeTab === 'approval' ? (
+        <SopRiskApprovalPanel />
+      ) : activeTab === 'sop' ? (
         /* 탭 1: 안전작업표준 (SOP) 상세 */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px' }}>
           {/* 공정 선택 목록 */}

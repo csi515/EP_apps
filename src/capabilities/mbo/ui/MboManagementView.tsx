@@ -40,10 +40,59 @@ import { MboCycleSettingsCard } from './MboCycleSettingsCard';
 import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
 import { MboReviseGoalModal } from './MboReviseGoalModal';
 import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
+import { MboProjectPortfolioView } from './MboProjectPortfolioView';
+import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import { MboService } from '../services/mboService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
+
+const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
+  {
+    id: 'proj-sample-1',
+    title: '친환경 촉매 합성 및 파일럿 스케일업',
+    ownerId: 'u-kim',
+    ownerName: '김수석',
+    status: 'in_progress',
+    startDate: '2026-01-15',
+    targetDate: '2026-06-30',
+    progressRate: 42,
+    objectiveId: 'obj-1',
+    description: 'Lab 1 합성 → 항온항습 신뢰성 → 양산 이관 게이트',
+  },
+  {
+    id: 'proj-sample-2',
+    title: 'FE-SEM/XRD 측정 표준 SOP 수립',
+    ownerId: 'u-lee',
+    ownerName: '이선임',
+    status: 'approved',
+    startDate: '2026-03-01',
+    targetDate: '2026-04-30',
+    progressRate: 68,
+    objectiveId: 'obj-2',
+  },
+  {
+    id: 'proj-sample-3',
+    title: '직무발명 선행기술 조사 및 출원 패키지',
+    ownerId: 'u-kim',
+    ownerName: '김수석',
+    status: 'completed',
+    startDate: '2025-11-01',
+    targetDate: '2026-01-20',
+    progressRate: 100,
+    objectiveId: 'obj-1',
+  },
+  {
+    id: 'proj-sample-4',
+    title: '2027 중장기 R&D 로드맵',
+    ownerId: 'u-park',
+    ownerName: '박센터장',
+    status: 'draft',
+    startDate: '2027-01-01',
+    targetDate: '2027-12-31',
+    progressRate: 5,
+  },
+];
 
 // 로컬 폴백 샘플 데이터
 const INITIAL_OBJECTIVES: ObjectiveNode[] = [
@@ -141,8 +190,10 @@ export const MboManagementView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'objectives' | 'projects' | 'evaluations' | 'workload' | 'forecast'
   >('objectives');
+  const [projectSubView, setProjectSubView] = useState<'portfolio' | 'quarterly'>('portfolio');
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
   const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
@@ -191,6 +242,10 @@ export const MboManagementView: React.FC = () => {
     resource: 'mbo_evaluations',
     pagination: { mode: 'off' },
   });
+  const { query: projectQuery } = useList<any>({
+    resource: 'mbo_projects',
+    pagination: { mode: 'off' },
+  });
 
   const { mutate: mutateCreate } = useCreate();
   const { mutate: mutateUpdate } = useUpdate();
@@ -198,6 +253,7 @@ export const MboManagementView: React.FC = () => {
   const refineObjectives = objQuery?.data?.data;
   const refineLogs = logQuery?.data?.data;
   const refineEvals = evalQuery?.data?.data;
+  const refineProjects = projectQuery?.data?.data;
 
   // DB 데이터 우선 바인딩
   const objectives: ObjectiveNode[] = useMemo(() => {
@@ -265,7 +321,41 @@ export const MboManagementView: React.FC = () => {
     return localEvaluations;
   }, [refineEvals, localEvaluations]);
 
+  const portfolioProjects: PortfolioProject[] = useMemo(() => {
+    if (refineProjects && refineProjects.length > 0) {
+      return refineProjects.map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        ownerId: row.owner_id ?? null,
+        ownerName: row.owner_name || '미배정',
+        status: (row.status || 'draft') as MboStatus,
+        startDate: row.start_date || '2026-01-01',
+        targetDate: row.target_date || '2026-12-31',
+        progressRate: row.progress_rate ?? 0,
+        objectiveId: row.objective_id,
+        evaluationPeriod: row.evaluation_period,
+        description: row.description,
+      }));
+    }
+    // DB 비어 있으면 목표 노드를 프로젝트 폴백으로 매핑 + 연구소 샘플
+    const fromObjectives: PortfolioProject[] = objectives.map((obj) => ({
+      id: `obj-as-proj-${obj.id}`,
+      title: obj.title,
+      ownerId: null,
+      ownerName: obj.ownerName,
+      status: obj.status,
+      startDate: obj.startDate,
+      targetDate: obj.targetDate,
+      progressRate: obj.progressRate,
+      objectiveId: obj.id,
+      description: obj.description,
+    }));
+    return [...SAMPLE_PORTFOLIO_PROJECTS, ...fromObjectives];
+  }, [refineProjects, objectives]);
+
   const selectedObjective = objectives.find((o) => o.id === selectedObjectiveId) || objectives[0];
+  const selectedPortfolioProject =
+    portfolioProjects.find((p) => p.id === selectedProjectId) || portfolioProjects[0];
 
   // 목표 가중치 100% 인터락 검증
   const weightValidation = useMemo(() => {
@@ -429,7 +519,10 @@ export const MboManagementView: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('projects')}
+            onClick={() => {
+              setActiveTab('projects');
+              setProjectSubView('portfolio');
+            }}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
               activeTab === 'projects'
                 ? 'bg-white text-indigo-700 shadow-xs'
@@ -437,7 +530,7 @@ export const MboManagementView: React.FC = () => {
             }`}
           >
             <FolderKanban className="w-3.5 h-3.5" />
-            <span>분기별 진척 리뷰</span>
+            <span>진행 프로젝트</span>
           </button>
           <button
             type="button"
@@ -526,29 +619,77 @@ export const MboManagementView: React.FC = () => {
         />
       )}
 
-      {/* 탭 2: 분기별 진척 일지 및 피드백 뷰 */}
+      {/* 탭 2: 진행 프로젝트 (연도/월/개인) + 분기 진척 리뷰 */}
       {activeTab === 'projects' && (
-        <MboQuarterlyReviewForm
-          projectId={selectedObjective?.id || 'obj-1'}
-          projectTitle={selectedObjective?.title || '선택된 목표'}
-          logs={logs}
-          feedbacks={localFeedbacks}
-          onCreateLog={(newLog) => {
-            const createdLog: ProgressLogItem = {
-              ...newLog,
-              id: `log-${Date.now()}`,
-            };
-            setLocalLogs((prev) => [createdLog, ...prev]);
-          }}
-          onCreateFeedback={(newFb) => {
-            const createdFb: FeedbackItem = {
-              ...newFb,
-              id: `fb-${Date.now()}`,
-              createdAt: new Date().toLocaleTimeString(),
-            };
-            setLocalFeedbacks((prev) => [...prev, createdFb]);
-          }}
-        />
+        <div className="space-y-4">
+          <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+            <button
+              type="button"
+              className={`h-12 rounded-lg px-4 text-xs font-bold ${
+                projectSubView === 'portfolio'
+                  ? 'bg-white text-indigo-800 shadow-xs'
+                  : 'text-slate-600'
+              }`}
+              onClick={() => setProjectSubView('portfolio')}
+            >
+              연도·월·개인 뷰
+            </button>
+            <button
+              type="button"
+              className={`h-12 rounded-lg px-4 text-xs font-bold ${
+                projectSubView === 'quarterly'
+                  ? 'bg-white text-indigo-800 shadow-xs'
+                  : 'text-slate-600'
+              }`}
+              onClick={() => setProjectSubView('quarterly')}
+            >
+              분기 진척 리뷰
+            </button>
+          </div>
+
+          {projectSubView === 'portfolio' ? (
+            <MboProjectPortfolioView
+              projects={portfolioProjects}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={(id) => {
+                setSelectedProjectId(id);
+                const proj = portfolioProjects.find((p) => p.id === id);
+                if (proj?.objectiveId) {
+                  const match = objectives.find((o) => o.id === proj.objectiveId);
+                  if (match) setSelectedObjectiveId(match.id);
+                }
+              }}
+              onOpenQuarterlyReview={(id) => {
+                setSelectedProjectId(id);
+                setProjectSubView('quarterly');
+              }}
+            />
+          ) : (
+            <MboQuarterlyReviewForm
+              projectId={selectedPortfolioProject?.id || selectedObjective?.id || 'obj-1'}
+              projectTitle={
+                selectedPortfolioProject?.title || selectedObjective?.title || '선택된 프로젝트'
+              }
+              logs={logs}
+              feedbacks={localFeedbacks}
+              onCreateLog={(newLog) => {
+                const createdLog: ProgressLogItem = {
+                  ...newLog,
+                  id: `log-${Date.now()}`,
+                };
+                setLocalLogs((prev) => [createdLog, ...prev]);
+              }}
+              onCreateFeedback={(newFb) => {
+                const createdFb: FeedbackItem = {
+                  ...newFb,
+                  id: `fb-${Date.now()}`,
+                  createdAt: new Date().toLocaleTimeString(),
+                };
+                setLocalFeedbacks((prev) => [...prev, createdFb]);
+              }}
+            />
+          )}
+        </div>
       )}
 
       {/* 탭 3: 다면 성과평가표 뷰 */}
