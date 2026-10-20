@@ -72,6 +72,7 @@ export const TENANT_SCOPED_RESOURCES = [
   "tenant_operating_hours",
   "mbo_objectives",
   "mbo_projects",
+  "project_categories",
   "mbo_progress_logs",
   "mbo_feedback_comments",
   "mbo_evaluations",

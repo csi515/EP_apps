@@ -19,4 +19,8 @@ export * from './ui/OrganizationMemberPickerModal';
 export * from './ui/MboRevisionTimelineModal';
 export * from './ui/MboReviseGoalModal';
 export * from './ui/MboProjectPortfolioView';
+export * from './ui/LabProjectsView';
+export * from './ui/ProjectCategoryManager';
 export * from './domain/projectPortfolioEngine';
+export * from './domain/projectCategoryEngine';
+export * from './services/projectCategoryService';

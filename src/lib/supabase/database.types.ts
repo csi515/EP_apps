@@ -4548,6 +4548,36 @@ export interface Database {
           },
         ];
       };
+      project_categories: {
+        Row: {
+          id: string;
+          organization_id: string;
+          category_key: string;
+          label: string;
+          color: string | null;
+          sort_order: number;
+          is_active: boolean;
+          archived_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          category_key: string;
+          label: string;
+          color?: string | null;
+          sort_order?: number;
+          is_active?: boolean;
+          archived_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['project_categories']['Insert']>;
+        Relationships: [];
+      };
       mbo_projects: {
         Row: {
           id: string;
@@ -4566,6 +4596,7 @@ export interface Database {
           approved_by: string | null;
           approved_at: string | null;
           revision: number;
+          category_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -4586,6 +4617,7 @@ export interface Database {
           approved_by?: string | null;
           approved_at?: string | null;
           revision?: number;
+          category_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -4601,6 +4633,12 @@ export interface Database {
             foreignKeyName: 'mbo_projects_objective_id_fkey';
             columns: ['objective_id'];
             referencedRelation: 'mbo_objectives';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_projects_category_id_fkey';
+            columns: ['category_id'];
+            referencedRelation: 'project_categories';
             referencedColumns: ['id'];
           },
         ];

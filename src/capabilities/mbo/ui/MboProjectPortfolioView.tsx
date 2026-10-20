@@ -5,6 +5,7 @@ import {
   Users,
   FolderKanban,
   ChevronRight,
+  Settings2,
 } from 'lucide-react';
 import {
   buildYearMonthBuckets,
@@ -15,7 +16,13 @@ import {
   type PortfolioProject,
   type PortfolioViewMode,
 } from '../domain/projectPortfolioEngine';
+import {
+  filterProjectsByCategories,
+  listActiveCategories,
+  type ProjectCategory,
+} from '../domain/projectCategoryEngine';
 import type { MboStatus } from '../domain/mboEngine';
+import { ProjectCategoryManager } from './ProjectCategoryManager';
 
 const STATUS_LABEL: Record<MboStatus, string> = {
   draft: '작성중',
@@ -39,9 +46,15 @@ const STATUS_STYLE: Record<MboStatus, string> = {
 
 export type MboProjectPortfolioViewProps = {
   projects: PortfolioProject[];
+  categories?: ProjectCategory[];
+  organizationId?: string | null;
+  title?: string;
+  subtitle?: string;
+  showQuarterlyReview?: boolean;
   selectedProjectId?: string | null;
   onSelectProject?: (projectId: string) => void;
   onOpenQuarterlyReview?: (projectId: string) => void;
+  onCategoriesChanged?: () => void;
 };
 
 function ProjectCard({
@@ -72,6 +85,18 @@ function ProjectCard({
         <p className="mt-1.5 text-[11px] text-slate-500">
           {project.ownerName} · {project.startDate} ~ {project.targetDate}
         </p>
+        {project.categoryLabel ? (
+          <span
+            className="mt-1.5 inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold text-white"
+            style={{ backgroundColor: project.categoryColor || '#64748b' }}
+          >
+            {project.categoryLabel}
+          </span>
+        ) : (
+          <span className="mt-1.5 inline-flex rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+            미분류
+          </span>
+        )}
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
           <div
             className="h-full rounded-full bg-indigo-600 transition-all"
@@ -96,9 +121,15 @@ function ProjectCard({
 
 export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = ({
   projects,
+  categories = [],
+  organizationId,
+  title = '진행 프로젝트 포트폴리오',
+  subtitle = '실행 프로젝트를 연도·월·담당자·분류 기준으로 조회합니다.',
+  showQuarterlyReview = true,
   selectedProjectId,
   onSelectProject,
   onOpenQuarterlyReview,
+  onCategoriesChanged,
 }) => {
   const fallbackYear = new Date().getFullYear();
   const years = useMemo(
@@ -109,21 +140,47 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
   const [year, setYear] = useState<number>(() => years[0] ?? fallbackYear);
   const [month, setMonth] = useState<number>(() => new Date().getMonth() + 1);
   const [ownerKey, setOwnerKey] = useState<string>('');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [includeUncategorized, setIncludeUncategorized] = useState(false);
+  const [manageOpen, setManageOpen] = useState(false);
 
-  const personBuckets = useMemo(() => groupProjectsByPerson(projects), [projects]);
-  const monthBuckets = useMemo(() => buildYearMonthBuckets(projects, year), [projects, year]);
+  const activeCategories = useMemo(() => listActiveCategories(categories), [categories]);
+
+  const categoryFiltered = useMemo(() => {
+    if (selectedCategoryIds.length === 0 && !includeUncategorized) {
+      return projects;
+    }
+    return filterProjectsByCategories(projects, selectedCategoryIds, {
+      includeUncategorized,
+    });
+  }, [projects, selectedCategoryIds, includeUncategorized]);
+
+  const personBuckets = useMemo(
+    () => groupProjectsByPerson(categoryFiltered),
+    [categoryFiltered],
+  );
+  const monthBuckets = useMemo(
+    () => buildYearMonthBuckets(categoryFiltered, year),
+    [categoryFiltered, year],
+  );
 
   const visible = useMemo(
     () =>
-      resolvePortfolioProjects(projects, viewMode, {
+      resolvePortfolioProjects(categoryFiltered, viewMode, {
         year,
         month,
         ownerKey: ownerKey || undefined,
       }),
-    [projects, viewMode, year, month, ownerKey],
+    [categoryFiltered, viewMode, year, month, ownerKey],
   );
 
   const summary = useMemo(() => summarizePortfolio(visible), [visible]);
+
+  const toggleCategory = (id: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
 
   const modeButtons: { mode: PortfolioViewMode; label: string; icon: React.ReactNode }[] = [
     { mode: 'year', label: '연도별', icon: <Calendar className="h-3.5 w-3.5" /> },
@@ -131,36 +188,92 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
     { mode: 'person', label: '개인별', icon: <Users className="h-3.5 w-3.5" /> },
   ];
 
+  const reviewHandler = showQuarterlyReview ? onOpenQuarterlyReview : undefined;
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
             <FolderKanban className="h-3.5 w-3.5" />
-            진행 프로젝트 포트폴리오
+            {title}
           </div>
-          <p className="mt-1 text-xs text-slate-500">
-            실행 프로젝트를 연도·월·담당자 기준으로 조회합니다. (MBO 기존 Capability 확장)
-          </p>
+          <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
         </div>
 
-        <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
-          {modeButtons.map((btn) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {organizationId ? (
             <button
-              key={btn.mode}
               type="button"
-              onClick={() => setViewMode(btn.mode)}
-              className={`inline-flex h-12 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all ${
-                viewMode === btn.mode
-                  ? 'bg-white text-indigo-800 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className="inline-flex h-12 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700"
+              onClick={() => setManageOpen(true)}
             >
-              {btn.icon}
-              {btn.label}
+              <Settings2 className="h-3.5 w-3.5" />
+              분류 관리
             </button>
-          ))}
+          ) : null}
+          <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
+            {modeButtons.map((btn) => (
+              <button
+                key={btn.mode}
+                type="button"
+                onClick={() => setViewMode(btn.mode)}
+                className={`inline-flex h-12 items-center gap-1.5 rounded-lg px-3 text-xs font-bold transition-all ${
+                  viewMode === btn.mode
+                    ? 'bg-white text-indigo-800 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {btn.icon}
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* 사용자 정의 분류 필터 */}
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-3">
+        <span className="text-xs font-bold text-slate-600">분류</span>
+        <button
+          type="button"
+          className={`h-12 rounded-full px-3 text-xs font-bold ${
+            selectedCategoryIds.length === 0 && !includeUncategorized
+              ? 'bg-indigo-700 text-white'
+              : 'bg-slate-100 text-slate-700'
+          }`}
+          onClick={() => {
+            setSelectedCategoryIds([]);
+            setIncludeUncategorized(false);
+          }}
+        >
+          전체
+        </button>
+        {activeCategories.map((cat) => {
+          const on = selectedCategoryIds.includes(cat.id);
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              className={`h-12 rounded-full px-3 text-xs font-bold ${
+                on ? 'text-white' : 'bg-slate-100 text-slate-700'
+              }`}
+              style={on ? { backgroundColor: cat.color || '#4f46e5' } : undefined}
+              onClick={() => toggleCategory(cat.id)}
+            >
+              {cat.label}
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          className={`h-12 rounded-full px-3 text-xs font-bold ${
+            includeUncategorized ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'
+          }`}
+          onClick={() => setIncludeUncategorized((v) => !v)}
+        >
+          미분류
+        </button>
       </div>
 
       {/* 필터 바 */}
@@ -254,9 +367,7 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
                         project={p}
                         selected={selectedProjectId === p.id}
                         onSelect={() => onSelectProject?.(p.id)}
-                        onReview={
-                          onOpenQuarterlyReview ? () => onOpenQuarterlyReview(p.id) : undefined
-                        }
+                        onReview={reviewHandler ? () => reviewHandler(p.id) : undefined}
                       />
                     ))}
                   </div>
@@ -284,7 +395,7 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
                   project={p}
                   selected={selectedProjectId === p.id}
                   onSelect={() => onSelectProject?.(p.id)}
-                  onReview={onOpenQuarterlyReview ? () => onOpenQuarterlyReview(p.id) : undefined}
+                  onReview={reviewHandler ? () => reviewHandler(p.id) : undefined}
                 />
               ))}
             </div>
@@ -317,9 +428,7 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
                     project={p}
                     selected={selectedProjectId === p.id}
                     onSelect={() => onSelectProject?.(p.id)}
-                    onReview={
-                      onOpenQuarterlyReview ? () => onOpenQuarterlyReview(p.id) : undefined
-                    }
+                    onReview={reviewHandler ? () => reviewHandler(p.id) : undefined}
                   />
                 ))}
               </div>
@@ -331,6 +440,15 @@ export const MboProjectPortfolioView: React.FC<MboProjectPortfolioViewProps> = (
             </p>
           ) : null}
         </div>
+      ) : null}
+
+      {manageOpen && organizationId ? (
+        <ProjectCategoryManager
+          organizationId={organizationId}
+          categories={categories}
+          onChanged={() => onCategoriesChanged?.()}
+          onClose={() => setManageOpen(false)}
+        />
       ) : null}
     </div>
   );

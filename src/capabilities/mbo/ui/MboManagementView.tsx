@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useList, useCreate, useUpdate } from '@refinedev/core';
 import {
   Target,
@@ -42,8 +42,13 @@ import { MboReviseGoalModal } from './MboReviseGoalModal';
 import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { MboProjectPortfolioView } from './MboProjectPortfolioView';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
+import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import { MboService } from '../services/mboService';
+import {
+  ensureDefaultProjectCategories,
+  listProjectCategories,
+} from '../services/projectCategoryService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
 
@@ -59,6 +64,9 @@ const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
     progressRate: 42,
     objectiveId: 'obj-1',
     description: 'Lab 1 합성 → 항온항습 신뢰성 → 양산 이관 게이트',
+    categoryId: 'local-research',
+    categoryLabel: '연구',
+    categoryColor: '#4f46e5',
   },
   {
     id: 'proj-sample-2',
@@ -70,6 +78,9 @@ const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
     targetDate: '2026-04-30',
     progressRate: 68,
     objectiveId: 'obj-2',
+    categoryId: 'local-quality',
+    categoryLabel: '품질',
+    categoryColor: '#059669',
   },
   {
     id: 'proj-sample-3',
@@ -81,6 +92,9 @@ const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
     targetDate: '2026-01-20',
     progressRate: 100,
     objectiveId: 'obj-1',
+    categoryId: 'local-patent',
+    categoryLabel: '특허',
+    categoryColor: '#c026d3',
   },
   {
     id: 'proj-sample-4',
@@ -91,6 +105,48 @@ const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
     startDate: '2027-01-01',
     targetDate: '2027-12-31',
     progressRate: 5,
+    categoryId: 'local-tech',
+    categoryLabel: '기술',
+    categoryColor: '#0284c7',
+  },
+];
+
+const SAMPLE_CATEGORIES: ProjectCategory[] = [
+  {
+    id: 'local-research',
+    organizationId: 'local',
+    categoryKey: 'research',
+    label: '연구',
+    color: '#4f46e5',
+    sortOrder: 10,
+    isActive: true,
+  },
+  {
+    id: 'local-quality',
+    organizationId: 'local',
+    categoryKey: 'quality',
+    label: '품질',
+    color: '#059669',
+    sortOrder: 20,
+    isActive: true,
+  },
+  {
+    id: 'local-tech',
+    organizationId: 'local',
+    categoryKey: 'technology',
+    label: '기술',
+    color: '#0284c7',
+    sortOrder: 30,
+    isActive: true,
+  },
+  {
+    id: 'local-patent',
+    organizationId: 'local',
+    categoryKey: 'patent',
+    label: '특허',
+    color: '#c026d3',
+    sortOrder: 40,
+    isActive: true,
   },
 ];
 
@@ -194,6 +250,7 @@ export const MboManagementView: React.FC = () => {
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>(SAMPLE_CATEGORIES);
   const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
   const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
@@ -225,9 +282,28 @@ export const MboManagementView: React.FC = () => {
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
 
   const { currentOrganization } = useOrganization();
+  const orgId = currentOrganization?.id ?? null;
   const { nodes: deptNodes, members: orgMembers, departmentMembers } = useOrganizationTree(
     currentOrganization?.id,
   );
+
+  const reloadProjectCategories = useCallback(async () => {
+    if (!orgId) {
+      setProjectCategories(SAMPLE_CATEGORIES);
+      return;
+    }
+    try {
+      await ensureDefaultProjectCategories(orgId);
+      const rows = await listProjectCategories(orgId, { includeArchived: true });
+      setProjectCategories(rows.length > 0 ? rows : SAMPLE_CATEGORIES);
+    } catch {
+      setProjectCategories(SAMPLE_CATEGORIES);
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    void reloadProjectCategories();
+  }, [reloadProjectCategories]);
 
   // Refine 쿼리
   const { query: objQuery } = useList<any>({
@@ -321,21 +397,33 @@ export const MboManagementView: React.FC = () => {
     return localEvaluations;
   }, [refineEvals, localEvaluations]);
 
+  const categoryById = useMemo(() => {
+    const map = new Map<string, ProjectCategory>();
+    for (const c of projectCategories) map.set(c.id, c);
+    return map;
+  }, [projectCategories]);
+
   const portfolioProjects: PortfolioProject[] = useMemo(() => {
     if (refineProjects && refineProjects.length > 0) {
-      return refineProjects.map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        ownerId: row.owner_id ?? null,
-        ownerName: row.owner_name || '미배정',
-        status: (row.status || 'draft') as MboStatus,
-        startDate: row.start_date || '2026-01-01',
-        targetDate: row.target_date || '2026-12-31',
-        progressRate: row.progress_rate ?? 0,
-        objectiveId: row.objective_id,
-        evaluationPeriod: row.evaluation_period,
-        description: row.description,
-      }));
+      return refineProjects.map((row: any) => {
+        const cat = row.category_id ? categoryById.get(row.category_id) : undefined;
+        return {
+          id: row.id,
+          title: row.title,
+          ownerId: row.owner_id ?? null,
+          ownerName: row.owner_name || '미배정',
+          status: (row.status || 'draft') as MboStatus,
+          startDate: row.start_date || '2026-01-01',
+          targetDate: row.target_date || '2026-12-31',
+          progressRate: row.progress_rate ?? 0,
+          objectiveId: row.objective_id,
+          evaluationPeriod: row.evaluation_period,
+          description: row.description,
+          categoryId: row.category_id ?? null,
+          categoryLabel: cat?.label ?? null,
+          categoryColor: cat?.color ?? null,
+        };
+      });
     }
     // DB 비어 있으면 목표 노드를 프로젝트 폴백으로 매핑 + 연구소 샘플
     const fromObjectives: PortfolioProject[] = objectives.map((obj) => ({
@@ -351,7 +439,7 @@ export const MboManagementView: React.FC = () => {
       description: obj.description,
     }));
     return [...SAMPLE_PORTFOLIO_PROJECTS, ...fromObjectives];
-  }, [refineProjects, objectives]);
+  }, [refineProjects, objectives, categoryById]);
 
   const selectedObjective = objectives.find((o) => o.id === selectedObjectiveId) || objectives[0];
   const selectedPortfolioProject =
@@ -650,6 +738,8 @@ export const MboManagementView: React.FC = () => {
           {projectSubView === 'portfolio' ? (
             <MboProjectPortfolioView
               projects={portfolioProjects}
+              categories={projectCategories}
+              organizationId={orgId}
               selectedProjectId={selectedProjectId}
               onSelectProject={(id) => {
                 setSelectedProjectId(id);
@@ -663,6 +753,7 @@ export const MboManagementView: React.FC = () => {
                 setSelectedProjectId(id);
                 setProjectSubView('quarterly');
               }}
+              onCategoriesChanged={() => void reloadProjectCategories()}
             />
           ) : (
             <MboQuarterlyReviewForm

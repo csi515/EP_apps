@@ -19,6 +19,10 @@ export interface PortfolioProject {
   objectiveId?: string | null;
   evaluationPeriod?: string | null;
   description?: string | null;
+  /** 테넌트 사용자 정의 분류 (project_categories.id) */
+  categoryId?: string | null;
+  categoryLabel?: string | null;
+  categoryColor?: string | null;
 }
 
 export interface PortfolioSummary {

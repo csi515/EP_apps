@@ -28,6 +28,7 @@ import {
   LayoutGrid,
   ShieldAlert,
   FileCheck,
+  FolderKanban,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -219,6 +220,9 @@ const DigitalGuestbookView = lazy(() =>
 );
 const MboManagementView = lazy(() =>
   import('@/capabilities/mbo').then((m) => ({ default: m.MboManagementView }))
+);
+const LabProjectsView = lazy(() =>
+  import('@/capabilities/mbo').then((m) => ({ default: m.LabProjectsView }))
 );
 const QualityInspectionManagementView = lazy(() =>
   import('@/capabilities/quality_inspection').then((m) => ({ default: m.QualityInspectionManagementView }))
@@ -609,6 +613,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('mbo')) {
       extendedItems.push({ tab: 'mbo', label: '목표관리(MBO)', icon: <Award className="w-4 h-4" /> });
+      extendedItems.push({ tab: 'lab-projects', label: '진행 프로젝트', icon: <FolderKanban className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('quality_inspection')) {
       extendedItems.push({ tab: 'quality', label: '품질 검사(QC)', icon: <CheckCircle2 className="w-4 h-4" /> });
@@ -1011,6 +1016,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     mbo: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">목표관리(MBO) 화면을 불러오는 중...</div>}>
         <MboManagementView />
+      </Suspense>
+    ),
+    'lab-projects': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">진행 프로젝트 화면을 불러오는 중...</div>}>
+        <LabProjectsView />
       </Suspense>
     ),
     quality: () => (

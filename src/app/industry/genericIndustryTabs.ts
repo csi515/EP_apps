@@ -62,6 +62,7 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   feedbacks: ['feedbacks'],
   incidents: ['feedbacks'],
   mbo: ['mbo'],
+  'lab-projects': ['mbo'],
   'change-management': ['change_management'],
   'leave-management': ['leave_management'],
 };
@@ -581,6 +582,13 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     tab: 'mbo',
     label: '목표관리(MBO)',
     description: '조직 및 개인 목표 계층화, 계획 승인 절차, 일자별 실행 피드 및 성과 다각 평가',
+    tier: 'tier1_ready',
+    primaryCapability: 'mbo',
+  },
+  'lab-projects': {
+    tab: 'lab-projects',
+    label: '진행 프로젝트',
+    description: '연도·월·개인 뷰와 사용자 정의 분류(연구/품질/기술 등) 필터 — MBO 평가 허브와 별도',
     tier: 'tier1_ready',
     primaryCapability: 'mbo',
   },
