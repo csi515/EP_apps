@@ -55,6 +55,7 @@ import { MyPassView } from "./pages/customer/MyPassView";
 import { RolesPage } from "./pages/settings/RolesPage";
 import { AcceptStaffInvitePage } from "./pages/invite/AcceptStaffInvitePage";
 import { QuickSetupPage } from "./pages/onboarding/QuickSetupPage";
+import { OrganizationTreePage } from "./pages/organization/OrganizationTreePage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
@@ -159,7 +160,7 @@ const CAPABILITY_ROUTE_PATHS = [
 ] as const;
 
 const RefineApp: React.FC = () => {
-  const { currentOrganization, activeCapabilities } = useOrganization();
+  const { currentOrganization, activeCapabilities, hiddenCapabilities } = useOrganization();
   const industryType = currentOrganization?.industry_type;
 
   const currentI18nProvider = useMemo(() => {
@@ -174,6 +175,7 @@ const RefineApp: React.FC = () => {
       industry: industryType,
       i18n: currentI18nProvider,
       activeCapabilities,
+      hiddenCapabilities,
     });
     const existingNames = new Set(base.map((r) => r.name));
     const extra: typeof base = [];
@@ -198,7 +200,7 @@ const RefineApp: React.FC = () => {
       });
     }
     return [...base, ...extra];
-  }, [industryType, currentI18nProvider, activeCapabilities]);
+  }, [industryType, currentI18nProvider, activeCapabilities, hiddenCapabilities]);
 
   return (
     <Refine
@@ -262,6 +264,7 @@ const RefineApp: React.FC = () => {
             <Route index element={<IndustryAppRouter />} />
             <Route path="/workspace/settings/roles" element={<DynamicRoleSettingsPage />} />
             <Route path="/workspace/members" element={<MemberList />} />
+            <Route path="/workspace/organization" element={<OrganizationTreePage />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
             <Route path="/dashboard" element={<DashboardPage />} />

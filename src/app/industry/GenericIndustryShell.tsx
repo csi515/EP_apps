@@ -24,6 +24,9 @@ import {
   Award,
   Car,
   AlertTriangle,
+  Wrench,
+  LayoutGrid,
+  ShieldAlert,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -39,6 +42,9 @@ const AttendanceView = lazy(() =>
 );
 const BookingView = lazy(() =>
   import('@/capabilities/booking/ui/BookingCalendarView').then((m) => ({ default: m.BookingCalendarView }))
+);
+const SeatRoomView = lazy(() =>
+  import('@/capabilities/seat_room').then((m) => ({ default: m.SeatRoomManagementView }))
 );
 const PassesView = lazy(() =>
   import('@/pages/passes/list').then((m) => ({ default: m.PassesListPage }))
@@ -498,6 +504,18 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('rental_equipment')) {
       extendedItems.push({ tab: 'rentals', label: '장비 대여', icon: <Clock className="w-4 h-4" /> });
     }
+    if (enabledCaps.includes('equipment_lifecycle')) {
+      extendedItems.push({ tab: 'equipment-lifecycle', label: '장비 수명주기', icon: <Wrench className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('seat_room')) {
+      extendedItems.push({ tab: 'seat-rooms', label: '공간·좌석', icon: <LayoutGrid className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('hygiene_haccp_log')) {
+      extendedItems.push({ tab: 'hygiene-log', label: '위생·HACCP', icon: <ClipboardList className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('sop_risk_assessment')) {
+      extendedItems.push({ tab: 'sop-risk', label: 'SOP·위험성평가', icon: <ShieldAlert className="w-4 h-4" /> });
+    }
     if (enabledCaps.includes('maintenance_checklist')) {
       extendedItems.push({ tab: 'maintenance', label: '시설 점검', icon: <ClipboardList className="w-4 h-4" /> });
     }
@@ -672,7 +690,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     ),
     'seat-rooms': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">공간·좌석 현황을 불러오는 중...</div>}>
-        <BookingView />
+        <SeatRoomView />
       </Suspense>
     ),
     attendance: () => (

@@ -37,6 +37,13 @@ import { MboEvaluationMatrixView, type EvaluationItem } from './MboEvaluationMat
 import { TeamWeeklyWorkloadView } from './TeamWeeklyWorkloadView';
 import { MboYearlyCapacityForecastView } from './MboYearlyCapacityForecastView';
 import { MboCycleSettingsCard } from './MboCycleSettingsCard';
+import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
+import { MboReviseGoalModal } from './MboReviseGoalModal';
+import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
+import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
+import { MboService } from '../services/mboService';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
 
 // 로컬 폴백 샘플 데이터
 const INITIAL_OBJECTIVES: ObjectiveNode[] = [
@@ -160,6 +167,16 @@ export const MboManagementView: React.FC = () => {
   const [newStartDate, setNewStartDate] = useState('2026-04-01');
   const [newTargetDate, setNewTargetDate] = useState('2026-06-30');
   const [newWeight, setNewWeight] = useState(100);
+  const [newVisibility, setNewVisibility] = useState<MboVisibilityType>('PRIVATE');
+  const [shareMemberIds, setShareMemberIds] = useState<string[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
+  const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
+
+  const { currentOrganization } = useOrganization();
+  const { nodes: deptNodes, members: orgMembers, departmentMembers } = useOrganizationTree(
+    currentOrganization?.id,
+  );
 
   // Refine 쿼리
   const { query: objQuery } = useList<any>({
@@ -199,11 +216,19 @@ export const MboManagementView: React.FC = () => {
         targetDate: row.target_date || '2026-12-31',
         weight: row.weight ?? 100,
         progressRate: row.progress_rate ?? 0,
-        revision: row.revision ?? 1,
+        revision: row.revision_count ?? row.revision ?? 1,
+        isRevised: Boolean(row.is_revised),
+        revisionCount: row.revision_count ?? row.revision ?? 1,
+        targetValue: row.target_value ?? row.weight ?? null,
         rejectionReason: row.rejection_reason,
       }));
     }
-    return localObjectives;
+    return localObjectives.map((obj) => ({
+      ...obj,
+      isRevised: obj.revision > 1,
+      revisionCount: obj.revision,
+      targetValue: obj.weight,
+    }));
   }, [refineObjectives, localObjectives]);
 
   const logs: ProgressLogItem[] = useMemo(() => {
@@ -297,7 +322,7 @@ export const MboManagementView: React.FC = () => {
       mutateCreate(
         {
           resource: 'mbo_objectives',
-          values: {
+            values: {
             parent_id: selectedObjectiveId === 'none' ? null : selectedObjectiveId,
             level: newLevel,
             department_name: newDept,
@@ -309,13 +334,20 @@ export const MboManagementView: React.FC = () => {
             weight: newWeight,
             progress_rate: 0,
             status: 'draft',
+            visibility_type: newVisibility,
           },
         },
         {
-          onSuccess: () => {
+          onSuccess: (result) => {
+            const createdId = (result as { data?: { id?: string } })?.data?.id;
+            if (createdId && newVisibility === 'PARTIAL' && shareMemberIds.length > 0) {
+              void MboService.replaceGoalShares(createdId, shareMemberIds).catch(() => undefined);
+            }
             objQuery?.refetch();
             setShowCreateModal(false);
             setNewTitle('');
+            setShareMemberIds([]);
+            setNewVisibility('PRIVATE');
             showToast('신규 MBO 목표가 DB에 등록되었습니다.', 'success');
           },
           onError: () => {
@@ -489,6 +521,8 @@ export const MboManagementView: React.FC = () => {
           onRequestApproval={(id) => handleTransitionStatus(id, 'submitted')}
           onApprove={(id) => handleTransitionStatus(id, 'approved')}
           onOpenRejectModal={(id) => setShowRejectModal(id)}
+          onOpenRevisionHistory={(id) => setHistoryGoalId(id)}
+          onOpenRevise={(id) => setReviseGoalId(id)}
         />
       )}
 
@@ -648,17 +682,47 @@ export const MboManagementView: React.FC = () => {
                 </div>
               </div>
 
+              <fieldset className="space-y-2 rounded-xl border border-slate-200 p-3">
+                <legend className="px-1 text-xs font-bold text-slate-700">공개 범위</legend>
+                {(
+                  [
+                    ['PUBLIC', '전사 공개 (PUBLIC)'],
+                    ['PRIVATE', '비공개 (본인 및 평가자만, PRIVATE)'],
+                    ['PARTIAL', '특정 인원에게만 부분 공개 (PARTIAL)'],
+                  ] as const
+                ).map(([value, label]) => (
+                  <label key={value} className="flex min-h-12 items-center gap-2 text-xs">
+                    <input
+                      type="radio"
+                      name="mbo-visibility"
+                      checked={newVisibility === value}
+                      onChange={() => setNewVisibility(value)}
+                    />
+                    {label}
+                  </label>
+                ))}
+                {newVisibility === 'PARTIAL' ? (
+                  <button
+                    type="button"
+                    className="min-h-12 w-full rounded-xl border border-slate-300 text-xs font-bold"
+                    onClick={() => setPickerOpen(true)}
+                  >
+                    + 사내 공개 대상자 선택 ({shareMemberIds.length}명)
+                  </button>
+                ) : null}
+              </fieldset>
+
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-500"
+                  className="min-h-12 px-4 text-xs font-semibold text-slate-500"
                 >
                   취소
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs"
+                  className="min-h-12 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-indigo-700"
                 >
                   등록 완료
                 </button>
@@ -667,6 +731,56 @@ export const MboManagementView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <OrganizationMemberPickerModal
+        open={pickerOpen}
+        departments={deptNodes.map((node) => ({
+          id: node.id,
+          name: node.name,
+          parentId: node.parentId,
+        }))}
+        members={orgMembers.map((member) => {
+          const dm = departmentMembers.find((row) => row.member_id === member.id);
+          const dept = deptNodes.find((node) => node.id === dm?.department_id);
+          return {
+            id: member.id,
+            userId: member.user_id,
+            displayName: member.role === 'owner' ? '사업주' : member.user_id.slice(0, 8),
+            departmentId: dm?.department_id ?? null,
+            departmentName: dept?.name,
+          };
+        })}
+        selectedIds={shareMemberIds}
+        onChange={setShareMemberIds}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={() => setPickerOpen(false)}
+      />
+
+      <MboRevisionTimelineModal
+        open={Boolean(historyGoalId)}
+        goalId={historyGoalId || ''}
+        currentTargetValue={objectives.find((o) => o.id === historyGoalId)?.targetValue}
+        currentDueDate={objectives.find((o) => o.id === historyGoalId)?.targetDate}
+        onClose={() => setHistoryGoalId(null)}
+      />
+
+      <MboReviseGoalModal
+        open={Boolean(reviseGoalId)}
+        goalId={reviseGoalId || ''}
+        currentTargetValue={objectives.find((o) => o.id === reviseGoalId)?.targetValue}
+        currentDueDate={objectives.find((o) => o.id === reviseGoalId)?.targetDate}
+        onClose={() => setReviseGoalId(null)}
+        onRevised={() => {
+          void objQuery?.refetch?.();
+          setLocalObjectives((prev) =>
+            prev.map((obj) =>
+              obj.id === reviseGoalId
+                ? { ...obj, revision: obj.revision + 1, isRevised: true, revisionCount: obj.revision + 1 }
+                : obj,
+            ),
+          );
+        }}
+      />
 
       {/* 반려 사유 모달 */}
       {showRejectModal && (

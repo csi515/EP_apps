@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Wrench,
   AlertTriangle,
@@ -10,6 +10,7 @@ import {
   DollarSign,
   ShieldAlert,
 } from 'lucide-react';
+import { useOpsTable } from '@/hooks/useOpsTable';
 import {
   EquipmentAsset,
   evaluateRepairVsReplaceDecision,
@@ -17,58 +18,45 @@ import {
   reportEquipmentBreakdown,
 } from '../domain/equipmentLifecycleEngine';
 
+type LifecycleRow = {
+  id: string;
+  name: string;
+  status: string;
+  meta: Partial<EquipmentAsset> & Record<string, unknown>;
+  department_id?: string | null;
+};
+
+function toAsset(row: LifecycleRow): EquipmentAsset {
+  return {
+    id: row.id,
+    name: row.name,
+    category: (row.meta.category as EquipmentAsset['category']) || 'fitness',
+    purchaseCost: Number(row.meta.purchaseCost ?? 0),
+    usefulLifeMonths: Number(row.meta.usefulLifeMonths ?? 60),
+    installedDate: String(row.meta.installedDate ?? new Date().toISOString()),
+    lastMaintenanceDate: String(row.meta.lastMaintenanceDate ?? new Date().toISOString()),
+    maintenanceIntervalMonths: Number(row.meta.maintenanceIntervalMonths ?? 6),
+    cumulativeRepairCost: Number(row.meta.cumulativeRepairCost ?? 0),
+    status: (row.status as EquipmentAsset['status']) || 'good',
+    breakdownNotes: row.meta.breakdownNotes as string | undefined,
+  };
+}
+
 export function EquipmentLifecycleManagementView() {
-  const [assets, setAssets] = useState<EquipmentAsset[]>([
-    {
-      id: 'eq_sample_1',
-      name: '캐딜락 리포머 1호 (스프링 세트)',
-      category: 'fitness',
-      purchaseCost: 6500000,
-      usefulLifeMonths: 60,
-      installedDate: '2024-03-01T00:00:00Z',
-      lastMaintenanceDate: '2026-08-01T00:00:00Z',
-      maintenanceIntervalMonths: 6,
-      cumulativeRepairCost: 800000,
-      status: 'good',
-    },
-    {
-      id: 'eq_sample_2',
-      name: '라마르조코 2그룹 에스프레소 머신',
-      category: 'cafe',
-      purchaseCost: 14000000,
-      usefulLifeMonths: 48,
-      installedDate: '2022-05-01T00:00:00Z',
-      lastMaintenanceDate: '2026-01-10T00:00:00Z',
-      maintenanceIntervalMonths: 3,
-      cumulativeRepairCost: 7500000,
-      status: 'overdue',
-    },
-    {
-      id: 'eq_sample_3',
-      name: '정비용 4주식 유압 리프트',
-      category: 'auto',
-      purchaseCost: 18000000,
-      usefulLifeMonths: 120,
-      installedDate: '2023-01-15T00:00:00Z',
-      lastMaintenanceDate: '2026-09-01T00:00:00Z',
-      maintenanceIntervalMonths: 6,
-      cumulativeRepairCost: 1500000,
-      status: 'good',
-    },
-    {
-      id: 'eq_sample_4',
-      name: '듀얼 케이블 크로스오버 머신',
-      category: 'fitness',
-      purchaseCost: 8000000,
-      usefulLifeMonths: 72,
-      installedDate: '2023-06-01T00:00:00Z',
-      lastMaintenanceDate: '2026-07-01T00:00:00Z',
-      maintenanceIntervalMonths: 3,
-      cumulativeRepairCost: 2100000,
-      status: 'breakdown',
-      breakdownNotes: '우측 와이어 피복 벗겨짐 및 풀리 유격 발생 (사용 금지 조치)',
-    },
-  ]);
+  const { rows, update } = useOpsTable<LifecycleRow>('equipment_lifecycle');
+  const assets = useMemo(() => rows.map(toAsset), [rows]);
+  const setAssets = (updater: EquipmentAsset[] | ((prev: EquipmentAsset[]) => EquipmentAsset[])) => {
+    const next = typeof updater === 'function' ? updater(assets) : updater;
+    void Promise.all(
+      next.map((asset) =>
+        update(asset.id, {
+          name: asset.name,
+          status: asset.status,
+          meta: asset as unknown as Record<string, unknown>,
+        }),
+      ),
+    );
+  };
 
   // 고장 핫라인 신고 모달
   const [reportingAsset, setReportingAsset] = useState<EquipmentAsset | null>(null);

@@ -443,4 +443,73 @@ export class MboService {
     if (error) throw error;
     return data as MboEvaluationRow;
   }
+
+  /** 원자적 목표 수정 (스냅샷 + 플래그 + 감사 로그) */
+  static async reviseGoal(input: {
+    goalId: string;
+    newTargetValue: number;
+    newDueDate: string;
+    unmetReason: string;
+    revisionReason: string;
+  }): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client.rpc('revise_mbo_goal' as never, {
+      p_goal_id: input.goalId,
+      p_new_target_value: input.newTargetValue,
+      p_new_due_date: input.newDueDate,
+      p_unmet_reason: input.unmetReason,
+      p_revision_reason: input.revisionReason,
+    } as never);
+    if (error) throw new Error(error.message);
+  }
+
+  static async listGoalRevisions(goalId: string): Promise<
+    Array<{
+      id: string;
+      previous_target_value: number | null;
+      previous_due_date: string | null;
+      unmet_reason: string | null;
+      revision_reason: string;
+      revised_by: string;
+      created_at: string;
+    }>
+  > {
+    const client = getCoreClient();
+    const { data, error } = await client
+      .from('mbo_goal_revisions' as never)
+      .select('*')
+      .eq('goal_id', goalId)
+      .order('created_at', { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as Array<{
+      id: string;
+      previous_target_value: number | null;
+      previous_due_date: string | null;
+      unmet_reason: string | null;
+      revision_reason: string;
+      revised_by: string;
+      created_at: string;
+    }>;
+  }
+
+  static async replaceGoalShares(goalId: string, memberIds: string[]): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client.rpc('replace_mbo_goal_shares' as never, {
+      p_goal_id: goalId,
+      p_member_ids: memberIds,
+    } as never);
+    if (error) throw new Error(error.message);
+  }
+
+  static async updateGoalVisibility(
+    goalId: string,
+    visibilityType: 'PUBLIC' | 'PRIVATE' | 'PARTIAL',
+  ): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client
+      .from('mbo_goals' as never)
+      .update({ visibility_type: visibilityType, updated_at: new Date().toISOString() } as never)
+      .eq('id', goalId);
+    if (error) throw new Error(error.message);
+  }
 }

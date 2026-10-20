@@ -56,6 +56,9 @@ import {
 } from '@/core/presets/operationBundles';
 import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
 import { getCapabilityDisplayName } from '@/capabilities';
+import { OrganizationOnboardingCard } from '@/pages/organization/OrganizationOnboardingCard';
+import { mergeOpsRuntimeSettings } from '@/core/capabilities/opsRuntimeSettings';
+import { shouldAskDepartmentSetup } from '@/core/organizations/departmentScope';
 
 interface QuickSetupFormData {
   name: string;
@@ -223,6 +226,7 @@ export const QuickSetupPage: React.FC = () => {
   const { switchTenant } = useTenant();
 
   const [selectedIndustry, setSelectedIndustry] = useState<string>('piano');
+  const [setupDepartments, setSetupDepartments] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
@@ -508,7 +512,7 @@ export const QuickSetupPage: React.FC = () => {
         return r;
       });
 
-      const payload = buildPresetPayload(selectedIndustry, {
+      const basePayload = buildPresetPayload(selectedIndustry, {
         ...data,
         name: trimmedName,
         roles: effectiveRoles,
@@ -517,6 +521,16 @@ export const QuickSetupPage: React.FC = () => {
         operating_hours: operatingHours,
         active_capabilities: activeCapabilitiesPayload,
       });
+      const payload = {
+        ...basePayload,
+        ...mergeOpsRuntimeSettings((basePayload as Record<string, unknown>) ?? {}, {
+          turnaround_buffer_minutes: Number((data as { turnaround_buffer_minutes?: number }).turnaround_buffer_minutes) || 15,
+          seat_capacity_default: rooms[0]?.capacity || 1,
+          require_cleaning_checklist: true,
+        }),
+        org_chart_enabled: shouldAskDepartmentSetup(selectedIndustry, activePreset?.category) && setupDepartments.length > 0,
+        setup_departments: shouldAskDepartmentSetup(selectedIndustry, activePreset?.category) ? setupDepartments : [],
+      };
 
       const { data: rpcResult, error } = await getCoreClient().rpc(
         'create_organization_with_preset',
@@ -914,6 +928,12 @@ export const QuickSetupPage: React.FC = () => {
                   </div>
                 )}
               </div>
+              <OrganizationOnboardingCard
+                presetId={selectedIndustry}
+                category={activePreset?.category}
+                departments={setupDepartments}
+                onChange={setSetupDepartments}
+              />
 
               {/* 선택된 업종 및 활성화 Capability 요약 배너 */}
               <div className="mt-4 p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

@@ -87,5 +87,19 @@ assert.ok(pianoAdHocNames.has('workplace_policies'), 'workplace_policies must be
 assert.ok(pianoAdHocNames.has('rental_equipments'), 'rental_equipments must be dynamically provisioned when activeCapabilities includes rental_equipment');
 console.log('✓ Ad-Hoc dynamic capability provisioning (Zero-refresh) passed');
 
+// 7. hidden_capabilities filters Refine resources (MenuVisibility parity)
+const pianoHidden = provisionIndustryResources({
+  industry: 'piano',
+  i18n: dummyI18n,
+  activeCapabilities: ['rental_equipment'],
+  hiddenCapabilities: ['rental_equipment'],
+});
+assert.equal(
+  pianoHidden.some((r) => r.name === 'rental_equipments'),
+  false,
+  'hidden rental_equipment must remove rental_equipments from Refine resources',
+);
+console.log('✓ hidden_capabilities Refine filter passed');
+
 console.log('[TEST] resourceProvisioner ALL TESTS PASSED!');
 

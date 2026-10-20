@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { StorageService } from '@/services/storage';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { insertOpsRow, listOpsRows } from '@/core/organizations/services/opsPersistenceService';
 import {
   selectActiveConsentTemplate,
   validateSignatureMetadata,
@@ -23,8 +25,6 @@ import {
   type ConsentAuditRecord,
   type SignatureMetadata,
 } from '../domain/safetyConsentEngine';
-
-const STORAGE_KEY_CONSENTS = 'moa_consent_audit_records';
 
 const DEFAULT_TEMPLATES: ConsentTemplate[] = [
   {
@@ -75,30 +75,40 @@ const DEFAULT_TEMPLATES: ConsentTemplate[] = [
 ];
 
 export const SafetyConsentManagementView: React.FC = () => {
+  const { currentOrganization } = useOrganization();
+  const orgId = currentOrganization?.id ?? null;
   const [auditRecords, setAuditRecords] = useState<ConsentAuditRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewRecord, setPreviewRecord] = useState<ConsentAuditRecord | null>(null);
 
-  // 로컬 스토리지에서 감사 기록 로드
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_CONSENTS);
-      if (saved) {
-        setAuditRecords(JSON.parse(saved));
-      }
-    } catch {
-      // 로드 실패 시 빈 배열 유지
+    if (!orgId) {
+      setAuditRecords([]);
+      return;
     }
-  }, []);
+    void listOpsRows<{ payload?: ConsentAuditRecord }>('safety_consent_signatures', orgId)
+      .then((rows) => {
+        setAuditRecords(
+          rows
+            .map((row) => row.payload)
+            .filter((payload): payload is ConsentAuditRecord => Boolean(payload && payload.signerName)),
+        );
+      })
+      .catch(() => setAuditRecords([]));
+  }, [orgId]);
 
   const saveAuditRecords = (next: ConsentAuditRecord[]) => {
     setAuditRecords(next);
-    try {
-      localStorage.setItem(STORAGE_KEY_CONSENTS, JSON.stringify(next));
-    } catch {
-      // 무시
-    }
+    if (!orgId) return;
+    const latest = next[0];
+    if (!latest) return;
+    void insertOpsRow('safety_consent_signatures', orgId, {
+      consent_id: latest.templateId || latest.id,
+      signer_name: latest.signerName,
+      signed_at: latest.signedAt || new Date().toISOString(),
+      payload: latest,
+    });
   };
 
   const filteredRecords = useMemo(() => {

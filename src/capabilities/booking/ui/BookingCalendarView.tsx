@@ -34,6 +34,7 @@ import {
 import { executeBookingCreate } from './executeBookingCreate';
 import { mergeScopedBookingsWithInbox, useBookingFilters } from './useBookingFilters';
 import { useBookingForm } from './useBookingForm';
+import { enqueueTurnaroundAfterBookingEnd } from '@/capabilities/booking/domain/bookingTurnaroundBridge';
 
 export const BookingCalendarView: React.FC = () => {
   const { industry, isOwner, isAdmin, isStaff } = usePermissions();
@@ -651,6 +652,26 @@ export const BookingCalendarView: React.FC = () => {
         'error'
       );
       return;
+    }
+    if (
+      status === 'completed' &&
+      currentOrganization?.id &&
+      (booking.roomId || result.roomId)
+    ) {
+      const roomId = booking.roomId || result.roomId || '';
+      const roomName =
+        treatmentRooms.find((room) => room.id === roomId)?.name || roomId || '공간';
+      void enqueueTurnaroundAfterBookingEnd({
+        organizationId: currentOrganization.id,
+        roomId,
+        roomName,
+        bookingId: booking.id,
+        serviceStartAt: booking.startsAt,
+        serviceEndAt: booking.endsAt,
+        organizationSettings: (currentOrganization.settings ?? null) as Record<string, unknown> | null,
+      }).catch(() => {
+        /* 턴어라운드 생성 실패는 예약 완료를 막지 않음 */
+      });
     }
     const notice = bookingChangeNotice(booking, status, bookingUi.sessionNoun || '예약');
     const shouldNotify = bookingUi.notifyOnStatus.includes(status);

@@ -1135,7 +1135,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       { name: '수석강사', rank_order: 2, permissions: ['booking:*', 'passes:*'] },
       { name: '강사', rank_order: 3, permissions: ['attendance:checkin', 'booking:view'] },
     ],
-    readinessLevel: 'persisted',
+    readinessLevel: 'verified',
   },
 
   yoga_studio: {

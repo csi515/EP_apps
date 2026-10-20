@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useOpsTable } from '@/hooks/useOpsTable';
 import {
   WorkStandardSOP,
   HazardRiskItem,
@@ -7,8 +7,6 @@ import {
   evaluateRiskReduction,
   calculateSafetyAuditSummary,
 } from '../domain/sopRiskAssessmentEngine';
-
-const STORAGE_KEY_HAZARDS = 'moa_sop_risk_hazards';
 
 const INITIAL_SOPS: WorkStandardSOP[] = [
   {
@@ -111,27 +109,46 @@ const INITIAL_HAZARDS: HazardRiskItem[] = [
   },
 ];
 
+type SopRow = {
+  id: string;
+  title: string;
+  hazard_level: string;
+  controls: HazardRiskItem[];
+  status: string;
+  department_id?: string | null;
+};
+
 export const SopRiskAssessmentView: React.FC = () => {
   const [sops] = useState<WorkStandardSOP[]>(INITIAL_SOPS);
   const [selectedSop, setSelectedSop] = useState<WorkStandardSOP>(INITIAL_SOPS[0]);
-  const storageKey = getTenantStorageKey(STORAGE_KEY_HAZARDS);
+  const { rows, create, update, reload } = useOpsTable<SopRow>('sop_risk_assessment');
 
-  const [hazards, setHazards] = useState<HazardRiskItem[]>(() => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      return saved ? JSON.parse(saved) : INITIAL_HAZARDS;
-    } catch {
-      return INITIAL_HAZARDS;
+  const hazards = useMemo(
+    () => rows.flatMap((row) => (Array.isArray(row.controls) ? row.controls : [])),
+    [rows],
+  );
+
+  const setHazards = (next: HazardRiskItem[] | ((prev: HazardRiskItem[]) => HazardRiskItem[])) => {
+    const resolved = typeof next === 'function' ? next(hazards) : next;
+    const primary = rows[0];
+    if (primary) {
+      void update(primary.id, { controls: resolved, title: primary.title || '위험성평가' });
+    } else {
+      void create({
+        title: '위험성평가',
+        hazard_level: 'medium',
+        controls: resolved,
+        status: 'open',
+        department_id: null,
+      }).then(() => reload());
     }
-  });
+  };
 
   useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(hazards));
-    } catch (e) {
-      console.warn('Failed to save hazards to tenant cache:', e);
+    if (rows.length === 0 && INITIAL_HAZARDS.length > 0) {
+      /* DB가 비어 있으면 엔진 시드를 자동 적재하지 않고 빈 목록으로 시작 */
     }
-  }, [hazards, storageKey]);
+  }, [rows.length]);
 
   const [activeTab, setActiveTab] = useState<'sop' | 'matrix' | 'controls'>('sop');
 

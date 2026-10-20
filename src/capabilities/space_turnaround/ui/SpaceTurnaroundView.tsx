@@ -37,8 +37,11 @@ export const SpaceTurnaroundView: React.FC = () => {
   const { mutate: updateTurnaround } = useUpdate();
 
   const handleAction = (row: TurnaroundRow, action: 'checkout' | 'start_cleaning' | 'complete_cleaning' | 'checkin_next') => {
-    const updatedChecklist = row.checklist.map((c) => ({ ...c, done: true })); // 간이 완료 처리
-    const result = transitionTurnaroundState(row.status, action, updatedChecklist);
+    const checklistForAction =
+      action === 'complete_cleaning'
+        ? row.checklist
+        : row.checklist;
+    const result = transitionTurnaroundState(row.status, action, checklistForAction);
 
     if (!result.allowed) {
       alert(result.error);
@@ -51,7 +54,7 @@ export const SpaceTurnaroundView: React.FC = () => {
         id: row.id,
         values: {
           status: result.nextStatus,
-          checklist: updatedChecklist,
+          checklist: checklistForAction,
           cleaned_at: result.cleanedAt ?? null,
           updated_at: new Date().toISOString(),
         },
@@ -107,6 +110,35 @@ export const SpaceTurnaroundView: React.FC = () => {
                     <strong>{new Date(room.buffer_end_at).toLocaleTimeString()}</strong>
                   </div>
                 </div>
+
+                {room.status === 'cleaning_in_progress' && room.checklist?.length > 0 ? (
+                  <ul className="space-y-1 text-xs text-gray-700">
+                    {room.checklist.map((item) => (
+                      <li key={item.id}>
+                        <label className="inline-flex min-h-11 items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(item.done)}
+                            onChange={() => {
+                              const next = room.checklist.map((entry) =>
+                                entry.id === item.id ? { ...entry, done: !entry.done } : entry,
+                              );
+                              updateTurnaround(
+                                {
+                                  resource: 'space_turnarounds',
+                                  id: room.id,
+                                  values: { checklist: next, updated_at: new Date().toISOString() },
+                                },
+                                { onSuccess: () => refetch() },
+                              );
+                            }}
+                          />
+                          {item.item}
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
 
                 <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                   {room.status === 'in_service' && (

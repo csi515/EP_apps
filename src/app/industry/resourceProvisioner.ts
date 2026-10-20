@@ -46,6 +46,7 @@ import {
 } from '@/app/presets/presetAssembler';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import type { PresetCapabilityId } from '@/core/presets/types';
+import { resourceHiddenByCapabilities } from '@/core/capabilities/opsCapabilityReadiness';
 import { createLogger } from '@/core/logging';
 
 const logger = createLogger('ResourceProvisioner');
@@ -92,6 +93,8 @@ export interface ProvisionResourcesOptions {
   i18n: MoaI18nProvider;
   /** 사업주가 스토어/설정에서 추가로 활성화한 Capability 목록 (0초 실시간 메뉴 재조립용) */
   activeCapabilities?: readonly string[];
+  /** MenuVisibilitySettingsView와 동일하게 Refine 사이드바에서 숨길 Capability id */
+  hiddenCapabilities?: readonly string[];
 }
 
 /**
@@ -107,7 +110,7 @@ export interface ProvisionResourcesOptions {
 export function provisionIndustryResources(
   options: ProvisionResourcesOptions
 ): ResourceProps[] {
-  const { industry, i18n, activeCapabilities = [] } = options;
+  const { industry, i18n, activeCapabilities = [], hiddenCapabilities = [] } = options;
   const capabilities = getIndustryCapabilities(industry);
 
   const resources: ResourceProps[] = [
@@ -236,5 +239,8 @@ export function provisionIndustryResources(
     }
   }
 
-  return resources;
+  if (hiddenCapabilities.length === 0) {
+    return resources;
+  }
+  return resources.filter((resource) => !resourceHiddenByCapabilities(resource.name, hiddenCapabilities));
 }

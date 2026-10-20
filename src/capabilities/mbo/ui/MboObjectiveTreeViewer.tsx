@@ -30,6 +30,9 @@ export interface ObjectiveNode {
   weight: number;
   progressRate: number;
   revision: number;
+  isRevised?: boolean;
+  revisionCount?: number;
+  targetValue?: number | null;
   rejectionReason?: string;
 }
 
@@ -41,6 +44,8 @@ interface MboObjectiveTreeViewerProps {
   onRequestApproval: (id: string) => void;
   onApprove: (id: string) => void;
   onOpenRejectModal: (id: string) => void;
+  onOpenRevisionHistory?: (id: string) => void;
+  onOpenRevise?: (id: string) => void;
 }
 
 export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
@@ -51,6 +56,8 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
   onRequestApproval,
   onApprove,
   onOpenRejectModal,
+  onOpenRevisionHistory,
+  onOpenRevise,
 }) => {
   // 전사 가중 진척률
   const overallProgress = calculateWeightedObjectiveProgress(
@@ -149,6 +156,18 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
+                  {(obj.isRevised || (obj.revisionCount ?? obj.revision) > 1) && (
+                    <button
+                      type="button"
+                      className="min-h-12 rounded-full bg-amber-50 px-3 text-[11px] font-bold text-amber-800"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenRevisionHistory?.(obj.id);
+                      }}
+                    >
+                      ⚠️ {(obj.revisionCount ?? obj.revision)}회 수정됨
+                    </button>
+                  )}
                   {getStatusBadge(obj.status)}
                   <span className="text-[10px] text-slate-400 font-mono">v{obj.revision}</span>
                 </div>
@@ -188,6 +207,15 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                 </span>
 
                 <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  {obj.status !== 'completed' && obj.status !== 'canceled' && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenRevise?.(obj.id)}
+                      className="min-h-12 rounded-lg bg-amber-50 px-2.5 text-[11px] font-bold text-amber-800"
+                    >
+                      월별 점검·수정
+                    </button>
+                  )}
                   {obj.status === 'draft' && (
                     <button
                       type="button"

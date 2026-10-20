@@ -1,5 +1,4 @@
-import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Package,
   Plus,
@@ -15,6 +14,7 @@ import {
   HelpCircle,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { useOpsTable } from '@/hooks/useOpsTable';
 import {
   transitionRentalStatus,
   type EquipmentItem,
@@ -22,68 +22,52 @@ import {
   type RentalAction,
 } from '../domain/rentalEquipmentEngine';
 
-const STORAGE_KEY_RENTALS = 'moa_rental_equipment_items';
+type RentalRow = {
+  id: string;
+  name: string;
+  asset_tag: string;
+  status: RentalStatus;
+  current_renter_id?: string | null;
+  rented_at?: string | null;
+  due_at?: string | null;
+  damage_note?: string | null;
+  department_id?: string | null;
+};
 
-const SAMPLE_EQUIPMENTS: EquipmentItem[] = [
-  {
-    id: 'eq-001',
-    name: '테일러메이드 스텔스 7번 아이언 단품',
-    assetTag: 'GOLF-IR-07-01',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'eq-002',
-    name: '어퓨쳐 Amaran 200d 지속광 조명 & 소프트박스',
-    assetTag: 'STUDIO-LGT-200D',
-    status: 'RENTED',
-    currentRenterId: '박지훈',
-    rentedAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    dueAt: new Date(Date.now() + 20 * 3600 * 1000).toISOString(),
-  },
-  {
-    id: 'eq-003',
-    name: '덱스터 정품 볼링화 265mm',
-    assetTag: 'BOWL-SH-265-03',
-    status: 'AVAILABLE',
-  },
-  {
-    id: 'eq-004',
-    name: '보드게임 스플렌더 마블 에디션',
-    assetTag: 'BG-SPL-MARVEL',
-    status: 'DAMAGED',
-    damageNote: '토큰 2개 분실 및 상자 모서리 찢어짐',
-  },
-];
+function toItem(row: RentalRow): EquipmentItem {
+  return {
+    id: row.id,
+    name: row.name,
+    assetTag: row.asset_tag,
+    status: row.status,
+    currentRenterId: row.current_renter_id ?? undefined,
+    rentedAt: row.rented_at ?? undefined,
+    dueAt: row.due_at ?? undefined,
+    damageNote: row.damage_note ?? undefined,
+  };
+}
+
+function toRow(item: EquipmentItem): Omit<RentalRow, 'id'> & { id?: string } {
+  return {
+    id: item.id,
+    name: item.name,
+    asset_tag: item.assetTag,
+    status: item.status,
+    current_renter_id: item.currentRenterId ?? null,
+    rented_at: item.rentedAt ?? null,
+    due_at: item.dueAt ?? null,
+    damage_note: item.damageNote ?? null,
+    department_id: null,
+  };
+}
 
 export const RentalEquipmentManagementView: React.FC = () => {
-  const [items, setItems] = useState<EquipmentItem[]>([]);
+  const { rows, loading, error, create, update } = useOpsTable<RentalRow>('rental_equipments');
+  const items = useMemo(() => rows.map(toItem), [rows]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [rentModalItem, setRentModalItem] = useState<EquipmentItem | null>(null);
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(getTenantStorageKey(STORAGE_KEY_RENTALS));
-      if (saved) {
-        setItems(JSON.parse(saved));
-      } else {
-        setItems(SAMPLE_EQUIPMENTS);
-        localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RENTALS), JSON.stringify(SAMPLE_EQUIPMENTS));
-      }
-    } catch {
-      setItems(SAMPLE_EQUIPMENTS);
-    }
-  }, []);
-
-  const saveItems = (next: EquipmentItem[]) => {
-    setItems(next);
-    try {
-      localStorage.setItem(getTenantStorageKey(STORAGE_KEY_RENTALS), JSON.stringify(next));
-    } catch {
-      // 무시
-    }
-  };
 
   const handleAction = (item: EquipmentItem, action: RentalAction, payload?: { note?: string }) => {
     const res = transitionRentalStatus(item, action, payload);
@@ -91,10 +75,11 @@ export const RentalEquipmentManagementView: React.FC = () => {
       showToast(res.error || '상태 변경에 실패했습니다.', 'warning');
       return;
     }
-
-    const next = items.map((i) => (i.id === item.id ? res.nextItem : i));
-    saveItems(next);
-    showToast(`'${item.name}' 상태가 변경되었습니다.`, 'success');
+    void update(item.id, toRow(res.nextItem)).then(() => {
+      showToast(`'${item.name}' 상태가 변경되었습니다.`, 'success');
+    }).catch((cause) => {
+      showToast(cause instanceof Error ? cause.message : '저장 실패', 'error');
+    });
   };
 
   const filteredItems = useMemo(() => {
@@ -320,8 +305,9 @@ export const RentalEquipmentManagementView: React.FC = () => {
               dueAt,
             });
             if (res.success) {
-              saveItems(items.map((i) => (i.id === rentModalItem.id ? res.nextItem : i)));
+              void update(rentModalItem.id, toRow(res.nextItem)).then(() => {
               showToast(`'${rentModalItem.name}' 대여가 완료되었습니다.`, 'success');
+              });
             }
             setRentModalItem(null);
           }}
@@ -333,9 +319,12 @@ export const RentalEquipmentManagementView: React.FC = () => {
         <NewEquipmentModal
           onClose={() => setIsNewModalOpen(false)}
           onCreated={(newItem) => {
-            saveItems([newItem, ...items]);
-            setIsNewModalOpen(false);
+            void create(toRow(newItem)).then(() => {
+              setIsNewModalOpen(false);
             showToast(`'${newItem.name}' 비품이 등록되었습니다.`, 'success');
+            }).catch((cause) => {
+              showToast(cause instanceof Error ? cause.message : '등록 실패', 'error');
+            });
           }}
         />
       )}
@@ -420,7 +409,7 @@ const NewEquipmentModal: React.FC<{
     if (!name.trim()) return;
 
     const newItem: EquipmentItem = {
-      id: `eq-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: name.trim(),
       assetTag: assetTag.trim() || `EQ-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'AVAILABLE',

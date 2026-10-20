@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useOpsTable } from '@/hooks/useOpsTable';
 import {
   TemperatureRecord,
   HealthCertificateRecord,
@@ -93,9 +94,40 @@ const INITIAL_HEALTH_CERTS: HealthCertificateRecord[] = [
 ];
 
 export const HygieneHaccpLogView: React.FC = () => {
-  const [tempRecords, setTempRecords] = useState<TemperatureRecord[]>(INITIAL_TEMP_RECORDS);
+  const { rows, create } = useOpsTable<{
+    id: string;
+    checkpoint: string;
+    value: string;
+    passed: boolean;
+    note?: string | null;
+    measured_at: string;
+    department_id?: string | null;
+  }>('hygiene_haccp_log');
+  const [tempRecords, setTempRecords] = useState<TemperatureRecord[]>([]);
   const [checklist, setChecklist] = useState<HygieneCheckItem[]>(INITIAL_CHECKLIST);
   const [healthCerts, setHealthCerts] = useState<HealthCertificateRecord[]>(INITIAL_HEALTH_CERTS);
+
+  useEffect(() => {
+    setTempRecords(
+      rows.map((row) => ({
+        recordId: row.id,
+        unitId: row.id,
+        unitName: row.checkpoint,
+        unitType: 'refrigerator' as const,
+        targetMinTemp: 0,
+        targetMaxTemp: 5,
+        recordedTemp: Number(row.value) || 0,
+        timeSlot: 'afternoon' as const,
+        isAlert: !row.passed,
+        alertReason: row.note || undefined,
+        recordedAt: new Date(row.measured_at).toLocaleTimeString('ko-KR', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        recordedBy: '현장 담당',
+      })),
+    );
+  }, [rows]);
   const [activeTab, setActiveTab] = useState<'temp' | 'checklist' | 'certs'>('temp');
 
   // 신규 온도 입력용 상태
@@ -120,7 +152,16 @@ export const HygieneHaccpLogView: React.FC = () => {
       recordedBy: '주방 당직자',
     };
 
-    setTempRecords([newRecord, ...tempRecords]);
+    void create({
+      checkpoint: newRecord.unitName,
+      value: String(newRecord.recordedTemp),
+      passed: !newRecord.isAlert,
+      note: newRecord.alertReason ?? null,
+      measured_at: new Date().toISOString(),
+      department_id: null,
+    }).then(() => {
+      setTempRecords([newRecord, ...tempRecords]);
+    });
   };
 
   const handleToggleCheck = (id: string) => {
