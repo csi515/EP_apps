@@ -231,7 +231,7 @@ DO $$ BEGIN
     ALTER TABLE core.products
       ADD COLUMN search_vector tsvector
       GENERATED ALWAYS AS (
-        to_tsvector('simple', coalesce(name, '') || ' ' || coalesce(sku, '') || ' ' || coalesce(description, ''))
+        to_tsvector('simple', coalesce(name, '') || ' ' || coalesce(product_code, ''))
       ) STORED;
     CREATE INDEX IF NOT EXISTS idx_products_search_vector_gin ON core.products USING gin (search_vector);
   END IF;

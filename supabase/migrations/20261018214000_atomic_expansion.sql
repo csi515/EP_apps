@@ -123,28 +123,13 @@ CREATE POLICY booking_waitlists_tenant_all ON core.booking_waitlists
   WITH CHECK (core.is_org_owner_or_admin(tenant_id) OR core.is_org_member(tenant_id));
 
 
--- 5. trial_funnel (체험 및 상담 리드 파이프라인)
-CREATE TABLE IF NOT EXISTS core.trial_leads (
-  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id           UUID NOT NULL REFERENCES core.organizations(id) ON DELETE CASCADE,
-  customer_name       VARCHAR(128) NOT NULL,
-  phone               VARCHAR(64) NOT NULL,
-  trial_service_name  VARCHAR(128),
-  scheduled_at        TIMESTAMPTZ,
-  status              VARCHAR(32) NOT NULL DEFAULT 'APPLIED' CHECK (status IN ('APPLIED', 'VISITED', 'CONSULTED', 'CONVERTED', 'LOST')),
-  lost_reason         TEXT,
-  memo                TEXT,
-  created_at          TIMESTAMPTZ DEFAULT now(),
-  updated_at          TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE INDEX IF NOT EXISTS idx_trial_leads_tenant_status
-  ON core.trial_leads (tenant_id, status, scheduled_at);
-
+-- 5. trial_funnel: core.trial_leads 는 선행 마이그레이션에서 organization_id/trial_date 스키마로 이미 생성됨.
+-- 중복 CREATE/인덱스(scheduled_at)는 원격 스키마와 충돌하므로 여기서는 RLS만 재확인한다.
 ALTER TABLE core.trial_leads ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS trial_leads_tenant_all ON core.trial_leads;
-CREATE POLICY trial_leads_tenant_all ON core.trial_leads
+DROP POLICY IF EXISTS trial_leads_org_all ON core.trial_leads;
+CREATE POLICY trial_leads_org_all ON core.trial_leads
   FOR ALL TO authenticated
-  USING (core.is_org_owner_or_admin(tenant_id) OR core.is_org_member(tenant_id))
-  WITH CHECK (core.is_org_owner_or_admin(tenant_id) OR core.is_org_member(tenant_id));
+  USING (core.is_org_owner_or_admin(organization_id) OR core.is_org_member(organization_id))
+  WITH CHECK (core.is_org_owner_or_admin(organization_id) OR core.is_org_member(organization_id));

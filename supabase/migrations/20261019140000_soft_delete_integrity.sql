@@ -14,8 +14,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_tenant_phone_active
 ALTER TABLE core.organization_members DROP CONSTRAINT IF EXISTS organization_members_tenant_user_key;
 DROP INDEX IF EXISTS core.organization_members_organization_id_user_id_key;
 
+-- 다중 역할(owner+customer 등)을 허용하므로 user 단독이 아니라 role까지 포함
 CREATE UNIQUE INDEX IF NOT EXISTS idx_organization_members_tenant_user_active
-  ON core.organization_members (organization_id, user_id)
+  ON core.organization_members (organization_id, user_id, role)
   WHERE deleted_at IS NULL;
 
 DO $$

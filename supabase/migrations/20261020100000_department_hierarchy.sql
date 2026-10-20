@@ -13,6 +13,18 @@ CREATE TABLE IF NOT EXISTS core.departments (
   CONSTRAINT departments_name_len CHECK (length(btrim(name)) > 0)
 );
 
+-- 선행 mbo_cycle_and_departments 테이블이 있으면 계층 컬럼만 보강한다.
+ALTER TABLE core.departments ADD COLUMN IF NOT EXISTS parent_id UUID NULL REFERENCES core.departments(id) ON DELETE RESTRICT;
+ALTER TABLE core.departments ADD COLUMN IF NOT EXISTS path TEXT;
+ALTER TABLE core.departments ADD COLUMN IF NOT EXISTS depth INT NOT NULL DEFAULT 1;
+
+UPDATE core.departments
+SET path = '/' || id::text || '/',
+    depth = 1
+WHERE path IS NULL;
+
+ALTER TABLE core.departments ALTER COLUMN path SET NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_departments_tenant_path
   ON core.departments (organization_id, path);
 

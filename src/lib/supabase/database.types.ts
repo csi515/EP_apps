@@ -4754,6 +4754,13 @@ export interface Database {
           key_results: Json;
           status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
           is_sample: boolean;
+          target_value: number | null;
+          due_date: string | null;
+          is_revised: boolean;
+          revision_count: number;
+          unmet_reason: string | null;
+          revision_reason: string | null;
+          visibility_type: 'PUBLIC' | 'PRIVATE' | 'PARTIAL';
           created_at: string;
           updated_at: string;
         };
@@ -4766,10 +4773,305 @@ export interface Database {
           key_results?: Json;
           status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'LOCKED';
           is_sample?: boolean;
+          target_value?: number | null;
+          due_date?: string | null;
+          is_revised?: boolean;
+          revision_count?: number;
+          unmet_reason?: string | null;
+          revision_reason?: string | null;
+          visibility_type?: 'PUBLIC' | 'PRIVATE' | 'PARTIAL';
           created_at?: string;
           updated_at?: string;
         };
         Update: Partial<Database['core']['Tables']['mbo_goals']['Insert']>;
+        Relationships: [];
+      };
+      department_members: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string;
+          member_id: string;
+          custom_role_id: string | null;
+          scope_type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id: string;
+          member_id: string;
+          custom_role_id?: string | null;
+          scope_type?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['department_members']['Insert']>;
+        Relationships: [];
+      };
+      equipment_lifecycle: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          name: string;
+          serial_no: string;
+          status: string;
+          purchased_at: string | null;
+          next_service_at: string | null;
+          meta: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          name: string;
+          serial_no?: string;
+          status?: string;
+          purchased_at?: string | null;
+          next_service_at?: string | null;
+          meta?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['equipment_lifecycle']['Insert']>;
+        Relationships: [];
+      };
+      hygiene_haccp_log: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          checkpoint: string;
+          measured_at: string;
+          value: string;
+          passed: boolean;
+          note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          checkpoint: string;
+          measured_at?: string;
+          value?: string;
+          passed?: boolean;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['hygiene_haccp_log']['Insert']>;
+        Relationships: [];
+      };
+      maintenance_checklists: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          title: string;
+          items: Json;
+          status: string;
+          due_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          title: string;
+          items?: Json;
+          status?: string;
+          due_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['maintenance_checklists']['Insert']>;
+        Relationships: [];
+      };
+      mbo_goal_revisions: {
+        Row: {
+          id: string | null;
+          goal_id: string;
+          organization_id: string;
+          revised_by: string;
+          previous_target_value: number | null;
+          previous_due_date: string | null;
+          previous_title: string | null;
+          unmet_reason: string | null;
+          revision_reason: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          goal_id: string;
+          organization_id: string;
+          revised_by: string;
+          previous_target_value?: number | null;
+          previous_due_date?: string | null;
+          previous_title?: string | null;
+          unmet_reason?: string | null;
+          revision_reason: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_goal_revisions']['Insert']>;
+        Relationships: [];
+      };
+      mbo_goal_shares: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          goal_id: string;
+          shared_with_member_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          goal_id: string;
+          shared_with_member_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_goal_shares']['Insert']>;
+        Relationships: [];
+      };
+      rental_equipments: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          name: string;
+          asset_tag: string;
+          status: string;
+          current_renter_id: string | null;
+          rented_at: string | null;
+          due_at: string | null;
+          damage_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          name: string;
+          asset_tag?: string;
+          status?: string;
+          current_renter_id?: string | null;
+          rented_at?: string | null;
+          due_at?: string | null;
+          damage_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['rental_equipments']['Insert']>;
+        Relationships: [];
+      };
+      safety_consent_signatures: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          consent_id: string;
+          signer_name: string;
+          signed_at: string;
+          payload: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          consent_id: string;
+          signer_name: string;
+          signed_at?: string;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['safety_consent_signatures']['Insert']>;
+        Relationships: [];
+      };
+      safety_consents: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          title: string;
+          body: string;
+          version: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          title: string;
+          body?: string;
+          version?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['safety_consents']['Insert']>;
+        Relationships: [];
+      };
+      seat_rooms: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          name: string;
+          capacity: number;
+          status: string;
+          meta: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          name: string;
+          capacity?: number;
+          status?: string;
+          meta?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['seat_rooms']['Insert']>;
+        Relationships: [];
+      };
+      sop_risk_assessment: {
+        Row: {
+          id: string | null;
+          organization_id: string;
+          department_id: string | null;
+          title: string;
+          hazard_level: string;
+          controls: Json;
+          status: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string | null;
+          organization_id: string;
+          department_id?: string | null;
+          title: string;
+          hazard_level?: string;
+          controls?: Json;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['sop_risk_assessment']['Insert']>;
         Relationships: [];
       };
       mbo_evaluation_history: {
