@@ -7,6 +7,7 @@ import {
   scopeAllowsResource,
   shouldAskDepartmentSetup,
   filterRowsByDepartmentScope,
+  filterRowsByMemberDepartmentScope,
 } from './departmentScope';
 
 const root = buildDepartmentPath(null, 'hq');
@@ -78,5 +79,27 @@ const scoped = filterRowsByDepartmentScope(
   'hq',
 );
 assert.deepEqual(scoped.map((row) => row.id), ['1', '2']);
+
+const pathMap = new Map<string, string>([['hq', '/hq/'], ['line', '/hq/line/']]);
+const descendantFiltered = filterRowsByMemberDepartmentScope(
+  [
+    { id: 'shared', department_id: null },
+    { id: 'hq-only', department_id: 'hq' },
+    { id: 'line-only', department_id: 'line' },
+    { id: 'other', department_id: 'other' },
+  ],
+  {
+    scopeType: 'DESCENDANTS',
+    memberDepartmentId: 'hq',
+    memberPath: '/hq/',
+    departmentPathById: pathMap,
+  },
+);
+assert.deepEqual(
+  descendantFiltered.map((row) => row.id).sort(),
+  ['hq-only', 'line-only', 'shared'].sort(),
+);
+
+assert.equal(shouldAskDepartmentSetup('personal_plant_ops', 'manufacturing'), true);
 
 console.log('departmentScope.invariant.test.ts: ok');

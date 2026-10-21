@@ -218,6 +218,9 @@ export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        아래 인원·부하 수치는 UI 시연용 샘플입니다. 조직도·MBO 실데이터 연동 전까지 참고용으로만 사용하세요.
+      </p>
       {/* 상단 컨트롤 바 */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>

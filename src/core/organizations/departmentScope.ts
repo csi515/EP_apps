@@ -59,6 +59,7 @@ export function planOwnershipTransfer(callerIsOwner: boolean, targetIsSelf: bool
 /** 제조·기업 프리셋만 조직도 질문을 노출한다. */
 const ORG_CHART_PRESET_IDS = new Set([
   'manufacturing_light',
+  'personal_plant_ops',
   'general_enterprise',
   'corporate_general_affairs',
   'CORP',
@@ -82,4 +83,31 @@ export function filterRowsByDepartmentScope<T extends { department_id?: string |
   return items.filter(
     (item) => item.department_id == null || item.department_id === scopedDepartmentId,
   );
+}
+
+/** 부서 스코프(GLOBAL / SELF_ONLY / DESCENDANTS)와 path 기반 하위 부서 포함 필터. */
+export function filterRowsByMemberDepartmentScope<T extends { department_id?: string | null }>(
+  items: T[],
+  input: {
+    scopeType: DepartmentScopeType;
+    memberDepartmentId: string | null;
+    memberPath: string | null;
+    departmentPathById: ReadonlyMap<string, string>;
+  },
+): T[] {
+  if (!items?.length) return [];
+  if (input.scopeType === 'GLOBAL' || !input.memberDepartmentId) return items;
+
+  return items.filter((item) => {
+    const resourceDept = item.department_id?.trim() || null;
+    if (!resourceDept) return true;
+    const resourcePath = input.departmentPathById.get(resourceDept) ?? null;
+    return scopeAllowsResource({
+      scopeType: input.scopeType,
+      memberDepartmentId: input.memberDepartmentId,
+      memberPath: input.memberPath,
+      resourceDepartmentId: resourceDept,
+      resourcePath,
+    });
+  });
 }

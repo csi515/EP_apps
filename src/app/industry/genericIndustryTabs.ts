@@ -4,6 +4,7 @@
  */
 
 export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
+  students: ['roster', 'enrollment', 'attendance', 'passes', 'consultation_crm'],
   // 기본 5대 기능 및 재무 허브
   bookings: ['booking', 'seat_room'],
   fleet: ['booking', 'seat_room'],

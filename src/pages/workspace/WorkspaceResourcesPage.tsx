@@ -5,6 +5,8 @@ import { canManageResourceCatalog } from '@/domain/permissions';
 import { StorageService } from '@/services/storage';
 import { listBookableResources, upsertBookableResource } from '@/core/resources/resourceService';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { filterRowsByMemberDepartmentScope } from '@/core/organizations/departmentScope';
+import { useWorkspaceMemberScope } from './useWorkspaceMemberScope';
 
 type ResourceTypeRow = {
   id: string;
@@ -14,6 +16,7 @@ type ResourceTypeRow = {
   kind_slug: string;
   requires_approval: boolean;
   spec_schema: unknown;
+  department_id?: string | null;
 };
 
 type TabId = 'catalog' | 'instances';
@@ -29,6 +32,9 @@ function slugifyKind(name: string): string {
 
 export const WorkspaceResourcesPage: React.FC = () => {
   const { currentOrganization } = useOrganization();
+  const memberScope = useWorkspaceMemberScope();
+  const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
+  const defaultRequiresApproval = settings?.resource_types_require_approval_default === true;
   const orgId = currentOrganization?.id ?? null;
   const active = StorageService.getActiveUser();
   const canManage = canManageResourceCatalog({
@@ -42,6 +48,11 @@ export const WorkspaceResourcesPage: React.FC = () => {
 
   const [typeName, setTypeName] = useState('');
   const [typeCategory, setTypeCategory] = useState<'EQUIPMENT' | 'SPACE'>('SPACE');
+  const [requiresApproval, setRequiresApproval] = useState(defaultRequiresApproval);
+
+  useEffect(() => {
+    setRequiresApproval(defaultRequiresApproval);
+  }, [defaultRequiresApproval]);
   const [selectedKind, setSelectedKind] = useState<string | null>(null);
   const [instanceName, setInstanceName] = useState('');
 
@@ -53,7 +64,16 @@ export const WorkspaceResourcesPage: React.FC = () => {
     queryOptions: { enabled: Boolean(orgId) },
   });
 
-  const types = (typesQuery?.data?.data as ResourceTypeRow[]) ?? [];
+  const typesRaw = (typesQuery?.data?.data as ResourceTypeRow[]) ?? [];
+  const types = useMemo(() => {
+    if (memberScope.isGlobalScope) return typesRaw;
+    return filterRowsByMemberDepartmentScope(typesRaw, {
+      scopeType: memberScope.scopeType,
+      memberDepartmentId: memberScope.memberDepartmentId,
+      memberPath: memberScope.memberPath,
+      departmentPathById: memberScope.departmentPathById,
+    });
+  }, [typesRaw, memberScope]);
   const { mutate: createType } = useCreate();
   const { mutate: deleteType } = useDelete();
 
@@ -90,7 +110,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
           name,
           category: typeCategory,
           kind_slug,
-          requires_approval: false,
+          requires_approval: requiresApproval,
           spec_schema: [],
         },
         meta: { schema: 'core' },
@@ -163,6 +183,15 @@ export const WorkspaceResourcesPage: React.FC = () => {
                 <option value="SPACE">공간 (SPACE)</option>
                 <option value="EQUIPMENT">장비 (EQUIPMENT)</option>
               </select>
+              <label className="flex min-h-12 items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={requiresApproval}
+                  onChange={(e) => setRequiresApproval(e.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300"
+                />
+                예약·사용 시 결재 필요
+              </label>
               <button type="submit" className="min-h-12 w-full rounded-xl bg-indigo-600 text-white font-medium">
                 등록
               </button>

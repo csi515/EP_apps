@@ -34,6 +34,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: 'menu-billing', label: '수납 장부', chosung: 'ㅅㄴㅈㅂ', group: 'menu', href: '/billing' },
   { id: 'menu-settings', label: '매장 설정', chosung: 'ㅁㅈㅅㅈ', group: 'menu', href: '/workspace/settings' },
   { id: 'menu-intranet', label: '사내 업무 스위트', chosung: 'ㅅㄴㅇㅁㅅㅌ', group: 'menu', href: '/workspace/intranet' },
+  { id: 'menu-approvals', label: '전자 결재', chosung: 'ㅈㅈㄱㅈ', group: 'menu', href: '/workspace/approvals' },
   { id: 'menu-org', label: '조직도·직급', chosung: 'ㅈㅈㄷㅈㄱ', group: 'menu', href: '/workspace/organization' },
   { id: 'menu-rnd', label: '연구소 포털', chosung: 'ㅇㄱㅅㅍㅌ', group: 'menu', href: '/rnd' },
   { id: 'action-member', label: '새 회원 등록', chosung: 'ㅅㅎㅇㄷㄹ', group: 'action', href: '/customers/create' },

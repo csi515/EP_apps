@@ -302,6 +302,26 @@ assert.equal(
   }),
   true,
 );
+assert.equal(
+  evaluatePermission(scopedMember, 'resources_manage', 'read', {
+    scopeType: 'DESCENDANTS',
+    memberDepartmentId: 'hq',
+    memberPath: '/hq/',
+    resourceDepartmentId: 'line',
+    resourcePath: '/hq/line/',
+  }),
+  true,
+);
+assert.equal(
+  evaluatePermission(scopedMember, 'resources_manage', 'read', {
+    scopeType: 'DESCENDANTS',
+    memberDepartmentId: 'hq',
+    memberPath: '/hq/',
+    resourceDepartmentId: 'other',
+    resourcePath: '/other/',
+  }),
+  false,
+);
 
 // [케이스 6] 부서 스코프(Department Scope) 격리 필터링 검증
 const mockResources = [

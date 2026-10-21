@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useList, useCreate, useUpdate } from '@refinedev/core';
 import { HelpCircle, Plus, ShieldCheck, MessageSquare } from 'lucide-react';
 import {
@@ -13,6 +13,8 @@ import { showToast } from '@/shared/feedback/uiFeedback';
 import { canReadAllFeedbacks, type AccessMember } from '@/domain/permissions';
 import { StorageService } from '@/services/storage';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 
 function resolveAccessMember(): AccessMember {
   const active = StorageService.getActiveUser();
@@ -30,12 +32,33 @@ function canManageGrievances(): boolean {
   }
 }
 
+function resolveDefaultGrievanceVisibility(
+  settings: Record<string, unknown> | null,
+  industryType: string | null | undefined,
+): GrievanceVisibility {
+  if (settings?.grievances_named_default === true) return 'named';
+  if (settings?.grievances_named_default === false) return 'anonymous';
+  const preset = industryType ? getIndustryPreset(industryType) : null;
+  if (preset?.defaultSettings?.grievances_named_default === true) return 'named';
+  return 'named';
+}
+
 export const GrievanceListPage: React.FC = () => {
   const { user } = useAuth();
+  const { currentOrganization } = useOrganization();
+  const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
+  const defaultVisibility = useMemo(
+    () => resolveDefaultGrievanceVisibility(settings, currentOrganization?.industry_type),
+    [settings, currentOrganization?.industry_type],
+  );
   const isHandler = canManageGrievances();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [visibility, setVisibility] = useState<GrievanceVisibility>('named');
+  const [visibility, setVisibility] = useState<GrievanceVisibility>(defaultVisibility);
+
+  useEffect(() => {
+    if (!isModalOpen) setVisibility(defaultVisibility);
+  }, [defaultVisibility, isModalOpen]);
   const [category, setCategory] = useState<GrievanceCategory>('GENERAL_GRIEVANCE');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -109,7 +132,7 @@ export const GrievanceListPage: React.FC = () => {
           setTitle('');
           setContent('');
           setPin('');
-          setVisibility('named');
+          setVisibility(defaultVisibility);
           refetch();
         },
         onError: (err) => {

@@ -486,10 +486,10 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
 
   const navSections: NavMenuSection[] = useMemo(() => {
-    const items: NavMenuItem[] = [
-      { tab: 'dashboard', label: '홈', icon: <Home className="w-4 h-4" /> },
-      { tab: 'students', label: `${customerWord} 관리`, icon: <Users className="w-4 h-4" /> },
-    ];
+    const items: NavMenuItem[] = [{ tab: 'dashboard', label: '홈', icon: <Home className="w-4 h-4" /> }];
+    if (isTabAllowedForCapabilities('students', enabledCaps)) {
+      items.push({ tab: 'students', label: `${customerWord} 관리`, icon: <Users className="w-4 h-4" /> });
+    }
 
     const hasIntranetSuite =
       enabledCaps.includes('mbo') ||

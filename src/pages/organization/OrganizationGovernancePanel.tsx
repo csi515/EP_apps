@@ -64,7 +64,7 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
     setMessage(null);
     try {
       await action();
-      setMessage('저장되었습니다.');
+      setMessage('저장되었습니다. 권한 변경 시 재로그인이 필요할 수 있습니다.');
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : '요청에 실패했습니다.');
     } finally {

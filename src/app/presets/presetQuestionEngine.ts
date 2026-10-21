@@ -415,6 +415,7 @@ export function buildPresetPayload(
     operating_hours,
     ...(preset?.capabilities ? { capabilities: preset.capabilities } : {}),
     ...(preset?.businessRules ? { business_rules: preset.businessRules } : {}),
+    ...(preset?.defaultSettings ?? {}),
     ...formValues,
   };
 

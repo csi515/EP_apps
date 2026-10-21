@@ -7,6 +7,7 @@ import {
   Target,
   FlaskConical,
   Package,
+  FileCheck,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
@@ -18,6 +19,8 @@ type HubTile = {
   icon: React.ReactNode;
   /** 비어 있으면 항상 표시 */
   requiredAnyCapability: readonly string[];
+  /** true면 org_chart_enabled 또는 제조/기업 프리셋일 때만 표시 */
+  requiresOrgChart?: boolean;
 };
 
 const HUB_TILES: HubTile[] = [
@@ -27,6 +30,14 @@ const HUB_TILES: HubTile[] = [
     description: '부서 트리, 스코프·직급 위임, 세션 즉시 파기',
     icon: <Building2 className="h-6 w-6" />,
     requiredAnyCapability: [],
+    requiresOrgChart: true,
+  },
+  {
+    to: '/workspace/approvals',
+    label: '전자 결재',
+    description: '결재 대기·기안, 연구 게이트·안전 승인 연동',
+    icon: <FileCheck className="h-6 w-6" />,
+    requiredAnyCapability: ['approval_workflow'],
   },
   {
     to: '/workspace/resources',
@@ -91,7 +102,17 @@ export const WorkspaceIntranetHubPage: React.FC<{
     );
   }, [enabledCapabilityIds, currentOrganization?.industry_type, settings, activeCapabilities]);
 
+  const showOrgChart = useMemo(() => {
+    const preset = currentOrganization?.industry_type
+      ? getIndustryPreset(currentOrganization.industry_type)
+      : null;
+    if (settings?.org_chart_enabled === true) return true;
+    if (preset?.defaultSettings?.org_chart_enabled === true) return true;
+    return preset?.category === 'manufacturing';
+  }, [currentOrganization?.industry_type, settings]);
+
   const visibleTiles = HUB_TILES.filter((tile) => {
+    if (tile.requiresOrgChart && !showOrgChart) return false;
     if (tile.requiredAnyCapability.length === 0) return true;
     return tile.requiredAnyCapability.some((cap) => enabledCaps.includes(cap));
   });

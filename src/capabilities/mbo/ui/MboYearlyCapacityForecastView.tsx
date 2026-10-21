@@ -66,6 +66,9 @@ export const MboYearlyCapacityForecastView: React.FC<MboYearlyCapacityForecastVi
 
   return (
     <div className="space-y-6">
+      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        부서별 연간 캐퍼시티는 샘플 데이터 기반입니다. 실제 headcount·목표 시간은 조직·MBO 연동 후 반영됩니다.
+      </p>
       {/* 헤더 안내 */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>

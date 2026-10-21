@@ -80,6 +80,9 @@ export const OrganizationTreePage: React.FC = () => {
           <Link to="/workspace/intranet" className="min-h-12 rounded-xl border border-slate-200 px-4 py-3">
             사내 업무 허브
           </Link>
+          <Link to="/workspace/approvals" className="min-h-12 rounded-xl border border-slate-200 px-4 py-3">
+            전자 결재
+          </Link>
           <Link to="/workspace/settings/roles" className="min-h-12 rounded-xl border border-slate-200 px-4 py-3">
             직급·권한 매트릭스
           </Link>

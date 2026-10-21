@@ -1,3 +1,5 @@
+import { scopeAllowsResource, type DepartmentScopeType } from '@/core/organizations/departmentScope';
+
 /** 사업주 및 위임 관리자가 설정한 직급 권한(JSONB boolean) 판정 및 RBAC 위임 관리 로직. */
 
 export const ROLE_PERMISSION_KEYS = [
@@ -370,9 +372,11 @@ export function isNavTabAllowed(tab: string, member: AccessMember): boolean {
  * 2. 사용자의 소속 부서가 특정 부서로 지정된 경우: 해당 부서에 속한 데이터 또는 부서 미지정(공용) 데이터만 반환
  */
 export type PermissionEvaluationContext = {
-  scopeType?: 'GLOBAL' | 'DESCENDANTS' | 'SELF_ONLY';
+  scopeType?: DepartmentScopeType;
   memberDepartmentId?: string | null;
+  memberPath?: string | null;
   resourceDepartmentId?: string | null;
+  resourcePath?: string | null;
 };
 
 /**
@@ -389,22 +393,19 @@ export function evaluatePermission(
   const allowed = evaluateMemberAccess(member, permissionKey, action);
   if (!allowed) return false;
 
-  const resourceDept = context?.resourceDepartmentId?.trim();
+  const resourceDept = context?.resourceDepartmentId?.trim() || null;
   if (!resourceDept) return true;
 
   const scope = context?.scopeType ?? 'SELF_ONLY';
-  if (scope === 'GLOBAL') return true;
+  const memberDept = context?.memberDepartmentId?.trim() || null;
 
-  const memberDept = context?.memberDepartmentId?.trim();
-  if (!memberDept) return true;
-
-  if (scope === 'SELF_ONLY') return memberDept === resourceDept;
-
-  if (scope === 'DESCENDANTS') {
-    return memberDept === resourceDept;
-  }
-
-  return false;
+  return scopeAllowsResource({
+    scopeType: scope,
+    memberDepartmentId: memberDept,
+    memberPath: context?.memberPath?.trim() || null,
+    resourceDepartmentId: resourceDept,
+    resourcePath: context?.resourcePath?.trim() || null,
+  });
 }
 
 export function filterByDepartmentScope<T extends { department_id?: string | null }>(

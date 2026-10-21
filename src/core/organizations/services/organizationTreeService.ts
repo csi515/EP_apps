@@ -119,6 +119,11 @@ export async function assignDepartmentScope(input: {
       p_scope_type: input.scopeType,
     } as never);
     if (rpcError) throw new Error(rpcError.message);
+    try {
+      await client.auth.refreshSession();
+    } catch {
+      // 세션 갱신 실패 시 UI에서 재로그인 안내
+    }
     return;
   }
   const { error } = await client.from('department_members' as never).upsert(

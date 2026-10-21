@@ -62,7 +62,7 @@ function run(): void {
 
   // 17개 별칭(Alias) 전수 검증
   const aliasKeys = Object.keys(PRESET_ALIASES);
-  assert.equal(aliasKeys.length, 17, `프리셋 별칭은 17개여야 합니다. 현재: ${aliasKeys.length}`);
+  assert.equal(aliasKeys.length, 19, `프리셋 별칭은 19개여야 합니다. 현재: ${aliasKeys.length}`);
 
   for (const [alias, targetPresetId] of Object.entries(PRESET_ALIASES)) {
     assert.ok(INDUSTRY_PRESETS[targetPresetId], `별칭 [${alias}]의 대상 프리셋 [${targetPresetId}]가 미존재`);
@@ -73,7 +73,7 @@ function run(): void {
 
   // 미등록 프리셋 안전성
   assert.equal(getIndustryPreset('non_existent_preset'), undefined);
-  console.log('  -> 44개 프리셋 및 17개 별칭 정상 매핑 확인 완료');
+  console.log('  -> 44개 프리셋 및 19개 별칭 정상 매핑 확인 완료');
 
   console.log('=== [2] Preset Assembly Integrity (전수 조립 검증) ===');
   for (const preset of presets) {
@@ -188,9 +188,10 @@ function run(): void {
   assert.equal(isTabAllowedForCapabilities('inventory', ['attendance']), false);
   assert.equal(isTabAllowedForCapabilities('inventory', ['inventory']), true);
 
-  // 4-7. 공통 탭(dashboard, students, settings, account): 제약 없이 항상 허용
+  // 4-7. 공통 탭(dashboard, settings, account): 제약 없이 허용. students는 회원/출결 계열 capability 필요
   assert.equal(isTabAllowedForCapabilities('dashboard', []), true);
-  assert.equal(isTabAllowedForCapabilities('students', []), true);
+  assert.equal(isTabAllowedForCapabilities('students', []), false);
+  assert.equal(isTabAllowedForCapabilities('students', ['attendance']), true);
   assert.equal(isTabAllowedForCapabilities('settings', []), true);
   assert.equal(isTabAllowedForCapabilities('account', []), true);
 

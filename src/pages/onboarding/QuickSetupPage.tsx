@@ -528,7 +528,9 @@ export const QuickSetupPage: React.FC = () => {
           seat_capacity_default: rooms[0]?.capacity || 1,
           require_cleaning_checklist: true,
         }),
-        org_chart_enabled: shouldAskDepartmentSetup(selectedIndustry, activePreset?.category) && setupDepartments.length > 0,
+        org_chart_enabled:
+          activePreset?.defaultSettings?.org_chart_enabled === true ||
+          (shouldAskDepartmentSetup(selectedIndustry, activePreset?.category) && setupDepartments.length > 0),
         setup_departments: shouldAskDepartmentSetup(selectedIndustry, activePreset?.category) ? setupDepartments : [],
       };
 

@@ -1,5 +1,8 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { isRndTabEnabled, resolveRndEnabledCapabilities, type RndTab } from './rndPortalCapabilities';
 
 const ResearchProjectManagementView = lazy(() =>
   import('@/capabilities/research_project').then((m) => ({ default: m.ResearchProjectManagementView })),
@@ -9,8 +12,6 @@ const PatentAssetManagementView = lazy(() =>
 );
 import { RndEquipmentPortalSection } from './RndEquipmentPortalSection';
 
-type RndTab = 'projects' | 'equipment' | 'patents';
-
 const TAB_LABEL: Record<RndTab, string> = {
   projects: '연구 프로젝트',
   equipment: '연구 장비·예약',
@@ -18,14 +19,57 @@ const TAB_LABEL: Record<RndTab, string> = {
 };
 
 export const RndPortalPage: React.FC = () => {
+  const { currentOrganization, activeCapabilities } = useOrganization();
+  const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
+  const enabledCaps = useMemo(
+    () =>
+      resolveRndEnabledCapabilities(
+        currentOrganization?.industry_type,
+        settings,
+        activeCapabilities ?? [],
+      ),
+    [currentOrganization?.industry_type, settings, activeCapabilities],
+  );
+
+  const visibleTabs = useMemo(
+    () => (Object.keys(TAB_LABEL) as RndTab[]).filter((id) => isRndTabEnabled(id, enabledCaps)),
+    [enabledCaps],
+  );
+
   const [tab, setTab] = useState<RndTab>('projects');
+
+  useEffect(() => {
+    if (visibleTabs.length === 0) return;
+    if (!visibleTabs.includes(tab)) setTab(visibleTabs[0]);
+  }, [visibleTabs, tab]);
+
+  if (visibleTabs.length === 0) {
+    return (
+      <main className="mx-auto max-w-lg p-6 text-center">
+        <p className="text-sm text-slate-600">연구소 포털 모듈이 활성화되지 않았습니다.</p>
+        <Link to="/workspace/intranet" className="mt-4 inline-block text-sm font-medium text-indigo-600">
+          사내 업무 허브로 이동
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-[100svh] bg-slate-50">
       <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
-        <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
+          {enabledCaps.includes('approval_workflow') ? (
+            <Link
+              to="/workspace/approvals"
+              className="ml-auto min-h-11 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700"
+            >
+              전자 결재
+            </Link>
+          ) : null}
+        </div>
         <div className="mt-3 flex gap-2 overflow-x-auto">
-          {(Object.keys(TAB_LABEL) as RndTab[]).map((id) => (
+          {visibleTabs.map((id) => (
             <button
               key={id}
               type="button"
