@@ -96,6 +96,8 @@ export const TENANT_SCOPED_RESOURCES = [
   "change_orders",
   "change_order_evaluations",
   "anonymous_grievances",
+  "resource_types",
+  "patents",
 ] as const;
 
 export const TENANT_COLUMN_MAP: Record<string, string> = {

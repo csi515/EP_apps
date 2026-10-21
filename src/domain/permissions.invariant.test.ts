@@ -10,6 +10,8 @@ import {
   assertCanTransferOwnership,
   filterByDepartmentScope,
   evaluateMemberAccess,
+  canManageResourceCatalog,
+  canReadAllFeedbacks,
   normalizeRolePermissions,
   type AccessMember,
   type RolePermissionMap,
@@ -254,6 +256,22 @@ assert.throws(
   '이미 대표 사업자인 대상에게 소유권 이전 시도는 예외 거절'
 );
 
+
+const gaWithResources: AccessMember = {
+  role: 'staff',
+  customRole: {
+    permissions: { ...EMPTY_ROLE_PERMISSIONS, 'resources:manage': true },
+  },
+};
+assert.equal(canManageResourceCatalog(gaWithResources), true, 'resources:manage alias enables catalog');
+assert.equal(canManageResourceCatalog({ role: 'staff', customRole: { permissions: EMPTY_ROLE_PERMISSIONS } }), false);
+
+const hrGrievance: AccessMember = {
+  role: 'staff',
+  customRole: { permissions: { ...EMPTY_ROLE_PERMISSIONS, 'feedbacks:read_all': true } },
+};
+assert.equal(canReadAllFeedbacks(hrGrievance), true, 'feedbacks:read_all alias enables inbox');
+assert.equal(canReadAllFeedbacks({ role: 'owner' }), true);
 
 // [케이스 6] 부서 스코프(Department Scope) 격리 필터링 검증
 const mockResources = [

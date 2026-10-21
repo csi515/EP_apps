@@ -13,7 +13,9 @@ export const ROLE_PERMISSION_KEYS = [
   'rental_equipment',
   'policies',
   'resources_manage',
+  'resources:manage',
   'grievances_manage',
+  'feedbacks:read_all',
   'ownership:transfer',
 ] as const;
 
@@ -34,7 +36,9 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   rental_equipment: false,
   policies: false,
   resources_manage: false,
+  'resources:manage': false,
   grievances_manage: false,
+  'feedbacks:read_all': false,
   'ownership:transfer': false,
 };
 
@@ -90,6 +94,22 @@ export function normalizeRolePermissions(value: unknown): RolePermissionMap | nu
     next['roles:assign'] = obj['roles:assign'] as boolean;
   } else if (typeof obj['roles_assign'] === 'boolean') {
     next['roles:assign'] = obj['roles_assign'] as boolean;
+  }
+
+  if (typeof obj['resources:manage'] === 'boolean') {
+    next['resources:manage'] = obj['resources:manage'] as boolean;
+    if (typeof obj.resources_manage !== 'boolean') next.resources_manage = obj['resources:manage'] as boolean;
+  } else if (typeof obj.resources_manage === 'boolean') {
+    next.resources_manage = obj.resources_manage as boolean;
+    next['resources:manage'] = obj.resources_manage as boolean;
+  }
+
+  if (typeof obj['feedbacks:read_all'] === 'boolean') {
+    next['feedbacks:read_all'] = obj['feedbacks:read_all'] as boolean;
+    if (typeof obj.grievances_manage !== 'boolean') next.grievances_manage = obj['feedbacks:read_all'] as boolean;
+  } else if (typeof obj.grievances_manage === 'boolean') {
+    next.grievances_manage = obj.grievances_manage as boolean;
+    next['feedbacks:read_all'] = obj.grievances_manage as boolean;
   }
 
   return next;
@@ -319,6 +339,20 @@ const NAV_RESOURCE: Record<string, RolePermissionKey> = {
   fleet: 'booking',
   grievances: 'grievances_manage',
 };
+
+export function canManageResourceCatalog(member: AccessMember): boolean {
+  if (member.role === 'owner') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (!flags) return false;
+  return flags.resources_manage || flags['resources:manage'];
+}
+
+export function canReadAllFeedbacks(member: AccessMember): boolean {
+  if (member.role === 'owner') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (!flags) return false;
+  return flags.grievances_manage || flags['feedbacks:read_all'];
+}
 
 export function isNavTabAllowed(tab: string, member: AccessMember): boolean {
   if (tab === 'grievances') {

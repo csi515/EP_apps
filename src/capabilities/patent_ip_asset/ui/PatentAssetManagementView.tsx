@@ -28,55 +28,12 @@ import {
   type PatentReviewStatus,
 } from '../domain/patentIpAssetEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
-
-// 초기 시연용 특허 자산 데이터
-const INITIAL_PATENTS: PatentAsset[] = [
-  {
-    id: 'pat-demo-1',
-    inventionTitle: '실리콘 복합 탄소나노튜브 기반의 초고용량 이차전지 음극재 코팅 기술',
-    summary: '실리콘 음극재의 부피 팽창을 억제하고 수명을 2배 이상 연장하는 화학적 기상증착 코팅 공정',
-    techField: '에너지/이차전지',
-    receiptDate: '2026-09-10',
-    inventors: [
-      { inventorId: 'inv-1', inventorName: '김수석 수석연구원', department: '소재개발팀', sharePercentage: 70 },
-      { inventorId: 'inv-2', inventorName: '이책임 책임연구원', department: '소재개발팀', sharePercentage: 30 },
-    ],
-    status: 'review_completed',
-    review: {
-      reviewDate: '2026-09-15',
-      reviewerName: 'R&D 특허심의위원회',
-      status: 'approved',
-      grade: 'A',
-      reviewComments: '미국/유럽 시장 공략을 위한 핵심 전략 특허로 PCT 해외 출원 확정',
-    },
-    applicationNumber: '10-2026-0123456',
-    applicationDate: '2026-09-25',
-    applicationReward: {
-      type: 'application',
-      totalRewardAmount: 1000000,
-      isPaid: true,
-      paidDate: '2026-09-30',
-      distributions: [
-        { inventorId: 'inv-1', inventorName: '김수석 수석연구원', sharePercentage: 70, allocatedAmount: 700000 },
-        { inventorId: 'inv-2', inventorName: '이책임 책임연구원', sharePercentage: 30, allocatedAmount: 300000 },
-      ],
-    },
-  },
-  {
-    id: 'pat-demo-2',
-    inventionTitle: '비전 AI 기반 복합소재 사출 결함 실시간 광학 검출 시스템',
-    summary: '엣지 컴퓨팅 기반의 3D 표면 스캐닝 알고리즘으로 0.05mm 미세 스크래치 실시간 검출',
-    techField: '스마트제조/AI',
-    receiptDate: '2026-10-05',
-    inventors: [
-      { inventorId: 'inv-3', inventorName: '박선임 선임연구원', department: 'AI소프트웨어랩', sharePercentage: 100 },
-    ],
-    status: 'review_pending',
-  },
-];
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { usePatentWorkspace } from '../hooks/usePatentWorkspace';
 
 export const PatentAssetManagementView: React.FC = () => {
-  const [patents, setPatents] = useState<PatentAsset[]>(INITIAL_PATENTS);
+  const { currentOrganization } = useOrganization();
+  const { patents, isLoading, persistPatent } = usePatentWorkspace(currentOrganization?.id);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'applied' | 'rewarded'>('all');
 
   // 모달 상태
@@ -147,12 +104,16 @@ export const PatentAssetManagementView: React.FC = () => {
       return;
     }
 
-    setPatents((prev) => [res.patent!, ...prev]);
-    setIsDeclarationModalOpen(false);
-    setTitle('');
-    setSummary('');
-    setInventors([{ inventorId: 'inv-new-1', inventorName: '', department: '연구1팀', sharePercentage: 100 }]);
-    showToast(`신규 발명 '${res.patent.inventionTitle}'이 사내 접수되었습니다.`, 'success');
+    const created = res.patent!;
+    void persistPatent(created, 'create')
+      .then(() => {
+        setIsDeclarationModalOpen(false);
+        setTitle('');
+        setSummary('');
+        setInventors([{ inventorId: 'inv-new-1', inventorName: '', department: '연구1팀', sharePercentage: 100 }]);
+        showToast(`신규 발명 '${created.inventionTitle}'이 사내 접수되었습니다.`, 'success');
+      })
+      .catch(() => showToast('특허 저장에 실패했습니다.', 'error'));
   };
 
   // 심의 확정
@@ -171,9 +132,12 @@ export const PatentAssetManagementView: React.FC = () => {
       return;
     }
 
-    setPatents((prev) => prev.map((p) => (p.id === reviewingPatent.id ? res.updatedPatent : p)));
-    setReviewingPatent(null);
-    showToast(`특허 심의가 완료되었습니다 (등급: ${reviewGrade || '-'}).`, 'success');
+    void persistPatent(res.updatedPatent, 'update')
+      .then(() => {
+        setReviewingPatent(null);
+        showToast(`특허 심의가 완료되었습니다 (등급: ${reviewGrade || '-'}).`, 'success');
+      })
+      .catch(() => showToast('심의 결과 저장에 실패했습니다.', 'error'));
   };
 
   // 보상금 지급 확정
@@ -185,18 +149,22 @@ export const PatentAssetManagementView: React.FC = () => {
       totalRewardAmount: Number(rewardAmount),
     });
 
-    setPatents((prev) => prev.map((p) => (p.id === patent.id ? updated : p)));
-    setRewardingPatent(null);
-    showToast(
-      `${type === 'application' ? '출원' : '등록'} 보상금 ${Number(rewardAmount).toLocaleString()}원이 발명자 지분율대로 지급 처리되었습니다.`,
-      'success'
-    );
+    void persistPatent(updated, 'update')
+      .then(() => {
+        setRewardingPatent(null);
+        showToast(
+          `${type === 'application' ? '출원' : '등록'} 보상금 ${Number(rewardAmount).toLocaleString()}원이 발명자 지분율대로 지급 처리되었습니다.`,
+          'success',
+        );
+      })
+      .catch(() => showToast('보상금 지급 저장에 실패했습니다.', 'error'));
   };
 
   const totalShare = inventors.reduce((sum, inv) => sum + (Number(inv.sharePercentage) || 0), 0);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto p-6">
+      {isLoading ? <p className="text-sm text-slate-500">특허 목록을 불러오는 중…</p> : null}
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-2xl shadow-xs">
         <div className="flex items-center gap-3">

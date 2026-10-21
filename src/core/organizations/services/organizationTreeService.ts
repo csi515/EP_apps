@@ -111,6 +111,16 @@ export async function assignDepartmentScope(input: {
   customRoleId?: string | null;
 }): Promise<void> {
   const client = getCoreClient();
+  if (input.customRoleId) {
+    const { error: rpcError } = await client.rpc('assign_department_member_role' as never, {
+      p_target_member_id: input.memberId,
+      p_department_id: input.departmentId,
+      p_role_id: input.customRoleId,
+      p_scope_type: input.scopeType,
+    } as never);
+    if (rpcError) throw new Error(rpcError.message);
+    return;
+  }
   const { error } = await client.from('department_members' as never).upsert(
     {
       organization_id: input.organizationId,

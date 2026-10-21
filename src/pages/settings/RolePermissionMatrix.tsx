@@ -32,6 +32,8 @@ const GROUPS: { title: string; items: { key: RolePermissionKey; label: string }[
       { key: 'seat_room', label: '좌석 및 회의실 공간 관리 (seat_room)' },
       { key: 'rental_equipment', label: '대여 장비 및 비품 관리 (rental_equipment)' },
       { key: 'resources_manage', label: '공용차량·자원 등록/수정' },
+      { key: 'resources:manage', label: '공용자원 카탈로그 (alias)' },
+      { key: 'feedbacks:read_all', label: '사내 건의 전체 열람 (alias)' },
       { key: 'grievances_manage', label: '노경 건의 전체 조회·처리' },
     ],
   },

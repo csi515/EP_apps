@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import type { DepartmentScopeType } from '@/core/organizations/departmentScope';
-import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRoleService';
+import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
 import type { DepartmentMemberRow, OrgNode } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 
 const SCOPE_OPTIONS: DepartmentScopeType[] = ['SELF_ONLY', 'DESCENDANTS', 'GLOBAL'];
+
+function memberLabel(member: DynamicMemberRow): string {
+  if (member.name?.trim()) return member.name.trim();
+  if (member.email?.trim()) return member.email.trim();
+  return `${member.user_id.slice(0, 8)}…`;
+}
 
 interface Props {
   isOwner: boolean;
@@ -12,10 +18,13 @@ interface Props {
   nodes: OrgNode[];
   members: DynamicMemberRow[];
   departmentMembers: DepartmentMemberRow[];
+  roles: DynamicRoleRow[];
+  selectedDepartmentId?: string | null;
   onAssignScope: (input: {
     departmentId: string;
     memberId: string;
     scopeType: DepartmentScopeType;
+    customRoleId?: string | null;
   }) => Promise<void>;
   onRevokeRole: (memberId: string) => Promise<void>;
   onTransferOwnership: (nextOwnerMemberId: string, reason: string) => Promise<void>;
@@ -27,13 +36,20 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
   nodes,
   members,
   departmentMembers,
+  roles,
+  selectedDepartmentId,
   onAssignScope,
   onRevokeRole,
   onTransferOwnership,
 }) => {
   const [departmentId, setDepartmentId] = useState('');
   const [memberId, setMemberId] = useState('');
+  const [customRoleId, setCustomRoleId] = useState('');
   const [scopeType, setScopeType] = useState<DepartmentScopeType>('SELF_ONLY');
+
+  React.useEffect(() => {
+    if (selectedDepartmentId) setDepartmentId(selectedDepartmentId);
+  }, [selectedDepartmentId]);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [transferTarget, setTransferTarget] = useState('');
   const [transferReason, setTransferReason] = useState('');
@@ -56,15 +72,19 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
     }
   }
 
+  const deptMemberRows = departmentId
+    ? departmentMembers.filter((row) => row.department_id === departmentId)
+    : departmentMembers;
+
   if (!canManage && !isOwner) return null;
 
   return (
-    <section className="mt-8 space-y-6 border-t border-slate-200 pt-6" aria-label="조직 권한 관리">
+    <section className="space-y-6 rounded-2xl border border-slate-200 bg-white p-4 lg:mt-0" aria-label="조직 권한 관리">
       {message ? <p className="text-sm text-slate-600">{message}</p> : null}
 
       {canManage ? (
         <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-          <h2 className="text-sm font-semibold text-slate-900">{ORG_CHART_COPY.scope}</h2>
+          <h2 className="text-sm font-semibold text-slate-900">부서원 · 직급 · 스코프</h2>
           <label className="block text-sm">
             부서
             <select
@@ -87,7 +107,20 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             >
               <option value="">선택</option>
               {staffMembers.map((member) => (
-                <option key={member.id} value={member.id}>{member.user_id}</option>
+                <option key={member.id} value={member.id}>{memberLabel(member)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            직급 (organization_roles)
+            <select
+              className="mt-1 min-h-12 w-full rounded-lg border px-3"
+              value={customRoleId}
+              onChange={(event) => setCustomRoleId(event.target.value)}
+            >
+              <option value="">변경 없음</option>
+              {roles.map((role) => (
+                <option key={role.id} value={role.id}>{role.name}</option>
               ))}
             </select>
           </label>
@@ -107,14 +140,33 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             type="button"
             disabled={busy || !departmentId || !memberId}
             className="min-h-11 rounded-lg bg-slate-900 px-4 text-sm text-white disabled:opacity-40"
-            onClick={() => void run(() => onAssignScope({ departmentId, memberId, scopeType }))}
+            onClick={() =>
+              void run(() =>
+                onAssignScope({
+                  departmentId,
+                  memberId,
+                  scopeType,
+                  customRoleId: customRoleId || null,
+                }),
+              )
+            }
           >
-            스코프 배정
+            배정 (세션 갱신)
           </button>
-          <ul className="space-y-1 text-xs text-slate-600">
-            {departmentMembers.map((row) => (
-              <li key={row.id}>{row.member_id.slice(0, 8)}… · {row.scope_type}</li>
-            ))}
+          <ul className="space-y-2 text-xs text-slate-600">
+            {deptMemberRows.map((row) => {
+              const member = members.find((m) => m.id === row.member_id);
+              const roleName = roles.find((r) => r.id === row.custom_role_id)?.name;
+              return (
+                <li key={row.id} className="min-h-10 rounded-lg bg-slate-50 px-2 py-2">
+                  {member ? memberLabel(member) : row.member_id.slice(0, 8)} · {row.scope_type}
+                  {roleName ? ` · ${roleName}` : ''}
+                </li>
+              );
+            })}
+            {deptMemberRows.length === 0 ? (
+              <li className="text-slate-400">선택한 부서에 배정된 구성원이 없습니다.</li>
+            ) : null}
           </ul>
         </div>
       ) : null}
@@ -126,7 +178,7 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
           <ul className="space-y-2">
             {staffMembers.map((member) => (
               <li key={member.id} className="flex min-h-11 items-center justify-between gap-2">
-                <span className="text-sm">{member.user_id}</span>
+                <span className="text-sm">{memberLabel(member)}</span>
                 <button
                   type="button"
                   className="min-h-11 rounded-lg border border-rose-300 px-3 text-sm text-rose-700"
@@ -153,7 +205,7 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             >
               <option value="">선택</option>
               {staffMembers.map((member) => (
-                <option key={member.id} value={member.id}>{member.user_id}</option>
+                <option key={member.id} value={member.id}>{memberLabel(member)}</option>
               ))}
             </select>
           </label>

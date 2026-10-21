@@ -135,7 +135,7 @@ export function createPatentInventionDeclaration(params: {
   const receiptDate = params.receiptDate || nowIso.slice(0, 10);
 
   const patent: PatentAsset = {
-    id: `pat-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: crypto.randomUUID(),
     inventionTitle: params.inventionTitle.trim(),
     summary: params.summary.trim(),
     techField: params.techField.trim() || '기타',

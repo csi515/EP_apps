@@ -4578,6 +4578,80 @@ export interface Database {
         Update: Partial<Database['core']['Tables']['project_categories']['Insert']>;
         Relationships: [];
       };
+      patents: {
+        Row: {
+          id: string;
+          organization_id: string;
+          application_no: string;
+          title: string;
+          summary: string | null;
+          tech_field: string | null;
+          inventor_ids: Json;
+          status: string;
+          filing_date: string | null;
+          document_urls: Json;
+          payload: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          application_no?: string;
+          title: string;
+          summary?: string | null;
+          tech_field?: string | null;
+          inventor_ids?: Json;
+          status?: string;
+          filing_date?: string | null;
+          document_urls?: Json;
+          payload?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['patents']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'patents_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      resource_types: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          category: 'EQUIPMENT' | 'SPACE';
+          kind_slug: string;
+          requires_approval: boolean;
+          spec_schema: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          category: 'EQUIPMENT' | 'SPACE';
+          kind_slug: string;
+          requires_approval?: boolean;
+          spec_schema?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['resource_types']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'resource_types_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       research_projects: {
         Row: {
           id: string;

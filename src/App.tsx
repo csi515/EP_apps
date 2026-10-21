@@ -56,6 +56,9 @@ import { RolesPage } from "./pages/settings/RolesPage";
 import { AcceptStaffInvitePage } from "./pages/invite/AcceptStaffInvitePage";
 import { QuickSetupPage } from "./pages/onboarding/QuickSetupPage";
 import { OrganizationTreePage } from "./pages/organization/OrganizationTreePage";
+import { WorkspaceResourcesPage } from "./pages/workspace/WorkspaceResourcesPage";
+import { WorkspaceFeedbacksPage } from "./pages/workspace/WorkspaceFeedbacksPage";
+import { RndPortalPage } from "./pages/workspace/RndPortalPage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
@@ -265,6 +268,9 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/settings/roles" element={<DynamicRoleSettingsPage />} />
             <Route path="/workspace/members" element={<MemberList />} />
             <Route path="/workspace/organization" element={<OrganizationTreePage />} />
+            <Route path="/workspace/resources" element={<WorkspaceResourcesPage />} />
+            <Route path="/workspace/feedbacks" element={<WorkspaceFeedbacksPage />} />
+            <Route path="/rnd" element={<RndPortalPage />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
             <Route path="/dashboard" element={<DashboardPage />} />
