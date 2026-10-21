@@ -153,6 +153,8 @@ import { changeManagementSetupSchema } from '@/capabilities/change_management/se
 import { changeManagementResources } from '@/capabilities/change_management/resources';
 import { patentIpAssetSetupSchema } from '@/capabilities/patent_ip_asset/setupSchema';
 import { patentIpAssetResources } from '@/capabilities/patent_ip_asset/resources';
+import { researchProjectSetupSchema } from '@/capabilities/research_project/setupSchema';
+import { researchProjectResources } from '@/capabilities/research_project/resources';
 import { leaveManagementSetupSchema } from '@/capabilities/leave_management/setupSchema';
 import { leaveManagementResources } from '@/capabilities/leave_management/resources';
 import { promotionalDealSetupSchema } from '@/capabilities/promotional_deal/setupSchema';
@@ -681,6 +683,13 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'patent_ip_asset',
     setupSchema: patentIpAssetSetupSchema,
     resources: patentIpAssetResources,
+  },
+
+  // 범주 BD: 연구과제 생명주기 (담당/예산/산출물/게이트)
+  research_project: {
+    capabilityId: 'research_project',
+    setupSchema: researchProjectSetupSchema,
+    resources: researchProjectResources,
   },
 
   // 범주 BB: 시간(Hour) 단위 휴가·연차 관리
@@ -2067,6 +2076,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     capabilities: [
       'task_pipeline',
       'seat_room',
+      'research_project',
       'patent_ip_asset',
       'equipment_lifecycle',
       'facility_incident_report',
@@ -2080,6 +2090,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     requiredCapabilities: [
       'task_pipeline',
       'seat_room',
+      'research_project',
       'patent_ip_asset',
       'sop_risk_assessment',
     ] as const,
@@ -2094,9 +2105,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     ] as const,
     roles: [
       { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
-      { name: '수석/책임연구원', rank_order: 2, permissions: ['task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
-      { name: '선임/전임연구원', rank_order: 3, permissions: ['task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
-      { name: '연구지원/안전관리자', rank_order: 2, permissions: ['sop_risk_assessment:*', 'supply_restock:*', 'facility_incident_report:*', 'approval_workflow:*'] },
+      { name: '수석/책임연구원', rank_order: 2, permissions: ['research_project:*', 'task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
+      { name: '선임/전임연구원', rank_order: 3, permissions: ['research_project:update', 'task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
+      { name: '연구지원/안전관리자', rank_order: 2, permissions: ['sop_risk_assessment:*', 'supply_restock:*', 'facility_incident_report:*', 'approval_workflow:*', 'research_project:view'] },
     ],
     resourceTypes: [
       { name: '정밀분석기기실 (FE-SEM/XRD)', type: 'equipment', capacity: 1 },

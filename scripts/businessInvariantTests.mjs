@@ -127,6 +127,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:reservation-machine', group: 'scheduling', kind: 'unit', ci: 'suite', order: 56 },
   { script: 'check:db-types', group: 'architecture', kind: 'static', ci: 'suite', order: 57 },
   { script: 'test:preset-runtime-parity', group: 'industry', kind: 'contract', ci: 'suite', order: 58 },
+  { script: 'test:research-project-engine', group: 'capability', kind: 'unit', ci: 'suite', order: 59 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */

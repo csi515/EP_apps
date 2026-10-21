@@ -137,6 +137,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   quality_inspection: ['quality', 'inspection-standards', 'inspection-records'],
   change_management: ['change-management', 'ecn', 'eco', 'change-orders'],
   patent_ip_asset: ['patents', 'patent-inventors', 'patent-rewards'],
+  research_project: ['lab-projects', 'research-projects', 'research-project-gates', 'research-project-deliverables'],
   leave_management: ['leave-management', 'leave-requests', 'leave-balances'],
   promotional_deal: ['promotional-deals', 'deals', 'promotions', 'events'],
   daily_pos_reconciliation: ['pos-reconciliations', 'daily-pos'],

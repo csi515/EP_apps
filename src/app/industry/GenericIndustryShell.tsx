@@ -221,8 +221,10 @@ const DigitalGuestbookView = lazy(() =>
 const MboManagementView = lazy(() =>
   import('@/capabilities/mbo').then((m) => ({ default: m.MboManagementView }))
 );
-const LabProjectsView = lazy(() =>
-  import('@/capabilities/mbo').then((m) => ({ default: m.LabProjectsView }))
+const ResearchProjectManagementView = lazy(() =>
+  import('@/capabilities/research_project').then((m) => ({
+    default: m.ResearchProjectManagementView,
+  }))
 );
 const QualityInspectionManagementView = lazy(() =>
   import('@/capabilities/quality_inspection').then((m) => ({ default: m.QualityInspectionManagementView }))
@@ -613,7 +615,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
     if (enabledCaps.includes('mbo')) {
       extendedItems.push({ tab: 'mbo', label: '목표관리(MBO)', icon: <Award className="w-4 h-4" /> });
-      extendedItems.push({ tab: 'lab-projects', label: '진행 프로젝트', icon: <FolderKanban className="w-4 h-4" /> });
+    }
+    if (enabledCaps.includes('research_project')) {
+      extendedItems.push({ tab: 'lab-projects', label: '연구과제', icon: <FolderKanban className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('quality_inspection')) {
       extendedItems.push({ tab: 'quality', label: '품질 검사(QC)', icon: <CheckCircle2 className="w-4 h-4" /> });
@@ -1019,8 +1023,13 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       </Suspense>
     ),
     'lab-projects': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">진행 프로젝트 화면을 불러오는 중...</div>}>
-        <LabProjectsView />
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중...</div>}>
+        <ResearchProjectManagementView />
+      </Suspense>
+    ),
+    'research-projects': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중...</div>}>
+        <ResearchProjectManagementView />
       </Suspense>
     ),
     quality: () => (

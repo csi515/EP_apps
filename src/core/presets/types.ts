@@ -133,6 +133,8 @@ export type BundledPresetCapabilityId =
   | 'leave_management'
   // 범주 BC: 기간 한정 특가 & 이벤트 스케줄러
   | 'promotional_deal'
+  // 범주 BD: 연구과제 생명주기 (담당/예산/산출물/게이트)
+  | 'research_project'
   // 30개 외부 연동 없는 독립 신규 Capability
   | 'daily_pos_reconciliation'
   | 'lost_card_rfid'

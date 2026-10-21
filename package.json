@@ -86,6 +86,7 @@
     "test:digital-guestbook": "tsx src/capabilities/digital_guestbook/domain/digitalGuestbookEngine.test.ts",
     "test:human-capital-kpi": "tsx src/capabilities/work_attendance_payroll/domain/humanCapitalKpiEngine.test.ts",
     "test:mbo-engine": "tsx src/capabilities/mbo/domain/mboEngine.test.ts",
+    "test:research-project-engine": "tsx src/capabilities/research_project/domain/researchProjectEngine.test.ts",
     "test:approval-engine": "tsx src/capabilities/approval_workflow/domain/approvalEngine.test.ts",
     "test:quality-inspection": "tsx src/capabilities/quality_inspection/domain/qualityInspectionEngine.test.ts",
     "test:change-management": "tsx src/capabilities/change_management/domain/changeManagementEngine.test.ts",

@@ -231,8 +231,8 @@ export function getStandardPresetsForIndustry(industry: string): {
       return {
         roles: [
           { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
-          { name: '수석/책임연구원', rank_order: 2, permissions: ['task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
-          { name: '선임/전임연구원', rank_order: 3, permissions: ['task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
+          { name: '수석/책임연구원', rank_order: 2, permissions: ['research_project:*', 'task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
+          { name: '선임/전임연구원', rank_order: 3, permissions: ['research_project:update', 'task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
         ],
         rooms: [
           { name: '정밀분석기기실 (FE-SEM/XRD)', capacity: 1 },

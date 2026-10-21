@@ -4578,6 +4578,164 @@ export interface Database {
         Update: Partial<Database['core']['Tables']['project_categories']['Insert']>;
         Relationships: [];
       };
+      research_projects: {
+        Row: {
+          id: string;
+          organization_id: string;
+          code: string | null;
+          title: string;
+          summary: string | null;
+          status: 'draft' | 'active' | 'gate_review' | 'completed' | 'suspended' | 'canceled';
+          category_id: string | null;
+          start_date: string;
+          end_date: string;
+          budget_planned: number;
+          budget_spent: number;
+          progress_rate: number;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          code?: string | null;
+          title: string;
+          summary?: string | null;
+          status?: 'draft' | 'active' | 'gate_review' | 'completed' | 'suspended' | 'canceled';
+          category_id?: string | null;
+          start_date: string;
+          end_date: string;
+          budget_planned?: number;
+          budget_spent?: number;
+          progress_rate?: number;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['research_projects']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'research_projects_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'research_projects_category_id_fkey';
+            columns: ['category_id'];
+            referencedRelation: 'project_categories';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      research_project_members: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          member_id: string | null;
+          member_name: string;
+          role: 'lead' | 'co_lead' | 'member';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          member_id?: string | null;
+          member_name: string;
+          role: 'lead' | 'co_lead' | 'member';
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['research_project_members']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'research_project_members_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'research_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      research_project_deliverables: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          title: string;
+          due_date: string | null;
+          status: 'planned' | 'submitted' | 'accepted' | 'rejected';
+          evidence_url: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          title: string;
+          due_date?: string | null;
+          status?: 'planned' | 'submitted' | 'accepted' | 'rejected';
+          evidence_url?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['research_project_deliverables']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'research_project_deliverables_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'research_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      research_project_gates: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          gate_order: number;
+          title: string;
+          criteria: string | null;
+          status: 'pending' | 'in_approval' | 'approved' | 'rejected' | 'skipped';
+          approval_request_id: string | null;
+          decided_by: string | null;
+          decided_by_name: string | null;
+          decided_at: string | null;
+          decision_note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          gate_order: number;
+          title: string;
+          criteria?: string | null;
+          status?: 'pending' | 'in_approval' | 'approved' | 'rejected' | 'skipped';
+          approval_request_id?: string | null;
+          decided_by?: string | null;
+          decided_by_name?: string | null;
+          decided_at?: string | null;
+          decision_note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['research_project_gates']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'research_project_gates_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'research_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       mbo_projects: {
         Row: {
           id: string;

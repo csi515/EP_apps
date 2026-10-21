@@ -76,6 +76,7 @@ import { change_managementCapability } from './change_management/manifest';
 import { patent_ip_assetCapability } from './patent_ip_asset/manifest';
 import { leave_managementCapability } from './leave_management/manifest';
 import { promotional_dealCapability } from './promotional_deal/manifest';
+import { research_projectCapability } from './research_project/manifest';
 import { daily_pos_reconciliationCapability } from './daily_pos_reconciliation/manifest';
 import { lost_card_rfidCapability } from './lost_card_rfid/manifest';
 import { valet_key_custodyCapability } from './valet_key_custody/manifest';
@@ -204,6 +205,7 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   patent_ip_assetCapability,
   leave_managementCapability,
   promotional_dealCapability,
+  research_projectCapability,
   daily_pos_reconciliationCapability,
   lost_card_rfidCapability,
   valet_key_custodyCapability,
@@ -269,6 +271,7 @@ export * from './change_management';
 export * from './patent_ip_asset';
 export * from './leave_management';
 export * from './promotional_deal';
+export * from './research_project';
 export * from './daily_pos_reconciliation';
 export * from './lost_card_rfid';
 export * from './valet_key_custody';

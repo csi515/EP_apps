@@ -62,7 +62,8 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   feedbacks: ['feedbacks'],
   incidents: ['feedbacks'],
   mbo: ['mbo'],
-  'lab-projects': ['mbo'],
+  'lab-projects': ['research_project'],
+  'research-projects': ['research_project'],
   'change-management': ['change_management'],
   'leave-management': ['leave_management'],
 };
@@ -587,10 +588,17 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
   },
   'lab-projects': {
     tab: 'lab-projects',
-    label: '진행 프로젝트',
-    description: '연도·월·개인 뷰와 사용자 정의 분류(연구/품질/기술 등) 필터 — MBO 평가 허브와 별도',
+    label: '연구과제',
+    description: '연구 담당/부담당, 예산, 산출물, 1~n차 게이트 승인 — MBO와 독립된 연구과제 생명주기',
     tier: 'tier1_ready',
-    primaryCapability: 'mbo',
+    primaryCapability: 'research_project',
+  },
+  'research-projects': {
+    tab: 'research-projects',
+    label: '연구과제',
+    description: '연구 담당/부담당, 예산, 산출물, 1~n차 게이트 승인',
+    tier: 'tier1_ready',
+    primaryCapability: 'research_project',
   },
   'change-management': {
     tab: 'change-management',

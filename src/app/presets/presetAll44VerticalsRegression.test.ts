@@ -210,6 +210,7 @@ console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAll
   assert.ok(hasSpaceCap(mfg.capabilities), 'manufacturing_light에 공간/자원 계열 포함되어야 함');
 
   const rnd = INDUSTRY_PRESETS.rnd_lab_management;
+  assert.ok(rnd.capabilities.includes('research_project'), 'rnd_lab_management에 research_project 포함되어야 함');
   assert.ok(rnd.capabilities.includes('leave_management'), 'rnd_lab_management에 leave_management 포함되어야 함');
   assert.ok(rnd.capabilities.includes('vehicle_shuttle'), 'rnd_lab_management에 vehicle_shuttle 포함되어야 함');
 

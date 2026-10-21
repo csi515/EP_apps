@@ -76,6 +76,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:reservation-machine',
   'check:db-types',
   'test:preset-runtime-parity',
+  'test:research-project-engine',
 ];
 
 const scripts = loadPackageScripts();

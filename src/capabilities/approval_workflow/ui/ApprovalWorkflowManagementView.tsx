@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useList, useCreate, useUpdate } from '@refinedev/core';
+import React, { useMemo, useState } from 'react';
+import { useList, useCreate, useInvalidate } from '@refinedev/core';
 import {
   FileCheck,
   Clock,
@@ -14,39 +14,74 @@ import {
   FileText,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { summarizeApprovalMetrics } from '../domain/approvalEngine';
 import {
-  summarizeApprovalMetrics,
-  type ApprovalRequest,
-  type ApprovalStatus,
-} from '../domain/approvalEngine';
+  findPendingStepForRequest,
+  processApprovalStepAtomic,
+  isResearchGateApprovalEntity,
+  type ApprovalRequestRow,
+  type ApprovalStepRow,
+} from '../services/approvalWorkflowService';
 
 export const ApprovalWorkflowManagementView: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<ApprovalRequest | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const invalidate = useInvalidate();
 
-  // 1. Refine useList로 approval_requests 데이터 페칭
-  const { query } = useList<ApprovalRequest>({
+  const { query } = useList<ApprovalRequestRow>({
     resource: 'approval_requests',
     sorters: [{ field: 'created_at', order: 'desc' }],
     pagination: { pageSize: 50 },
   });
 
-  const requests = query?.data?.data || [];
-  const isLoading = query?.isLoading;
+  const stepsQuery = useList<ApprovalStepRow>({
+    resource: 'approval_steps',
+    pagination: { mode: 'off' },
+  });
+
+  const requests = query?.data?.data ?? [];
+  const steps = stepsQuery.query?.data?.data ?? [];
+  const isLoading = query?.isLoading || stepsQuery.query?.isLoading;
   const refetch = query?.refetch ?? (() => {});
 
-  // 2. Refine useCreate / useUpdate
   const { mutate: createRequest } = useCreate();
-  const { mutate: updateRequest } = useUpdate();
+
+  const metrics = useMemo(
+    () =>
+      summarizeApprovalMetrics(
+        requests.map((r) => ({
+          id: r.id,
+          organizationId: '',
+          title: r.title,
+          content: {},
+          requesterId: '',
+          requesterName: r.requester_name,
+          status: r.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'canceled',
+          currentStepOrder: r.current_step_order,
+          totalSteps: r.total_steps,
+          steps: [],
+          createdAt: r.created_at ?? '',
+          updatedAt: '',
+        }))
+      ),
+    [requests]
+  );
+
+  const invalidateLinkedResources = (req: ApprovalRequestRow) => {
+    void invalidate({ resource: 'approval_requests', invalidates: ['list'] });
+    void invalidate({ resource: 'approval_steps', invalidates: ['list'] });
+    if (isResearchGateApprovalEntity(req.entity_type)) {
+      void invalidate({ resource: 'research_projects', invalidates: ['list'] });
+      void invalidate({ resource: 'research_project_gates', invalidates: ['list'] });
+    }
+  };
 
   // 신규 기안 폼 상태
   const [newTitle, setNewTitle] = useState('');
   const [newAmount, setNewAmount] = useState<number>(0);
   const [newDescription, setNewDescription] = useState('');
-
-  const metrics = summarizeApprovalMetrics(requests);
 
   const filteredRequests = requests.filter((r) => {
     if (selectedStatus !== 'ALL' && r.status !== selectedStatus) return false;
@@ -83,44 +118,37 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
     );
   };
 
-  const handleApprove = (req: ApprovalRequest) => {
-    updateRequest(
-      {
-        resource: 'approval_requests',
-        id: req.id,
-        values: {
-          status: 'approved',
-          final_approved_at: new Date().toISOString(),
-        },
-      },
-      {
-        onSuccess: () => {
-          showToast('승인 처리되었습니다.', 'success');
-          setSelectedRequest(null);
-          refetch();
-        },
-      }
-    );
-  };
-
-  const handleReject = (req: ApprovalRequest) => {
-    updateRequest(
-      {
-        resource: 'approval_requests',
-        id: req.id,
-        values: {
-          status: 'rejected',
-          rejected_at: new Date().toISOString(),
-          rejection_reason: '반려 처리되었습니다.',
-        },
-      },
-      {
-        onSuccess: () => {
-          showToast('반려 처리되었습니다.', 'warning');
-          setSelectedRequest(null);
-          refetch();
-        },
-      }
+  const runApprovalAction = async (
+    req: ApprovalRequestRow,
+    action: 'approve' | 'reject'
+  ) => {
+    const step = findPendingStepForRequest(req, steps);
+    if (!step) {
+      showToast('현재 대기 중인 결재 단계를 찾을 수 없습니다.', 'error');
+      return;
+    }
+    setProcessingId(req.id);
+    const result = await processApprovalStepAtomic({
+      requestId: req.id,
+      stepId: step.id,
+      action,
+      comment: action === 'approve' ? '승인' : '반려',
+    });
+    setProcessingId(null);
+    if (!result.success) {
+      showToast(result.error || '결재 처리 실패', 'error');
+      return;
+    }
+    invalidateLinkedResources(req);
+    void stepsQuery.query?.refetch?.();
+    refetch();
+    showToast(
+      action === 'approve'
+        ? result.isFinal
+          ? '최종 승인되었습니다. 연구 게이트가 동기화됩니다.'
+          : '1차 검토가 승인되었습니다. 다음 결재 단계로 진행됩니다.'
+        : '반려 처리되었습니다.',
+      action === 'approve' ? 'success' : 'warning'
     );
   };
 
@@ -240,10 +268,17 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
               ) : (
                 filteredRequests.map((req) => (
                   <tr key={req.id} className="hover:bg-slate-50/50 transition">
-                    <td className="py-3.5 px-4 font-medium text-slate-900">{req.title}</td>
-                    <td className="py-3.5 px-4">{req.requesterName || '직원'}</td>
+                    <td className="py-3.5 px-4 font-medium text-slate-900">
+                      <div>{req.title}</div>
+                      {isResearchGateApprovalEntity(req.entity_type) && (
+                        <span className="mt-1 inline-block rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
+                          연구 게이트
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4">{req.requester_name || '직원'}</td>
                     <td className="py-3.5 px-4">
-                      {req.currentStepOrder} / {req.totalSteps}단계
+                      {req.current_step_order} / {req.total_steps}단계
                     </td>
                     <td className="py-3.5 px-4">
                       <span
@@ -262,20 +297,24 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-slate-400">
-                      {req.createdAt ? req.createdAt.slice(0, 10) : '-'}
+                      {req.created_at ? req.created_at.slice(0, 10) : '-'}
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       {req.status === 'pending' && (
                         <div className="flex items-center justify-end gap-1.5">
                           <button
-                            onClick={() => handleApprove(req)}
-                            className="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-xs font-semibold"
+                            type="button"
+                            disabled={processingId === req.id}
+                            onClick={() => void runApprovalAction(req, 'approve')}
+                            className="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-xs font-semibold disabled:opacity-50"
                           >
                             승인
                           </button>
                           <button
-                            onClick={() => handleReject(req)}
-                            className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded text-xs font-semibold"
+                            type="button"
+                            disabled={processingId === req.id}
+                            onClick={() => void runApprovalAction(req, 'reject')}
+                            className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded text-xs font-semibold disabled:opacity-50"
                           >
                             반려
                           </button>

@@ -85,6 +85,7 @@ export const CAPABILITY_IDS = [
   'patent_ip_asset',
   'leave_management',
   'promotional_deal',
+  'research_project',
   // 30개 외부 연동 없는 독립 신규 Capability
   'daily_pos_reconciliation',
   'lost_card_rfid',
