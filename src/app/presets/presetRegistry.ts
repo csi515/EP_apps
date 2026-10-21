@@ -65,6 +65,8 @@ import { dietBodyLogSetupSchema } from '@/capabilities/diet_body_log/setupSchema
 import { dietBodyLogResources } from '@/capabilities/diet_body_log/resources';
 import { vehicleShuttleSetupSchema } from '@/capabilities/vehicle_shuttle/setupSchema';
 import { vehicleShuttleResources } from '@/capabilities/vehicle_shuttle/resources';
+import { shuttleDispatchSetupSchema } from '@/capabilities/shuttle_dispatch/setupSchema';
+import { shuttleDispatchResources } from '@/capabilities/shuttle_dispatch/resources';
 import { commissionPayrollSetupSchema } from '@/capabilities/commission_payroll/setupSchema';
 import { commissionPayrollResources } from '@/capabilities/commission_payroll/resources';
 import { lostFoundSetupSchema } from '@/capabilities/lost_found/setupSchema';
@@ -375,6 +377,12 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'vehicle_shuttle',
     setupSchema: vehicleShuttleSetupSchema,
     resources: vehicleShuttleResources,
+  },
+
+  shuttle_dispatch: {
+    capabilityId: 'shuttle_dispatch',
+    setupSchema: shuttleDispatchSetupSchema,
+    resources: shuttleDispatchResources,
   },
 
   // 범주 J: 프리랜서 & 인센티브 정산
@@ -1816,6 +1824,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'seat_room',
       'leave_management',
       'supply_restock',
+      'shuttle_dispatch',
     ] as const,
     roles: [
       { name: '대표이사/임원', rank_order: 1, permissions: ['*'] },
@@ -1980,6 +1989,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'approval_workflow',
       'leave_management',
       'vehicle_shuttle',
+      'shuttle_dispatch',
       'seat_room',
     ] as const,
     requiredCapabilities: ['task_pipeline', 'recipe_bom', 'inventory'] as const,
@@ -1996,6 +2006,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'approval_workflow',
       'leave_management',
       'vehicle_shuttle',
+      'shuttle_dispatch',
       'seat_room',
     ] as const,
     roles: [

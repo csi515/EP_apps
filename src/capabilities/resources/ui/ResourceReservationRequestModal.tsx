@@ -14,8 +14,7 @@ import type { Resource, ResourceReservation } from '../types';
 import { resourceRangesOverlap, isBlockingReservationStatus } from '../overlap';
 import {
   requestResourceReservation,
-  createStaffResourceReservation,
-  determineInitialReservationStatus,
+  requestMemberResourceReservation,
 } from '../reservationService';
 
 interface ResourceReservationRequestModalProps {
@@ -29,6 +28,11 @@ interface ResourceReservationRequestModalProps {
   defaultStartTime?: string; // HH:mm
   defaultEndTime?: string; // HH:mm
   currentUserId?: string;
+  /**
+   * member: 사내 직원 즉시 확정(request_member_room_reservation).
+   * customer: 학원 고객 신청(request_room_reservation, pending 가능).
+   */
+  bookingMode?: 'member' | 'customer';
 }
 
 export const ResourceReservationRequestModal: React.FC<ResourceReservationRequestModalProps> = ({
@@ -42,6 +46,7 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   defaultStartTime = '10:00',
   defaultEndTime = '11:00',
   currentUserId,
+  bookingMode = 'member',
 }) => {
   const [date, setDate] = useState<string>(
     defaultDate || new Date().toISOString().split('T')[0]
@@ -57,7 +62,9 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   if (!isOpen || !resource) return null;
 
   const metadata = (resource.metadata || {}) as Record<string, any>;
-  const isRequireApproval = metadata.require_approval === true;
+  // v1 사내 예약은 즉시 확정만. 승인제는 후속 티켓.
+  const isRequireApproval =
+    bookingMode === 'customer' && metadata.require_approval === true;
   const approverLabel = metadata.approver_name || '지정 관리자';
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -103,14 +110,18 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
       setIsSubmitting(true);
       setErrorMessage(null);
 
-      // 예약 생성
-      await requestResourceReservation({
+      const payload = {
         organizationId,
         resourceId: resource.id,
         startsAt,
         endsAt,
         memo: fullMemo,
-      });
+      };
+      if (bookingMode === 'member') {
+        await requestMemberResourceReservation(payload);
+      } else {
+        await requestResourceReservation(payload);
+      }
 
       onSuccess();
       onClose();

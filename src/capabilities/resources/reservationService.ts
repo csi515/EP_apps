@@ -11,6 +11,7 @@ import type {
   ListResourceReservationsQuery,
   RequestResourceReservationInput,
   ResourceReservation,
+  ResourceReservationStatus,
   RoomReservationRow,
 } from './types';
 import { dayRangeSeoul } from './seoulTime';
@@ -24,6 +25,25 @@ export { toPracticeRoomRow } from './resourceMappers';
 
 type ReservationQueryRow = RoomReservationRow & {
   bookable_resources?: { name: string; kind: string } | null;
+};
+
+type ListOrgReservationRpcRow = {
+  id: string;
+  organization_id: string;
+  room_id: string;
+  customer_id: string | null;
+  requested_by: string;
+  starts_at: string;
+  ends_at: string;
+  status: ResourceReservationStatus;
+  memo: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  resource_name: string | null;
+  resource_kind: string | null;
+  customer_name: string | null;
+  requester_name: string | null;
 };
 
 function client() {
@@ -56,12 +76,64 @@ export function toResourceReservation(row: ReservationQueryRow): ResourceReserva
     resourceName: mapped.practice_rooms?.name,
     resourceKind: row.bookable_resources?.kind,
     customerName: mapped.customers?.name,
+    requesterName: mapped.requester_name ?? undefined,
   };
+}
+
+function rpcRowToQueryRow(row: ListOrgReservationRpcRow): ReservationQueryRow {
+  return {
+    id: row.id,
+    organization_id: row.organization_id,
+    room_id: row.room_id,
+    customer_id: row.customer_id,
+    requested_by: row.requested_by,
+    starts_at: row.starts_at,
+    ends_at: row.ends_at,
+    status: row.status,
+    memo: row.memo,
+    reviewed_by: row.reviewed_by,
+    reviewed_at: row.reviewed_at,
+    created_at: row.created_at,
+    requester_name: row.requester_name,
+    bookable_resources:
+      row.resource_name || row.resource_kind
+        ? { name: row.resource_name ?? '', kind: row.resource_kind ?? '' }
+        : null,
+    customers: row.customer_name ? { name: row.customer_name } : null,
+  };
+}
+
+async function listViaRpc(query: ListResourceReservationsQuery): Promise<ReservationQueryRow[] | null> {
+  // customerId / status 필터는 RPC에 없으므로 직접 조회 경로 사용
+  if (query.customerId || query.status) return null;
+
+  const { data, error } = await client().rpc('list_org_room_reservations' as never, {
+    p_org_id: query.organizationId,
+    p_room_id: query.resourceId ?? null,
+    p_from: query.fromIso ?? null,
+    p_to: query.toIso ?? null,
+    p_limit: query.limit ?? 200,
+  } as never);
+
+  if (error) {
+    // 마이그레이션 미적용 환경: 직접 조회로 폴백
+    if (/does not exist|not found/i.test(error.message)) return null;
+    throw new Error(error.message || '예약 목록을 불러오지 못했습니다.');
+  }
+
+  const rows = ((data as ListOrgReservationRpcRow[] | null) ?? []).map(rpcRowToQueryRow);
+  if (query.order === 'desc') {
+    return [...rows].reverse();
+  }
+  return rows;
 }
 
 export async function listResourceReservationRows(
   query: ListResourceReservationsQuery
 ): Promise<ReservationQueryRow[]> {
+  const viaRpc = await listViaRpc(query);
+  if (viaRpc) return viaRpc;
+
   let builder = client()
     .from('room_reservations')
     .select('*, bookable_resources(name, kind), customers(name)')
@@ -102,6 +174,7 @@ export function listActiveResourceReservationRows(
   });
 }
 
+/** 학원·고객 예약 신청 (pending). 연결된 customer 필수. */
 export async function requestResourceReservation(
   params: RequestResourceReservationInput
 ): Promise<string> {
@@ -113,6 +186,24 @@ export async function requestResourceReservation(
     p_memo: params.memo ?? null,
   } as never);
   if (error) throw mapResourceReservationError(error.message, '예약 신청에 실패했습니다.');
+  return data as string;
+}
+
+/**
+ * 사내 직원 공용자원 예약 (즉시 approved, customer_id NULL).
+ * v1은 require_approval 메타를 무시한다.
+ */
+export async function requestMemberResourceReservation(
+  params: RequestResourceReservationInput
+): Promise<string> {
+  const { data, error } = await client().rpc('request_member_room_reservation' as never, {
+    p_org_id: params.organizationId,
+    p_room_id: params.resourceId,
+    p_starts_at: params.startsAt,
+    p_ends_at: params.endsAt,
+    p_memo: params.memo ?? null,
+  } as never);
+  if (error) throw mapResourceReservationError(error.message, '예약에 실패했습니다.');
   return data as string;
 }
 
@@ -170,6 +261,7 @@ export async function listReservationsByRange(
 
 /**
  * 자원의 require_approval 설정에 따라 예약의 초기 상태를 결정합니다.
+ * 사내 member RPC(v1)는 항상 approved이므로 UI 안내용으로만 사용.
  */
 export function determineInitialReservationStatus(
   resource: { metadata?: Record<string, unknown> | null }

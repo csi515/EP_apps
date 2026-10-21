@@ -64,11 +64,13 @@ function core(client: SupabaseClient) {
 // ── 단위 계약 ─────────────────────────────────────────────────────
 {
   assert.equal(mapStockMovementRpcError('재고가 부족합니다. (현재 1)'), '재고가 부족합니다. (현재 1)');
+  assert.equal(mapStockMovementRpcError('insufficient stock (current 1)'), '재고가 부족합니다.');
   assert.equal(
     mapStockMovementRpcError('product organization_id mismatch'),
     '다른 사업장의 상품은 처리할 수 없습니다.'
   );
   assert.equal(mapStockMovementRpcError('Not authenticated'), '로그인이 필요합니다.');
+  assert.equal(mapStockMovementRpcError('from and to location must differ'), '출발과 도착 창고가 같습니다.');
 }
 
 {

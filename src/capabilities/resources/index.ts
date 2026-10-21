@@ -42,8 +42,21 @@ export type {
   ApproverType,
   UniversalResourceMetadata,
 } from './types';
-export { canUserApproveReservation } from './resourceService';
-export { determineInitialReservationStatus, listPendingReservations } from './reservationService';
+export {
+  canUserApproveReservation,
+  listBookableResources,
+  upsertBookableResource,
+  listResources,
+  setResourceActive,
+} from './resourceService';
+export {
+  determineInitialReservationStatus,
+  listPendingReservations,
+  requestMemberResourceReservation,
+  requestResourceReservation,
+  cancelResourceReservation,
+  listResourceReservations,
+} from './reservationService';
 
 export { UniversalResourceCalendarView } from './ui/UniversalResourceCalendarView';
 export { ResourceMasterSettingsModal } from './ui/ResourceMasterSettingsModal';

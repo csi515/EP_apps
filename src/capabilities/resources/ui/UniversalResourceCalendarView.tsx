@@ -33,11 +33,24 @@ import {
   listResources,
 } from '../resourceService';
 import {
+  cancelResourceReservation,
   listResourceReservations,
 } from '../reservationService';
 import { ResourceMasterSettingsModal } from './ResourceMasterSettingsModal';
 import { ResourceReservationRequestModal } from './ResourceReservationRequestModal';
 import { ResourceApprovalInboxView } from './ResourceApprovalInboxView';
+import { showToast } from '@/shared/feedback/uiFeedback';
+
+export type UniversalResourceCalendarViewProps = {
+  /** 임베드 시 헤더·승인함 축소 */
+  compact?: boolean;
+  /** v1: 승인 대기함 숨김 (기본 true) */
+  hideApprovalInbox?: boolean;
+  /** 자원 마스터 등록 버튼 숨김 (워크스페이스 카탈로그 탭 사용 시) */
+  hideMasterButton?: boolean;
+  defaultCategory?: ResourceCategory | 'all';
+  bookingMode?: 'member' | 'customer';
+};
 
 function canManageResources(): boolean {
   try {
@@ -75,7 +88,13 @@ const TIME_SLOTS = [
   '18:00', '19:00', '20:00',
 ];
 
-export const UniversalResourceCalendarView: React.FC = () => {
+export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarViewProps> = ({
+  compact = false,
+  hideApprovalInbox = true,
+  hideMasterButton = false,
+  defaultCategory = 'all',
+  bookingMode = 'member',
+}) => {
   const { currentOrganization, currentStaffId, currentRole } = useOrganization();
   const { user } = useAuth();
   const orgId = currentOrganization?.id || '';
@@ -83,7 +102,7 @@ export const UniversalResourceCalendarView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'calendar' | 'inbox'>('calendar');
   const [viewMode, setViewMode] = useState<ViewMode>('day');
-  const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | 'all'>(defaultCategory);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const [resources, setResources] = useState<Resource[]>([]);
@@ -95,6 +114,8 @@ export const UniversalResourceCalendarView: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState<boolean>(false);
   const [selectedResourceForBooking, setSelectedResourceForBooking] = useState<Resource | null>(null);
   const [prefilledTimeSlot, setPrefilledTimeSlot] = useState<string>('09:00');
+  const [selectedBooking, setSelectedBooking] = useState<ResourceReservation | null>(null);
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   const loadData = async () => {
     if (!orgId) return;
@@ -180,6 +201,30 @@ export const UniversalResourceCalendarView: React.FC = () => {
     setIsRequestModalOpen(true);
   };
 
+  const canCancelSelected = useMemo(() => {
+    if (!selectedBooking || !user?.id) return false;
+    if (selectedBooking.requested_by === user.id) return true;
+    return allowResourceWrite;
+  }, [selectedBooking, user?.id, allowResourceWrite]);
+
+  const handleCancelBooking = async () => {
+    if (!selectedBooking) return;
+    setCancelBusy(true);
+    try {
+      await cancelResourceReservation(selectedBooking.id);
+      showToast('예약을 취소했습니다.', 'success');
+      setSelectedBooking(null);
+      await loadData();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : '취소에 실패했습니다.', 'error');
+    } finally {
+      setCancelBusy(false);
+    }
+  };
+
+  const displayBookingLabel = (booked: ResourceReservation) =>
+    booked.requesterName || booked.customerName || '예약 이용 중';
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* 1. 상단 글로벌 컨트롤 바 */}
@@ -190,53 +235,58 @@ export const UniversalResourceCalendarView: React.FC = () => {
               <CalendarDays className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">범용 자원 예약 시스템</h1>
+              <h1 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold text-slate-900`}>
+                공용자원 예약
+              </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                차량, 회의실, 보건실 등 사내 공용 자원을 승인권자 거버넌스 및 월/주/일 달력으로 통합 관리합니다.
+                시간·자원을 선택해 예약합니다. 조직 구성원 모두가 예약자를 확인할 수 있으며, 취소는 본인(또는 총무)만 가능합니다.
               </p>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* 서브 탭 (달력 뷰 vs 승인 대기함) */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
-            <button
-              onClick={() => setActiveTab('calendar')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                activeTab === 'calendar'
-                  ? 'bg-white text-indigo-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              예약 달력
-            </button>
-            <button
-              onClick={() => setActiveTab('inbox')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative ${
-                activeTab === 'inbox'
-                  ? 'bg-white text-indigo-900 shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              승인 대기함
-              {pendingCount > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px]">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          </div>
+          {!hideApprovalInbox ? (
+            <div className="inline-flex rounded-xl bg-slate-100 p-1 border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setActiveTab('calendar')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  activeTab === 'calendar'
+                    ? 'bg-white text-indigo-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                예약 달력
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('inbox')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all relative ${
+                  activeTab === 'inbox'
+                    ? 'bg-white text-indigo-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                승인 대기함
+                {pendingCount > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px]">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          ) : null}
 
-          {/* 자원 마스터 등록 버튼 — resources_manage 또는 사업주 */}
-          {allowResourceWrite ? (
-          <button
-            onClick={() => setIsMasterModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            새 자원 등록
-          </button>
+          {allowResourceWrite && !hideMasterButton ? (
+            <button
+              type="button"
+              onClick={() => setIsMasterModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              새 자원 등록
+            </button>
           ) : null}
         </div>
       </div>
@@ -407,22 +457,27 @@ export const UniversalResourceCalendarView: React.FC = () => {
 
                           if (booked) {
                             const isPending = booked.status === 'pending';
+                            const isMine = user?.id && booked.requested_by === user.id;
                             return (
-                              <div
+                              <button
                                 key={res.id}
-                                className={`p-1.5 border-r border-slate-100 last:border-r-0 flex flex-col justify-center ${
+                                type="button"
+                                onClick={() => setSelectedBooking(booked)}
+                                className={`p-1.5 border-r border-slate-100 last:border-r-0 flex flex-col justify-center text-left w-full ${
                                   isPending
                                     ? 'bg-amber-50/80 border-l-2 border-l-amber-500'
-                                    : 'bg-indigo-50/90 border-l-2 border-l-indigo-600'
+                                    : isMine
+                                      ? 'bg-emerald-50/90 border-l-2 border-l-emerald-600'
+                                      : 'bg-indigo-50/90 border-l-2 border-l-indigo-600'
                                 }`}
                               >
                                 <div className="text-[11px] font-bold truncate text-slate-800">
-                                  {booked.customerName || '예약 이용 중'}
+                                  {displayBookingLabel(booked)}
                                 </div>
                                 <div className="text-[10px] text-slate-500 truncate">
                                   {booked.memo || (isPending ? '승인 대기 중' : '확정')}
                                 </div>
-                              </div>
+                              </button>
                             );
                           }
 
@@ -542,7 +597,68 @@ export const UniversalResourceCalendarView: React.FC = () => {
         defaultDate={dateString}
         defaultStartTime={prefilledTimeSlot}
         currentUserId={user?.id}
+        bookingMode={bookingMode}
       />
+
+      {/* 7. 예약 상세·취소 시트 */}
+      {selectedBooking ? (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"
+          >
+            <h3 className="text-base font-bold text-slate-900">예약 상세</h3>
+            <dl className="mt-3 space-y-2 text-sm text-slate-700">
+              <div className="flex justify-between gap-2">
+                <dt className="text-slate-500">예약자</dt>
+                <dd className="font-medium">{displayBookingLabel(selectedBooking)}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-slate-500">시작</dt>
+                <dd>{selectedBooking.starts_at.replace('T', ' ').slice(0, 16)}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-slate-500">종료</dt>
+                <dd>{selectedBooking.ends_at.replace('T', ' ').slice(0, 16)}</dd>
+              </div>
+              <div className="flex justify-between gap-2">
+                <dt className="text-slate-500">상태</dt>
+                <dd>{selectedBooking.status}</dd>
+              </div>
+              {selectedBooking.memo ? (
+                <div>
+                  <dt className="text-slate-500">메모</dt>
+                  <dd className="mt-0.5 text-xs text-slate-600">{selectedBooking.memo}</dd>
+                </div>
+              ) : null}
+            </dl>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse">
+              {canCancelSelected &&
+              (selectedBooking.status === 'approved' || selectedBooking.status === 'pending') ? (
+                <button
+                  type="button"
+                  disabled={cancelBusy}
+                  onClick={() => void handleCancelBooking()}
+                  className="min-h-12 flex-1 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {cancelBusy ? '취소 중…' : '예약 취소'}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setSelectedBooking(null)}
+                className="min-h-12 flex-1 rounded-xl border border-slate-200 px-4 text-sm font-medium text-slate-700"
+              >
+                닫기
+              </button>
+            </div>
+            {!canCancelSelected ? (
+              <p className="mt-2 text-xs text-slate-500">본인 예약만 취소할 수 있습니다. 총무·사업주는 예외입니다.</p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -35,6 +35,7 @@ const GROUPS: { title: string; items: { key: RolePermissionKey; label: string }[
       { key: 'resources:manage', label: '공용자원 카탈로그 (alias)' },
       { key: 'feedbacks:read_all', label: '사내 건의 전체 열람 (alias)' },
       { key: 'grievances_manage', label: '노경 건의 전체 조회·처리' },
+      { key: 'shuttle:manage', label: '통근 셔틀 노선·명부 관리 (shuttle:manage)' },
     ],
   },
 ];

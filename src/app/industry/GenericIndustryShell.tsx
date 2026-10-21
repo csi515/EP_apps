@@ -239,8 +239,8 @@ const PatentAssetManagementView = lazy(() =>
 const LeaveManagementDashboardView = lazy(() =>
   import('@/capabilities/leave_management').then((m) => ({ default: m.LeaveManagementDashboardView }))
 );
-const SharedVehicleCatalogView = lazy(() =>
-  import('@/capabilities/resources').then((m) => ({ default: m.SharedVehicleCatalogView }))
+const UniversalResourceCalendarView = lazy(() =>
+  import('@/capabilities/resources').then((m) => ({ default: m.UniversalResourceCalendarView }))
 );
 const GrievanceListPage = lazy(() =>
   import('@/capabilities/whistleblower_grievance').then((m) => ({ default: m.GrievanceListPage }))
@@ -506,7 +506,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
     if (enabledCaps.includes('booking') || enabledCaps.includes('seat_room')) {
       items.push({ tab: 'bookings', label: '예약·공간', icon: <Calendar className="w-4 h-4" /> });
-      items.push({ tab: 'fleet', label: '공용차량·자원', icon: <Car className="w-4 h-4" /> });
+      items.push({ tab: 'fleet', label: '공용자원 예약', icon: <Car className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('attendance')) {
       items.push({ tab: 'attendance', label: '출결 관리', icon: <CheckCircle2 className="w-4 h-4" /> });
@@ -713,8 +713,14 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       </Suspense>
     ),
     fleet: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">공용차량 목록을 불러오는 중...</div>}>
-        <SharedVehicleCatalogView />
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공용자원 예약을 불러오는 중...</div>}>
+        <UniversalResourceCalendarView
+          compact
+          hideApprovalInbox
+          hideMasterButton
+          bookingMode="member"
+          defaultCategory="vehicle"
+        />
       </Suspense>
     ),
     grievances: () => (

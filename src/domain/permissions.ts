@@ -19,6 +19,7 @@ export const ROLE_PERMISSION_KEYS = [
   'grievances_manage',
   'feedbacks:read_all',
   'ownership:transfer',
+  'shuttle:manage',
 ] as const;
 
 export type RolePermissionKey = (typeof ROLE_PERMISSION_KEYS)[number];
@@ -42,6 +43,7 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   grievances_manage: false,
   'feedbacks:read_all': false,
   'ownership:transfer': false,
+  'shuttle:manage': false,
 };
 
 /** 기업 총무팀 기본 직급 템플릿 (Pre-fill 규격) */
@@ -61,6 +63,7 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
     statistics: false,
     resources_manage: true,
     grievances_manage: false,
+    'shuttle:manage': true,
   },
 } as const;
 
@@ -347,6 +350,19 @@ export function canManageResourceCatalog(member: AccessMember): boolean {
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (!flags) return false;
   return flags.resources_manage || flags['resources:manage'];
+}
+
+/** 사내 통근 셔틀 노선·정류장·명부 관리 위임 권한 */
+export function canManageShuttleRoutes(member: AccessMember): boolean {
+  if (member.role === 'owner' || member.role === 'admin') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['shuttle:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return (
+    effective['shuttle:manage'] === true ||
+    effective['shuttle:routes:manage'] === true ||
+    effective['shuttle:dispatch:operate'] === true
+  );
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {

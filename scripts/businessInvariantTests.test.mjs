@@ -46,6 +46,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:create-sale-atomic',
   'test:create-sale-return-atomic',
   'test:stock-movement-atomic',
+  'test:stock-location-scope',
   'test:sale-return-points',
   'test:point-atomic',
   'test:sale-redeem-consistency',

@@ -8,6 +8,7 @@ import {
   FlaskConical,
   Package,
   FileCheck,
+  Bus,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
@@ -40,9 +41,16 @@ const HUB_TILES: HubTile[] = [
     requiredAnyCapability: ['approval_workflow'],
   },
   {
+    to: '/workspace/shuttle/my',
+    label: '통근 셔틀',
+    description: '내 탑승 설정, 노선·정류장(총무), 기사용 명부 인쇄',
+    icon: <Bus className="h-6 w-6" />,
+    requiredAnyCapability: ['vehicle_shuttle', 'shuttle_dispatch'],
+  },
+  {
     to: '/workspace/resources',
     label: '공용자원',
-    description: '자원 카탈로그, 차량·회의실·비품 인스턴스',
+    description: '예약·현황, 자원 종류·인스턴스(총무)',
     icon: <Package className="h-6 w-6" />,
     requiredAnyCapability: ['booking', 'seat_room', 'rental_equipment'],
   },

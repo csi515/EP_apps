@@ -50,7 +50,8 @@ export type ResourceReservation = {
   id: string;
   organization_id: string;
   resourceId: string;
-  customer_id: string;
+  /** 학원 고객 예약 시 customers.id. 사내 직원 예약은 null. */
+  customer_id: string | null;
   requested_by: string;
   starts_at: string;
   ends_at: string;
@@ -62,6 +63,8 @@ export type ResourceReservation = {
   resourceName?: string;
   resourceKind?: string;
   customerName?: string;
+  /** 예약자(requested_by) 표시명 — profiles.full_name */
+  requesterName?: string;
 };
 
 /** Piano UI 호환 — room_id = bookable_resources.id */
@@ -80,7 +83,7 @@ export type RoomReservationRow = {
   id: string;
   organization_id: string;
   room_id: string;
-  customer_id: string;
+  customer_id: string | null;
   requested_by: string;
   starts_at: string;
   ends_at: string;
@@ -91,6 +94,7 @@ export type RoomReservationRow = {
   created_at?: string;
   practice_rooms?: { name: string } | null;
   customers?: { name: string } | null;
+  requester_name?: string | null;
 };
 
 export type ResourceCategory = 'vehicle' | 'meeting_room' | 'health_room' | 'display' | 'other';

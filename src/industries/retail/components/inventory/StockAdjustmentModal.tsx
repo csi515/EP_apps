@@ -14,6 +14,7 @@ interface Props {
   organizationId: string;
   stockRows: InventoryStockRow[];
   initialRow?: InventoryStockRow | null;
+  stockLocationId?: string | null;
   onClose: () => void;
   onCompleted: (delta: number, quantityAfter: number) => void;
   onError: (message: string) => void;
@@ -31,6 +32,7 @@ export const StockAdjustmentModal: FC<Props> = ({
   organizationId,
   stockRows,
   initialRow,
+  stockLocationId,
   onClose,
   onCompleted,
   onError,
@@ -161,6 +163,7 @@ export const StockAdjustmentModal: FC<Props> = ({
         variantId: needsVariant ? variantId : null,
         quantity: delta,
         reason,
+        stockLocationId: stockLocationId ?? null,
       });
       onCompleted(delta, result.quantityAfter);
       onClose();

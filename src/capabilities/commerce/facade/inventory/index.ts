@@ -8,6 +8,7 @@ export type {
   SaleStockDeductLine,
   StockAdjustmentInput,
   StockInboundInput,
+  StockListOptions,
   StockMovement,
   StockMovementListQuery,
   StockMovementType,
@@ -16,6 +17,8 @@ export type {
   StockSaleDeductInput,
   StockSaleReferenceType,
   StockShortfall,
+  StockTransferInput,
+  StockLocation,
 } from '@/capabilities/commerce/stock';
 export {
   INVENTORY_LOW_STOCK_THRESHOLD,
@@ -27,6 +30,7 @@ export {
   callApplyStockMovement,
   mapStockMovementRpcError,
   stockSaleOps,
+  stockLocationService,
   aggregateSaleStockLines,
   findStockShortfalls,
   saleStockAggKey,

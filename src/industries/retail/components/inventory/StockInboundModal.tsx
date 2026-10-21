@@ -12,6 +12,8 @@ interface Props {
   stockRows: InventoryStockRow[];
   /** 목록에서 입고 진입 시 사전 선택 */
   initialRow?: InventoryStockRow | null;
+  /** 부서/자재 창고. 미지정 시 central */
+  stockLocationId?: string | null;
   onClose: () => void;
   onCompleted: (quantityAfter: number) => void;
   onError: (message: string) => void;
@@ -30,6 +32,7 @@ export const StockInboundModal: FC<Props> = ({
   organizationId,
   stockRows,
   initialRow,
+  stockLocationId,
   onClose,
   onCompleted,
   onError,
@@ -132,6 +135,7 @@ export const StockInboundModal: FC<Props> = ({
         variantId: needsVariant ? variantId : null,
         quantity: qty,
         reason: memo.trim() || null,
+        stockLocationId: stockLocationId ?? null,
       });
       onCompleted(result.quantityAfter);
       onClose();

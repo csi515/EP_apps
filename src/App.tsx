@@ -62,6 +62,11 @@ import { RndPortalPage } from "./pages/workspace/RndPortalPage";
 import { WorkspaceIntranetHubPage } from "./pages/workspace/WorkspaceIntranetHubPage";
 import { WorkspaceMboPage } from "./pages/workspace/WorkspaceMboPage";
 import { WorkspaceApprovalsPage } from "./pages/workspace/WorkspaceApprovalsPage";
+import {
+  WorkspaceShuttleMyPage,
+  WorkspaceShuttleRosterPage,
+  WorkspaceShuttleRoutesPage,
+} from "./pages/workspace/WorkspaceShuttlePage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
@@ -276,6 +281,9 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/feedbacks" element={<WorkspaceFeedbacksPage />} />
             <Route path="/workspace/mbo" element={<WorkspaceMboPage />} />
             <Route path="/workspace/approvals" element={<WorkspaceApprovalsPage />} />
+            <Route path="/workspace/shuttle/routes" element={<WorkspaceShuttleRoutesPage />} />
+            <Route path="/workspace/shuttle/roster" element={<WorkspaceShuttleRosterPage />} />
+            <Route path="/workspace/shuttle/my" element={<WorkspaceShuttleMyPage />} />
             <Route path="/rnd" element={<RndPortalPage />} />
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />

@@ -1,12 +1,28 @@
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
-import { PackagePlus, SlidersHorizontal, Warehouse, Camera, Printer, QrCode } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  PackagePlus,
+  SlidersHorizontal,
+  Warehouse,
+  Camera,
+  Printer,
+  QrCode,
+  Plus,
+} from 'lucide-react';
+import { useList } from '@refinedev/core';
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { EmptyState, PageHeader } from '@/shared/components';
-import { FilterBar, FilterTabs, SearchField } from '@/shared/components/ui';
+import { EmptyState, Modal, PageHeader } from '@/shared/components';
+import {
+  FilterBar,
+  FilterTabs,
+  FormField,
+  FORM_CONTROL_CLASS,
+  SearchField,
+} from '@/shared/components/ui';
 import {
   BarcodeLabelPrintModal,
   StoreQrPopPrintModal,
@@ -14,6 +30,11 @@ import {
   generateItemBarcode,
   type InventoryItem,
 } from '@/capabilities/inventory';
+import {
+  stockLocationService,
+  type StockLocation,
+} from '@/capabilities/commerce/stock';
+import { useWorkspaceMemberScope } from '@/pages/workspace/useWorkspaceMemberScope';
 import { inventoryService } from '../../services/inventoryService';
 import {
   INVENTORY_LOW_STOCK_THRESHOLD,
@@ -23,6 +44,7 @@ import {
 import { INVENTORY_LIST_COPY as COPY } from './inventoryListCopy';
 import { StockAdjustmentModal } from './StockAdjustmentModal';
 import { StockInboundModal } from './StockInboundModal';
+import { StockTransferModal } from './StockTransferModal';
 
 function matchesStockFilter(row: InventoryStockRow, filter: InventoryStockFilter): boolean {
   if (filter === 'ALL') return true;
@@ -40,11 +62,14 @@ export const InventoryListView: FC = () => {
   const { showToast } = useApp();
   const { isAdmin } = usePermissions();
   const { currentOrganization } = useOrganization();
+  const memberScope = useWorkspaceMemberScope();
   const orgId = currentOrganization?.id;
   /** Owner/Admin/Manager만 입고·조정 — Staff는 조회만 */
   const canMutate = isAdmin;
 
   const [rows, setRows] = useState<InventoryStockRow[]>([]);
+  const [locations, setLocations] = useState<StockLocation[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<InventoryStockFilter>('ALL');
@@ -52,26 +77,75 @@ export const InventoryListView: FC = () => {
   const [inboundInitial, setInboundInitial] = useState<InventoryStockRow | null>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjustInitial, setAdjustInitial] = useState<InventoryStockRow | null>(null);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferInitial, setTransferInitial] = useState<InventoryStockRow | null>(null);
+  const [addLocOpen, setAddLocOpen] = useState(false);
+  const [newLocName, setNewLocName] = useState('');
+  const [newLocDeptId, setNewLocDeptId] = useState('');
+  const [savingLoc, setSavingLoc] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [labelPrintOpen, setLabelPrintOpen] = useState(false);
   const [selectedLabelItem, setSelectedLabelItem] = useState<InventoryItem | null>(null);
   const [storePopOpen, setStorePopOpen] = useState(false);
 
-  const load = useCallback(async () => {
+  const { query: deptQuery } = useList<{ id: string; name: string }>({
+    resource: 'departments',
+    meta: { schema: 'core' },
+    sorters: [{ field: 'name', order: 'asc' }],
+    pagination: { pageSize: 200 },
+    queryOptions: { enabled: Boolean(orgId) && canMutate },
+  });
+  const departments = (deptQuery?.data?.data as { id: string; name: string }[]) ?? [];
+
+  const loadLocations = useCallback(async () => {
     if (!orgId || !isSupabaseConfigured()) {
+      setLocations([]);
+      setSelectedLocationId(null);
+      return;
+    }
+    try {
+      const all = await stockLocationService.listLocations(orgId);
+      const scoped = stockLocationService.filterByMemberScope(all, {
+        scopeType: memberScope.scopeType,
+        memberDepartmentId: memberScope.memberDepartmentId,
+        memberPath: memberScope.memberPath,
+        departmentPathById: memberScope.departmentPathById,
+      });
+      setLocations(scoped);
+      setSelectedLocationId((prev) => {
+        if (prev && scoped.some((loc) => loc.id === prev)) return prev;
+        const central = scoped.find((loc) => loc.code === 'central');
+        return central?.id ?? scoped[0]?.id ?? null;
+      });
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : COPY.loadError, 'error');
+      setLocations([]);
+    }
+  }, [orgId, memberScope, showToast]);
+
+  const load = useCallback(async () => {
+    if (!orgId || !isSupabaseConfigured() || !selectedLocationId) {
       setRows([]);
       return;
     }
     setLoading(true);
     try {
-      setRows(await inventoryService.listStockRows(orgId));
+      setRows(
+        await inventoryService.listStockRows(orgId, {
+          stockLocationId: selectedLocationId,
+        })
+      );
     } catch (err) {
       showToast(err instanceof Error ? err.message : COPY.loadError, 'error');
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, [orgId, showToast]);
+  }, [orgId, selectedLocationId, showToast]);
+
+  useEffect(() => {
+    void loadLocations();
+  }, [loadLocations]);
 
   useEffect(() => {
     void load();
@@ -149,7 +223,7 @@ export const InventoryListView: FC = () => {
         icon={<Warehouse className="w-5 h-5" />}
         iconClassName="text-teal-600"
         title={COPY.title}
-        description={canMutate ? COPY.description : COPY.descriptionReadOnly}
+        description={canMutate ? COPY.locationAllHint : COPY.descriptionReadOnly}
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button
@@ -170,6 +244,18 @@ export const InventoryListView: FC = () => {
             </button>
             {canMutate && (
               <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTransferInitial(null);
+                    setTransferOpen(true);
+                  }}
+                  disabled={rows.length === 0 || locations.length < 2}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl w-full sm:w-auto border border-slate-200/80 disabled:opacity-60"
+                >
+                  <ArrowLeftRight className="w-4 h-4" />
+                  {COPY.transfer}
+                </button>
                 <button
                   type="button"
                   onClick={() => openAdjust()}
@@ -195,6 +281,34 @@ export const InventoryListView: FC = () => {
       />
 
       <FilterBar>
+        <label className="flex flex-col gap-1 w-full sm:w-auto sm:min-w-[180px]">
+          <span className="text-[11px] font-bold text-slate-500">{COPY.locationLabel}</span>
+          <select
+            value={selectedLocationId ?? ''}
+            onChange={(e) => setSelectedLocationId(e.target.value || null)}
+            className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
+          >
+            {locations.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.code === 'central' ? COPY.locationCentral : loc.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        {canMutate && (
+          <button
+            type="button"
+            onClick={() => {
+              setNewLocName('');
+              setNewLocDeptId(departments[0]?.id ?? '');
+              setAddLocOpen(true);
+            }}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] text-sm font-bold text-teal-700 bg-teal-50 rounded-xl border border-teal-100"
+          >
+            <Plus className="w-4 h-4" />
+            {COPY.addDeptLocation}
+          </button>
+        )}
         <SearchField
           value={search}
           onChange={setSearch}
@@ -363,13 +477,14 @@ export const InventoryListView: FC = () => {
         </>
       )}
 
-      {canMutate && (
+      {canMutate && selectedLocationId && (
         <>
           <StockInboundModal
             isOpen={inboundOpen}
             organizationId={orgId}
             stockRows={rows}
             initialRow={inboundInitial}
+            stockLocationId={selectedLocationId}
             onClose={() => setInboundOpen(false)}
             onCompleted={(after) => {
               showToast(COPY.inboundDone(after), 'success');
@@ -383,6 +498,7 @@ export const InventoryListView: FC = () => {
             organizationId={orgId}
             stockRows={rows}
             initialRow={adjustInitial}
+            stockLocationId={selectedLocationId}
             onClose={() => setAdjustOpen(false)}
             onCompleted={(delta, after) => {
               showToast(COPY.adjustDone(delta, after), 'success');
@@ -390,6 +506,109 @@ export const InventoryListView: FC = () => {
             }}
             onError={(message) => showToast(message, 'error')}
           />
+
+          <StockTransferModal
+            isOpen={transferOpen}
+            organizationId={orgId}
+            stockRows={rows}
+            locations={locations}
+            fromLocationId={selectedLocationId}
+            initialRow={transferInitial}
+            onClose={() => setTransferOpen(false)}
+            onCompleted={() => {
+              showToast(COPY.transferDone, 'success');
+              void load();
+            }}
+            onError={(message) => showToast(message, 'error')}
+          />
+
+          <Modal
+            isOpen={addLocOpen}
+            onClose={() => setAddLocOpen(false)}
+            title={COPY.addDeptLocationTitle}
+            maxWidth="md"
+          >
+            <form
+              className="p-4 sm:p-6 space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (savingLoc || !orgId) return;
+                const name = newLocName.trim();
+                if (!name) {
+                  showToast(COPY.addDeptLocationNeedName, 'error');
+                  return;
+                }
+                if (!newLocDeptId) {
+                  showToast(COPY.addDeptLocationNeedDept, 'error');
+                  return;
+                }
+                setSavingLoc(true);
+                void stockLocationService
+                  .createDepartmentLocation({
+                    organizationId: orgId,
+                    name,
+                    code: `dept_${newLocDeptId.slice(0, 8)}`,
+                    departmentId: newLocDeptId,
+                  })
+                  .then(async (created) => {
+                    showToast(`${created.name} 창고가 추가되었습니다.`, 'success');
+                    setAddLocOpen(false);
+                    await loadLocations();
+                    setSelectedLocationId(created.id);
+                  })
+                  .catch((err) => {
+                    showToast(
+                      err instanceof Error ? err.message : COPY.addDeptLocationError,
+                      'error'
+                    );
+                  })
+                  .finally(() => setSavingLoc(false));
+              }}
+            >
+              <FormField label={COPY.addDeptLocationName} required>
+                <input
+                  required
+                  value={newLocName}
+                  onChange={(e) => setNewLocName(e.target.value)}
+                  className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
+                  placeholder="예: 생산1팀 자재고"
+                />
+              </FormField>
+              <FormField label={COPY.addDeptLocationDept} required>
+                <select
+                  required
+                  value={newLocDeptId}
+                  onChange={(e) => setNewLocDeptId(e.target.value)}
+                  className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
+                >
+                  <option value="" disabled>
+                    {COPY.addDeptLocationDept}
+                  </option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </FormField>
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setAddLocOpen(false)}
+                  className="min-h-[44px] px-4 rounded-xl border border-slate-200 text-sm font-bold"
+                >
+                  {COPY.cancel}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingLoc || departments.length === 0}
+                  className="min-h-[44px] px-4 rounded-xl bg-teal-600 text-white text-sm font-bold disabled:opacity-60"
+                >
+                  {COPY.addDeptLocationSubmit}
+                </button>
+              </div>
+            </form>
+          </Modal>
         </>
       )}
 

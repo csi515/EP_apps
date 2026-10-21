@@ -93,6 +93,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   table_order_kds: ['kds', 'orders', 'table-orders'],
   diet_body_log: ['diet-body-log', 'diet', 'workout', 'inbody'],
   vehicle_shuttle: ['shuttle', 'routes'],
+  shuttle_dispatch: ['shuttle', 'shuttle-routes', 'shuttle-roster', 'shuttle-my'],
   commission_payroll: ['commission-payroll', 'payroll', 'settlement'],
   lost_found: ['lost-found', 'lost_items'],
   recipe_bom: ['recipe-bom', 'recipes', 'bom'],

@@ -120,6 +120,25 @@ function run() {
   assert.doesNotMatch(bathFiles, /EXCLUDE USING gist/);
   assert.doesNotMatch(bathFiles, /book_room_reservation_guarded/);
 
+  const memberSql = readSrc('supabase/migrations/20261021150000_member_room_reservation.sql');
+  assert.match(memberSql, /request_member_room_reservation/);
+  assert.match(memberSql, /ALTER COLUMN customer_id DROP NOT NULL/);
+  assert.match(memberSql, /list_org_room_reservations/);
+  assert.match(memberSql, /resources_manage/);
+  assert.match(memberSql, /is_org_member\(organization_id\)/);
+  assert.doesNotMatch(memberSql, /is_org_staff_actor\(v_row\.organization_id\)/);
+
+  const memberService = readSrc('src/capabilities/resources/reservationService.ts');
+  assert.match(memberService, /request_member_room_reservation/);
+  assert.match(memberService, /requestMemberResourceReservation/);
+  assert.match(memberService, /list_org_room_reservations/);
+  assert.match(memberService, /requesterName/);
+
+  const workspacePage = readSrc('src/pages/workspace/WorkspaceResourcesPage.tsx');
+  assert.match(workspacePage, /UniversalResourceCalendarView/);
+  assert.match(workspacePage, /bookings/);
+  assert.match(workspacePage, /bookingMode="member"/);
+
   console.log('resourceReservation.test.ts: ok');
 }
 

@@ -3,7 +3,9 @@ import { useCreate, useDelete, useList } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { canManageResourceCatalog } from '@/domain/permissions';
 import { StorageService } from '@/services/storage';
-import { listBookableResources, upsertBookableResource } from '@/core/resources/resourceService';
+import { listBookableResources, upsertBookableResource } from '@/capabilities/resources';
+import type { ResourceCategory } from '@/capabilities/resources';
+import { UniversalResourceCalendarView } from '@/capabilities/resources';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { filterRowsByMemberDepartmentScope } from '@/core/organizations/departmentScope';
 import { useWorkspaceMemberScope } from './useWorkspaceMemberScope';
@@ -19,7 +21,10 @@ type ResourceTypeRow = {
   department_id?: string | null;
 };
 
-type TabId = 'catalog' | 'instances';
+type TabId = 'bookings' | 'catalog' | 'instances';
+
+const DEFAULT_OPEN = '08:00';
+const DEFAULT_CLOSE = '20:00';
 
 function slugifyKind(name: string): string {
   const base = name
@@ -28,6 +33,11 @@ function slugifyKind(name: string): string {
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
   return base.length >= 2 ? base : `resource_${Date.now()}`;
+}
+
+/** resource_types.category → 캘린더 메타 category */
+function mapTypeCategoryToMeta(category: 'EQUIPMENT' | 'SPACE'): ResourceCategory {
+  return category === 'SPACE' ? 'meeting_room' : 'vehicle';
 }
 
 export const WorkspaceResourcesPage: React.FC = () => {
@@ -42,7 +52,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
     customRole: { permissions: active?.customRole?.permissions ?? null },
   });
 
-  const [tab, setTab] = useState<TabId>('catalog');
+  const [tab, setTab] = useState<TabId>('bookings');
   const [instances, setInstances] = useState<Awaited<ReturnType<typeof listBookableResources>>>([]);
   const [loadingInstances, setLoadingInstances] = useState(false);
 
@@ -81,7 +91,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
     if (!orgId) return;
     setLoadingInstances(true);
     try {
-      const rows = await listBookableResources({ organizationId: orgId, kind: selectedKind ?? undefined });
+      const rows = await listBookableResources({
+        organizationId: orgId,
+        kind: selectedKind ?? undefined,
+      });
       setInstances(rows);
     } catch (cause) {
       showToast(cause instanceof Error ? cause.message : '자원 목록 조회 실패', 'error');
@@ -95,6 +108,11 @@ export const WorkspaceResourcesPage: React.FC = () => {
   }, [reloadInstances]);
 
   const filteredTypes = useMemo(() => types, [types]);
+
+  const selectedTypeRow = useMemo(
+    () => filteredTypes.find((t) => t.kind_slug === selectedKind) ?? null,
+    [filteredTypes, selectedKind],
+  );
 
   const handleAddType = (event: React.FormEvent) => {
     event.preventDefault();
@@ -118,8 +136,9 @@ export const WorkspaceResourcesPage: React.FC = () => {
       {
         onSuccess: () => {
           setTypeName('');
-          showToast('자원 종류가 등록되었습니다.', 'success');
+          showToast('자원 종류가 등록되었습니다. 인스턴스 탭에서 실물을 등록하세요.', 'success');
           void typesQuery?.refetch?.();
+          setSelectedKind(kind_slug);
         },
         onError: () => showToast('자원 종류 등록에 실패했습니다.', 'error'),
       },
@@ -129,12 +148,20 @@ export const WorkspaceResourcesPage: React.FC = () => {
   const handleAddInstance = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!orgId || !selectedKind || !instanceName.trim()) return;
+    const typeRow = selectedTypeRow;
     try {
       await upsertBookableResource({
         organizationId: orgId,
         kind: selectedKind,
         name: instanceName.trim(),
         capacity: 1,
+        openTime: DEFAULT_OPEN,
+        closeTime: DEFAULT_CLOSE,
+        metadata: {
+          category: typeRow ? mapTypeCategoryToMeta(typeRow.category) : 'other',
+          // v1 예약은 즉시 확정. 플래그는 후속 승인제 연동용으로만 저장.
+          require_approval: typeRow?.requires_approval === true,
+        },
       });
       setInstanceName('');
       showToast('자원 인스턴스가 저장되었습니다.', 'success');
@@ -144,28 +171,58 @@ export const WorkspaceResourcesPage: React.FC = () => {
     }
   };
 
-  return (
-    <main className="mx-auto max-w-3xl p-4 pb-12">
-      <h1 className="text-lg font-semibold text-slate-900">공용자원 관리</h1>
-      <p className="mt-1 text-sm text-slate-600">총무팀 자원 카탈로그와 예약 가능 인스턴스를 관리합니다.</p>
+  const tabLabel: Record<TabId, string> = {
+    bookings: '예약·현황',
+    catalog: '자원 종류',
+    instances: '인스턴스',
+  };
 
-      <div className="mt-4 flex gap-2">
-        {(['catalog', 'instances'] as TabId[]).map((id) => (
-          <button
-            key={id}
-            type="button"
-            className={`min-h-12 flex-1 rounded-xl border px-3 text-sm font-medium ${
-              tab === id ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-slate-200 bg-white'
-            }`}
-            onClick={() => setTab(id)}
-          >
-            {id === 'catalog' ? '자원 카탈로그' : '자원 인스턴스'}
-          </button>
-        ))}
+  return (
+    <main className="mx-auto max-w-6xl p-4 pb-12">
+      <h1 className="text-lg font-semibold text-slate-900">공용자원</h1>
+      <p className="mt-1 text-sm text-slate-600">
+        예약·현황에서 시간대를 잡고, 총무는 자원 종류·인스턴스를 관리합니다.
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(['bookings', 'catalog', 'instances'] as TabId[]).map((id) => {
+          if ((id === 'catalog' || id === 'instances') && !canManage && id === 'catalog') {
+            // 종류 탭은 조회는 가능, 쓰기는 canManage
+          }
+          return (
+            <button
+              key={id}
+              type="button"
+              className={`min-h-12 flex-1 rounded-xl border px-3 text-sm font-medium sm:flex-none sm:px-5 ${
+                tab === id
+                  ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
+                  : 'border-slate-200 bg-white'
+              }`}
+              onClick={() => setTab(id)}
+            >
+              {tabLabel[id]}
+            </button>
+          );
+        })}
       </div>
 
+      {tab === 'bookings' ? (
+        <section className="mt-6">
+          {orgId ? (
+            <UniversalResourceCalendarView
+              compact
+              hideApprovalInbox
+              hideMasterButton
+              bookingMode="member"
+            />
+          ) : (
+            <p className="text-sm text-slate-500">조직을 선택하세요.</p>
+          )}
+        </section>
+      ) : null}
+
       {tab === 'catalog' ? (
-        <section className="mt-6 space-y-4">
+        <section className="mt-6 mx-auto max-w-3xl space-y-4">
           {canManage ? (
             <form onSubmit={handleAddType} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
               <label className="block text-sm font-medium">자원 종류 추가</label>
@@ -183,21 +240,23 @@ export const WorkspaceResourcesPage: React.FC = () => {
                 <option value="SPACE">공간 (SPACE)</option>
                 <option value="EQUIPMENT">장비 (EQUIPMENT)</option>
               </select>
-              <label className="flex min-h-12 items-center gap-2 text-sm text-slate-700">
+              <label className="flex min-h-12 items-center gap-2 text-sm text-slate-500">
                 <input
                   type="checkbox"
                   checked={requiresApproval}
                   onChange={(e) => setRequiresApproval(e.target.checked)}
                   className="h-5 w-5 rounded border-slate-300"
                 />
-                예약·사용 시 결재 필요
+                예약 시 결재 필요 (v1에서는 저장만, 예약은 즉시 확정)
               </label>
               <button type="submit" className="min-h-12 w-full rounded-xl bg-indigo-600 text-white font-medium">
                 등록
               </button>
             </form>
           ) : (
-            <p className="text-sm text-slate-500">자원 종류 변경은 총무(resources_manage) 권한이 필요합니다.</p>
+            <p className="text-sm text-slate-500">
+              자원 종류 변경은 총무(resources_manage) 권한이 필요합니다.
+            </p>
           )}
 
           <ul className="divide-y rounded-2xl border border-slate-200 bg-white">
@@ -205,7 +264,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
               <li key={row.id} className="flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="font-medium text-slate-900">{row.name}</p>
-                  <p className="text-xs text-slate-500">{row.category} · kind={row.kind_slug}</p>
+                  <p className="text-xs text-slate-500">
+                    {row.category} · kind={row.kind_slug}
+                    {row.requires_approval ? ' · 결재플래그' : ''}
+                  </p>
                 </div>
                 {canManage ? (
                   <button
@@ -228,8 +290,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
             ) : null}
           </ul>
         </section>
-      ) : (
-        <section className="mt-6 space-y-4">
+      ) : null}
+
+      {tab === 'instances' ? (
+        <section className="mt-6 mx-auto max-w-3xl space-y-4">
           <select
             className="min-h-12 w-full rounded-xl border border-slate-200 px-3"
             value={selectedKind ?? ''}
@@ -256,6 +320,11 @@ export const WorkspaceResourcesPage: React.FC = () => {
               </button>
             </form>
           ) : null}
+          {selectedKind ? (
+            <p className="text-xs text-slate-500">
+              운영 시간 기본값 {DEFAULT_OPEN}–{DEFAULT_CLOSE} (예약 슬롯과 맞춤)
+            </p>
+          ) : null}
 
           {loadingInstances ? <p className="text-sm text-slate-500">불러오는 중…</p> : null}
           <ul className="divide-y rounded-2xl border border-slate-200 bg-white">
@@ -263,7 +332,8 @@ export const WorkspaceResourcesPage: React.FC = () => {
               <li key={row.id} className="p-4">
                 <p className="font-medium">{row.name}</p>
                 <p className="text-xs text-slate-500">
-                  {row.kind} · {row.is_active ? '사용 가능' : '비활성'}
+                  {row.kind} · {row.open_time}–{row.close_time} ·{' '}
+                  {row.is_active ? '사용 가능' : '비활성'}
                 </p>
               </li>
             ))}
@@ -272,7 +342,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
             ) : null}
           </ul>
         </section>
-      )}
+      ) : null}
     </main>
   );
 };

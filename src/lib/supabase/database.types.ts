@@ -1669,6 +1669,7 @@ export interface Database {
           product_id: string | null;
           variant_id: string | null;
           quantity: number;
+          stock_location_id: string;
           updated_at: string;
         };
         Insert: {
@@ -1677,9 +1678,36 @@ export interface Database {
           product_id?: string | null;
           variant_id?: string | null;
           quantity?: number;
+          stock_location_id: string;
           updated_at?: string;
         };
         Update: Partial<Database['core']['Tables']['inventory']['Insert']>;
+        Relationships: [];
+      };
+      stock_locations: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          code: string;
+          department_id: string | null;
+          is_active: boolean;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          code: string;
+          department_id?: string | null;
+          is_active?: boolean;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['stock_locations']['Insert']>;
         Relationships: [];
       };
       stock_movements: {
@@ -1695,6 +1723,7 @@ export interface Database {
           reason: string | null;
           lot_number: string | null;
           expiry_date: string | null;
+          stock_location_id: string | null;
           source_location_id: string | null;
           destination_location_id: string | null;
           created_at: string;
@@ -1711,6 +1740,7 @@ export interface Database {
           reason?: string | null;
           lot_number?: string | null;
           expiry_date?: string | null;
+          stock_location_id?: string | null;
           source_location_id?: string | null;
           destination_location_id?: string | null;
           created_at?: string;
@@ -1728,6 +1758,7 @@ export interface Database {
           expiry_date: string | null;
           quantity: number;
           location_name: string | null;
+          stock_location_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1740,6 +1771,7 @@ export interface Database {
           expiry_date?: string | null;
           quantity?: number;
           location_name?: string | null;
+          stock_location_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -4619,6 +4651,82 @@ export interface Database {
           },
         ];
       };
+      shuttle_registrations: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          member_id: string;
+          route_id: string | null;
+          pickup_stop_id: string | null;
+          dropoff_stop_id: string | null;
+          is_active: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          member_id: string;
+          route_id?: string | null;
+          pickup_stop_id?: string | null;
+          dropoff_stop_id?: string | null;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['shuttle_registrations']['Insert']>;
+        Relationships: [];
+      };
+      shuttle_routes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          name: string;
+          direction: string;
+          departure_time: string;
+          capacity: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id: string;
+          name: string;
+          direction?: string;
+          departure_time: string;
+          capacity?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['shuttle_routes']['Insert']>;
+        Relationships: [];
+      };
+      shuttle_stops: {
+        Row: {
+          id: string;
+          route_id: string;
+          stop_order: number;
+          stop_name: string;
+          pickup_time: string | null;
+          dropoff_time: string | null;
+          pickup_location_detail: string | null;
+          is_pickup: boolean;
+          is_dropoff: boolean;
+        };
+        Insert: {
+          id?: string;
+          route_id: string;
+          stop_order: number;
+          stop_name: string;
+          pickup_time?: string | null;
+          dropoff_time?: string | null;
+          pickup_location_detail?: string | null;
+          is_pickup?: boolean;
+          is_dropoff?: boolean;
+        };
+        Update: Partial<Database['core']['Tables']['shuttle_stops']['Insert']>;
+        Relationships: [];
+      };
       resource_types: {
         Row: {
           id: string;
@@ -6786,7 +6894,7 @@ export interface Database {
       point_transaction_type: PointTransactionType;
       notification_status: NotificationStatus;
       notification_channel: NotificationChannel;
-      stock_movement_type: 'inbound' | 'sale' | 'return' | 'adjustment';
+      stock_movement_type: 'inbound' | 'sale' | 'return' | 'adjustment' | 'transfer';
       customer_session_status: CustomerSessionStatus;
       waitlist_status: WaitlistStatus;
       ops_task_status: OpsTaskStatus;

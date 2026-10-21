@@ -3,13 +3,14 @@
  * 잔량은 Inventory, 증감은 StockMovement. 절대값 덮어쓰기 금지.
  */
 
-export type StockMovementType = 'inbound' | 'sale' | 'return' | 'adjustment';
+export type StockMovementType = 'inbound' | 'sale' | 'return' | 'adjustment' | 'transfer';
 
 export const STOCK_MOVEMENT_TYPES: readonly StockMovementType[] = [
   'inbound',
   'sale',
   'return',
   'adjustment',
+  'transfer',
 ] as const;
 
 export const STOCK_MOVEMENT_TYPE_LABELS: Record<StockMovementType, string> = {
@@ -17,6 +18,7 @@ export const STOCK_MOVEMENT_TYPE_LABELS: Record<StockMovementType, string> = {
   sale: '판매',
   return: '반품',
   adjustment: '조정',
+  transfer: '이동',
 };
 
 export interface Inventory {
@@ -25,6 +27,7 @@ export interface Inventory {
   productId: string | null;
   variantId: string | null;
   quantity: number;
+  stockLocationId: string | null;
   updatedAt: string;
 }
 
@@ -38,6 +41,7 @@ export interface StockMovement {
   referenceType: string | null;
   referenceId: string | null;
   reason: string | null;
+  stockLocationId: string | null;
   createdAt: string;
 }
 
@@ -51,6 +55,7 @@ export interface InventoryStockRow {
   quantity: number;
   isActive: boolean;
   productIsActive: boolean;
+  stockLocationId?: string | null;
 }
 
 export const INVENTORY_LOW_STOCK_THRESHOLD = 5;
@@ -61,6 +66,8 @@ export interface StockInboundInput {
   variantId?: string | null;
   quantity: number;
   reason?: string | null;
+  /** NULL이면 central */
+  stockLocationId?: string | null;
 }
 
 export const STOCK_ADJUSTMENT_REASONS = [
@@ -77,6 +84,23 @@ export interface StockAdjustmentInput {
   /** 부호 있는 증감 (0 불가) */
   quantity: number;
   reason: string;
+  /** NULL이면 central */
+  stockLocationId?: string | null;
+}
+
+export interface StockTransferInput {
+  organizationId: string;
+  productId: string;
+  variantId?: string | null;
+  fromLocationId: string;
+  toLocationId: string;
+  quantity: number;
+  reason?: string | null;
+}
+
+export interface StockListOptions {
+  /** 지정 시 해당 창고 잔량만. 미지정 시 central */
+  stockLocationId?: string | null;
 }
 
 /** sale movement: quantity 음수, reference_type=sale | textbook_sale */

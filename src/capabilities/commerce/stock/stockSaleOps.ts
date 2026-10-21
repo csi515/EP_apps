@@ -1,5 +1,6 @@
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { callApplyStockMovement } from './inventoryService';
+import { stockLocationService } from './stockLocationService';
 import { findStockShortfalls, saleStockAggKey, aggregateSaleStockLines } from './saleStockAggregate';
 import type { SaleStockDeductLine, StockShortfall } from './types';
 
@@ -21,17 +22,20 @@ function ensureClient() {
   return getCoreClient();
 }
 
+/** 판매용 재고는 central 창고 잔량만 조회한다. */
 export async function findInventoryRow(
   organizationId: string,
   productId: string,
   variantId: string | null
 ): Promise<InventoryRow | null> {
   const client = ensureClient();
+  const centralId = await stockLocationService.ensureCentral(organizationId);
   let query = client
     .from('inventory')
     .select('id, quantity')
     .eq('organization_id', organizationId)
-    .eq('product_id', productId);
+    .eq('product_id', productId)
+    .eq('stock_location_id', centralId);
 
   if (variantId) {
     query = query.eq('variant_id', variantId);

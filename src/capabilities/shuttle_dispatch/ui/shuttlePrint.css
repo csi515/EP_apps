@@ -1,0 +1,44 @@
+.shuttle-roster-print-root {
+  max-width: 210mm;
+  margin: 0 auto;
+}
+
+.shuttle-roster-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.shuttle-roster-print-table th,
+.shuttle-roster-print-table td {
+  border: 1px solid #334155;
+  padding: 4px 6px;
+  text-align: left;
+}
+
+.shuttle-roster-print-table th {
+  background: #f1f5f9;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .shuttle-roster-print-root,
+  .shuttle-roster-print-root * {
+    visibility: visible;
+  }
+
+  .shuttle-roster-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 8mm;
+  }
+
+  .shuttle-no-print {
+    display: none !important;
+  }
+}

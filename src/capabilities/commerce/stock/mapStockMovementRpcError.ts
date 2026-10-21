@@ -2,9 +2,15 @@
 export function mapStockMovementRpcError(message: string | null | undefined): string {
   const raw = (message || '').trim();
   if (!raw) return '재고 처리에 실패했습니다.';
-  if (raw.includes('재고가 부족')) return raw;
+  if (raw.includes('재고가 부족') || raw.includes('insufficient stock')) {
+    return raw.includes('재고가 부족') ? raw : '재고가 부족합니다.';
+  }
   if (raw.includes('조정 후 재고가 음수')) return raw;
   if (raw.includes('재고가 음수가 됩니다')) return raw;
+  if (raw.includes('from and to location')) return '출발과 도착 창고가 같습니다.';
+  if (raw.includes('invalid stock location')) return '유효하지 않은 재고 위치입니다.';
+  if (raw.includes('no stock at from')) return '출발 창고 재고가 없습니다.';
+  if (raw.includes('transfer qty')) return '이동 수량은 0보다 커야 합니다.';
   if (raw.includes('입고 수량')) return '입고 수량은 0보다 커야 합니다.';
   if (raw.includes('조정 수량')) return '조정 수량은 0이 아닌 정수여야 합니다.';
   if (raw.includes('조정 사유')) return '조정 사유를 입력해 주세요.';

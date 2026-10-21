@@ -41,6 +41,7 @@ export type BundledPresetCapabilityId =
   | 'diet_body_log'
   // 범주 I: 통학 & 모빌리티 관제
   | 'vehicle_shuttle'
+  | 'shuttle_dispatch'
   // 범주 J: 프리랜서 & 인센티브 정산
   | 'commission_payroll'
   // 범주 K: 시설 분실물·습득물 보관

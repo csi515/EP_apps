@@ -1,14 +1,17 @@
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { mapStockMovementRpcError } from './mapStockMovementRpcError';
+import { stockLocationService } from './stockLocationService';
 import type {
   InventoryStockRow,
   StockAdjustmentInput,
   StockInboundInput,
+  StockListOptions,
   StockMovement,
   StockMovementListQuery,
   StockMovementType,
   StockReturnRestoreInput,
   StockSaleDeductInput,
+  StockTransferInput,
 } from './types';
 
 type ProductRow = {
@@ -30,6 +33,7 @@ type InventoryRow = {
   product_id: string | null;
   variant_id: string | null;
   quantity: number | string;
+  stock_location_id?: string | null;
 };
 
 type MovementRow = {
@@ -42,12 +46,14 @@ type MovementRow = {
   reference_type: string | null;
   reference_id: string | null;
   reason: string | null;
+  stock_location_id?: string | null;
   created_at: string;
 };
 
 type ApplyStockMovementRpcResult = {
   movement: MovementRow;
   quantity_after: number | string;
+  stock_location_id?: string;
 };
 
 function toNumber(value: number | string | null | undefined): number {
@@ -74,6 +80,7 @@ function mapMovement(row: MovementRow): StockMovement {
     referenceType: row.reference_type,
     referenceId: row.reference_id,
     reason: row.reason,
+    stockLocationId: row.stock_location_id ?? null,
     createdAt: row.created_at,
   };
 }
@@ -106,6 +113,14 @@ async function assertProductInOrg(
   }
 }
 
+async function resolveStockLocationId(
+  organizationId: string,
+  stockLocationId?: string | null
+): Promise<string> {
+  if (stockLocationId) return stockLocationId;
+  return stockLocationService.ensureCentral(organizationId);
+}
+
 /**
  * core.apply_stock_movement — movement + inventory 원자 변경.
  * 공개 apply* API는 이 RPC만 사용한다.
@@ -119,8 +134,14 @@ export async function callApplyStockMovement(params: {
   referenceType?: string | null;
   referenceId?: string | null;
   reason?: string | null;
+  stockLocationId?: string | null;
 }): Promise<{ movement: StockMovement; quantityAfter: number }> {
   const client = ensureClient();
+  const stockLocationId = await resolveStockLocationId(
+    params.organizationId,
+    params.stockLocationId
+  );
+
   const { data, error } = await client.rpc(
     'apply_stock_movement' as never,
     {
@@ -132,6 +153,7 @@ export async function callApplyStockMovement(params: {
       p_reference_type: params.referenceType ?? null,
       p_reference_id: params.referenceId ?? null,
       p_reason: params.reason ?? null,
+      p_stock_location_id: stockLocationId,
     } as never
   );
 
@@ -151,12 +173,19 @@ export async function callApplyStockMovement(params: {
 }
 
 /**
- * Core 재고 조회·입고·판매·반품·조정·이력.
- * 잔량 변경은 apply_stock_movement RPC(FOR UPDATE)로 원자 처리.
+ * Core 재고 조회·입고·판매·반품·조정·이력·창고 이동.
+ * 잔량 변경은 apply_stock_movement / transfer_stock_between_locations RPC로 원자 처리.
  */
 export const inventoryService = {
-  async listStockRows(organizationId: string): Promise<InventoryStockRow[]> {
+  async listStockRows(
+    organizationId: string,
+    options?: StockListOptions
+  ): Promise<InventoryStockRow[]> {
     const client = ensureClient();
+    const stockLocationId = await resolveStockLocationId(
+      organizationId,
+      options?.stockLocationId
+    );
 
     const [productsRes, variantsRes, inventoryRes] = await Promise.all([
       client
@@ -167,8 +196,9 @@ export const inventoryService = {
       client.from('product_variants').select('id, product_id, name, is_active'),
       client
         .from('inventory')
-        .select('id, product_id, variant_id, quantity')
-        .eq('organization_id', organizationId),
+        .select('id, product_id, variant_id, quantity, stock_location_id')
+        .eq('organization_id', organizationId)
+        .eq('stock_location_id', stockLocationId),
     ]);
 
     if (productsRes.error) throw productsRes.error;
@@ -214,6 +244,7 @@ export const inventoryService = {
             quantity: qtyByVariant.get(variant.id) ?? 0,
             isActive: variant.is_active && product.is_active,
             productIsActive: product.is_active,
+            stockLocationId,
           });
         }
       } else {
@@ -227,6 +258,7 @@ export const inventoryService = {
           quantity: qtyByProductOnly.get(product.id) ?? 0,
           isActive: product.is_active,
           productIsActive: product.is_active,
+          stockLocationId,
         });
       }
     }
@@ -291,6 +323,7 @@ export const inventoryService = {
       movementType: 'inbound',
       quantity: qty,
       reason: input.reason?.trim() || null,
+      stockLocationId: input.stockLocationId,
     });
   },
 
@@ -320,13 +353,61 @@ export const inventoryService = {
       movementType: 'adjustment',
       quantity: delta,
       reason,
+      stockLocationId: input.stockLocationId,
     });
+  },
+
+  async transferBetweenLocations(input: StockTransferInput): Promise<{
+    fromQuantityAfter: number;
+    toQuantityAfter: number;
+    quantity: number;
+  }> {
+    const qty = Math.floor(Number(input.quantity) || 0);
+    if (qty <= 0) throw new Error('이동 수량은 0보다 커야 합니다.');
+    if (!input.productId) throw new Error('상품을 선택해 주세요.');
+    if (!input.fromLocationId || !input.toLocationId) {
+      throw new Error('출발·도착 창고를 선택해 주세요.');
+    }
+    if (input.fromLocationId === input.toLocationId) {
+      throw new Error('출발과 도착 창고가 같습니다.');
+    }
+
+    const variantId = input.variantId || null;
+    await assertProductInOrg(input.organizationId, input.productId, variantId);
+
+    const client = ensureClient();
+    const { data, error } = await client.rpc(
+      'transfer_stock_between_locations' as never,
+      {
+        p_organization_id: input.organizationId,
+        p_product_id: input.productId,
+        p_variant_id: variantId,
+        p_from_location_id: input.fromLocationId,
+        p_to_location_id: input.toLocationId,
+        p_quantity: qty,
+        p_reason: input.reason?.trim() || null,
+      } as never
+    );
+    if (error) throw new Error(mapStockMovementRpcError(error.message));
+
+    const payload = data as {
+      from_quantity_after?: number | string;
+      to_quantity_after?: number | string;
+      quantity?: number | string;
+    } | null;
+
+    return {
+      fromQuantityAfter: toNumber(payload?.from_quantity_after),
+      toQuantityAfter: toNumber(payload?.to_quantity_after),
+      quantity: toNumber(payload?.quantity) || qty,
+    };
   },
 
   /**
    * 판매 출고.
    * stock_movements_sale_sign_ref_chk: quantity < 0,
    * reference_type IN ('sale','textbook_sale'), reference_id 필수.
+   * 기본 central 창고.
    */
   async applySaleDeduct(input: StockSaleDeductInput): Promise<{
     movement: StockMovement;
@@ -358,6 +439,7 @@ export const inventoryService = {
       referenceType,
       referenceId: saleId,
       reason: input.reason?.trim() || null,
+      stockLocationId: null,
     });
   },
 
@@ -396,6 +478,7 @@ export const inventoryService = {
       referenceType,
       referenceId: saleReturnId,
       reason: input.reason?.trim() || null,
+      stockLocationId: null,
     });
   },
 };
