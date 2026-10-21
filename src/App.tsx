@@ -68,6 +68,15 @@ import {
   WorkspaceShuttleRosterPage,
   WorkspaceShuttleRoutesPage,
 } from "./pages/workspace/WorkspaceShuttlePage";
+import {
+  WorkspaceVolunteerListPage,
+  WorkspaceVolunteerManagePage,
+} from "./pages/workspace/WorkspaceVolunteerPage";
+import {
+  WorkspaceMealSurveyMyPage,
+  WorkspaceMealSurveyManagePage,
+  WorkspaceMealSurveySettingsPage,
+} from "./pages/workspace/WorkspaceMealSurveyPage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
@@ -286,6 +295,11 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/shuttle/roster" element={<WorkspaceShuttleRosterPage />} />
             <Route path="/workspace/shuttle/my" element={<WorkspaceShuttleMyPage />} />
             <Route path="/workspace/sop-risk" element={<WorkspaceSopRiskPage />} />
+            <Route path="/workspace/volunteer" element={<WorkspaceVolunteerListPage />} />
+            <Route path="/workspace/volunteer/manage" element={<WorkspaceVolunteerManagePage />} />
+            <Route path="/workspace/meal-survey" element={<WorkspaceMealSurveyMyPage />} />
+            <Route path="/workspace/meal-survey/manage" element={<WorkspaceMealSurveyManagePage />} />
+            <Route path="/workspace/meal-survey/settings" element={<WorkspaceMealSurveySettingsPage />} />
             <Route path="/rnd" element={<RndPortalPage />} />
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />

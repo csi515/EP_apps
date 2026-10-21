@@ -9,6 +9,8 @@ export const STANDARD_PERMISSION_KEYS = [
   'shuttle:routes:manage',
   'shuttle:dispatch:operate',
   'shuttle:logs:read',
+  'volunteer:manage',
+  'meal_survey:manage',
   'billing:invoices:read',
   'attendance:records:write',
 ] as const;
@@ -23,6 +25,23 @@ const RESOURCE_ACTION: Record<string, Partial<Record<string, StandardPermissionK
   shuttle_roster: { manage: 'shuttle:manage', list: 'shuttle:manage', edit: 'shuttle:manage' },
   shuttle_dispatch: { operate: 'shuttle:dispatch:operate', edit: 'shuttle:dispatch:operate' },
   shuttle_logs: { read: 'shuttle:logs:read', list: 'shuttle:logs:read' },
+  volunteer_activities: {
+    manage: 'volunteer:manage',
+    create: 'volunteer:manage',
+    edit: 'volunteer:manage',
+    delete: 'volunteer:manage',
+  },
+  volunteer_signups: { manage: 'volunteer:manage', list: 'volunteer:manage' },
+  meal_survey_settings: {
+    manage: 'meal_survey:manage',
+    create: 'meal_survey:manage',
+    edit: 'meal_survey:manage',
+  },
+  meal_survey_overview: {
+    manage: 'meal_survey:manage',
+    list: 'meal_survey:manage',
+    read: 'meal_survey:manage',
+  },
   billing_invoices: { read: 'billing:invoices:read', list: 'billing:invoices:read', show: 'billing:invoices:read' },
   attendance_records: { write: 'attendance:records:write', create: 'attendance:records:write', edit: 'attendance:records:write' },
   attendance: { write: 'attendance:records:write', create: 'attendance:records:write' },

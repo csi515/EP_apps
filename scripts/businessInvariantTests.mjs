@@ -129,6 +129,9 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'check:db-types', group: 'architecture', kind: 'static', ci: 'suite', order: 58 },
   { script: 'test:preset-runtime-parity', group: 'industry', kind: 'contract', ci: 'suite', order: 59 },
   { script: 'test:research-project-engine', group: 'capability', kind: 'unit', ci: 'suite', order: 60 },
+  { script: 'test:permission-catalog', group: 'authorization', kind: 'unit', ci: 'always', order: 61 },
+  { script: 'test:volunteer-activity-engine', group: 'capability', kind: 'unit', ci: 'always', order: 62 },
+  { script: 'test:meal-survey-engine', group: 'capability', kind: 'unit', ci: 'always', order: 63 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */

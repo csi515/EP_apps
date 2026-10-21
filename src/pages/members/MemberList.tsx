@@ -24,6 +24,17 @@ import {
   type DynamicRoleRow,
 } from '@/core/organizations/services/dynamicRoleService';
 import { OwnershipTransferCard } from '@/pages/settings/OwnershipTransferCard';
+import { listAuditLogs } from '@/core/audit';
+import type { AuditLog } from '@/core/audit/types';
+import { StorageService } from '@/services/storage';
+import { canManageRoles } from '@/domain/permissions';
+import { listEnabledPermissionLabels } from '@/domain/permissionCatalog';
+
+function formatAuditAction(action: string): string {
+  if (action === 'ROLE_ASSIGNED') return '직급 부여';
+  if (action === 'ROLE_REVOKED') return '권한 회수';
+  return action;
+}
 
 export function MemberList(): React.JSX.Element {
   const { currentOrganization } = useOrganization();
@@ -36,6 +47,8 @@ export function MemberList(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [expandedPermMemberIds, setExpandedPermMemberIds] = useState<Set<string>>(new Set());
+  const [roleAuditLogs, setRoleAuditLogs] = useState<AuditLog[]>([]);
 
   // 직급 부여/변경 모달 상태
   const [assignTarget, setAssignTarget] = useState<DynamicMemberRow | null>(null);
@@ -45,6 +58,10 @@ export function MemberList(): React.JSX.Element {
 
   // 권한 회수(강등) 컨펌 모달 상태
   const [revokeTarget, setRevokeTarget] = useState<DynamicMemberRow | null>(null);
+
+  const activeUser = StorageService.getActiveUser();
+  const canViewRoleAudit =
+    callerRole === 'owner' || canManageRoles(activeUser);
 
   async function loadData() {
     if (!orgId) return;
@@ -57,6 +74,30 @@ export function MemberList(): React.JSX.Element {
       ]);
       setRoles(fetchedRoles);
       setMembers(fetchedMembers);
+
+      if (canViewRoleAudit) {
+        try {
+          const logs = await listAuditLogs({
+            organizationId: orgId,
+            entityType: 'permissions',
+            limit: 20,
+          });
+          setRoleAuditLogs(
+            logs.filter(
+              (log) =>
+                log.action === 'ROLE_ASSIGNED' ||
+                log.action === 'ROLE_REVOKED' ||
+                log.action === 'role_changed' ||
+                log.action === 'granted' ||
+                log.action === 'revoked'
+            )
+          );
+        } catch {
+          setRoleAuditLogs([]);
+        }
+      } else {
+        setRoleAuditLogs([]);
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '데이터 조회 중 오류가 발생했습니다.');
     } finally {
@@ -273,19 +314,44 @@ export function MemberList(): React.JSX.Element {
                               <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
                               {assignedRole.name}
                             </span>
-                            <div className="flex flex-wrap gap-1">
-                              {Object.entries(assignedRole.permissions)
-                                .filter(([, on]) => on)
-                                .slice(0, 3)
-                                .map(([key]) => (
-                                  <span
-                                    key={key}
-                                    className="rounded-sm bg-slate-100 px-1.5 py-0.2 text-[10px] text-slate-600"
-                                  >
-                                    {key}
-                                  </span>
-                                ))}
-                            </div>
+                            {(() => {
+                              const labels = listEnabledPermissionLabels(assignedRole.permissions);
+                              const expanded = expandedPermMemberIds.has(member.id);
+                              const visible = expanded ? labels : labels.slice(0, 4);
+                              return (
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap gap-1">
+                                    {visible.map((item) => (
+                                      <span
+                                        key={item.key}
+                                        title={item.key}
+                                        className="rounded-sm bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-700"
+                                      >
+                                        {item.label}
+                                      </span>
+                                    ))}
+                                  </div>
+                                  {labels.length > 4 ? (
+                                    <button
+                                      type="button"
+                                      className="text-[10px] font-semibold text-indigo-600 hover:underline"
+                                      onClick={() => {
+                                        setExpandedPermMemberIds((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(member.id)) next.delete(member.id);
+                                          else next.add(member.id);
+                                          return next;
+                                        });
+                                      }}
+                                    >
+                                      {expanded
+                                        ? '접기'
+                                        : `권한 ${labels.length - 4}개 더 보기`}
+                                    </button>
+                                  ) : null}
+                                </div>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <span className="text-xs text-slate-400 font-medium">기본 직급 (미배정)</span>
@@ -413,16 +479,15 @@ export function MemberList(): React.JSX.Element {
               <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs space-y-2">
                 <p className="font-bold text-indigo-900">포함된 세부 권한:</p>
                 <div className="flex flex-wrap gap-1">
-                  {Object.entries(selectedRole.permissions)
-                    .filter(([, on]) => on)
-                    .map(([key]) => (
-                      <span
-                        key={key}
-                        className="rounded-md bg-white border border-indigo-200 px-2 py-0.5 text-[11px] font-semibold text-indigo-800"
-                      >
-                        ✓ {key}
-                      </span>
-                    ))}
+                  {listEnabledPermissionLabels(selectedRole.permissions).map((item) => (
+                    <span
+                      key={item.key}
+                      title={item.key}
+                      className="rounded-md bg-white border border-indigo-200 px-2 py-0.5 text-[11px] font-semibold text-indigo-800"
+                    >
+                      ✓ {item.label}
+                    </span>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -509,6 +574,62 @@ export function MemberList(): React.JSX.Element {
             </div>
           </div>
         </div>
+      ) : null}
+
+      {canViewRoleAudit ? (
+        <section
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs"
+          data-testid="role-delegation-audit"
+        >
+          <h2 className="text-base font-bold text-slate-900">최근 직급 부여·회수 이력</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            누구에게 어떤 직급이 부여·회수되었는지 최근 기록을 확인합니다.
+          </p>
+          {roleAuditLogs.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-400">최근 이력이 없습니다.</p>
+          ) : (
+            <ul className="mt-3 divide-y divide-slate-100">
+              {roleAuditLogs.map((log) => {
+                const after = log.afterData ?? {};
+                const targetId =
+                  typeof after.target_member_id === 'string'
+                    ? after.target_member_id
+                    : log.entityId;
+                const targetMember = members.find((m) => m.id === targetId);
+                const roleId =
+                  typeof after.assigned_role_id === 'string' ? after.assigned_role_id : null;
+                const roleName = roleId
+                  ? roles.find((r) => r.id === roleId)?.name
+                  : null;
+                const reason =
+                  typeof after.reason === 'string' && after.reason.trim()
+                    ? after.reason
+                    : null;
+                return (
+                  <li key={log.id} className="py-2.5 text-sm">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+                        {formatAuditAction(log.action)}
+                      </span>
+                      <span className="font-semibold text-slate-900">
+                        {targetMember?.name ||
+                          targetMember?.email ||
+                          (targetId ? `${String(targetId).slice(0, 8)}…` : '대상 미상')}
+                      </span>
+                      {roleName ? (
+                        <span className="text-xs text-indigo-700">→ {roleName}</span>
+                      ) : null}
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-slate-500">
+                      {new Date(log.createdAt).toLocaleString('ko-KR')}
+                      {reason ? ` · ${reason}` : ''}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       ) : null}
 
       {/* CEO 대표 사업자 소유권 이전 관리 카드 (대표 전용) */}

@@ -20,6 +20,8 @@ export const ROLE_PERMISSION_KEYS = [
   'feedbacks:read_all',
   'ownership:transfer',
   'shuttle:manage',
+  'volunteer:manage',
+  'meal_survey:manage',
 ] as const;
 
 export type RolePermissionKey = (typeof ROLE_PERMISSION_KEYS)[number];
@@ -44,6 +46,8 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   'feedbacks:read_all': false,
   'ownership:transfer': false,
   'shuttle:manage': false,
+  'volunteer:manage': false,
+  'meal_survey:manage': false,
 };
 
 /** 기업 총무팀 기본 직급 템플릿 (Pre-fill 규격) */
@@ -64,6 +68,8 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
     resources_manage: true,
     grievances_manage: false,
     'shuttle:manage': true,
+    'volunteer:manage': true,
+    'meal_survey:manage': true,
   },
 } as const;
 
@@ -363,6 +369,24 @@ export function canManageShuttleRoutes(member: AccessMember): boolean {
     effective['shuttle:routes:manage'] === true ||
     effective['shuttle:dispatch:operate'] === true
   );
+}
+
+/** 사내 봉사활동 게시·모집 관리 위임 권한 */
+export function canManageVolunteer(member: AccessMember): boolean {
+  if (member.role === 'owner' || member.role === 'admin') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['volunteer:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['volunteer:manage'] === true;
+}
+
+/** 사내 식수인원 조사 설정·전체 현황 위임 권한 */
+export function canManageMealSurvey(member: AccessMember): boolean {
+  if (member.role === 'owner' || member.role === 'admin') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['meal_survey:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['meal_survey:manage'] === true;
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {

@@ -78,6 +78,9 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'check:db-types',
   'test:preset-runtime-parity',
   'test:research-project-engine',
+  'test:permission-catalog',
+  'test:volunteer-activity-engine',
+  'test:meal-survey-engine',
 ];
 
 const scripts = loadPackageScripts();

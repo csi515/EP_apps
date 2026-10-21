@@ -31,6 +31,8 @@ import { table_order_kdsCapability } from './table_order_kds/manifest';
 import { diet_body_logCapability } from './diet_body_log/manifest';
 import { vehicle_shuttleCapability } from './vehicle_shuttle/manifest';
 import { shuttle_dispatchCapability } from './shuttle_dispatch/manifest';
+import { volunteer_activityCapability } from './volunteer_activity/manifest';
+import { meal_surveyCapability } from './meal_survey/manifest';
 import { commission_payrollCapability } from './commission_payroll/manifest';
 import { lost_foundCapability } from './lost_found/manifest';
 import { recipe_bomCapability } from './recipe_bom/manifest';
@@ -161,6 +163,8 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   diet_body_logCapability,
   vehicle_shuttleCapability,
   shuttle_dispatchCapability,
+  volunteer_activityCapability,
+  meal_surveyCapability,
   commission_payrollCapability,
   lost_foundCapability,
   recipe_bomCapability,

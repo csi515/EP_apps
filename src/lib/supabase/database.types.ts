@@ -4727,6 +4727,124 @@ export interface Database {
         Update: Partial<Database['core']['Tables']['shuttle_stops']['Insert']>;
         Relationships: [];
       };
+      volunteer_activities: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          activity_type: string;
+          description: string | null;
+          capacity: number;
+          event_date: string | null;
+          status: 'open' | 'closed' | 'cancelled';
+          created_by_member_id: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          activity_type?: string;
+          description?: string | null;
+          capacity: number;
+          event_date?: string | null;
+          status?: 'open' | 'closed' | 'cancelled';
+          created_by_member_id?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['volunteer_activities']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'volunteer_activities_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      volunteer_signups: {
+        Row: {
+          id: string;
+          organization_id: string;
+          activity_id: string;
+          member_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          activity_id: string;
+          member_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['volunteer_signups']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'volunteer_signups_activity_id_fkey';
+            columns: ['activity_id'];
+            referencedRelation: 'volunteer_activities';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      meal_survey_settings: {
+        Row: {
+          organization_id: string;
+          offer_breakfast: boolean;
+          offer_lunch: boolean;
+          offer_dinner: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          organization_id: string;
+          offer_breakfast?: boolean;
+          offer_lunch?: boolean;
+          offer_dinner?: boolean;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['meal_survey_settings']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'meal_survey_settings_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      meal_survey_responses: {
+        Row: {
+          id: string;
+          organization_id: string;
+          member_id: string;
+          meal_date: string;
+          meal_slot: 'breakfast' | 'lunch' | 'dinner';
+          status: 'eating' | 'skipping';
+          updated_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          member_id: string;
+          meal_date: string;
+          meal_slot: 'breakfast' | 'lunch' | 'dinner';
+          status: 'eating' | 'skipping';
+          updated_at?: string;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['meal_survey_responses']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'meal_survey_responses_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       resource_types: {
         Row: {
           id: string;
@@ -6756,6 +6874,60 @@ export interface Database {
       };
       cancel_customer_session: {
         Args: { p_organization_id: string; p_session_id: string };
+        Returns: Json;
+      };
+      join_volunteer_activity: {
+        Args: { p_activity_id: string };
+        Returns: Json;
+      };
+      cancel_volunteer_signup: {
+        Args: { p_activity_id: string };
+        Returns: Json;
+      };
+      can_manage_volunteer: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_manage_meal_survey: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      ensure_meal_survey_settings: {
+        Args: { p_org: string };
+        Returns: Json;
+      };
+      upsert_meal_survey_settings: {
+        Args: {
+          p_organization_id: string;
+          p_offer_breakfast: boolean;
+          p_offer_lunch: boolean;
+          p_offer_dinner: boolean;
+        };
+        Returns: Json;
+      };
+      upsert_meal_survey_response: {
+        Args: {
+          p_organization_id: string;
+          p_meal_date: string;
+          p_meal_slot: string;
+          p_status: string;
+        };
+        Returns: Json;
+      };
+      clear_meal_survey_response: {
+        Args: {
+          p_organization_id: string;
+          p_meal_date: string;
+          p_meal_slot: string;
+        };
+        Returns: Json;
+      };
+      list_meal_survey_overview: {
+        Args: {
+          p_organization_id: string;
+          p_from: string;
+          p_to: string;
+        };
         Returns: Json;
       };
       join_waitlist: {

@@ -67,6 +67,10 @@ import { vehicleShuttleSetupSchema } from '@/capabilities/vehicle_shuttle/setupS
 import { vehicleShuttleResources } from '@/capabilities/vehicle_shuttle/resources';
 import { shuttleDispatchSetupSchema } from '@/capabilities/shuttle_dispatch/setupSchema';
 import { shuttleDispatchResources } from '@/capabilities/shuttle_dispatch/resources';
+import { volunteerActivitySetupSchema } from '@/capabilities/volunteer_activity/setupSchema';
+import { volunteerActivityResources } from '@/capabilities/volunteer_activity/resources';
+import { mealSurveySetupSchema } from '@/capabilities/meal_survey/setupSchema';
+import { mealSurveyResources } from '@/capabilities/meal_survey/resources';
 import { commissionPayrollSetupSchema } from '@/capabilities/commission_payroll/setupSchema';
 import { commissionPayrollResources } from '@/capabilities/commission_payroll/resources';
 import { lostFoundSetupSchema } from '@/capabilities/lost_found/setupSchema';
@@ -383,6 +387,16 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'shuttle_dispatch',
     setupSchema: shuttleDispatchSetupSchema,
     resources: shuttleDispatchResources,
+  },
+  volunteer_activity: {
+    capabilityId: 'volunteer_activity',
+    setupSchema: volunteerActivitySetupSchema,
+    resources: volunteerActivityResources,
+  },
+  meal_survey: {
+    capabilityId: 'meal_survey',
+    setupSchema: mealSurveySetupSchema,
+    resources: mealSurveyResources,
   },
 
   // 범주 J: 프리랜서 & 인센티브 정산
@@ -1858,6 +1872,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'research_project',
       'patent_ip_asset',
       'equipment_lifecycle',
+      'volunteer_activity',
+      'meal_survey',
     ] as const,
     requiredCapabilities: [
       'approval_workflow',
@@ -1879,6 +1895,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'task_pipeline',
       'patent_ip_asset',
       'equipment_lifecycle',
+      'volunteer_activity',
+      'meal_survey',
     ] as const,
     roles: [
       {

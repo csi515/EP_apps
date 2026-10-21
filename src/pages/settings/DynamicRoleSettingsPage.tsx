@@ -20,15 +20,27 @@ import {
   normalizeRolePermissions,
   type RolePermissionMap,
 } from '@/domain/permissions';
+import {
+  getPermissionDictionaryGroups,
+  listEnabledPermissionLabels,
+} from '@/domain/permissionCatalog';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
 import { OwnershipTransferCard } from './OwnershipTransferCard';
 
 type RoleRow = DynamicRoleRow;
 type MemberRow = DynamicMemberRow;
 
+function memberDisplayName(member: MemberRow): string {
+  return member.name || member.email || `${member.user_id.slice(0, 8)}…`;
+}
+
 export function AccessDeniedBanner() {
   return (
-    <div role="alert" data-testid="forbidden-banner" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+    <div
+      role="alert"
+      data-testid="forbidden-banner"
+      className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+    >
       403 Forbidden. 이 직급에는 해당 화면 권한이 없습니다.
     </div>
   );
@@ -61,10 +73,12 @@ export function DynamicRoleSettingsPage() {
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [settingTab, setSettingTab] = useState<'org' | 'roles'>('org');
+  const [dictOpen, setDictOpen] = useState(true);
 
   const isOwner = role === 'owner';
   const activeUser = StorageService.getActiveUser();
   const canManage = isOwner || canManageRoles(activeUser);
+  const dictionary = getPermissionDictionaryGroups();
 
   async function reload() {
     if (!orgId) return;
@@ -83,7 +97,12 @@ export function DynamicRoleSettingsPage() {
   async function saveRole() {
     if (!orgId || !name.trim()) return;
     try {
-      await saveDynamicRole({ organizationId: orgId, id: editingId, name: name.trim(), permissions });
+      await saveDynamicRole({
+        organizationId: orgId,
+        id: editingId,
+        name: name.trim(),
+        permissions,
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '저장에 실패했습니다.');
       return;
@@ -95,10 +114,10 @@ export function DynamicRoleSettingsPage() {
     await reload();
   }
 
-  async function removeRole(role: RoleRow) {
-    if (role.is_system) return;
+  async function removeRole(roleRow: RoleRow) {
+    if (roleRow.is_system) return;
     try {
-      await deleteDynamicRole(role.id);
+      await deleteDynamicRole(roleRow.id);
       await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '삭제에 실패했습니다.');
@@ -128,7 +147,6 @@ export function DynamicRoleSettingsPage() {
         </Link>
       </div>
 
-      {/* 설정 서브탭: 조직도 vs 직급 및 권한 */}
       <div className="flex gap-2 border-b border-slate-200 pb-3">
         <button
           type="button"
@@ -163,33 +181,142 @@ export function DynamicRoleSettingsPage() {
           <header className="flex items-center justify-between gap-3">
             <div>
               <h1 className="text-xl font-black">직급 및 권한 관리</h1>
-              <p className="text-sm text-slate-500">사업주가 직급과 업무 권한을 직접 편집합니다.</p>
+              <p className="text-sm text-slate-500">
+                위임 가능 권한 종류와 직급별 배정자를 확인할 수 있습니다.
+              </p>
             </div>
-            <button type="button" className="min-h-11 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white" onClick={() => setOpen(true)}>
-              + 새 직급 만들기
-            </button>
+            {isOwner ? (
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white"
+                onClick={() => {
+                  setEditingId(null);
+                  setName('');
+                  setPermissions(EMPTY_ROLE_PERMISSIONS);
+                  setOpen(true);
+                }}
+              >
+                + 새 직급 만들기
+              </button>
+            ) : null}
           </header>
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+
+          <section
+            className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+            data-testid="permission-dictionary"
+          >
+            <button
+              type="button"
+              className="flex w-full items-center justify-between text-left"
+              onClick={() => setDictOpen((v) => !v)}
+            >
+              <div>
+                <h2 className="text-base font-bold text-slate-900">위임 가능 권한 사전</h2>
+                <p className="text-xs text-slate-500">
+                  조직에서 직급에 부여할 수 있는 권한 종류와 설명입니다.
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-slate-600">
+                {dictOpen ? '접기' : '펼치기'}
+              </span>
+            </button>
+            {dictOpen ? (
+              <div className="mt-4 space-y-4">
+                {dictionary.map((group) => (
+                  <div key={group.title}>
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      {group.title}
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {group.items.map((item) => (
+                        <li
+                          key={item.key}
+                          className="rounded-xl border border-slate-200 bg-white px-3 py-2"
+                        >
+                          <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">{item.description}</p>
+                          <p className="mt-1 font-mono text-[10px] text-slate-400">{item.key}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </section>
+
           <ul className="space-y-3">
-            {roles.map((role) => {
-              const count = members.filter((member) => member.organization_role_id === role.id).length;
+            {roles.map((roleRow) => {
+              const assignees = members.filter(
+                (member) => member.organization_role_id === roleRow.id
+              );
+              const enabled = listEnabledPermissionLabels(roleRow.permissions);
               return (
-                <li key={role.id} className="rounded-2xl border border-slate-200 p-4">
+                <li key={roleRow.id} className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between gap-2">
                     <div>
-                      <p className="font-bold">{role.name}</p>
-                      <p className="text-xs text-slate-500">배정 {count}명</p>
+                      <p className="font-bold">{roleRow.name}</p>
+                      <p className="text-xs text-slate-500">배정 {assignees.length}명</p>
                     </div>
-                    <div className="flex gap-2">
-                      <button type="button" className="min-h-11 px-3 text-sm" onClick={() => { setEditingId(role.id); setName(role.name); setPermissions(role.permissions); setOpen(true); }}>수정</button>
-                      <button type="button" className="min-h-11 px-3 text-sm text-rose-600" disabled={role.is_system} onClick={() => void removeRole(role)}>삭제</button>
-                    </div>
+                    {isOwner ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          className="min-h-11 px-3 text-sm"
+                          onClick={() => {
+                            setEditingId(roleRow.id);
+                            setName(roleRow.name);
+                            setPermissions(roleRow.permissions);
+                            setOpen(true);
+                          }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          type="button"
+                          className="min-h-11 px-3 text-sm text-rose-600"
+                          disabled={roleRow.is_system}
+                          onClick={() => void removeRole(roleRow)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1">
-                    {Object.entries(role.permissions).filter(([, on]) => on).map(([key]) => (
-                      <span key={key} className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px]">{key}</span>
-                    ))}
+                    {enabled.length === 0 ? (
+                      <span className="text-xs text-slate-400">활성 권한 없음</span>
+                    ) : (
+                      enabled.map((item) => (
+                        <span
+                          key={item.key}
+                          title={item.key}
+                          className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-800"
+                        >
+                          {item.label}
+                        </span>
+                      ))
+                    )}
                   </div>
+                  {assignees.length > 0 ? (
+                    <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2">
+                      <p className="text-[11px] font-bold text-slate-600">배정된 직원</p>
+                      <ul className="mt-1 flex flex-wrap gap-2">
+                        {assignees.map((member) => (
+                          <li
+                            key={member.id}
+                            className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-slate-800 border border-slate-200"
+                          >
+                            {memberDisplayName(member)}
+                            {member.role === 'owner' ? ' (사업주)' : ''}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-xs text-slate-400">이 직급에 배정된 직원이 없습니다.</p>
+                  )}
                 </li>
               );
             })}
@@ -199,8 +326,13 @@ export function DynamicRoleSettingsPage() {
             <h2 className="mb-2 text-base font-bold">직원 직급 지정</h2>
             <ul className="space-y-2">
               {members.map((member) => (
-                <li key={member.id} className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-slate-100 px-3">
-                  <span className="text-sm">{member.role === 'owner' ? '사업주' : member.user_id}</span>
+                <li
+                  key={member.id}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-slate-100 px-3"
+                >
+                  <span className="text-sm">
+                    {member.role === 'owner' ? '사업주' : memberDisplayName(member)}
+                  </span>
                   <select
                     className="min-h-11 rounded-lg border px-2 text-sm"
                     aria-label="직급 지정"
@@ -209,8 +341,10 @@ export function DynamicRoleSettingsPage() {
                     onChange={(event) => void assign(member.id, event.target.value)}
                   >
                     <option value="">직급 없음</option>
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>{role.name}</option>
+                    {roles.map((roleOption) => (
+                      <option key={roleOption.id} value={roleOption.id}>
+                        {roleOption.name}
+                      </option>
                     ))}
                   </select>
                 </li>
@@ -218,7 +352,6 @@ export function DynamicRoleSettingsPage() {
             </ul>
           </section>
 
-          {/* CEO 대표 사업자 소유권 이전 관리 카드 */}
           <section className="pt-4">
             <OwnershipTransferCard />
           </section>
@@ -231,14 +364,26 @@ export function DynamicRoleSettingsPage() {
             <h2 className="text-lg font-bold">{editingId ? '직급 수정' : '새 직급'}</h2>
             <label className="mt-3 block text-sm">
               직급명
-              <input className="mt-1 min-h-11 w-full rounded-lg border px-3" value={name} onChange={(event) => setName(event.target.value)} />
+              <input
+                className="mt-1 min-h-11 w-full rounded-lg border px-3"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+              />
             </label>
             <div className="mt-4">
               <RolePermissionMatrix value={permissions} onChange={setPermissions} />
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="min-h-11 px-4" onClick={() => setOpen(false)}>닫기</button>
-              <button type="button" className="min-h-11 rounded-xl bg-slate-900 px-4 text-white" onClick={() => void saveRole()}>저장</button>
+              <button type="button" className="min-h-11 px-4" onClick={() => setOpen(false)}>
+                닫기
+              </button>
+              <button
+                type="button"
+                className="min-h-11 rounded-xl bg-slate-900 px-4 text-white"
+                onClick={() => void saveRole()}
+              >
+                저장
+              </button>
             </div>
           </div>
         </div>

@@ -2,6 +2,8 @@
 export const CAPABILITY_MATURITY = {
   mbo_management: 'B',
   shuttle_dispatch: 'B-',
+  volunteer_activity: 'B-',
+  meal_survey: 'B-',
   attendance_loop: 'A',
   ticket_passes: 'B+',
   workplace_policy: 'B',
