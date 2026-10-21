@@ -39,6 +39,7 @@ import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
 import { BusinessHealthWidget } from '@/shared/components/diagnostics';
 import { WorkspaceIntranetHubPage } from '@/pages/workspace/WorkspaceIntranetHubPage';
+import { CompanyAppLauncherDashboard } from '@/pages/workspace/CompanyAppLauncherDashboard';
 
 const AttendanceView = lazy(() =>
   import('@/capabilities/attendance').then((m) => ({ default: m.AttendanceManagementView }))
@@ -297,6 +298,25 @@ interface GenericDashboardViewProps {
 function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboardViewProps) {
   const { currentOrganization } = useOrganization();
   const { industry } = usePermissions();
+
+  const isCorporatePreset = useMemo(() => {
+    const it = currentOrganization?.industry_type || industry;
+    return (
+      it === 'general_enterprise' ||
+      it === 'rnd_lab_management' ||
+      it === 'personal_plant_ops' ||
+      it === 'corporate_general_affairs' ||
+      (enabledCaps.includes('mbo') && enabledCaps.includes('research_project'))
+    );
+  }, [currentOrganization?.industry_type, industry, enabledCaps]);
+
+  if (isCorporatePreset) {
+    return (
+      <div className="max-w-5xl mx-auto pt-2 sm:pt-4" data-testid="corporate-launcher-home">
+        <CompanyAppLauncherDashboard />
+      </div>
+    );
+  }
   const { t } = useTerminology(currentOrganization?.industry_type || industry);
   const [isFormOpen, setIsFormOpen] = useState(false);
 

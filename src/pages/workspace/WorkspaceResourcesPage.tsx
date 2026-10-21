@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { useCreate, useDelete, useList } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { canManageResourceCatalog } from '@/domain/permissions';
@@ -179,9 +181,18 @@ export const WorkspaceResourcesPage: React.FC = () => {
 
   return (
     <main className="mx-auto max-w-6xl p-4 pb-12">
-      <h1 className="text-lg font-semibold text-slate-900">공용자원</h1>
+      <div className="mb-4">
+        <Link
+          to="/workspace/intranet"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          <span>사내 앱 런처로 돌아가기</span>
+        </Link>
+      </div>
+      <h1 className="text-lg font-semibold text-slate-900">공용 자원 (건강관리실, 차량 예약)</h1>
       <p className="mt-1 text-sm text-slate-600">
-        예약·현황에서 시간대를 잡고, 총무는 자원 종류·인스턴스를 관리합니다.
+        건강관리실 이용 및 업무용 법인 차량 배차를 예약하고, 총무는 자원 종류·인스턴스를 관리합니다.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -228,7 +239,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
               <label className="block text-sm font-medium">자원 종류 추가</label>
               <input
                 className="min-h-12 w-full rounded-xl border border-slate-200 px-3"
-                placeholder="예: 법인차량, 회의실 A"
+                placeholder="예: 법인차량, 건강관리실 A"
                 value={typeName}
                 onChange={(e) => setTypeName(e.target.value)}
               />
