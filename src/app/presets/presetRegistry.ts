@@ -1829,7 +1829,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     id: 'personal_plant_ops',
     name: '개인용 현장·공용자원',
     description:
-      '소규모 현장용: 결재·안전·품질·자재·공용차량 예약·노경 건의. 인사평가·급여·장부는 포함하지 않습니다.',
+      '소규모 현장용: 결재·안전·품질·자재·공용자원·노경 건의·조직도·MBO·연구과제·연구소 포털. 급여·휴가·전사 장부는 포함하지 않습니다.',
     category: 'manufacturing',
     capabilities: [
       'approval_workflow',
@@ -1842,14 +1842,22 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'recipe_bom',
       'supply_restock',
       'booking',
+      'seat_room',
       'rental_equipment',
       'whistleblower_grievance',
+      'task_pipeline',
+      'mbo',
+      'research_project',
+      'patent_ip_asset',
+      'equipment_lifecycle',
     ] as const,
     requiredCapabilities: [
       'approval_workflow',
       'inventory',
       'booking',
       'whistleblower_grievance',
+      'mbo',
+      'research_project',
     ] as const,
     optionalCapabilities: [
       'sop_risk_assessment',
@@ -1860,6 +1868,10 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'recipe_bom',
       'supply_restock',
       'rental_equipment',
+      'seat_room',
+      'task_pipeline',
+      'patent_ip_asset',
+      'equipment_lifecycle',
     ] as const,
     roles: [
       {
@@ -1871,7 +1883,13 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       {
         name: '총무',
         rank_order: 2,
-        permissions: ['booking:*', 'inventory:*', 'rental_equipment:*', 'supply_restock:*'],
+        permissions: [
+          'booking:*',
+          'inventory:*',
+          'rental_equipment:*',
+          'supply_restock:*',
+          'research_project:view',
+        ],
         description: '공용차량·자원 등록(resources_manage) 및 예약·자재',
       },
       {
@@ -1881,23 +1899,41 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
         description: '건의 전체 조회·처리(grievances_manage)',
       },
       {
+        name: '연구·MBO 담당',
+        rank_order: 2,
+        permissions: [
+          'mbo:*',
+          'research_project:*',
+          'task_pipeline:*',
+          'patent_ip_asset:*',
+          'equipment_lifecycle:*',
+        ],
+        description: '연구과제·특허·장비·MBO 점검',
+      },
+      {
         name: '일반 직원',
         rank_order: 3,
-        permissions: ['booking:book', 'whistleblower_grievance:create'],
-        description: '예약만, 건의는 본인 건만',
+        permissions: [
+          'booking:book',
+          'whistleblower_grievance:create',
+          'mbo:view',
+          'research_project:view',
+        ],
+        description: '예약·건의 접수, 본인 MBO·연구과제 조회',
       },
     ],
     resourceTypes: [
       { name: '1호 업무용 차량', type: 'vehicle', capacity: 1 },
       { name: '회의실', type: 'room', capacity: 8 },
+      { name: '시험·계측 장비', type: 'equipment', capacity: 1 },
     ],
     defaultSettings: {
       fleet_catalog_kind: 'vehicle',
       grievances_named_default: true,
+      org_chart_enabled: true,
     },
     businessRules: {
       exclude_payroll: true,
-      exclude_mbo: true,
     },
     readinessLevel: 'basic_ui',
   },

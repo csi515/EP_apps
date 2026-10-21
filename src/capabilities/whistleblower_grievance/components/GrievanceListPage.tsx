@@ -10,21 +10,21 @@ import {
   type GrievanceVisibility,
 } from '../domain/grievanceEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import { evaluateMemberAccess } from '@/domain/permissions';
+import { canReadAllFeedbacks, type AccessMember } from '@/domain/permissions';
 import { StorageService } from '@/services/storage';
 import { useAuth } from '@/core/auth/AuthProvider';
 
+function resolveAccessMember(): AccessMember {
+  const active = StorageService.getActiveUser();
+  return {
+    role: active?.role === 'owner' ? 'owner' : 'staff',
+    customRole: { permissions: active?.customRole?.permissions ?? null },
+  };
+}
+
 function canManageGrievances(): boolean {
   try {
-    const active = StorageService.getActiveUser();
-    return evaluateMemberAccess(
-      {
-        role: active?.role === 'owner' ? 'owner' : 'staff',
-        customRole: { permissions: active?.customRole?.permissions ?? null },
-      },
-      'grievances_manage',
-      'read'
-    );
+    return canReadAllFeedbacks(resolveAccessMember());
   } catch {
     return false;
   }

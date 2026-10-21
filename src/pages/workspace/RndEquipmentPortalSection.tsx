@@ -10,12 +10,18 @@ const BookingCalendarView = lazy(() =>
 const TaskPipelineKanbanView = lazy(() =>
   import('@/capabilities/task_pipeline').then((m) => ({ default: m.TaskPipelineKanbanView })),
 );
+const MaintenanceChecklistManagementView = lazy(() =>
+  import('@/capabilities/maintenance_checklist').then((m) => ({
+    default: m.MaintenanceChecklistManagementView,
+  })),
+);
 
-type EquipmentTab = 'assets' | 'booking' | 'pipeline';
+type EquipmentTab = 'assets' | 'booking' | 'maintenance' | 'pipeline';
 
 const LABELS: Record<EquipmentTab, string> = {
   assets: '계측·장비 자산',
   booking: '장비·실험실 예약',
+  maintenance: '정기 점검·체크리스트',
   pipeline: '공정 파이프라인',
 };
 
@@ -44,6 +50,7 @@ export const RndEquipmentPortalSection: React.FC = () => {
       <Suspense fallback={<LoadingScreen message="장비 화면 로딩…" />}>
         {subTab === 'assets' ? <EquipmentLifecycleManagementView /> : null}
         {subTab === 'booking' ? <BookingCalendarView /> : null}
+        {subTab === 'maintenance' ? <MaintenanceChecklistManagementView /> : null}
         {subTab === 'pipeline' ? <TaskPipelineKanbanView /> : null}
       </Suspense>
     </div>

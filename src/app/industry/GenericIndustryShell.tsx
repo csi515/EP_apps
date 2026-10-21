@@ -38,6 +38,7 @@ import { accountViewEntry, financeViewEntries } from '@/core/industry/commonView
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
 import { BusinessHealthWidget } from '@/shared/components/diagnostics';
+import { WorkspaceIntranetHubPage } from '@/pages/workspace/WorkspaceIntranetHubPage';
 
 const AttendanceView = lazy(() =>
   import('@/capabilities/attendance').then((m) => ({ default: m.AttendanceManagementView }))
@@ -490,6 +491,19 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       { tab: 'students', label: `${customerWord} 관리`, icon: <Users className="w-4 h-4" /> },
     ];
 
+    const hasIntranetSuite =
+      enabledCaps.includes('mbo') ||
+      enabledCaps.includes('whistleblower_grievance') ||
+      enabledCaps.includes('research_project') ||
+      enabledCaps.includes('approval_workflow');
+    if (hasIntranetSuite) {
+      items.splice(1, 0, {
+        tab: 'intranet-hub',
+        label: '사내 업무',
+        icon: <Building2 className="w-4 h-4" />,
+      });
+    }
+
     if (enabledCaps.includes('booking') || enabledCaps.includes('seat_room')) {
       items.push({ tab: 'bookings', label: '예약·공간', icon: <Calendar className="w-4 h-4" /> });
       items.push({ tab: 'fleet', label: '공용차량·자원', icon: <Car className="w-4 h-4" /> });
@@ -691,6 +705,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
   const defaultViewMap: Record<string, () => ReactNode> = {
     dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
+    'intranet-hub': () => <WorkspaceIntranetHubPage enabledCapabilityIds={enabledCaps} />,
     students: () => <StudentListView />,
     bookings: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>

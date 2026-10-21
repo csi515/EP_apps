@@ -369,6 +369,44 @@ export function isNavTabAllowed(tab: string, member: AccessMember): boolean {
  * 1. 사용자의 소속 부서(memberDepartmentId)가 없거나(null/undefined/공백) 전사 권한인 경우: 전체 항목 반환
  * 2. 사용자의 소속 부서가 특정 부서로 지정된 경우: 해당 부서에 속한 데이터 또는 부서 미지정(공용) 데이터만 반환
  */
+export type PermissionEvaluationContext = {
+  scopeType?: 'GLOBAL' | 'DESCENDANTS' | 'SELF_ONLY';
+  memberDepartmentId?: string | null;
+  resourceDepartmentId?: string | null;
+};
+
+/**
+ * 직급 JSONB + 부서 스코프를 함께 평가한다. resource는 RolePermissionKey 또는 NAV 리소스 키.
+ */
+export function evaluatePermission(
+  member: AccessMember,
+  resource: string,
+  action: string,
+  context?: PermissionEvaluationContext,
+): boolean {
+  const navKey = NAV_RESOURCE[resource];
+  const permissionKey = (navKey ?? resource) as RolePermissionKey;
+  const allowed = evaluateMemberAccess(member, permissionKey, action);
+  if (!allowed) return false;
+
+  const resourceDept = context?.resourceDepartmentId?.trim();
+  if (!resourceDept) return true;
+
+  const scope = context?.scopeType ?? 'SELF_ONLY';
+  if (scope === 'GLOBAL') return true;
+
+  const memberDept = context?.memberDepartmentId?.trim();
+  if (!memberDept) return true;
+
+  if (scope === 'SELF_ONLY') return memberDept === resourceDept;
+
+  if (scope === 'DESCENDANTS') {
+    return memberDept === resourceDept;
+  }
+
+  return false;
+}
+
 export function filterByDepartmentScope<T extends { department_id?: string | null }>(
   items: T[],
   memberDepartmentId?: string | null

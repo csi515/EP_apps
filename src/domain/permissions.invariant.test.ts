@@ -12,6 +12,7 @@ import {
   evaluateMemberAccess,
   canManageResourceCatalog,
   canReadAllFeedbacks,
+  evaluatePermission,
   normalizeRolePermissions,
   type AccessMember,
   type RolePermissionMap,
@@ -272,6 +273,35 @@ const hrGrievance: AccessMember = {
 };
 assert.equal(canReadAllFeedbacks(hrGrievance), true, 'feedbacks:read_all alias enables inbox');
 assert.equal(canReadAllFeedbacks({ role: 'owner' }), true);
+
+const scopedMember: AccessMember = {
+  role: 'staff',
+  customRole: { permissions: { ...EMPTY_ROLE_PERMISSIONS, resources_manage: true } },
+};
+assert.equal(
+  evaluatePermission(scopedMember, 'resources_manage', 'read', {
+    scopeType: 'SELF_ONLY',
+    memberDepartmentId: 'dept_a',
+    resourceDepartmentId: 'dept_a',
+  }),
+  true,
+);
+assert.equal(
+  evaluatePermission(scopedMember, 'resources_manage', 'read', {
+    scopeType: 'SELF_ONLY',
+    memberDepartmentId: 'dept_a',
+    resourceDepartmentId: 'dept_b',
+  }),
+  false,
+);
+assert.equal(
+  evaluatePermission(scopedMember, 'resources_manage', 'read', {
+    scopeType: 'GLOBAL',
+    memberDepartmentId: 'dept_a',
+    resourceDepartmentId: 'dept_b',
+  }),
+  true,
+);
 
 // [케이스 6] 부서 스코프(Department Scope) 격리 필터링 검증
 const mockResources = [

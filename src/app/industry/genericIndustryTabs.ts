@@ -8,6 +8,7 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   bookings: ['booking', 'seat_room'],
   fleet: ['booking', 'seat_room'],
   grievances: ['whistleblower_grievance'],
+  'intranet-hub': ['mbo', 'whistleblower_grievance', 'research_project', 'approval_workflow'],
   attendance: ['attendance'],
   passes: ['passes'],
   lockers: ['locker'],

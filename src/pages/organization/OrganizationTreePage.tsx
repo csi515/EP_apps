@@ -77,6 +77,9 @@ export const OrganizationTreePage: React.FC = () => {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-lg font-semibold">{ORG_CHART_COPY.title}</h1>
         <div className="flex flex-wrap gap-2 text-sm">
+          <Link to="/workspace/intranet" className="min-h-12 rounded-xl border border-slate-200 px-4 py-3">
+            사내 업무 허브
+          </Link>
           <Link to="/workspace/settings/roles" className="min-h-12 rounded-xl border border-slate-200 px-4 py-3">
             직급·권한 매트릭스
           </Link>
