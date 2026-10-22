@@ -29,6 +29,7 @@ import type { AuditLog } from '@/core/audit/types';
 import { StorageService } from '@/services/storage';
 import { canManageRoles } from '@/domain/permissions';
 import { listEnabledPermissionLabels } from '@/domain/permissionCatalog';
+import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 
 function formatAuditAction(action: string): string {
   if (action === 'ROLE_ASSIGNED') return '직급 부여';
@@ -37,9 +38,13 @@ function formatAuditAction(action: string): string {
 }
 
 export function MemberList(): React.JSX.Element {
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, activeCapabilities, hiddenCapabilities } = useOrganization();
   const { role: callerRole } = useAuthorization();
   const orgId = currentOrganization?.id ?? '';
+  const scopedCapIds = useMemo(
+    () => resolveActiveCapabilityIds(activeCapabilities, hiddenCapabilities),
+    [activeCapabilities, hiddenCapabilities]
+  );
 
   const [members, setMembers] = useState<DynamicMemberRow[]>([]);
   const [roles, setRoles] = useState<DynamicRoleRow[]>([]);
@@ -315,7 +320,10 @@ export function MemberList(): React.JSX.Element {
                               {assignedRole.name}
                             </span>
                             {(() => {
-                              const labels = listEnabledPermissionLabels(assignedRole.permissions);
+                              const labels = listEnabledPermissionLabels(
+                                assignedRole.permissions,
+                                scopedCapIds
+                              );
                               const expanded = expandedPermMemberIds.has(member.id);
                               const visible = expanded ? labels : labels.slice(0, 4);
                               return (
@@ -479,7 +487,7 @@ export function MemberList(): React.JSX.Element {
               <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 text-xs space-y-2">
                 <p className="font-bold text-indigo-900">포함된 세부 권한:</p>
                 <div className="flex flex-wrap gap-1">
-                  {listEnabledPermissionLabels(selectedRole.permissions).map((item) => (
+                  {listEnabledPermissionLabels(selectedRole.permissions, scopedCapIds).map((item) => (
                     <span
                       key={item.key}
                       title={item.key}

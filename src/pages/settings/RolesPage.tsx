@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useTable, useDelete, useCreate, CanAccess } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import {
@@ -291,6 +292,24 @@ export const RolesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+      <div
+        role="status"
+        className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+      >
+        <p className="font-semibold">위임 직급·권한 매트릭스는 워크스페이스 직급 설정을 사용하세요.</p>
+        <p className="mt-1 text-amber-900/90">
+          이 화면은 제로컨피그 템플릿·직원 초대(QR)용 레거시 경로입니다. 사업장 Capability에 맞는 권한
+          체크박스는{' '}
+          <Link
+            to="/workspace/settings/roles"
+            className="font-semibold underline underline-offset-2"
+          >
+            워크스페이스 직급·권한 설정
+          </Link>
+          에서 관리합니다.
+        </p>
+      </div>
+
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

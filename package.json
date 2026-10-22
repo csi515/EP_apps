@@ -193,6 +193,7 @@
     "test:stock-movement-atomic": "tsx src/capabilities/commerce/stock/applyStockMovementAtomic.test.ts",
     "test:stock-location-scope": "tsx src/capabilities/commerce/stock/stockLocationScope.test.ts",
     "test:permission-catalog": "tsx src/domain/permissionCatalog.test.ts",
+    "test:permission-visibility": "tsx src/domain/permissionVisibility.test.ts",
     "test:volunteer-activity-engine": "tsx src/capabilities/volunteer_activity/domain/volunteerActivityEngine.test.ts",
     "test:meal-survey-engine": "tsx src/capabilities/meal_survey/domain/mealSurveyEngine.test.ts",
     "test:permissions-invariant": "tsx src/core/auth/permissions.invariant.test.ts",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, type ReactNode } from 'react';
+import React, { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { OrganizationTreePage } from '../organization/OrganizationTreePage';
@@ -24,6 +24,7 @@ import {
   getPermissionDictionaryGroups,
   listEnabledPermissionLabels,
 } from '@/domain/permissionCatalog';
+import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
 import { OwnershipTransferCard } from './OwnershipTransferCard';
 
@@ -62,7 +63,7 @@ export function FinanceRouteGate({ children }: { children: ReactNode }) {
 }
 
 export function DynamicRoleSettingsPage() {
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, activeCapabilities, hiddenCapabilities } = useOrganization();
   const { role } = useAuthorization();
   const orgId = currentOrganization?.id ?? '';
   const [roles, setRoles] = useState<RoleRow[]>([]);
@@ -78,7 +79,11 @@ export function DynamicRoleSettingsPage() {
   const isOwner = role === 'owner';
   const activeUser = StorageService.getActiveUser();
   const canManage = isOwner || canManageRoles(activeUser);
-  const dictionary = getPermissionDictionaryGroups();
+  const scopedCapIds = useMemo(
+    () => resolveActiveCapabilityIds(activeCapabilities, hiddenCapabilities),
+    [activeCapabilities, hiddenCapabilities]
+  );
+  const dictionary = getPermissionDictionaryGroups(scopedCapIds);
 
   async function reload() {
     if (!orgId) return;
@@ -251,7 +256,7 @@ export function DynamicRoleSettingsPage() {
               const assignees = members.filter(
                 (member) => member.organization_role_id === roleRow.id
               );
-              const enabled = listEnabledPermissionLabels(roleRow.permissions);
+              const enabled = listEnabledPermissionLabels(roleRow.permissions, scopedCapIds);
               return (
                 <li key={roleRow.id} className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between gap-2">
@@ -371,7 +376,11 @@ export function DynamicRoleSettingsPage() {
               />
             </label>
             <div className="mt-4">
-              <RolePermissionMatrix value={permissions} onChange={setPermissions} />
+              <RolePermissionMatrix
+                value={permissions}
+                onChange={setPermissions}
+                activeCapabilityIds={scopedCapIds}
+              />
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" className="min-h-11 px-4" onClick={() => setOpen(false)}>

@@ -5,10 +5,12 @@ import { getPermissionCatalogGroupsForMatrix } from '@/domain/permissionCatalog'
 type Props = {
   value: RolePermissionMap;
   onChange: (next: RolePermissionMap) => void;
+  /** 활성 Capability(프리셋 − hidden). 전달 시 해당 사업장에 없는 권한 키 숨김 */
+  activeCapabilityIds?: readonly string[] | null;
 };
 
-export function RolePermissionMatrix({ value, onChange }: Props) {
-  const groups = getPermissionCatalogGroupsForMatrix();
+export function RolePermissionMatrix({ value, onChange, activeCapabilityIds }: Props) {
+  const groups = getPermissionCatalogGroupsForMatrix(activeCapabilityIds);
 
   function handleToggle(key: RolePermissionKey, checked: boolean) {
     const next = { ...value, [key]: checked };

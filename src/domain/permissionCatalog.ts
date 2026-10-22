@@ -7,6 +7,7 @@ import {
   type RolePermissionKey,
   type RolePermissionMap,
 } from './permissions';
+import { isPermissionKeyVisible } from './permissionVisibility';
 
 export type PermissionCatalogGroupId =
   | 'ops'
@@ -167,7 +168,8 @@ export function getPermissionDescription(key: string): string {
 }
 
 export function listEnabledPermissionLabels(
-  permissions: RolePermissionMap | Record<string, boolean> | null | undefined
+  permissions: RolePermissionMap | Record<string, boolean> | null | undefined,
+  activeCapIds?: readonly string[] | null
 ): { key: string; label: string }[] {
   if (!permissions) return [];
   const seen = new Set<string>();
@@ -176,6 +178,9 @@ export function listEnabledPermissionLabels(
     if (!permissions[key]) continue;
     const entry = BY_KEY.get(key);
     if (entry?.hideInMatrix) continue;
+    if (activeCapIds !== undefined && activeCapIds !== null) {
+      if (!isPermissionKeyVisible(key, activeCapIds)) continue;
+    }
     if (seen.has(key)) continue;
     seen.add(key);
     out.push({ key, label: entry?.label ?? key });
@@ -183,7 +188,9 @@ export function listEnabledPermissionLabels(
   return out;
 }
 
-export function getPermissionCatalogGroupsForMatrix(): {
+export function getPermissionCatalogGroupsForMatrix(
+  activeCapIds?: readonly string[] | null
+): {
   title: string;
   items: { key: RolePermissionKey; label: string }[];
 }[] {
@@ -194,15 +201,21 @@ export function getPermissionCatalogGroupsForMatrix(): {
     'facilities',
     'intranet',
   ];
-  return order.map((groupId) => ({
-    title: PERMISSION_GROUP_TITLES[groupId],
-    items: PERMISSION_CATALOG.filter(
-      (entry) => entry.group === groupId && !entry.hideInMatrix
-    ).map((entry) => ({ key: entry.key, label: entry.label })),
-  }));
+  return order
+    .map((groupId) => ({
+      title: PERMISSION_GROUP_TITLES[groupId],
+      items: PERMISSION_CATALOG.filter((entry) => {
+        if (entry.group !== groupId || entry.hideInMatrix) return false;
+        if (activeCapIds === undefined || activeCapIds === null) return true;
+        return isPermissionKeyVisible(entry.key, activeCapIds);
+      }).map((entry) => ({ key: entry.key, label: entry.label })),
+    }))
+    .filter((group) => group.items.length > 0);
 }
 
-export function getPermissionDictionaryGroups(): {
+export function getPermissionDictionaryGroups(
+  activeCapIds?: readonly string[] | null
+): {
   title: string;
   items: { key: RolePermissionKey; label: string; description: string }[];
 }[] {
@@ -213,16 +226,20 @@ export function getPermissionDictionaryGroups(): {
     'facilities',
     'intranet',
   ];
-  return order.map((groupId) => ({
-    title: PERMISSION_GROUP_TITLES[groupId],
-    items: PERMISSION_CATALOG.filter(
-      (entry) => entry.group === groupId && !entry.hideInMatrix
-    ).map((entry) => ({
-      key: entry.key,
-      label: entry.label,
-      description: entry.description,
-    })),
-  }));
+  return order
+    .map((groupId) => ({
+      title: PERMISSION_GROUP_TITLES[groupId],
+      items: PERMISSION_CATALOG.filter((entry) => {
+        if (entry.group !== groupId || entry.hideInMatrix) return false;
+        if (activeCapIds === undefined || activeCapIds === null) return true;
+        return isPermissionKeyVisible(entry.key, activeCapIds);
+      }).map((entry) => ({
+        key: entry.key,
+        label: entry.label,
+        description: entry.description,
+      })),
+    }))
+    .filter((group) => group.items.length > 0);
 }
 
 /** ROLE_PERMISSION_KEYS와 카탈로그 1:1 커버리지 검증용 */

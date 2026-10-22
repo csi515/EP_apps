@@ -584,7 +584,7 @@ export const WorkplaceSettingsView: FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => navigate('/settings/roles')}
+                onClick={() => navigate('/workspace/settings/roles')}
                 className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-all shadow-xs"
               >
                 직급 관리 열기

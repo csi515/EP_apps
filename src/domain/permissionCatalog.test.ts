@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { ROLE_PERMISSION_KEYS } from './permissions';
-import { listCatalogKeys, getPermissionLabel } from './permissionCatalog';
+import {
+  getPermissionCatalogGroupsForMatrix,
+  getPermissionLabel,
+  listCatalogKeys,
+} from './permissionCatalog';
 
 assert.deepEqual(
   [...listCatalogKeys()].sort(),
@@ -12,5 +16,22 @@ assert.equal(getPermissionLabel('volunteer:manage'), '봉사활동 게시·모�
 assert.equal(getPermissionLabel('meal_survey:manage'), '식수인원 조사 관리');
 assert.equal(getPermissionLabel('roles:assign'), '직급/권한 부여 및 회수');
 assert.ok(getPermissionLabel('unknown_key') === 'unknown_key');
+
+const plantGroups = getPermissionCatalogGroupsForMatrix([
+  'meal_survey',
+  'volunteer_activity',
+  'booking',
+  'seat_room',
+]);
+const plantKeys = plantGroups.flatMap((g) => g.items.map((i) => i.key));
+assert.ok(plantKeys.includes('meal_survey:manage'));
+assert.ok(plantKeys.includes('roles:assign'));
+
+const academyGroups = getPermissionCatalogGroupsForMatrix(['attendance', 'booking', 'passes']);
+const academyKeys = academyGroups.flatMap((g) => g.items.map((i) => i.key));
+assert.ok(!academyKeys.includes('meal_survey:manage'));
+assert.ok(!academyKeys.includes('volunteer:manage'));
+assert.ok(academyKeys.includes('roles:assign'));
+assert.ok(academyKeys.includes('attendance'));
 
 console.log('permissionCatalog.test.ts: ok');

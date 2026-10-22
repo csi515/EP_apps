@@ -81,6 +81,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:permission-catalog',
   'test:volunteer-activity-engine',
   'test:meal-survey-engine',
+  'test:permission-visibility',
 ];
 
 const scripts = loadPackageScripts();
