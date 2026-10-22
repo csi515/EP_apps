@@ -67,6 +67,8 @@ export interface PatentAsset {
   registrationDate?: string; // 등록 일자
   applicationReward?: InventionRewardItem; // 출원 보상금
   registrationReward?: InventionRewardItem; // 등록 보상금
+  /** 공보·출원 문서 URL */
+  documentUrls?: string[];
   auditEvidence?: {
     recordedAt: string;
     actor: string;

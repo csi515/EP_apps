@@ -21,14 +21,21 @@ assert.ok(enabled.includes('mbo'));
 assert.ok(enabled.includes('inventory'));
 assert.ok(enabled.includes('whistleblower_grievance'));
 assert.ok(enabled.includes('office_supply_request'));
+assert.ok(enabled.includes('shuttle_dispatch'));
 assert.ok(!enabled.includes('recipe_bom'), 'default hidden BOM');
-assert.ok(!enabled.includes('supply_restock'), 'default hidden supply');
+assert.ok(enabled.includes('supply_restock'), 'supply_restock now visible by default');
 
 assert.equal(tileAllowed({ requiredAnyCapability: ['vehicle_shuttle'] } as never, enabled), false);
 assert.equal(tileAllowed({ requiredAnyCapability: ['feedbacks'] } as never, enabled), false);
 assert.equal(tileAllowed({ requiredAnyCapability: ['approval_workflow'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['booking', 'seat_room'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['office_supply_request'] } as never, enabled), true);
+assert.equal(tileAllowed({ requiredAnyCapability: ['shuttle_dispatch'] } as never, enabled), true);
+assert.equal(
+  tileAllowed({ requiredAnyCapability: ['research_project'] } as never, enabled, false),
+  false,
+  'R&D tile blocked without portal access'
+);
 
 assert.equal(plant.readinessLevel, 'isolated');
 

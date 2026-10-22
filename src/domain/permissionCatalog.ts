@@ -157,6 +157,12 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     group: 'intranet',
     description: '구매 가능 품목·월별 마감 캠페인·부서별 취합',
   },
+  {
+    key: 'rnd_portal:access',
+    label: '연구소 포털 접속',
+    group: 'intranet',
+    description: '연구소 통합 포털(과제·장비·특허) 진입. 일반 과제 조회와 별도',
+  },
 ] as const;
 
 const BY_KEY = new Map<RolePermissionKey, PermissionCatalogEntry>(

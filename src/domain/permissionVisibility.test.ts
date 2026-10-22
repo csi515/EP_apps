@@ -16,6 +16,8 @@ assert.equal(
   isPermissionKeyVisible('office_supply_request:manage', ['meal_survey', 'booking']),
   false
 );
+assert.equal(isPermissionKeyVisible('rnd_portal:access', ['research_project']), true);
+assert.equal(isPermissionKeyVisible('rnd_portal:access', ['booking']), false);
 assert.equal(isPermissionKeyVisible('volunteer:manage', ['volunteer_activity']), true);
 assert.equal(isPermissionKeyVisible('volunteer:manage', ['piano']), false);
 

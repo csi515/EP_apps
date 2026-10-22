@@ -23,6 +23,7 @@ export const ROLE_PERMISSION_KEYS = [
   'volunteer:manage',
   'meal_survey:manage',
   'office_supply_request:manage',
+  'rnd_portal:access',
 ] as const;
 
 export type RolePermissionKey = (typeof ROLE_PERMISSION_KEYS)[number];
@@ -50,6 +51,7 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   'volunteer:manage': false,
   'meal_survey:manage': false,
   'office_supply_request:manage': false,
+  'rnd_portal:access': false,
 };
 
 /** 기업 총무팀 기본 직급 템플릿 (Pre-fill 규격) */
@@ -73,6 +75,7 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
     'volunteer:manage': true,
     'meal_survey:manage': true,
     'office_supply_request:manage': true,
+    'rnd_portal:access': false,
   },
 } as const;
 
@@ -399,6 +402,15 @@ export function canManageOfficeSupplyRequest(member: AccessMember): boolean {
   if (flags?.['office_supply_request:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
   return effective['office_supply_request:manage'] === true;
+}
+
+/** 연구소 통합 포털 진입 (과제 조회 view 와 분리) */
+export function canAccessRndPortal(member: AccessMember): boolean {
+  if (member.role === 'owner' || member.role === 'admin') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['rnd_portal:access']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['rnd_portal:access'] === true;
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {

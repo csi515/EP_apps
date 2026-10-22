@@ -1882,6 +1882,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'volunteer_activity',
       'meal_survey',
       'office_supply_request',
+      'shuttle_dispatch',
     ] as const,
     requiredCapabilities: [
       'approval_workflow',
@@ -1906,6 +1907,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'volunteer_activity',
       'meal_survey',
       'office_supply_request',
+      'shuttle_dispatch',
     ] as const,
     roles: [
       {
@@ -1923,11 +1925,12 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
           'rental_equipment:*',
           'supply_restock:*',
           'office_supply_request:manage',
+          'shuttle:manage',
           'research_project:view',
           'approval_workflow:view',
           'resources:manage',
         ],
-        description: '공용차량·자원 등록(resources_manage) 및 예약·자재·사무용품 취합',
+        description: '공용차량·자원 등록(resources_manage) 및 예약·자재·사무용품·셔틀',
       },
       {
         name: '노경 담당',
@@ -1953,12 +1956,13 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
         permissions: [
           'mbo:*',
           'research_project:*',
+          'rnd_portal:access',
           'task_pipeline:*',
           'patent_ip_asset:*',
           'equipment_lifecycle:*',
           'approval_workflow:*',
         ],
-        description: '연구과제·특허·장비·MBO·게이트 결재',
+        description: '연구과제·특허·장비·MBO·게이트 결재·연구소 포털',
       },
       {
         name: '일반 직원',
@@ -1969,7 +1973,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
           'mbo:view',
           'research_project:view',
         ],
-        description: '예약·건의 접수, 본인 MBO·연구과제 조회',
+        description: '예약·건의 접수, 본인 MBO·연구과제 조회(연구소 포털 제외)',
       },
     ],
     resourceTypes: [
@@ -1984,7 +1988,6 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       resource_types_require_approval_default: true,
       hidden_capabilities: [
         'recipe_bom',
-        'supply_restock',
         'rental_equipment',
         'safety_consent',
       ],

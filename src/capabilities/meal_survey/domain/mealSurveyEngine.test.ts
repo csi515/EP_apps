@@ -22,6 +22,13 @@ assert.equal(
     offerBreakfast: false,
     offerLunch: false,
     offerDinner: false,
+    defaultEating: true,
+    breakfastCutoffTime: '17:00',
+    breakfastCutoffPrevDay: true,
+    lunchCutoffTime: '09:00',
+    lunchCutoffPrevDay: false,
+    dinnerCutoffTime: '15:00',
+    dinnerCutoffPrevDay: false,
   }).isValid,
   false
 );
@@ -30,12 +37,30 @@ assert.equal(
     offerBreakfast: false,
     offerLunch: true,
     offerDinner: false,
+    defaultEating: true,
+    breakfastCutoffTime: '17:00',
+    breakfastCutoffPrevDay: true,
+    lunchCutoffTime: '09:00',
+    lunchCutoffPrevDay: false,
+    dinnerCutoffTime: '15:00',
+    dinnerCutoffPrevDay: false,
   }).isValid,
   true
 );
 
 assert.deepEqual(
-  activeMealSlots({ offerBreakfast: true, offerLunch: false, offerDinner: true }),
+  activeMealSlots({
+    offerBreakfast: true,
+    offerLunch: false,
+    offerDinner: true,
+    defaultEating: true,
+    breakfastCutoffTime: '17:00',
+    breakfastCutoffPrevDay: true,
+    lunchCutoffTime: '09:00',
+    lunchCutoffPrevDay: false,
+    dinnerCutoffTime: '15:00',
+    dinnerCutoffPrevDay: false,
+  }),
   ['breakfast', 'dinner']
 );
 

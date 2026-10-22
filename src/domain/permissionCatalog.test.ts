@@ -15,6 +15,7 @@ assert.deepEqual(
 assert.equal(getPermissionLabel('volunteer:manage'), '봉사활동 게시·모집 관리');
 assert.equal(getPermissionLabel('meal_survey:manage'), '식수인원 조사 관리');
 assert.equal(getPermissionLabel('office_supply_request:manage'), '사무용품 취합 관리');
+assert.equal(getPermissionLabel('rnd_portal:access'), '연구소 포털 접속');
 assert.equal(getPermissionLabel('roles:assign'), '직급/권한 부여 및 회수');
 assert.ok(getPermissionLabel('unknown_key') === 'unknown_key');
 

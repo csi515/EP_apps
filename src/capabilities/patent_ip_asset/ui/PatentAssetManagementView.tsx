@@ -287,6 +287,52 @@ export const PatentAssetManagementView: React.FC = () => {
                 <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                   {patent.summary}
                 </p>
+                {(patent.documentUrls?.length ?? 0) > 0 ? (
+                  <ul className="mt-2 space-y-1 text-xs">
+                    {patent.documentUrls!.map((url) => (
+                      <li key={url}>
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-indigo-600 underline break-all"
+                        >
+                          {url}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <form
+                  className="mt-2 flex flex-wrap gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.currentTarget);
+                    const url = String(fd.get('docUrl') ?? '').trim();
+                    if (!url) return;
+                    void persistPatent(
+                      {
+                        ...patent,
+                        documentUrls: [...(patent.documentUrls ?? []), url],
+                      },
+                      'update'
+                    );
+                    e.currentTarget.reset();
+                  }}
+                >
+                  <input
+                    name="docUrl"
+                    type="url"
+                    placeholder="공보·문서 URL 추가"
+                    className="min-h-10 flex-1 rounded-lg border border-slate-200 px-2 text-xs"
+                  />
+                  <button
+                    type="submit"
+                    className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold"
+                  >
+                    URL 저장
+                  </button>
+                </form>
               </div>
 
               {/* 발명자 지분율 배지 목록 */}

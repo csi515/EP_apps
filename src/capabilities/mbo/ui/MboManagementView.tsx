@@ -250,16 +250,16 @@ export const MboManagementView: React.FC = () => {
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
-  const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>(SAMPLE_CATEGORIES);
+  const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
   const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
   const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
 
-  // 로컬 폴백 상태
-  const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>(INITIAL_OBJECTIVES);
-  const [localLogs, setLocalLogs] = useState<ProgressLogItem[]>(INITIAL_LOGS);
-  const [localFeedbacks, setLocalFeedbacks] = useState<FeedbackItem[]>(INITIAL_FEEDBACKS);
-  const [localEvaluations, setLocalEvaluations] = useState<EvaluationItem[]>(INITIAL_EVALUATIONS);
+  // 로컬 폴백 — 샘플 데이터 없이 빈 상태로 시작 (실데이터 우선)
+  const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>([]);
+  const [localLogs, setLocalLogs] = useState<ProgressLogItem[]>([]);
+  const [localFeedbacks, setLocalFeedbacks] = useState<FeedbackItem[]>([]);
+  const [localEvaluations, setLocalEvaluations] = useState<EvaluationItem[]>([]);
 
   // 모달 제어 상태
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -289,15 +289,15 @@ export const MboManagementView: React.FC = () => {
 
   const reloadProjectCategories = useCallback(async () => {
     if (!orgId) {
-      setProjectCategories(SAMPLE_CATEGORIES);
+      setProjectCategories([]);
       return;
     }
     try {
       await ensureDefaultProjectCategories(orgId);
       const rows = await listProjectCategories(orgId, { includeArchived: true });
-      setProjectCategories(rows.length > 0 ? rows : SAMPLE_CATEGORIES);
+      setProjectCategories(rows);
     } catch {
-      setProjectCategories(SAMPLE_CATEGORIES);
+      setProjectCategories([]);
     }
   }, [orgId]);
 
@@ -438,7 +438,7 @@ export const MboManagementView: React.FC = () => {
       objectiveId: obj.id,
       description: obj.description,
     }));
-    return [...SAMPLE_PORTFOLIO_PROJECTS, ...fromObjectives];
+    return fromObjectives;
   }, [refineProjects, objectives, categoryById]);
 
   const selectedObjective = objectives.find((o) => o.id === selectedObjectiveId) || objectives[0];

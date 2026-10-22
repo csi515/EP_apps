@@ -13,6 +13,27 @@ export type MealSurveySettings = {
   offerBreakfast: boolean;
   offerLunch: boolean;
   offerDinner: boolean;
+  /** 평일 기본 식사(표시·미응답 시 eating으로 간주하는 정책 플래그) */
+  defaultEating: boolean;
+  breakfastCutoffTime: string;
+  breakfastCutoffPrevDay: boolean;
+  lunchCutoffTime: string;
+  lunchCutoffPrevDay: boolean;
+  dinnerCutoffTime: string;
+  dinnerCutoffPrevDay: boolean;
+};
+
+export const DEFAULT_MEAL_SURVEY_SETTINGS: MealSurveySettings = {
+  offerBreakfast: false,
+  offerLunch: true,
+  offerDinner: false,
+  defaultEating: true,
+  breakfastCutoffTime: '17:00',
+  breakfastCutoffPrevDay: true,
+  lunchCutoffTime: '09:00',
+  lunchCutoffPrevDay: false,
+  dinnerCutoffTime: '15:00',
+  dinnerCutoffPrevDay: false,
 };
 
 export type MealDayAggregate = {
@@ -152,4 +173,42 @@ export function aggregateDaySlots(
 
 export function responseMapKey(mealDate: string, mealSlot: MealSlot): string {
   return `${mealDate}|${mealSlot}`;
+}
+
+function parseTimeHm(value: string): { h: number; m: number } {
+  const [h, m] = value.split(':').map(Number);
+  return { h: h ?? 0, m: m ?? 0 };
+}
+
+/** mealDate(YYYY-MM-DD) + 컷오프 시각·전일여부 → Date */
+export function mealCutoffAt(
+  mealDate: string,
+  cutoffTime: string,
+  prevDay: boolean
+): Date {
+  const [y, mo, d] = mealDate.split('-').map(Number);
+  const base = new Date(y, (mo ?? 1) - 1, d ?? 1);
+  if (prevDay) base.setDate(base.getDate() - 1);
+  const { h, m } = parseTimeHm(cutoffTime);
+  base.setHours(h, m, 0, 0);
+  return base;
+}
+
+export function isMealSlotWritable(
+  settings: MealSurveySettings,
+  mealDate: string,
+  mealSlot: MealSlot,
+  now: Date = new Date()
+): boolean {
+  if (!isMealSlotOffered(settings, mealSlot)) return false;
+  let cutoffTime = settings.lunchCutoffTime;
+  let prevDay = settings.lunchCutoffPrevDay;
+  if (mealSlot === 'breakfast') {
+    cutoffTime = settings.breakfastCutoffTime;
+    prevDay = settings.breakfastCutoffPrevDay;
+  } else if (mealSlot === 'dinner') {
+    cutoffTime = settings.dinnerCutoffTime;
+    prevDay = settings.dinnerCutoffPrevDay;
+  }
+  return now.getTime() < mealCutoffAt(mealDate, cutoffTime, prevDay).getTime();
 }

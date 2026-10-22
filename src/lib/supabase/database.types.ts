@@ -4771,6 +4771,7 @@ export interface Database {
           activity_id: string;
           member_id: string;
           created_at: string;
+          checked_in_at: string | null;
         };
         Insert: {
           id?: string;
@@ -4778,6 +4779,7 @@ export interface Database {
           activity_id: string;
           member_id: string;
           created_at?: string;
+          checked_in_at?: string | null;
         };
         Update: Partial<Database['core']['Tables']['volunteer_signups']['Insert']>;
         Relationships: [
@@ -4795,6 +4797,13 @@ export interface Database {
           offer_breakfast: boolean;
           offer_lunch: boolean;
           offer_dinner: boolean;
+          default_eating: boolean;
+          breakfast_cutoff_time: string;
+          breakfast_cutoff_prev_day: boolean;
+          lunch_cutoff_time: string;
+          lunch_cutoff_prev_day: boolean;
+          dinner_cutoff_time: string;
+          dinner_cutoff_prev_day: boolean;
           updated_at: string;
         };
         Insert: {
@@ -4802,6 +4811,13 @@ export interface Database {
           offer_breakfast?: boolean;
           offer_lunch?: boolean;
           offer_dinner?: boolean;
+          default_eating?: boolean;
+          breakfast_cutoff_time?: string;
+          breakfast_cutoff_prev_day?: boolean;
+          lunch_cutoff_time?: string;
+          lunch_cutoff_prev_day?: boolean;
+          dinner_cutoff_time?: string;
+          dinner_cutoff_prev_day?: boolean;
           updated_at?: string;
         };
         Update: Partial<Database['core']['Tables']['meal_survey_settings']['Insert']>;
@@ -7007,6 +7023,35 @@ export interface Database {
           p_offer_breakfast: boolean;
           p_offer_lunch: boolean;
           p_offer_dinner: boolean;
+          p_default_eating?: boolean;
+          p_breakfast_cutoff_time?: string;
+          p_breakfast_cutoff_prev_day?: boolean;
+          p_lunch_cutoff_time?: string;
+          p_lunch_cutoff_prev_day?: boolean;
+          p_dinner_cutoff_time?: string;
+          p_dinner_cutoff_prev_day?: boolean;
+        };
+        Returns: Json;
+      };
+      meal_survey_slot_writable: {
+        Args: {
+          p_org: string;
+          p_meal_date: string;
+          p_meal_slot: string;
+          p_now?: string;
+        };
+        Returns: boolean;
+      };
+      bulk_skip_meal_survey_range: {
+        Args: { p_organization_id: string; p_from: string; p_to: string };
+        Returns: Json;
+      };
+      set_volunteer_signup_checkin: {
+        Args: {
+          p_organization_id: string;
+          p_activity_id: string;
+          p_member_id: string;
+          p_checked_in: boolean;
         };
         Returns: Json;
       };

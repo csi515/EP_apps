@@ -19,6 +19,7 @@ export type VolunteerSignupRow = {
   activity_id: string;
   member_id: string;
   created_at: string;
+  checked_in_at?: string | null;
 };
 
 export async function listVolunteerActivities(
@@ -106,4 +107,20 @@ export async function cancelVolunteerSignup(activityId: string): Promise<Record<
   });
   if (error) throw new Error(error.message);
   return (data ?? {}) as Record<string, unknown>;
+}
+
+export async function setVolunteerSignupCheckin(input: {
+  organizationId: string;
+  activityId: string;
+  memberId: string;
+  checkedIn: boolean;
+}): Promise<void> {
+  const client = getCoreClient();
+  const { error } = await (client as any).rpc('set_volunteer_signup_checkin', {
+    p_organization_id: input.organizationId,
+    p_activity_id: input.activityId,
+    p_member_id: input.memberId,
+    p_checked_in: input.checkedIn,
+  });
+  if (error) throw new Error(error.message);
 }

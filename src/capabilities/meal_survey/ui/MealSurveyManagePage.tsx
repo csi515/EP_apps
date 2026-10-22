@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import {
+  DEFAULT_MEAL_SURVEY_SETTINGS,
   activeMealSlots,
   mealSlotLabel,
   mealStatusLabel,
@@ -20,9 +21,7 @@ import {
 import { MealSurveyManageGate } from './MealSurveyAccessGate';
 
 function overviewSettings(overview: MealSurveyOverview | null): MealSurveySettings {
-  if (!overview) {
-    return { offerBreakfast: false, offerLunch: true, offerDinner: false };
-  }
+  if (!overview) return { ...DEFAULT_MEAL_SURVEY_SETTINGS };
   return settingsRowToDomain({
     organization_id: '',
     offer_breakfast: overview.settings.offer_breakfast,
@@ -86,9 +85,9 @@ const MealSurveyManageInner: React.FC = () => {
     <div className="mx-auto max-w-5xl space-y-4 p-4 pb-24">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">식수 전체 현황</h1>
+          <h1 className="text-xl font-semibold text-slate-900">조리팀 식수 모니터</h1>
           <p className="mt-1 text-sm text-slate-500">
-            대상 인원 {overview?.member_count ?? '—'}명 · {range.from} ~ {range.to}
+            확정 식수(식사) · 대상 {overview?.member_count ?? '—'}명 · {range.from} ~ {range.to}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">

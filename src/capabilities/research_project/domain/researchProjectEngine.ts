@@ -31,6 +31,39 @@ export const RESEARCH_STATUS_LABELS: Record<ResearchProjectStatus, string> = {
   canceled: '중단',
 };
 
+/** 칸반 컬럼(기획→개발→시험→완료) — 기존 status 매핑 */
+export const RESEARCH_KANBAN_COLUMNS: Array<{
+  id: string;
+  label: string;
+  statuses: ResearchProjectStatus[];
+}> = [
+  { id: 'planning', label: '기획', statuses: ['draft'] },
+  { id: 'development', label: '개발', statuses: ['active', 'suspended'] },
+  { id: 'testing', label: '시험', statuses: ['gate_review'] },
+  { id: 'done', label: '완료', statuses: ['completed', 'canceled'] },
+];
+
+export type MemberProjectLoad = {
+  memberName: string;
+  projectCount: number;
+};
+
+/** 연구원별 참여 과제 수(간단 부하) */
+export function buildMemberProjectLoad(
+  projects: Array<{ members: ResearchMember[] }>
+): MemberProjectLoad[] {
+  const map = new Map<string, number>();
+  for (const p of projects) {
+    for (const m of p.members) {
+      const name = m.memberName.trim() || '미배정';
+      map.set(name, (map.get(name) ?? 0) + 1);
+    }
+  }
+  return [...map.entries()]
+    .map(([memberName, projectCount]) => ({ memberName, projectCount }))
+    .sort((a, b) => b.projectCount - a.projectCount || a.memberName.localeCompare(b.memberName, 'ko'));
+}
+
 export const MEMBER_ROLE_LABELS: Record<ResearchMemberRole, string> = {
   lead: '연구 담당자',
   co_lead: '부담당자',

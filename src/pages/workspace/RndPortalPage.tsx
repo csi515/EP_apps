@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { StorageService } from '@/services/storage';
+import { canAccessRndPortal, normalizeRolePermissions } from '@/domain/permissions';
+import { AccessDeniedBanner } from '@/pages/settings/DynamicRoleSettingsPage';
 import { isRndTabEnabled, resolveRndEnabledCapabilities, type RndTab } from './rndPortalCapabilities';
 
 const ResearchProjectManagementView = lazy(() =>
@@ -22,6 +25,13 @@ const TAB_LABEL: Record<RndTab, string> = {
 export const RndPortalPage: React.FC = () => {
   const { currentOrganization, activeCapabilities } = useOrganization();
   const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
+  const activeUser = StorageService.getActiveUser();
+  const hasPortalAccess = canAccessRndPortal({
+    role: activeUser?.role ?? null,
+    permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
+    customRole: activeUser?.customRole ?? null,
+  });
+
   const enabledCaps = useMemo(
     () =>
       resolveRndEnabledCapabilities(
@@ -43,6 +53,20 @@ export const RndPortalPage: React.FC = () => {
     if (visibleTabs.length === 0) return;
     if (!visibleTabs.includes(tab)) setTab(visibleTabs[0]);
   }, [visibleTabs, tab]);
+
+  if (!hasPortalAccess) {
+    return (
+      <main className="mx-auto max-w-lg p-6">
+        <AccessDeniedBanner />
+        <p className="mt-3 text-center text-sm text-slate-600">
+          연구소 포털은 권한이 부여된 담당자만 이용할 수 있습니다.
+        </p>
+        <Link to="/workspace/intranet" className="mt-4 block text-center text-sm font-medium text-indigo-600">
+          사내 업무 허브로 이동
+        </Link>
+      </main>
+    );
+  }
 
   if (visibleTabs.length === 0) {
     return (

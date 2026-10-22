@@ -99,7 +99,7 @@ export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
 }) => {
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(initialThresholds);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [items, setItems] = useState<TeamMemberWorkloadItem[]>(SAMPLE_WORKLOAD_ITEMS);
+  const [items, setItems] = useState<TeamMemberWorkloadItem[]>([]);
   const [selectedDeptId, setSelectedDeptId] = useState<string>('ALL');
 
   // 재분배 모달 상태

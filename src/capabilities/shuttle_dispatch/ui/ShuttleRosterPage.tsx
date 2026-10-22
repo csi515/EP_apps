@@ -4,7 +4,7 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { listRoleMembers } from '@/core/organizations/services/dynamicRoleService';
 import { ShuttleManageGate } from './ShuttleAccessGate';
 import { aggregateStopHeadcounts, type ShuttleRegistration, type ShuttleStop } from '../domain/shuttleRosterEngine';
-import { downloadCsv } from '../lib/csvExport';
+import { downloadCsv } from '@/shared/utils/csvDownload';
 import './shuttlePrint.css';
 
 type RouteRow = {

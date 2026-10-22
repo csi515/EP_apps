@@ -2,13 +2,11 @@ import React, { useState } from 'react';
 import {
   X,
   Calendar,
-  Clock,
-  User,
-  Users,
   ShieldCheck,
   Sparkles,
   AlertCircle,
   CheckCircle2,
+  User,
 } from 'lucide-react';
 import type { Resource, ResourceReservation } from '../types';
 import { resourceRangesOverlap, isBlockingReservationStatus } from '../overlap';
@@ -16,6 +14,7 @@ import {
   requestResourceReservation,
   requestMemberResourceReservation,
 } from '../reservationService';
+import { StorageService } from '@/services/storage';
 
 interface ResourceReservationRequestModalProps {
   organizationId: string;
@@ -28,6 +27,9 @@ interface ResourceReservationRequestModalProps {
   defaultStartTime?: string; // HH:mm
   defaultEndTime?: string; // HH:mm
   currentUserId?: string;
+  /** 세션에서 주입된 표시명(수기 선택 제거) */
+  requesterDisplayName?: string;
+  requesterDepartmentName?: string;
   /**
    * member: 사내 직원 즉시 확정(request_member_room_reservation).
    * customer: 학원 고객 신청(request_room_reservation, pending 가능).
@@ -46,6 +48,8 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   defaultStartTime = '10:00',
   defaultEndTime = '11:00',
   currentUserId,
+  requesterDisplayName,
+  requesterDepartmentName,
   bookingMode = 'member',
 }) => {
   const [date, setDate] = useState<string>(
@@ -58,6 +62,14 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   const [memo, setMemo] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const sessionUser = StorageService.getActiveUser();
+  const displayName =
+    requesterDisplayName?.trim() ||
+    sessionUser?.name ||
+    sessionUser?.email ||
+    '로그인 사용자';
+  const departmentLabel = requesterDepartmentName?.trim() || '세션 부서 자동 적용';
 
   if (!isOpen || !resource) return null;
 
@@ -161,6 +173,20 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
               <span>{errorMessage}</span>
             </div>
           )}
+
+          {bookingMode === 'member' ? (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs text-slate-700">
+              <User className="h-4 w-4 shrink-0 text-slate-500" />
+              <div>
+                <span className="font-bold">{displayName}</span>
+                <span className="mx-1 text-slate-400">·</span>
+                <span>{departmentLabel}</span>
+                <p className="mt-0.5 text-[11px] text-slate-500">
+                  로그인 세션 기준으로 예약자가 자동 지정됩니다. 이름·부서를 다시 고르지 않습니다.
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           {/* 승인 안내 배너 */}
           <div

@@ -34,6 +34,7 @@ const KEY_REQUIRES_ANY_CAPABILITY: Partial<Record<RolePermissionKey, readonly st
   'volunteer:manage': ['volunteer_activity'],
   'meal_survey:manage': ['meal_survey'],
   'office_supply_request:manage': ['office_supply_request'],
+  'rnd_portal:access': ['research_project', 'patent_ip_asset'],
 };
 
 export function resolveActiveCapabilityIds(

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { FolderKanban, Plus } from 'lucide-react';
 import {
+  RESEARCH_KANBAN_COLUMNS,
   RESEARCH_STATUS_LABELS,
+  buildMemberProjectLoad,
   getCoLeadNames,
   getCurrentGate,
   getLeadName,
@@ -20,6 +22,8 @@ const STATUS_FILTERS: Array<ResearchProjectStatus | 'all'> = [
   'draft',
 ];
 
+type ViewMode = 'list' | 'kanban';
+
 function formatKrw(value: number): string {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
@@ -30,6 +34,7 @@ function formatKrw(value: number): string {
 
 export const ResearchProjectManagementView: React.FC = () => {
   const ws = useResearchProjectWorkspace();
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
@@ -75,6 +80,12 @@ export const ResearchProjectManagementView: React.FC = () => {
     showToast('연구과제가 등록되었습니다.', 'success');
   };
 
+  const workload = useMemo(
+    () => buildMemberProjectLoad(ws.projects ?? []),
+    [ws.projects]
+  );
+  const maxLoad = Math.max(1, ...workload.map((w) => w.projectCount));
+
   if (ws.isLoading) {
     return <div className="p-8 text-center text-slate-400">연구과제를 불러오는 중...</div>;
   }
@@ -96,18 +107,56 @@ export const ResearchProjectManagementView: React.FC = () => {
             연구과제 관리
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Refine·Supabase 영속화 · 게이트는 전자결재(approval_workflow)와 연동 가능
+            칸반(기획→개발→시험→완료) · 참여 부하 · 게이트 결재 연동
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreateOpen(true)}
-          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700"
-        >
-          <Plus className="h-4 w-4" />
-          과제 등록
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <div className="inline-flex rounded-lg border border-slate-200 p-0.5">
+            <button
+              type="button"
+              className={`min-h-11 px-3 text-sm ${viewMode === 'kanban' ? 'rounded-md bg-slate-900 text-white' : 'text-slate-600'}`}
+              onClick={() => setViewMode('kanban')}
+            >
+              칸반
+            </button>
+            <button
+              type="button"
+              className={`min-h-11 px-3 text-sm ${viewMode === 'list' ? 'rounded-md bg-slate-900 text-white' : 'text-slate-600'}`}
+              onClick={() => setViewMode('list')}
+            >
+              목록
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4" />
+            과제 등록
+          </button>
+        </div>
       </div>
+
+      {workload.length > 0 ? (
+        <section className="rounded-xl border border-slate-200 bg-white p-4">
+          <h2 className="text-sm font-semibold text-slate-800">연구원 참여 부하 (과제 수)</h2>
+          <ul className="mt-3 space-y-2">
+            {workload.slice(0, 8).map((row) => (
+              <li key={row.memberName} className="flex items-center gap-3 text-sm">
+                <span className="w-24 shrink-0 truncate text-slate-700">{row.memberName}</span>
+                <div className="h-2 flex-1 rounded-full bg-slate-100">
+                  <div
+                    className="h-2 rounded-full bg-indigo-500"
+                    style={{ width: `${(row.projectCount / maxLoad) * 100}%` }}
+                  />
+                </div>
+                <span className="w-8 text-right text-slate-600">{row.projectCount}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap gap-2">
         {STATUS_FILTERS.map((s) => (
@@ -124,8 +173,45 @@ export const ResearchProjectManagementView: React.FC = () => {
         ))}
       </div>
 
+      {viewMode === 'kanban' ? (
+        <div className="grid gap-3 overflow-x-auto pb-2 md:grid-cols-4">
+          {RESEARCH_KANBAN_COLUMNS.map((col) => {
+            const cards = (ws.projects ?? []).filter((p) => col.statuses.includes(p.status));
+            return (
+              <div key={col.id} className="min-w-[12rem] rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                  {col.label} ({cards.length})
+                </p>
+                <div className="space-y-2">
+                  {cards.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => ws.setSelectedId(p.id)}
+                      className={`w-full rounded-lg border p-3 text-left text-sm ${
+                        ws.selectedId === p.id
+                          ? 'border-indigo-500 bg-indigo-50'
+                          : 'border-slate-200 bg-white'
+                      }`}
+                    >
+                      <p className="font-medium text-slate-900">{p.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {getLeadName(p)} · {p.progressRate}%
+                      </p>
+                    </button>
+                  ))}
+                  {cards.length === 0 ? (
+                    <p className="text-xs text-slate-400">없음</p>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-        <div className="space-y-2">
+        <div className={`space-y-2 ${viewMode === 'kanban' ? 'hidden lg:block' : ''}`}>
           {ws.filteredProjects.map((p) => {
             const gate = getCurrentGate(p.gates);
             return (

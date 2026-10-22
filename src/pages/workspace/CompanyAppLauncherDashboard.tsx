@@ -4,6 +4,7 @@ import {
   FlaskConical,
   Target,
   Car,
+  Bus,
   ShieldAlert,
   HeartHandshake,
   UtensilsCrossed,
@@ -21,6 +22,7 @@ import { useList, useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
+import { canAccessRndPortal, normalizeRolePermissions } from '@/domain/permissions';
 
 export interface CompanyAppTile {
   id: string;
@@ -33,6 +35,8 @@ export interface CompanyAppTile {
   badgeColor?: string;
   statusText?: string;
   requiredAnyCapability?: readonly string[];
+  /** true면 호출측에서 멤버 권한까지 통과해야 타일 표시 */
+  requiresPermissionCheck?: boolean;
 }
 
 interface PendingApprovalItem {
@@ -71,7 +75,12 @@ function resolveEnabledCaps(
   return Array.from(combined).filter((cap) => requiredCaps.has(cap) || !hiddenSet.has(cap));
 }
 
-function tileAllowed(tile: CompanyAppTile, enabledCaps: readonly string[]): boolean {
+function tileAllowed(
+  tile: CompanyAppTile,
+  enabledCaps: readonly string[],
+  permissionOk = true
+): boolean {
+  if (!permissionOk) return false;
   if (!tile.requiredAnyCapability || tile.requiredAnyCapability.length === 0) return true;
   return tile.requiredAnyCapability.some((c) => enabledCaps.includes(c));
 }
@@ -163,6 +172,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <FlaskConical className="h-8 w-8 text-white drop-shadow-sm" />,
         gradient: 'from-violet-500 to-purple-600',
         requiredAnyCapability: ['research_project'],
+        requiresPermissionCheck: true,
       },
       {
         id: 'mbo',
@@ -172,6 +182,15 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <Target className="h-8 w-8 text-white drop-shadow-sm" />,
         gradient: 'from-emerald-500 to-teal-600',
         requiredAnyCapability: ['mbo'],
+      },
+      {
+        id: 'shuttle',
+        to: '/workspace/shuttle/my',
+        label: '통근 셔틀',
+        description: '탑승·노선·운행표',
+        icon: <Bus className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-blue-500 to-indigo-600',
+        requiredAnyCapability: ['shuttle_dispatch'],
       },
       {
         id: 'resources',
@@ -190,6 +209,15 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <Warehouse className="h-8 w-8 text-white drop-shadow-sm" />,
         gradient: 'from-cyan-500 to-teal-600',
         requiredAnyCapability: ['inventory'],
+      },
+      {
+        id: 'supply_restock',
+        to: '/workspace/supply-restock',
+        label: '소모품·발주',
+        description: '안전재고·간이 발주',
+        icon: <Package className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-teal-500 to-cyan-700',
+        requiredAnyCapability: ['supply_restock'],
       },
       {
         id: 'sop_risk',
@@ -245,8 +273,16 @@ export const CompanyAppLauncherDashboard: React.FC<{
         gradient: 'from-zinc-500 to-slate-600',
       },
     ];
-    return all.filter((t) => tileAllowed(t, enabledCaps));
-  }, [enabledCaps, pendingApprovals.length]);
+    const rndOk = canAccessRndPortal({
+      role: activeUser?.role ?? null,
+      permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
+      customRole: activeUser?.customRole ?? null,
+    });
+    return all.filter((t) => {
+      const permOk = t.requiresPermissionCheck && t.id === 'research' ? rndOk : true;
+      return tileAllowed(t, enabledCaps, permOk);
+    });
+  }, [enabledCaps, pendingApprovals.length, activeUser?.role, activeUser?.customRole]);
 
   const handleTileClick = (tile: CompanyAppTile, e: React.MouseEvent) => {
     if (onSelectApp) {

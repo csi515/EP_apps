@@ -415,6 +415,7 @@ export function useResearchProjectWorkspace() {
     hasApprovalWorkflow,
     filter,
     setFilter,
+    projects,
     filteredProjects,
     selected,
     selectedId,

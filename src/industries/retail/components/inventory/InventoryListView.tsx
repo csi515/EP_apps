@@ -72,6 +72,7 @@ export const InventoryListView: FC = () => {
     industryType === 'manufacturing_light';
   /** Owner/Admin/Manager만 입고·조정 — Staff는 조회만 */
   const canMutate = isAdmin;
+  const productColumnLabel = isPlantOpsContext ? '표준코드·품명' : COPY.colProduct;
 
   const [rows, setRows] = useState<InventoryStockRow[]>([]);
   const [locations, setLocations] = useState<StockLocation[]>([]);
@@ -418,7 +419,7 @@ export const InventoryListView: FC = () => {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
                 <tr>
-                  <th className="px-4 py-3 font-bold">{COPY.colProduct}</th>
+                  <th className="px-4 py-3 font-bold">{productColumnLabel}</th>
                   <th className="px-4 py-3 font-bold">{COPY.colOption}</th>
                   <th className="px-4 py-3 font-bold text-right">{COPY.colQty}</th>
                   <th className="px-4 py-3 font-bold">{COPY.colStatus}</th>

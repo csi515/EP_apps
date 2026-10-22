@@ -93,7 +93,7 @@ export const SopRiskApprovalPanel: React.FC = () => {
             className="h-12 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-bold text-amber-900"
             onClick={() => setHistoryOpen(true)}
           >
-            v{selected.current_version}.0 ⚠️ {selected.current_version - 1}회 개정됨
+            v1.{selected.current_version - 1} ⚠️ {selected.current_version - 1}회 개정됨
           </button>
         ) : null}
       </div>

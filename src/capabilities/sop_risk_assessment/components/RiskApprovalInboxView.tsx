@@ -103,7 +103,8 @@ export const RiskApprovalInboxView: React.FC = () => {
                       {doc?.title ?? line.assessment_id}
                     </h3>
                     <p className="text-sm text-slate-500">
-                      {doc?.process_name ?? '-'} · v{doc?.current_version ?? '?'}.0 · {doc?.document_no}
+                      {doc?.process_name ?? '-'} · v1.
+                      {Math.max(0, (doc?.current_version ?? 1) - 1)} · {doc?.document_no}
                     </p>
                   </div>
                   <div className="flex gap-2">

@@ -3,9 +3,11 @@ import { Link } from 'react-router-dom';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import {
+  DEFAULT_MEAL_SURVEY_SETTINGS,
   activeMealSlots,
   cycleMealCellStatus,
   dayRange,
+  isMealSlotWritable,
   listDatesInRange,
   mealSlotLabel,
   mealStatusLabel,
@@ -19,6 +21,7 @@ import {
   type MealSurveySettings,
 } from '../domain/mealSurveyEngine';
 import {
+  bulkSkipMealSurveyRange,
   clearMealSurveyResponse,
   ensureMealSurveySettings,
   listMyMealSurveyResponses,
@@ -49,7 +52,9 @@ export const MealSurveyMyView: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [anchor, setAnchor] = useState(() => new Date());
-  const [settings, setSettings] = useState<MealSurveySettings | null>(null);
+  const [settings, setSettings] = useState<MealSurveySettings | null>({
+    ...DEFAULT_MEAL_SURVEY_SETTINGS,
+  });
   const [statusByKey, setStatusByKey] = useState<Record<string, MealCellStatus>>({});
   const [loading, setLoading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
@@ -98,7 +103,11 @@ export const MealSurveyMyView: React.FC = () => {
   }
 
   async function handleCycle(mealDate: string, mealSlot: MealSlot) {
-    if (!orgId) return;
+    if (!orgId || !settings) return;
+    if (!isMealSlotWritable(settings, mealDate, mealSlot)) {
+      showToast('해당 끼니 신청이 마감되었습니다.', 'error');
+      return;
+    }
     const key = responseMapKey(mealDate, mealSlot);
     const current = statusByKey[key] ?? null;
     const next = cycleMealCellStatus(current);
@@ -123,6 +132,22 @@ export const MealSurveyMyView: React.FC = () => {
     }
   }
 
+  async function handleBulkSkip(scope: 'day' | 'week') {
+    if (!orgId) return;
+    const r = scope === 'day' ? dayRange(anchor) : weekRange(anchor);
+    try {
+      const result = await bulkSkipMealSurveyRange({
+        organizationId: orgId,
+        from: r.from,
+        to: r.to,
+      });
+      showToast(`불참 처리 ${result.skipped_cells}칸 반영`, 'success');
+      await reload();
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '불참 처리 실패', 'error');
+    }
+  }
+
   const title =
     viewMode === 'month'
       ? `${anchor.getFullYear()}년 ${anchor.getMonth() + 1}월`
@@ -135,22 +160,39 @@ export const MealSurveyMyView: React.FC = () => {
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">내 식수</h1>
-          <p className="mt-1 text-sm text-slate-500">탭하면 식사 → 미식사 → 미응답 순으로 바뀝니다.</p>
+          <p className="mt-1 text-sm text-slate-500">
+            탭하면 식사 → 미식사 → 미응답. 마감 후에는 변경할 수 없습니다.
+            {settings?.defaultEating ? ' (평일 기본 식사 ON)' : ''}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-50"
+            onClick={() => void handleBulkSkip('day')}
+          >
+            오늘 불참
+          </button>
+          <button
+            type="button"
+            className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-50"
+            onClick={() => void handleBulkSkip('week')}
+          >
+            이번 주 불참
+          </button>
           {canManage && (
             <>
               <Link
                 to="/workspace/meal-survey/manage"
                 className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-50"
               >
-                전체 현황
+                조리팀 현황
               </Link>
               <Link
                 to="/workspace/meal-survey/settings"
                 className="rounded-lg border border-slate-200 px-3 py-2 text-slate-700 hover:bg-slate-50"
               >
-                슬롯 설정
+                슬롯·마감 설정
               </Link>
             </>
           )}

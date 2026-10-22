@@ -1,11 +1,23 @@
 import { getCoreClient } from '@/lib/supabase';
-import type { MealResponseStatus, MealSlot, MealSurveySettings } from './domain/mealSurveyEngine';
+import {
+  DEFAULT_MEAL_SURVEY_SETTINGS,
+  type MealResponseStatus,
+  type MealSlot,
+  type MealSurveySettings,
+} from './domain/mealSurveyEngine';
 
 export type MealSurveySettingsRow = {
   organization_id: string;
   offer_breakfast: boolean;
   offer_lunch: boolean;
   offer_dinner: boolean;
+  default_eating?: boolean;
+  breakfast_cutoff_time?: string;
+  breakfast_cutoff_prev_day?: boolean;
+  lunch_cutoff_time?: string;
+  lunch_cutoff_prev_day?: boolean;
+  dinner_cutoff_time?: string;
+  dinner_cutoff_prev_day?: boolean;
   updated_at?: string;
 };
 
@@ -46,11 +58,56 @@ export type MealSurveyOverview = {
   }>;
 };
 
+function timeFromRow(value: string | undefined, fallback: string): string {
+  if (!value) return fallback;
+  // TIME may come as HH:MM:SS
+  return value.slice(0, 5);
+}
+
 export function settingsRowToDomain(row: MealSurveySettingsRow): MealSurveySettings {
   return {
     offerBreakfast: row.offer_breakfast,
     offerLunch: row.offer_lunch,
     offerDinner: row.offer_dinner,
+    defaultEating: row.default_eating ?? DEFAULT_MEAL_SURVEY_SETTINGS.defaultEating,
+    breakfastCutoffTime: timeFromRow(
+      row.breakfast_cutoff_time,
+      DEFAULT_MEAL_SURVEY_SETTINGS.breakfastCutoffTime
+    ),
+    breakfastCutoffPrevDay:
+      row.breakfast_cutoff_prev_day ?? DEFAULT_MEAL_SURVEY_SETTINGS.breakfastCutoffPrevDay,
+    lunchCutoffTime: timeFromRow(
+      row.lunch_cutoff_time,
+      DEFAULT_MEAL_SURVEY_SETTINGS.lunchCutoffTime
+    ),
+    lunchCutoffPrevDay:
+      row.lunch_cutoff_prev_day ?? DEFAULT_MEAL_SURVEY_SETTINGS.lunchCutoffPrevDay,
+    dinnerCutoffTime: timeFromRow(
+      row.dinner_cutoff_time,
+      DEFAULT_MEAL_SURVEY_SETTINGS.dinnerCutoffTime
+    ),
+    dinnerCutoffPrevDay:
+      row.dinner_cutoff_prev_day ?? DEFAULT_MEAL_SURVEY_SETTINGS.dinnerCutoffPrevDay,
+  };
+}
+
+function normalizeSettingsRow(
+  row: MealSurveySettingsRow,
+  organizationId: string
+): MealSurveySettingsRow {
+  return {
+    organization_id: row.organization_id ?? organizationId,
+    offer_breakfast: Boolean(row.offer_breakfast),
+    offer_lunch: Boolean(row.offer_lunch ?? true),
+    offer_dinner: Boolean(row.offer_dinner),
+    default_eating: row.default_eating ?? true,
+    breakfast_cutoff_time: timeFromRow(row.breakfast_cutoff_time, '17:00'),
+    breakfast_cutoff_prev_day: row.breakfast_cutoff_prev_day ?? true,
+    lunch_cutoff_time: timeFromRow(row.lunch_cutoff_time, '09:00'),
+    lunch_cutoff_prev_day: row.lunch_cutoff_prev_day ?? false,
+    dinner_cutoff_time: timeFromRow(row.dinner_cutoff_time, '15:00'),
+    dinner_cutoff_prev_day: row.dinner_cutoff_prev_day ?? false,
+    updated_at: row.updated_at,
   };
 }
 
@@ -62,14 +119,7 @@ export async function ensureMealSurveySettings(
     p_org: organizationId,
   });
   if (error) throw new Error(error.message);
-  const row = data as MealSurveySettingsRow;
-  return {
-    organization_id: row.organization_id ?? organizationId,
-    offer_breakfast: Boolean(row.offer_breakfast),
-    offer_lunch: Boolean(row.offer_lunch ?? true),
-    offer_dinner: Boolean(row.offer_dinner),
-    updated_at: row.updated_at,
-  };
+  return normalizeSettingsRow(data as MealSurveySettingsRow, organizationId);
 }
 
 export async function upsertMealSurveySettings(
@@ -82,16 +132,16 @@ export async function upsertMealSurveySettings(
     p_offer_breakfast: settings.offerBreakfast,
     p_offer_lunch: settings.offerLunch,
     p_offer_dinner: settings.offerDinner,
+    p_default_eating: settings.defaultEating,
+    p_breakfast_cutoff_time: settings.breakfastCutoffTime,
+    p_breakfast_cutoff_prev_day: settings.breakfastCutoffPrevDay,
+    p_lunch_cutoff_time: settings.lunchCutoffTime,
+    p_lunch_cutoff_prev_day: settings.lunchCutoffPrevDay,
+    p_dinner_cutoff_time: settings.dinnerCutoffTime,
+    p_dinner_cutoff_prev_day: settings.dinnerCutoffPrevDay,
   });
   if (error) throw new Error(error.message);
-  const row = data as MealSurveySettingsRow;
-  return {
-    organization_id: row.organization_id ?? organizationId,
-    offer_breakfast: Boolean(row.offer_breakfast),
-    offer_lunch: Boolean(row.offer_lunch),
-    offer_dinner: Boolean(row.offer_dinner),
-    updated_at: row.updated_at,
-  };
+  return normalizeSettingsRow(data as MealSurveySettingsRow, organizationId);
 }
 
 export async function listMyMealSurveyResponses(
@@ -143,6 +193,21 @@ export async function clearMealSurveyResponse(input: {
   });
   if (error) throw new Error(error.message);
   return (data ?? {}) as Record<string, unknown>;
+}
+
+export async function bulkSkipMealSurveyRange(input: {
+  organizationId: string;
+  from: string;
+  to: string;
+}): Promise<{ skipped_cells: number }> {
+  const client = getCoreClient();
+  const { data, error } = await (client as any).rpc('bulk_skip_meal_survey_range', {
+    p_organization_id: input.organizationId,
+    p_from: input.from,
+    p_to: input.to,
+  });
+  if (error) throw new Error(error.message);
+  return (data ?? { skipped_cells: 0 }) as { skipped_cells: number };
 }
 
 export async function listMealSurveyOverview(

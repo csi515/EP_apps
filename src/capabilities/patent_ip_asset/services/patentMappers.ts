@@ -63,6 +63,9 @@ export function patentRowToAsset(row: PatentRow): PatentAsset {
     registrationDate: payload.registrationDate as string | undefined,
     applicationReward: payload.applicationReward as PatentAsset['applicationReward'],
     registrationReward: payload.registrationReward as PatentAsset['registrationReward'],
+    documentUrls: Array.isArray(row.document_urls)
+      ? (row.document_urls as unknown[]).map(String).filter(Boolean)
+      : [],
   };
 }
 
@@ -79,7 +82,7 @@ export function patentAssetToInsert(
     inventor_ids: asset.inventors as unknown as Json,
     status: asset.status,
     filing_date: asset.receiptDate,
-    document_urls: [] as Json,
+    document_urls: (asset.documentUrls ?? []) as unknown as Json,
     payload: {
       review: asset.review,
       applicationNumber: asset.applicationNumber,
@@ -101,6 +104,7 @@ export function patentAssetToUpdate(asset: PatentAsset): Partial<PatentRow> {
     inventor_ids: asset.inventors as unknown as Json,
     status: asset.status,
     filing_date: asset.receiptDate,
+    document_urls: (asset.documentUrls ?? []) as unknown as Json,
     payload: {
       review: asset.review,
       applicationNumber: asset.applicationNumber,

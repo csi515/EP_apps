@@ -6,11 +6,13 @@ import {
   createVolunteerActivity,
   listVolunteerActivities,
   listVolunteerSignups,
+  setVolunteerSignupCheckin,
   updateVolunteerActivityStatus,
   type VolunteerActivityRow,
   type VolunteerSignupRow,
 } from '../volunteerActivityService';
 import { validateVolunteerActivityDraft } from '../domain/volunteerActivityEngine';
+import { downloadCsv } from '@/shared/utils/csvDownload';
 import { VolunteerManageGate } from './VolunteerAccessGate';
 
 function VolunteerManageInner() {
@@ -27,6 +29,7 @@ function VolunteerManageInner() {
   const [capacity, setCapacity] = useState(10);
   const [eventDate, setEventDate] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const signupCountByActivity = useMemo(() => {
     const map = new Map<string, number>();
@@ -97,10 +100,45 @@ function VolunteerManageInner() {
   async function handleStatus(id: string, status: 'open' | 'closed' | 'cancelled') {
     try {
       await updateVolunteerActivityStatus(id, status);
-      showToast('상태가 변경되었습니다.', 'success');
+      showToast(
+        status === 'closed' ? '모집이 마감되었습니다.' : '상태가 변경되었습니다.',
+        'success'
+      );
       await reload();
     } catch (cause) {
       showToast(cause instanceof Error ? cause.message : '상태 변경에 실패했습니다.', 'error');
+    }
+  }
+
+  const selected = activities.find((a) => a.id === selectedId) ?? null;
+  const selectedSignups = useMemo(
+    () => signups.filter((s) => s.activity_id === selectedId),
+    [signups, selectedId]
+  );
+
+  function exportSelectedCsv() {
+    if (!selected) return;
+    const header = ['member_id', 'checked_in', 'signed_up_at'];
+    const rows = selectedSignups.map((s) => [
+      s.member_id,
+      s.checked_in_at ? 'Y' : 'N',
+      s.created_at,
+    ]);
+    downloadCsv(`volunteer-${selected.title.replace(/\s+/g, '_')}.csv`, [header, ...rows]);
+  }
+
+  async function toggleCheckin(row: VolunteerSignupRow) {
+    if (!orgId) return;
+    try {
+      await setVolunteerSignupCheckin({
+        organizationId: orgId,
+        activityId: row.activity_id,
+        memberId: row.member_id,
+        checkedIn: !row.checked_in_at,
+      });
+      await reload();
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '체크인 변경 실패', 'error');
     }
   }
 
@@ -189,14 +227,26 @@ function VolunteerManageInner() {
                 key={act.id}
                 className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2"
               >
+                {act.status === 'closed' ? (
+                  <div
+                    role="status"
+                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950"
+                  >
+                    마감됨 — 신규 신청이 불가합니다.
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
+                  <button
+                    type="button"
+                    className="text-left"
+                    onClick={() => setSelectedId(act.id)}
+                  >
                     <p className="font-bold text-slate-900">{act.title}</p>
                     <p className="text-xs text-slate-500">
                       {act.activity_type}
                       {act.event_date ? ` · ${act.event_date}` : ''}
                     </p>
-                  </div>
+                  </button>
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700">
                     {act.status}
                   </span>
@@ -241,6 +291,52 @@ function VolunteerManageInner() {
           })
         )}
       </section>
+
+      {selected ? (
+        <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-base font-bold">참가자 · {selected.title}</h2>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="min-h-10 rounded-xl border px-3 text-xs font-semibold"
+                onClick={() => exportSelectedCsv()}
+              >
+                CSV
+              </button>
+              <button
+                type="button"
+                className="min-h-10 rounded-xl border px-3 text-xs font-semibold"
+                onClick={() => window.print()}
+              >
+                인쇄
+              </button>
+            </div>
+          </div>
+          {selectedSignups.length === 0 ? (
+            <p className="text-sm text-slate-400">신청자가 없습니다.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100">
+              {selectedSignups.map((s) => (
+                <li key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
+                  <span className="font-mono text-xs text-slate-600">{s.member_id.slice(0, 8)}…</span>
+                  <button
+                    type="button"
+                    className={`min-h-10 rounded-xl px-3 text-xs font-semibold ${
+                      s.checked_in_at
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : 'border border-slate-200 text-slate-700'
+                    }`}
+                    onClick={() => void toggleCheckin(s)}
+                  >
+                    {s.checked_in_at ? '체크인됨' : '체크인'}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }
