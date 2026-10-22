@@ -33,6 +33,7 @@ import { vehicle_shuttleCapability } from './vehicle_shuttle/manifest';
 import { shuttle_dispatchCapability } from './shuttle_dispatch/manifest';
 import { volunteer_activityCapability } from './volunteer_activity/manifest';
 import { meal_surveyCapability } from './meal_survey/manifest';
+import { office_supply_requestCapability } from './office_supply_request/manifest';
 import { commission_payrollCapability } from './commission_payroll/manifest';
 import { lost_foundCapability } from './lost_found/manifest';
 import { recipe_bomCapability } from './recipe_bom/manifest';
@@ -165,6 +166,7 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   shuttle_dispatchCapability,
   volunteer_activityCapability,
   meal_surveyCapability,
+  office_supply_requestCapability,
   commission_payrollCapability,
   lost_foundCapability,
   recipe_bomCapability,

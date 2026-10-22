@@ -22,6 +22,7 @@ export const ROLE_PERMISSION_KEYS = [
   'shuttle:manage',
   'volunteer:manage',
   'meal_survey:manage',
+  'office_supply_request:manage',
 ] as const;
 
 export type RolePermissionKey = (typeof ROLE_PERMISSION_KEYS)[number];
@@ -48,6 +49,7 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   'shuttle:manage': false,
   'volunteer:manage': false,
   'meal_survey:manage': false,
+  'office_supply_request:manage': false,
 };
 
 /** 기업 총무팀 기본 직급 템플릿 (Pre-fill 규격) */
@@ -70,6 +72,7 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
     'shuttle:manage': true,
     'volunteer:manage': true,
     'meal_survey:manage': true,
+    'office_supply_request:manage': true,
   },
 } as const;
 
@@ -387,6 +390,15 @@ export function canManageMealSurvey(member: AccessMember): boolean {
   if (flags?.['meal_survey:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
   return effective['meal_survey:manage'] === true;
+}
+
+/** 사무용품 월별 취합 카탈로그·캠페인·취합 위임 권한 */
+export function canManageOfficeSupplyRequest(member: AccessMember): boolean {
+  if (member.role === 'owner' || member.role === 'admin') return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['office_supply_request:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['office_supply_request:manage'] === true;
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {

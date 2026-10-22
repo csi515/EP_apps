@@ -33,6 +33,7 @@ const KEY_REQUIRES_ANY_CAPABILITY: Partial<Record<RolePermissionKey, readonly st
   'shuttle:manage': ['vehicle_shuttle', 'shuttle_dispatch'],
   'volunteer:manage': ['volunteer_activity'],
   'meal_survey:manage': ['meal_survey'],
+  'office_supply_request:manage': ['office_supply_request'],
 };
 
 export function resolveActiveCapabilityIds(

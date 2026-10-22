@@ -7,6 +7,7 @@ import {
   ShieldAlert,
   HeartHandshake,
   UtensilsCrossed,
+  Package,
   Settings,
   Bell,
   ChevronRight,
@@ -225,6 +226,15 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <UtensilsCrossed className="h-8 w-8 text-white drop-shadow-sm" />,
         gradient: 'from-lime-500 to-green-600',
         requiredAnyCapability: ['meal_survey'],
+      },
+      {
+        id: 'office_supply',
+        to: '/workspace/office-supply',
+        label: '사무용품 취합',
+        description: '월별 신청·부서 취합',
+        icon: <Package className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-sky-500 to-blue-600',
+        requiredAnyCapability: ['office_supply_request'],
       },
       {
         id: 'settings',

@@ -151,6 +151,12 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     group: 'intranet',
     description: '식사 슬롯 설정 및 전체 식수 현황 조회',
   },
+  {
+    key: 'office_supply_request:manage',
+    label: '사무용품 취합 관리',
+    group: 'intranet',
+    description: '구매 가능 품목·월별 마감 캠페인·부서별 취합',
+  },
 ] as const;
 
 const BY_KEY = new Map<RolePermissionKey, PermissionCatalogEntry>(

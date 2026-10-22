@@ -11,6 +11,7 @@ export const STANDARD_PERMISSION_KEYS = [
   'shuttle:logs:read',
   'volunteer:manage',
   'meal_survey:manage',
+  'office_supply_request:manage',
   'billing:invoices:read',
   'attendance:records:write',
 ] as const;
@@ -41,6 +42,21 @@ const RESOURCE_ACTION: Record<string, Partial<Record<string, StandardPermissionK
     manage: 'meal_survey:manage',
     list: 'meal_survey:manage',
     read: 'meal_survey:manage',
+  },
+  office_supply_catalog: {
+    manage: 'office_supply_request:manage',
+    create: 'office_supply_request:manage',
+    edit: 'office_supply_request:manage',
+  },
+  office_supply_campaigns: {
+    manage: 'office_supply_request:manage',
+    create: 'office_supply_request:manage',
+    edit: 'office_supply_request:manage',
+  },
+  office_supply_manage: {
+    manage: 'office_supply_request:manage',
+    list: 'office_supply_request:manage',
+    read: 'office_supply_request:manage',
   },
   billing_invoices: { read: 'billing:invoices:read', list: 'billing:invoices:read', show: 'billing:invoices:read' },
   attendance_records: { write: 'attendance:records:write', create: 'attendance:records:write', edit: 'attendance:records:write' },

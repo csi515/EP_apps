@@ -133,6 +133,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:volunteer-activity-engine', group: 'capability', kind: 'unit', ci: 'always', order: 62 },
   { script: 'test:meal-survey-engine', group: 'capability', kind: 'unit', ci: 'always', order: 63 },
   { script: 'test:permission-visibility', group: 'authorization', kind: 'unit', ci: 'always', order: 64 },
+  { script: 'test:office-supply-request-engine', group: 'capability', kind: 'unit', ci: 'always', order: 65 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */

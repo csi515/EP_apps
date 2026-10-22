@@ -11,6 +11,11 @@ assert.equal(isPermissionKeyVisible('policies', []), true);
 
 assert.equal(isPermissionKeyVisible('meal_survey:manage', ['meal_survey']), true);
 assert.equal(isPermissionKeyVisible('meal_survey:manage', ['attendance', 'booking']), false);
+assert.equal(isPermissionKeyVisible('office_supply_request:manage', ['office_supply_request']), true);
+assert.equal(
+  isPermissionKeyVisible('office_supply_request:manage', ['meal_survey', 'booking']),
+  false
+);
 assert.equal(isPermissionKeyVisible('volunteer:manage', ['volunteer_activity']), true);
 assert.equal(isPermissionKeyVisible('volunteer:manage', ['piano']), false);
 

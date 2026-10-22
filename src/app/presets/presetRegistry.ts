@@ -71,6 +71,8 @@ import { volunteerActivitySetupSchema } from '@/capabilities/volunteer_activity/
 import { volunteerActivityResources } from '@/capabilities/volunteer_activity/resources';
 import { mealSurveySetupSchema } from '@/capabilities/meal_survey/setupSchema';
 import { mealSurveyResources } from '@/capabilities/meal_survey/resources';
+import { officeSupplyRequestSetupSchema } from '@/capabilities/office_supply_request/setupSchema';
+import { officeSupplyRequestResources } from '@/capabilities/office_supply_request/resources';
 import { commissionPayrollSetupSchema } from '@/capabilities/commission_payroll/setupSchema';
 import { commissionPayrollResources } from '@/capabilities/commission_payroll/resources';
 import { lostFoundSetupSchema } from '@/capabilities/lost_found/setupSchema';
@@ -397,6 +399,11 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     capabilityId: 'meal_survey',
     setupSchema: mealSurveySetupSchema,
     resources: mealSurveyResources,
+  },
+  office_supply_request: {
+    capabilityId: 'office_supply_request',
+    setupSchema: officeSupplyRequestSetupSchema,
+    resources: officeSupplyRequestResources,
   },
 
   // 범주 J: 프리랜서 & 인센티브 정산
@@ -1874,6 +1881,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'equipment_lifecycle',
       'volunteer_activity',
       'meal_survey',
+      'office_supply_request',
     ] as const,
     requiredCapabilities: [
       'approval_workflow',
@@ -1897,6 +1905,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'equipment_lifecycle',
       'volunteer_activity',
       'meal_survey',
+      'office_supply_request',
     ] as const,
     roles: [
       {
@@ -1913,11 +1922,12 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
           'inventory:*',
           'rental_equipment:*',
           'supply_restock:*',
+          'office_supply_request:manage',
           'research_project:view',
           'approval_workflow:view',
           'resources:manage',
         ],
-        description: '공용차량·자원 등록(resources_manage) 및 예약·자재',
+        description: '공용차량·자원 등록(resources_manage) 및 예약·자재·사무용품 취합',
       },
       {
         name: '노경 담당',

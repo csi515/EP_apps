@@ -77,6 +77,11 @@ import {
   WorkspaceMealSurveyManagePage,
   WorkspaceMealSurveySettingsPage,
 } from "./pages/workspace/WorkspaceMealSurveyPage";
+import {
+  WorkspaceOfficeSupplyMyPage,
+  WorkspaceOfficeSupplyManagePage,
+  WorkspaceOfficeSupplyCatalogPage,
+} from "./pages/workspace/WorkspaceOfficeSupplyPage";
 import { PassesListPage } from "./pages/passes/list";
 import { LockersGridPage } from "./pages/lockers/grid";
 import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
@@ -302,6 +307,9 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/meal-survey" element={<WorkspaceMealSurveyMyPage />} />
             <Route path="/workspace/meal-survey/manage" element={<WorkspaceMealSurveyManagePage />} />
             <Route path="/workspace/meal-survey/settings" element={<WorkspaceMealSurveySettingsPage />} />
+            <Route path="/workspace/office-supply" element={<WorkspaceOfficeSupplyMyPage />} />
+            <Route path="/workspace/office-supply/manage" element={<WorkspaceOfficeSupplyManagePage />} />
+            <Route path="/workspace/office-supply/catalog" element={<WorkspaceOfficeSupplyCatalogPage />} />
             <Route path="/rnd" element={<RndPortalPage />} />
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />

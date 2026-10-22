@@ -103,6 +103,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   shuttle_dispatch: ['shuttle', 'shuttle-routes', 'shuttle-roster', 'shuttle-my'],
   volunteer_activity: ['volunteer', 'volunteer-manage'],
   meal_survey: ['meal-survey', 'meal-survey-manage', 'meal-survey-settings'],
+  office_supply_request: ['office-supply', 'office-supply-manage', 'office-supply-catalog'],
   commission_payroll: ['commission-payroll', 'payroll', 'settlement'],
   lost_found: ['lost-found', 'lost_items'],
   recipe_bom: ['recipe-bom', 'recipes', 'bom'],

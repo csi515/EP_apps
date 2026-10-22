@@ -20,6 +20,7 @@ assert.ok(enabled.includes('approval_workflow'));
 assert.ok(enabled.includes('mbo'));
 assert.ok(enabled.includes('inventory'));
 assert.ok(enabled.includes('whistleblower_grievance'));
+assert.ok(enabled.includes('office_supply_request'));
 assert.ok(!enabled.includes('recipe_bom'), 'default hidden BOM');
 assert.ok(!enabled.includes('supply_restock'), 'default hidden supply');
 
@@ -27,6 +28,7 @@ assert.equal(tileAllowed({ requiredAnyCapability: ['vehicle_shuttle'] } as never
 assert.equal(tileAllowed({ requiredAnyCapability: ['feedbacks'] } as never, enabled), false);
 assert.equal(tileAllowed({ requiredAnyCapability: ['approval_workflow'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['booking', 'seat_room'] } as never, enabled), true);
+assert.equal(tileAllowed({ requiredAnyCapability: ['office_supply_request'] } as never, enabled), true);
 
 assert.equal(plant.readinessLevel, 'isolated');
 

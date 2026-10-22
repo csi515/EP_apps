@@ -4845,6 +4845,111 @@ export interface Database {
           },
         ];
       };
+      office_supply_catalog_items: {
+        Row: {
+          id: string;
+          organization_id: string;
+          name: string;
+          unit: string;
+          estimated_unit_price: number;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          name: string;
+          unit?: string;
+          estimated_unit_price?: number;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['office_supply_catalog_items']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'office_supply_catalog_items_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      office_supply_campaigns: {
+        Row: {
+          id: string;
+          organization_id: string;
+          year_month: string;
+          deadline_at: string;
+          status: 'open' | 'closed';
+          closed_at: string | null;
+          note: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          year_month: string;
+          deadline_at: string;
+          status?: 'open' | 'closed';
+          closed_at?: string | null;
+          note?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['office_supply_campaigns']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'office_supply_campaigns_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      office_supply_request_lines: {
+        Row: {
+          id: string;
+          organization_id: string;
+          campaign_id: string;
+          member_id: string;
+          department_id: string | null;
+          catalog_item_id: string;
+          quantity: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          campaign_id: string;
+          member_id: string;
+          department_id?: string | null;
+          catalog_item_id: string;
+          quantity: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['office_supply_request_lines']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'office_supply_request_lines_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'office_supply_request_lines_campaign_id_fkey';
+            columns: ['campaign_id'];
+            referencedRelation: 'office_supply_campaigns';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       resource_types: {
         Row: {
           id: string;
@@ -6928,6 +7033,51 @@ export interface Database {
           p_from: string;
           p_to: string;
         };
+        Returns: Json;
+      };
+      can_manage_office_supply_request: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      office_supply_campaign_is_writable: {
+        Args: { p_campaign: Json };
+        Returns: boolean;
+      };
+      resolve_member_primary_department: {
+        Args: { p_organization_id: string; p_member_id: string };
+        Returns: string;
+      };
+      upsert_office_supply_campaign: {
+        Args: {
+          p_organization_id: string;
+          p_year_month: string;
+          p_deadline_at: string;
+          p_note?: string | null;
+        };
+        Returns: Json;
+      };
+      close_office_supply_campaign: {
+        Args: { p_organization_id: string; p_campaign_id: string };
+        Returns: Json;
+      };
+      reopen_office_supply_campaign: {
+        Args: {
+          p_organization_id: string;
+          p_campaign_id: string;
+          p_deadline_at?: string | null;
+        };
+        Returns: Json;
+      };
+      upsert_office_supply_request_lines: {
+        Args: {
+          p_organization_id: string;
+          p_campaign_id: string;
+          p_lines: Json;
+        };
+        Returns: Json;
+      };
+      list_office_supply_dept_aggregate: {
+        Args: { p_organization_id: string; p_campaign_id: string };
         Returns: Json;
       };
       join_waitlist: {
