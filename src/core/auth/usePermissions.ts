@@ -8,6 +8,7 @@ import {
   isOrgOwner,
 } from './permissions';
 import { useNavigationPermissions } from './useNavigationPermissions';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 /**
  * @deprecated Prefer `useCan` for data permission decisions and
@@ -16,7 +17,7 @@ import { useNavigationPermissions } from './useNavigationPermissions';
 export function usePermissions() {
   const org = useOptionalOrganization();
   const { role, staffId, parentCustomerId, requestContext, authorization } = useAuthorization();
-  const industry = (org?.currentOrganization?.industry_type ?? 'piano') as IndustryType;
+  const industry = resolveIndustryId(org?.currentOrganization?.industry_type);
   const navigation = useNavigationPermissions({ role, staffId, industry });
 
   return {

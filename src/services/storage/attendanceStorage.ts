@@ -11,6 +11,7 @@ import {
 } from '../../core/attendance/services/attendanceService';
 import { getIndustryType } from '../adapters/storageContext';
 import { dispatchAppPush } from '@/core/push';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 /** 출결·PIN·보강 도메인 */
 export function createAttendanceStorage(api: StorageApi) {
@@ -191,7 +192,7 @@ export function createAttendanceStorage(api: StorageApi) {
       organizationId: string
     ): Promise<PinCheckResult> {
       const settings = (api.getSettings as () => import('../../types').AcademySettings)();
-      const industry = getIndustryType() || 'piano';
+      const industry = resolveIndustryId(getIndustryType());
       const moduleEnabled = isAttendanceModuleEnabled(settings, industry);
 
       const { result, sessions } = await toggleCheckInByPinLocal({

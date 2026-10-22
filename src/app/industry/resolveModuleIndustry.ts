@@ -46,7 +46,7 @@ export function resolveModuleIndustryId(
 ): ModuleIndustryId | null {
   const raw = industryType?.trim() ?? '';
   if (!raw) {
-    return isBlankIndustryInput(industryType) ? 'piano' : null;
+    return null; // 빈 값·미로드는 piano로 위장하지 않는다 (core/industry/resolveIndustry.ts)
   }
 
   const shared = resolveSharedModuleId(raw);

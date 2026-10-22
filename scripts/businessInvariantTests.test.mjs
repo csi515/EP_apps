@@ -94,6 +94,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:tenant-query',
   'test:policy-engine',
   'test:app-routing',
+  'test:industry-resolver',
 ];
 
 const scripts = loadPackageScripts();

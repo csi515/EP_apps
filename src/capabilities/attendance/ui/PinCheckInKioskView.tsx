@@ -26,6 +26,7 @@ import {
   enqueueAttendance,
   initOfflineAttendanceSync,
 } from '../offline/attendanceOfflineQueue';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'enter'] as const;
 const ADMIN_EXIT_HOLD_MS = 2000;
@@ -46,7 +47,7 @@ export const PinCheckInKioskView: React.FC<PinCheckInKioskViewProps> = ({
     org?.currentOrganization?.id,
     standalone ? 'standalone' : 'embedded'
   );
-  const industry = org?.currentOrganization?.industry_type || 'piano';
+  const industry = resolveIndustryId(org?.currentOrganization?.industry_type);
   const settings = settingsStorage.getSettings();
 
   const [pin, setPin] = useState('');

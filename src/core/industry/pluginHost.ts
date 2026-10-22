@@ -41,7 +41,7 @@ export function getIndustryPlugin(
   industry: string | null | undefined
 ): IndustryPluginManifest {
   if (isBlankIndustryInput(industry)) {
-    return installed.get('piano') ?? buildGenericPluginManifest(INDUSTRY_DEFINITIONS.piano);
+    return unknownIndustryPlugin();
   }
   const sharedModule = resolveSharedModuleId(industry);
   if (sharedModule) {

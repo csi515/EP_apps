@@ -12,6 +12,7 @@ import {
 } from '@/core/parent/services/parentAccountService';
 import { sendParentInvitationEmail } from '@/core/parent/services/parentInviteService';
 import { getIndustryType } from '@/services/adapters/storageContext';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 /** 등록 시 보호자 1명 입력 */
 export interface GuardianRegistrationInput {
@@ -58,7 +59,7 @@ export async function registerStudentWithParent(
 ): Promise<StudentRegistrationResult> {
   const organizationId = options.organizationId || 'local-org';
   const settings = StorageService.getSettings();
-  const industry = getIndustryType() || 'piano';
+  const industry = resolveIndustryId(getIndustryType());
   const attendanceEnabled = isAttendanceModuleEnabled(settings, industry);
 
   const { parentId: _p, parentName: _n, parentPhone: _ph, ...studentCore } = studentData;

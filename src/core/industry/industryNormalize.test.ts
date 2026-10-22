@@ -54,11 +54,12 @@ function run() {
   assert.equal(isBlankIndustryInput('  '), true);
   assert.equal(parseIndustryType(null), null);
   assert.equal(parseIndustryType(''), null);
-  assert.equal(normalizeIndustryType(null), 'piano');
-  assert.equal(normalizeIndustryType(''), 'piano');
-  assert.equal(normalizeIndustryType('   '), 'piano');
-  assert.equal(resolveIndustryAppKind(null), 'module');
-  assert.equal(resolveIndustryAppKind(''), 'module');
+  // 빈 값·미로드는 piano로 위장하지 않는다 (resolveIndustry.ts)
+  assert.equal(normalizeIndustryType(null), null);
+  assert.equal(normalizeIndustryType(''), null);
+  assert.equal(normalizeIndustryType('   '), null);
+  assert.equal(resolveIndustryAppKind(null), 'generic');
+  assert.equal(resolveIndustryAppKind(''), 'generic');
 
   assert.equal(parseIndustryType('english_academy'), null);
   assert.equal(normalizeIndustryType('english_academy'), null);
@@ -88,16 +89,12 @@ function run() {
     education: true,
     daycare: false,
   });
-  assert.deepEqual(resolveHydrateModules(null), {
-    piano: true,
-    education: true,
-    daycare: false,
-  });
+  assert.equal(resolveHydrateModules(null).piano, false);
 
   const pianoNav = getParentPortalNav('piano').map((t) => t.id);
   assert.ok(pianoNav.includes('schedule'));
-  assert.deepEqual(getParentPortalNav(null).map((t) => t.id), pianoNav);
-  assert.deepEqual(getParentPortalNav('').map((t) => t.id), pianoNav);
+  assert.deepEqual(getParentPortalNav(null).map((t) => t.id), getParentPortalNav('not_a_real_type').map((t) => t.id));
+  assert.deepEqual(getParentPortalNav('').map((t) => t.id), getParentPortalNav('not_a_real_type').map((t) => t.id));
   assert.deepEqual(getParentPortalNav('taekwondo').map((t) => t.id), getParentPortalNav('gym').map((t) => t.id));
 
   const genericNav = getParentPortalNav('english_academy').map((t) => t.id);

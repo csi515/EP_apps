@@ -305,7 +305,7 @@ function run(): void {
   assert.equal(shouldUseGenericShell('english_academy'), true);
   assert.equal(shouldUseGenericShell(''), false);
   assert.equal(resolveIndustryAppKind('academy'), 'generic');
-  assert.equal(resolveIndustryAppKind(null), 'module');
+  assert.equal(resolveIndustryAppKind(null), 'generic');
 
   // 16–17. defaults valid + no capability cycle (already asserted)
   const objectPiano = defineIndustry({

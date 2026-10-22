@@ -26,8 +26,7 @@ function resolveIndustryApp(industryType?: string | null): ComponentType {
   }
   if (resolveIndustryAppKind(industryType) === 'generic') return GenericIndustryShell;
   const parsed = parseIndustryType(industryType);
-  const moduleIndustry =
-    parsed ?? (isBlankIndustryInput(industryType) ? ('piano' as IndustryType) : null);
+  const moduleIndustry = parsed;
   if (!moduleIndustry || !hasIndustryModule(moduleIndustry)) return GenericIndustryShell;
   return APP_BY_INDUSTRY[moduleIndustry] ?? GenericIndustryShell;
 }

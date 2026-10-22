@@ -313,10 +313,6 @@ const adapterCache = new Map<string, IndustryPluginAdapter>();
 export function getIndustryPluginAdapter(
   industry: IndustryType | string | null | undefined
 ): IndustryPluginAdapter {
-  if (isBlankIndustryInput(industry)) {
-    const pianoPlugin = getIndustryPlugin('piano');
-    return new StandardIndustryPluginAdapter(pianoPlugin);
-  }
 
   const plugin = getIndustryPlugin(industry);
   if (!plugin) {
