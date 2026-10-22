@@ -263,6 +263,50 @@ export const FacilityIncidentReportView: React.FC = () => {
             </div>
 
             <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '8px' }}>
+                CAPA · 후속 조치
+              </div>
+              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '8px' }}>
+                사고 후 시정·예방(CAPA)은 작업 파이프라인 등록 및 전자 결재로 연계합니다.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                <a
+                  href="/workspace/pipelines"
+                  style={{
+                    flex: 1,
+                    minWidth: '120px',
+                    textAlign: 'center',
+                    padding: '8px',
+                    fontSize: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #c7d2fe',
+                    background: '#eef2ff',
+                    color: '#3730a3',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  작업 파이프라인에서 CAPA 등록
+                </a>
+                <a
+                  href="/workspace/approvals"
+                  style={{
+                    flex: 1,
+                    minWidth: '120px',
+                    textAlign: 'center',
+                    padding: '8px',
+                    fontSize: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#f8fafc',
+                    color: '#334155',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                  }}
+                >
+                  전자 결재로 조치 승인
+                </a>
+              </div>
               <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '8px' }}>상태 변경</div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button

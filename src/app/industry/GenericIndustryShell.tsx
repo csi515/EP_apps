@@ -240,6 +240,11 @@ const PatentAssetManagementView = lazy(() =>
 const LeaveManagementDashboardView = lazy(() =>
   import('@/capabilities/leave_management').then((m) => ({ default: m.LeaveManagementDashboardView }))
 );
+const ApprovalWorkflowManagementView = lazy(() =>
+  import('@/capabilities/approval_workflow').then((m) => ({
+    default: m.ApprovalWorkflowManagementView,
+  }))
+);
 const UniversalResourceCalendarView = lazy(() =>
   import('@/capabilities/resources').then((m) => ({ default: m.UniversalResourceCalendarView }))
 );
@@ -265,7 +270,13 @@ import { ExecutiveRiskDashboardWidget } from '@/shared/components/ExecutiveRiskD
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
 import { ModuleSidebar } from '@/shared/components/layout/ModuleSidebar';
 import { ModuleBottomNav } from '@/shared/components/layout/ModuleBottomNav';
+import { getModuleChrome } from '@/app/industry/moduleChromeRegistry';
+import {
+  isCorporateChromePreset,
+  resolveModuleIndustryId,
+} from '@/app/industry/resolveModuleIndustry';
 import { SupabaseRoleSync } from '@/SupabaseRoleSync';
+import { MORE_NAV_SECTION } from '@/core/auth/navUtils';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getIndustryLabel, shouldUseGenericShell } from '@/core/industry/types';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -313,7 +324,10 @@ function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboard
   if (isCorporatePreset) {
     return (
       <div className="max-w-5xl mx-auto pt-2 sm:pt-4" data-testid="corporate-launcher-home">
-        <CompanyAppLauncherDashboard />
+        <CompanyAppLauncherDashboard
+          variant="home"
+          enabledCapabilityIds={enabledCaps}
+        />
       </div>
     );
   }
@@ -726,6 +740,16 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const defaultViewMap: Record<string, () => ReactNode> = {
     dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
     'intranet-hub': () => <WorkspaceIntranetHubPage enabledCapabilityIds={enabledCaps} />,
+    'approval-workflow': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
+        <ApprovalWorkflowManagementView />
+      </Suspense>
+    ),
+    approvals: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
+        <ApprovalWorkflowManagementView />
+      </Suspense>
+    ),
     students: () => <StudentListView />,
     bookings: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>
@@ -1277,8 +1301,34 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     return viewRenderer();
   };
 
-  return (
-    <div className="flex-1 p-3 sm:p-4 lg:p-5 max-w-full overflow-x-hidden">
+  const industryKey = currentOrganization?.industry_type || industry;
+  const moduleId = resolveModuleIndustryId(industryKey);
+  const moduleChrome = externalViewMap && moduleId ? getModuleChrome(moduleId) : null;
+  const ChromeSidebar = moduleChrome?.Sidebar;
+  const ChromeBottomNav = moduleChrome?.BottomNav;
+  const useCorporateChrome = !externalViewMap && isCorporateChromePreset(industryKey);
+
+  const corporateMainTabs = useMemo(() => {
+    const preferred = ['dashboard', 'intranet-hub', 'approval-workflow', 'fleet', 'inventory'] as const;
+    const byTab = new Map(
+      filteredSections.flatMap((s) => s.items).map((item) => [item.tab, item])
+    );
+    return preferred.map((tab) => byTab.get(tab)).filter(Boolean) as typeof filteredSections[0]['items'];
+  }, [filteredSections]);
+
+  const corporateMoreTabs = useMemo(() => {
+    const mainSet = new Set(corporateMainTabs.map((t) => t.tab));
+    return filteredSections
+      .flatMap((s) => s.items)
+      .filter((item) => !mainSet.has(item.tab))
+      .map((item) => ({
+        ...item,
+        section: item.tab === 'settings' || item.tab === 'account' ? MORE_NAV_SECTION.settings : MORE_NAV_SECTION.manage,
+      }));
+  }, [filteredSections, corporateMainTabs]);
+
+  const body = (
+    <>
       {isOwner && <DirectorFloatingFab />}
       {Overlays && <Overlays />}
       {(enabledCaps.includes('sop_risk_assessment') || enabledCaps.includes('safety_consent')) && (
@@ -1289,6 +1339,58 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       <PluginErrorBoundary pluginName={activeTab}>
         {renderViewContent()}
       </PluginErrorBoundary>
+    </>
+  );
+
+  if (moduleChrome && ChromeSidebar && ChromeBottomNav) {
+    return (
+      <ModuleAppShell
+        theme={moduleChrome.theme}
+        omitHeader
+        nested
+        sidebar={<ChromeSidebar />}
+        bottomNav={<ChromeBottomNav />}
+      >
+        {body}
+      </ModuleAppShell>
+    );
+  }
+
+  if (useCorporateChrome) {
+    return (
+      <ModuleAppShell
+        theme="indigo"
+        omitHeader
+        nested
+        sidebar={
+          <ModuleSidebar
+            theme="indigo"
+            sections={filteredSections}
+            activeTab={activeTab}
+            onNavigate={setActiveTab}
+            user={{ name: currentUser.name, roleLabel, roleBadge }}
+          />
+        }
+        bottomNav={
+          <ModuleBottomNav
+            theme="indigo"
+            mainTabs={corporateMainTabs}
+            moreTabs={corporateMoreTabs}
+            activeTab={activeTab}
+            onNavigate={setActiveTab}
+            moreMenuTitle="더보기"
+            moreMenuDescription="맞춤 운영 도구 · 설정"
+          />
+        }
+      >
+        {body}
+      </ModuleAppShell>
+    );
+  }
+
+  return (
+    <div className="flex-1 p-3 sm:p-4 lg:p-5 max-w-full overflow-x-hidden">
+      {body}
     </div>
   );
 };

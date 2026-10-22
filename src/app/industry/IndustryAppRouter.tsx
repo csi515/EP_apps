@@ -17,8 +17,13 @@ import { WorkerKioskShell } from './WorkerKioskShell';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { APP_BY_INDUSTRY } from './industryModules';
+import { resolveModuleIndustryId } from './resolveModuleIndustry';
 
 function resolveIndustryApp(industryType?: string | null): ComponentType {
+  const boundModule = resolveModuleIndustryId(industryType);
+  if (boundModule && APP_BY_INDUSTRY[boundModule]) {
+    return APP_BY_INDUSTRY[boundModule];
+  }
   if (resolveIndustryAppKind(industryType) === 'generic') return GenericIndustryShell;
   const parsed = parseIndustryType(industryType);
   const moduleIndustry =

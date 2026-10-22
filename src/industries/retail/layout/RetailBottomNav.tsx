@@ -25,7 +25,7 @@ export const RetailBottomNav: FC = () => {
         setActiveTab(tab);
       }}
       moreMenuTitle="더보기"
-      moreMenuDescription="매출 · 판매내역 · 직원 · 설정"
+      moreMenuDescription="매출 · 판매내역 · 시재 · 직원 · 설정"
     />
   );
 };

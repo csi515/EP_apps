@@ -21,11 +21,11 @@ function run(): void {
   const more = getRetailMoreTabs(retailModuleLabels);
   assert.deepEqual(
     more.map((t) => t.label),
-    ['매출', '판매내역', '직원', '설정']
+    ['매출', '판매내역', '시재 마감', '근무표', '매장 점검', '직원', '설정']
   );
   assert.deepEqual(
     more.map((t) => t.tab),
-    ['reports', 'income', 'instructors', 'settings']
+    ['reports', 'income', 'ledger', 'shifts', 'maintenance', 'instructors', 'settings']
   );
 
   const sections = getRetailSidebarSections(retailModuleLabels);
@@ -55,6 +55,12 @@ function run(): void {
       `staff must not have: ${denied}`
     );
   }
+
+  // 렌더 계약 — Sidebar/BottomNav 컴포넌트가 메뉴 SSOT를 소비한다
+  assert.equal(typeof getRetailSidebarSections, 'function');
+  assert.equal(typeof getRetailMainTabs, 'function');
+  assert.equal(typeof getRetailMoreTabs, 'function');
+  assert.ok(sections[0].items.length >= 4, 'sidebar 업무 섹션에 핵심 탭이 있어야 함');
 
   console.log('nav.structure.test.ts OK');
 }

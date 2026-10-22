@@ -16,6 +16,7 @@ import type {
 import { ProductFormModal } from './ProductFormModal';
 import { ProductCategoryManageModal } from './ProductCategoryManageModal';
 import { PRODUCT_LIST_COPY as COPY } from './productListCopy';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 
 type CategoryFilter = 'ALL' | 'NONE' | string;
 
@@ -23,6 +24,9 @@ export const ProductListView: FC = () => {
   const { showToast } = useApp();
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id;
+  const requireSizeColorVariants = Boolean(
+    getIndustryPreset(currentOrganization?.industry_type)?.businessRules?.sizeColorSkuSupport
+  );
 
   const [items, setItems] = useState<ProductListItem[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
@@ -278,9 +282,10 @@ export const ProductListView: FC = () => {
 
       <ProductFormModal
         isOpen={formOpen}
-        organizationId={orgId}
+        organizationId={orgId!}
         categories={categories}
         editing={editing}
+        requireSizeColorVariants={requireSizeColorVariants}
         onClose={() => setFormOpen(false)}
         onSaved={() => {
           showToast(

@@ -270,12 +270,14 @@ const RefineApp: React.FC = () => {
           <Route
             element={
               <AppErrorBoundary>
-                <div className="flex min-h-[100svh] h-dvh flex-col">
+                <div className="flex h-dvh min-h-[100svh] flex-col">
                   <ImpersonationFloatingBanner />
                   <Header />
-                  <Layout>
-                    <Outlet />
-                  </Layout>
+                  <div className="flex min-h-0 flex-1 flex-col">
+                    <Layout>
+                      <Outlet />
+                    </Layout>
+                  </div>
                   <ConfirmDialog />
                   <ToastContainer />
                 </div>

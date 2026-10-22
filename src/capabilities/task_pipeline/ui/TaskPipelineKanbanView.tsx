@@ -48,45 +48,6 @@ const KANBAN_STAGES: { stage: PipelineStage; label: string; color: string }[] = 
   { stage: 'COMPLETED', label: '최종 완료', color: 'border-purple-200 bg-purple-50/20' },
 ];
 
-const INITIAL_SAMPLE_ORDERS: TaskOrder[] = [
-  {
-    id: 'ord-101',
-    orderNumber: 'RO-2026-0101',
-    orderType: 'repair',
-    title: '빈티지 가죽 가방 지퍼 수선 및 가죽 영양 케어',
-    customerId: 'cust-김민수',
-    customerName: '김민수',
-    currentStage: 'IN_PROGRESS',
-    stageEnteredAt: new Date(Date.now() - 14 * 3600 * 1000).toISOString(),
-    slaHours: 24,
-    slaHoursPerStage: { IN_PROGRESS: 24 },
-  },
-  {
-    id: 'ord-102',
-    orderNumber: 'RO-2026-0102',
-    orderType: 'repair',
-    title: '제네시스 G80 브레이크 패드 교체 및 정비',
-    customerId: 'cust-홍길동',
-    customerName: '홍길동',
-    currentStage: 'PARTS_WAITING',
-    stageEnteredAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    slaHours: 24,
-    slaHoursPerStage: { PARTS_WAITING: 24 },
-  },
-  {
-    id: 'ord-103',
-    orderNumber: 'RO-2026-0103',
-    orderType: 'custom_order',
-    title: '프리미엄 자전거 브레이크 세팅',
-    customerId: 'cust-이영희',
-    customerName: '이영희',
-    currentStage: 'RECEIVED',
-    stageEnteredAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(),
-    slaHours: 24,
-    slaHoursPerStage: { RECEIVED: 24 },
-  },
-];
-
 export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
   defaultOrderType = 'custom_order',
   title = '작업 파이프라인 (칸반 보드)',
@@ -110,22 +71,21 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
   const { mutate: mutateCreate } = useCreate();
   const { mutate: mutateUpdate } = useUpdate();
 
-  // 로컬 스토리지 초기화 및 폴백 로직
+  // 로컬은 오프라인 작성분만 보관. 빈 테넌트에 샘플 수리 주문을 심지 않는다.
   useEffect(() => {
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
         setLocalOrders(JSON.parse(saved));
       } else {
-        setLocalOrders(INITIAL_SAMPLE_ORDERS);
-        localStorage.setItem(storageKey, JSON.stringify(INITIAL_SAMPLE_ORDERS));
+        setLocalOrders([]);
       }
     } catch {
-      setLocalOrders(INITIAL_SAMPLE_ORDERS);
+      setLocalOrders([]);
     }
   }, [storageKey]);
 
-  // Refine 데이터가 존재하면 서버 데이터를 우선 사용, 없으면 로컬 데이터 사용
+  // Refine 서버 데이터 우선. 로딩 중이거나 서버 행이 있으면 로컬 샘플로 채우지 않음.
   const orders: TaskOrder[] = useMemo(() => {
     if (refineRows && refineRows.length > 0) {
       return refineRows.map((row: any) => ({
@@ -148,8 +108,9 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
         details: row.details,
       }));
     }
+    if (isLoading) return [];
     return localOrders;
-  }, [refineRows, localOrders]);
+  }, [refineRows, localOrders, isLoading]);
 
   const saveLocalOrders = (next: TaskOrder[]) => {
     setLocalOrders(next);
@@ -370,6 +331,12 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
           전체 <span className="text-blue-600 font-bold">{orders.length}</span>건 진행 중
         </div>
       </div>
+
+      {!isLoading && orders.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
+          등록된 작업이 없습니다. 「새 작업 등록」으로 첫 공정 주문을 추가하세요.
+        </div>
+      ) : null}
 
       {/* 뷰 모드 분기 (칸반 vs 간트 타임라인) */}
       {viewMode === 'kanban' ? (

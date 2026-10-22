@@ -25,6 +25,13 @@ export const NAV_TAB_REQUIRED_CAPABILITY: Readonly<Partial<Record<string, Capabi
   sales: 'commerce',
   retail: 'commerce',
   inventory: 'commerce',
+  shifts: 'shift_schedule',
+  maintenance: 'maintenance_checklist',
+  ledger: 'ledger_simple',
+  closing: 'ledger_simple',
+  retention: 'retention_marketing',
+  'family-tree': 'membership_referral_tree',
+  supplies: 'inventory',
 };
 
 /**

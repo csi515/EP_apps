@@ -230,6 +230,9 @@ console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAll
   assert.ok(plant.capabilities.includes('research_project'), 'personal_plant_ops에 research_project 포함');
   assert.ok(!plant.capabilities.includes('leave_management'), 'personal_plant_ops는 휴가·급여 계열 제외');
   assert.ok(!plant.capabilities.includes('quality_inspection'), 'personal_plant_ops는 quality_inspection 제외');
+  assert.ok(!plant.capabilities.includes('vehicle_shuttle'), 'personal_plant_ops는 셔틀 미포함(런처 비노출)');
+  assert.ok(!plant.capabilities.includes('feedbacks'), 'personal_plant_ops는 feedbacks 미포함');
+  assert.equal(plant.readinessLevel, 'isolated', 'plant ops readiness isolated');
 
   // corporate_general_affairs 별칭 해석 검증
   const cga = getIndustryPreset('corporate_general_affairs');

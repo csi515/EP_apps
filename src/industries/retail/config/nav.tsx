@@ -15,11 +15,14 @@ import {
   UserCog,
   Settings,
   Warehouse,
+  BookOpenCheck,
+  ClipboardList,
+  CalendarClock,
 } from 'lucide-react';
 
 const icon = (node: ReactNode) => node;
 
-/** 홈 · 판매 · 상품 · 재고 · 고객 · (더보기: 매출·판매내역·직원·설정) */
+/** 홈 · 판매 · 상품 · 재고 · 고객 · (더보기: 매출·판매내역·시재·직원·설정) */
 export function getRetailSidebarSections(labels: ModuleLabels): NavMenuSection[] {
   return [
     buildNavSection('업무', [
@@ -36,6 +39,9 @@ export function getRetailSidebarSections(labels: ModuleLabels): NavMenuSection[]
     buildNavSection('더보기', [
       { tab: 'reports', label: '매출', icon: icon(<BarChart3 className="w-4 h-4" />) },
       { tab: 'income', label: '판매내역', icon: icon(<Receipt className="w-4 h-4" />) },
+      { tab: 'ledger', label: '시재 마감', icon: icon(<BookOpenCheck className="w-4 h-4" />) },
+      { tab: 'shifts', label: '근무표', icon: icon(<CalendarClock className="w-4 h-4" />) },
+      { tab: 'maintenance', label: '매장 점검', icon: icon(<ClipboardList className="w-4 h-4" />) },
       {
         tab: 'instructors',
         label: labels.staff.singular,
@@ -81,6 +87,24 @@ export function getRetailMoreTabs(labels: ModuleLabels): NavMenuItem[] {
       tab: 'income',
       label: '판매내역',
       icon: icon(<Receipt className="w-5 h-5" />),
+      section: MORE_NAV_SECTION.manage,
+    },
+    {
+      tab: 'ledger',
+      label: '시재 마감',
+      icon: icon(<BookOpenCheck className="w-5 h-5" />),
+      section: MORE_NAV_SECTION.manage,
+    },
+    {
+      tab: 'shifts',
+      label: '근무표',
+      icon: icon(<CalendarClock className="w-5 h-5" />),
+      section: MORE_NAV_SECTION.manage,
+    },
+    {
+      tab: 'maintenance',
+      label: '매장 점검',
+      icon: icon(<ClipboardList className="w-5 h-5" />),
       section: MORE_NAV_SECTION.manage,
     },
     {

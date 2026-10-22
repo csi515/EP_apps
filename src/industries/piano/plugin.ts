@@ -114,6 +114,13 @@ export const pianoPluginManifest: IndustryPluginManifest = {
     'achievements',
     'song-stamps',
     'reports',
+    'resources',
+    /** optional capability 진입 (활성 시에만 설정 부가에 노출) */
+    'retention',
+    'shuttle',
+    'family-tree',
+    'supplies',
+    'seat-rooms',
   ]),
   staffTabs: withNoticesTabs([
     'dashboard',

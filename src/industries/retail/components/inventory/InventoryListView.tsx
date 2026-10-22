@@ -64,6 +64,12 @@ export const InventoryListView: FC = () => {
   const { currentOrganization } = useOrganization();
   const memberScope = useWorkspaceMemberScope();
   const orgId = currentOrganization?.id;
+  const industryType = currentOrganization?.industry_type ?? '';
+  const isPlantOpsContext =
+    industryType === 'personal_plant_ops' ||
+    industryType === 'personal_plant' ||
+    industryType === 'plant_ops' ||
+    industryType === 'manufacturing_light';
   /** Owner/Admin/Manager만 입고·조정 — Staff는 조회만 */
   const canMutate = isAdmin;
 
@@ -222,8 +228,16 @@ export const InventoryListView: FC = () => {
       <PageHeader
         icon={<Warehouse className="w-5 h-5" />}
         iconClassName="text-teal-600"
-        title={COPY.title}
-        description={canMutate ? COPY.locationAllHint : COPY.descriptionReadOnly}
+        title={isPlantOpsContext ? '현장 자재' : COPY.title}
+        description={
+          isPlantOpsContext
+            ? canMutate
+              ? '현장·생산용 자재 재고를 입고·조정합니다'
+              : '현장·생산용 자재 재고를 조회합니다 (변경은 관리자만 가능)'
+            : canMutate
+              ? COPY.locationAllHint
+              : COPY.descriptionReadOnly
+        }
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <button

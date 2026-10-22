@@ -66,6 +66,10 @@ export const retailPluginManifest: IndustryPluginManifest = {
     'reports',
     'income',
     'instructors',
+    'ledger',
+    'closing',
+    'shifts',
+    'maintenance',
     'settings',
   ]),
   staffTabs: withNoticesTabs([

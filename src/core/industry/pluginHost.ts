@@ -2,6 +2,7 @@ import type { IndustryPluginManifest } from './pluginTypes';
 import { buildGenericPluginManifest } from './genericPlugin';
 import { getIndustryDefinition, INDUSTRY_DEFINITIONS } from './catalog';
 import { isBlankIndustryInput, parseIndustryType } from './types';
+import { resolveSharedModuleId } from './sharedModuleBindings';
 
 const installed = new Map<string, IndustryPluginManifest>();
 
@@ -41,6 +42,11 @@ export function getIndustryPlugin(
 ): IndustryPluginManifest {
   if (isBlankIndustryInput(industry)) {
     return installed.get('piano') ?? buildGenericPluginManifest(INDUSTRY_DEFINITIONS.piano);
+  }
+  const sharedModule = resolveSharedModuleId(industry);
+  if (sharedModule) {
+    const sharedPlugin = installed.get(sharedModule);
+    if (sharedPlugin) return sharedPlugin;
   }
   const parsed = parseIndustryType(industry);
   if (!parsed) {

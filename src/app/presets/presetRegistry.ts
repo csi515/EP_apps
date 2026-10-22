@@ -1578,7 +1578,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       { name: '점주', rank_order: 1, permissions: ['*'] },
       { name: '캐셔', rank_order: 2, permissions: ['inventory:view', 'ledger_simple:*'] },
     ],
-    readinessLevel: 'isolated',
+    readinessLevel: 'verified',
   },
 
   apparel_store: {
@@ -1595,7 +1595,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       { name: '점주', rank_order: 1, permissions: ['*'] },
       { name: '스태프', rank_order: 2, permissions: ['inventory:view', 'ledger_simple:*'] },
     ],
-    readinessLevel: 'basic_ui',
+    readinessLevel: 'isolated',
   },
 
   convenience_store: {
@@ -1612,7 +1612,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       { name: '점주', rank_order: 1, permissions: ['*'] },
       { name: '근무자', rank_order: 2, permissions: ['shift_schedule:view', 'ledger_simple:*'] },
     ],
-    readinessLevel: 'basic_ui',
+    readinessLevel: 'isolated',
   },
 
   pet_supplies: {
@@ -1983,7 +1983,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       exclude_payroll: true,
       incident_capa_linkage: true,
     },
-    readinessLevel: 'basic_ui',
+    readinessLevel: 'isolated',
   },
 
   manufacturing_light: {

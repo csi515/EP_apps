@@ -50,6 +50,8 @@ interface Props {
   onClose: () => void;
   onSaved: () => void;
   onError: (message: string) => void;
+  /** apparel_store businessRules.sizeColorSkuSupport */
+  requireSizeColorVariants?: boolean;
 }
 
 export const ProductFormModal: FC<Props> = ({
@@ -60,6 +62,7 @@ export const ProductFormModal: FC<Props> = ({
   onClose,
   onSaved,
   onError,
+  requireSizeColorVariants = false,
 }) => {
   const [name, setName] = useState('');
   const [productCode, setProductCode] = useState('');
@@ -87,8 +90,13 @@ export const ProductFormModal: FC<Props> = ({
         setCategoryId('');
         setNewCategoryName('');
         setIsActive(true);
-        setOptionMode('none');
-        setVariants([emptyVariant()]);
+        setOptionMode(requireSizeColorVariants ? 'yes' : 'none');
+        setVariants([
+          emptyVariant(),
+          ...(requireSizeColorVariants
+            ? [emptyVariant(), emptyVariant()]
+            : []),
+        ]);
         setHydrating(false);
         return;
       }
@@ -135,7 +143,7 @@ export const ProductFormModal: FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, editing]);
+  }, [isOpen, editing, requireSizeColorVariants]);
 
   const updateVariant = (key: string, patch: Partial<VariantDraft>) => {
     setVariants((prev) => prev.map((v) => (v.key === key ? { ...v, ...patch } : v)));
@@ -285,9 +293,15 @@ export const ProductFormModal: FC<Props> = ({
 
         <div className="space-y-2">
           <p className="text-xs font-semibold text-slate-700">{COPY.optionModeLabel}</p>
+          {requireSizeColorVariants ? (
+            <p className="text-xs text-teal-800 bg-teal-50 border border-teal-100 rounded-lg px-3 py-2">
+              의류 매장 프리셋: 사이즈·색상 등 옵션(SKU)을 등록하세요. 옵션명 예: M / 블랙.
+            </p>
+          ) : null}
           <SegmentedControl
             value={optionMode}
             onChange={(mode) => {
+              if (requireSizeColorVariants && mode === 'none') return;
               setOptionMode(mode);
               if (mode === 'yes' && variants.length === 0) {
                 setVariants([emptyVariant({ price: Number(price) || undefined })]);
