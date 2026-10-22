@@ -1,3 +1,4 @@
+import { peekPendingMutations, pendingDeleteIds } from '../pendingMutations';
 import type {
   Achievement,
   CurriculumItem,
@@ -203,15 +204,9 @@ async function persistEducationTable<T extends { id: string }>(
         (row) => client.from(table).upsert(row as never),
         (error) => console.error(`Failed to upsert piano.${table}:`, error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from(table)
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(storageKey, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from(table).delete().in('id', ids);
+      const { error } = await client.from(table).delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });
@@ -249,15 +244,9 @@ async function persistWeeklyAssignments(
           client.from('weekly_assignments').upsert(weeklyAssignmentToRow(assignment, orgId)),
         (error) => console.error('Failed to upsert weekly_assignment:', error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existingAssignments, error } = await client
-        .from('weekly_assignments')
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existingAssignments || []).map((r) => r.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(STORAGE_KEYS.WEEKLY_ASSIGNMENTS, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from('weekly_assignments').delete().in('id', ids);
+      const { error } = await client.from('weekly_assignments').delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });
@@ -266,6 +255,29 @@ async function persistWeeklyAssignments(
   const allItems = assignments.flatMap((a) =>
     a.items.map((item) => assignmentItemToRow({ ...item, assignmentId: a.id }, orgId))
   );
+
+  // 이 기기에서 명시적으로 편집/삭제한 과제의 하위 항목만 삭제 후보 — 부재만으로 삭제 추론 금지
+  const editedAssignmentIds = [
+    ...new Set(
+      peekPendingMutations(orgId)
+        .filter((row) => row.key === STORAGE_KEYS.WEEKLY_ASSIGNMENTS && row.entityId)
+        .map((row) => row.entityId as string)
+    ),
+  ];
+  let itemTombstones: string[] = [];
+  if (editedAssignmentIds.length > 0) {
+    const { data: editedItems, error: itemsFetchError } = await client
+      .from('assignment_items')
+      .select('id')
+      .eq('organization_id', orgId)
+      .in('assignment_id', editedAssignmentIds);
+    if (itemsFetchError) {
+      console.error('Failed to fetch assignment_items for sync:', itemsFetchError);
+      return false;
+    }
+    itemTombstones = (editedItems || []).map((r) => r.id);
+  }
+  if (isAborted()) return false;
 
   const itemsOk = await upsertThenDiffDelete({
     context: 'education.assignment_items',
@@ -279,15 +291,9 @@ async function persistWeeklyAssignments(
         (row) => client.from('assignment_items').upsert(row),
         (error) => console.error('Failed to upsert assignment_item:', error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existingItems, error } = await client
-        .from('assignment_items')
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existingItems || []).map((r) => r.id), error };
-    },
+    tombstoneIds: itemTombstones,
     deleteIds: async (ids) => {
-      const { error } = await client.from('assignment_items').delete().in('id', ids);
+      const { error } = await client.from('assignment_items').delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });

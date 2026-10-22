@@ -38,7 +38,12 @@ export async function persistPayments(
         (inv) => client.from('payments').upsert(invoiceToPaymentRow(inv, orgId)),
         (error) => console.error('Failed to upsert payment:', error)
       ),
-    { cachePresent: true, context: 'payments', isAborted }
+    {
+      cachePresent: true,
+      context: 'payments',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.INVOICES],
+    }
   );
 
   if (isAborted()) return false;
@@ -76,7 +81,12 @@ export async function persistTuitionPayments(
           client.from('payment_transactions').upsert(tuitionPaymentToTransactionRow(payment, orgId)),
         (error) => console.error('Failed to upsert payment_transaction:', error)
       ),
-    { cachePresent: true, context: 'payment_transactions', isAborted }
+    {
+      cachePresent: true,
+      context: 'payment_transactions',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.TUITION_PAYMENTS],
+    }
   );
 
   if (isAborted()) return false;
@@ -106,7 +116,12 @@ export async function persistExpenses(
         (expense) => client.from('expenses').upsert(expenseToCoreRow(expense, orgId)),
         (error) => console.error('Failed to upsert expense:', error)
       ),
-    { cachePresent: true, context: 'expenses', isAborted }
+    {
+      cachePresent: true,
+      context: 'expenses',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.EXPENSES],
+    }
   );
 
   if (isAborted()) return false;
@@ -136,7 +151,12 @@ export async function persistIncomeEntries(
         (entry) => client.from('income_entries').upsert(incomeToCoreRow(entry, orgId)),
         (error) => console.error('Failed to upsert income entry:', error)
       ),
-    { cachePresent: true, context: 'income_entries', isAborted }
+    {
+      cachePresent: true,
+      context: 'income_entries',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.INCOME_ENTRIES],
+    }
   );
 
   if (isAborted()) return false;
@@ -171,7 +191,12 @@ export async function persistTeacherPayrollSettlements(
           client.from('teacher_payroll_settlements').upsert(settlementToCoreRow(settlement, orgId)),
         (error) => console.error('Failed to upsert teacher_payroll_settlement:', error)
       ),
-    { cachePresent: true, context: 'teacher_payroll_settlements', isAborted }
+    {
+      cachePresent: true,
+      context: 'teacher_payroll_settlements',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.TEACHER_PAYROLL_SETTLEMENTS],
+    }
   );
 
   if (isAborted()) return false;

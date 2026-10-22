@@ -1,3 +1,4 @@
+import { peekPendingMutations, pendingDeleteIds } from '../pendingMutations';
 import type {
   Student,
   TextbookPayment,
@@ -44,15 +45,9 @@ export async function persistPianoCustomers(
         (student) => client.from('customers').upsert(studentToPianoCustomerRow(student, orgId)),
         (error) => console.error('Failed to upsert piano customer:', error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from('customers')
-        .select('customer_id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.customer_id), error };
-    },
+    tombstoneIds: pendingDeleteIds(STORAGE_KEYS.STUDENTS, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from('customers').delete().in('customer_id', ids);
+      const { error } = await client.from('customers').delete().eq('organization_id', orgId).in('customer_id', ids);
       return { error };
     },
   });
@@ -67,10 +62,18 @@ export async function persistPianoCustomers(
   );
   const currentMemberKeys = memberRows.map((r) => classMemberKey(r.service_id, r.customer_id));
 
+  // 이 기기에서 명시적으로 편집/삭제한 학생의 반 배정만 삭제 후보 — 부재만으로 삭제 추론 금지
+  const editedStudentIds = new Set(
+    peekPendingMutations(orgId)
+      .filter((row) => row.key === STORAGE_KEYS.STUDENTS && row.entityId)
+      .map((row) => row.entityId as string)
+  );
+
   const membersOk = await upsertThenDiffDeleteByKeys({
     context: 'piano.class_members',
     cachePresent: true,
     currentKeys: currentMemberKeys,
+    isExplicitDelete: (key) => editedStudentIds.has(key.split(':')[1] ?? ''),
     isAborted,
     upsertAll: () =>
       runRowUpserts(
@@ -137,15 +140,9 @@ export async function persistPianoPayments(
         (payment) => client.from('textbook_payments').upsert(paymentToPianoRow(payment, orgId)),
         (error) => console.error('Failed to upsert textbook payment:', error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from('textbook_payments')
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(STORAGE_KEYS.TEXTBOOK_PAYMENTS, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from('textbook_payments').delete().in('id', ids);
+      const { error } = await client.from('textbook_payments').delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });
@@ -205,15 +202,9 @@ export async function persistPianoTable<T extends { id: string }>(
         (row) => client.from(table).upsert(row as never),
         (error) => console.error(`Failed to upsert piano.${table}:`, error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from(table)
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(storageKey, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from(table).delete().in('id', ids);
+      const { error } = await client.from(table).delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });

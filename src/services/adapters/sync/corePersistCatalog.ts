@@ -63,7 +63,12 @@ export async function persistServices(
         }
         return upsertOk;
       },
-      { cachePresent: true, context: 'services(classes)', isAborted }
+      {
+      cachePresent: true,
+      context: 'services(classes)',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.CLASSES],
+    }
     );
     if (isAborted()) return false;
     writeLocal(STORAGE_KEYS.CLASSES, classes);
@@ -89,7 +94,12 @@ export async function persistServices(
         (offering) => client.from('services').upsert(serviceOfferingToRow(offering, orgId)),
         (error) => console.error('Failed to upsert service offering:', error)
       ),
-    { cachePresent: true, context: 'services(offerings)', isAborted }
+    {
+      cachePresent: true,
+      context: 'services(offerings)',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.SERVICE_OFFERINGS],
+    }
   );
   if (isAborted()) return false;
   writeLocal(STORAGE_KEYS.SERVICE_OFFERINGS, offerings);
@@ -165,7 +175,12 @@ export async function persistConsultations(
         (cst) => client.from('consultations').upsert(consultationToRow(cst, orgId)),
         (error) => console.error('Failed to upsert consultation:', error)
       ),
-    { cachePresent: true, context: 'consultations', isAborted }
+    {
+      cachePresent: true,
+      context: 'consultations',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.CONSULTATIONS],
+    }
   );
 
   if (isAborted()) return false;
@@ -199,7 +214,12 @@ export async function persistNotifications(
         (notif) => client.from('notifications').upsert(notificationToRow(notif, orgId)),
         (error) => console.error('Failed to upsert notification:', error)
       ),
-    { cachePresent: true, context: 'notifications', isAborted }
+    {
+      cachePresent: true,
+      context: 'notifications',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.NOTIFICATIONS],
+    }
   );
 
   if (isAborted()) return false;
@@ -233,7 +253,12 @@ export async function persistAttendanceSessions(
         (session) => client.from('attendance_sessions').upsert(sessionToCoreRow(session, orgId)),
         (error) => console.error('Failed to upsert attendance session:', error)
       ),
-    { cachePresent: true, context: 'attendance_sessions', isAborted }
+    {
+      cachePresent: true,
+      context: 'attendance_sessions',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.ATTENDANCE_SESSIONS],
+    }
   );
 
   if (isAborted()) return false;

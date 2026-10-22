@@ -83,6 +83,8 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:meal-survey-engine',
   'test:permission-visibility',
   'test:office-supply-request-engine',
+  'test:sync-no-diff-delete',
+  'test:sync-persist-helpers',
 ];
 
 const scripts = loadPackageScripts();

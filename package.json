@@ -147,6 +147,8 @@
     "test:booking-query": "tsx src/core/schedules/bookingQuery.test.ts",
     "test:persist-policy": "tsx src/services/adapters/persistPolicy.test.ts",
     "test:persist-schedules": "tsx src/services/adapters/sync/persistSchedules.test.ts",
+    "test:sync-no-diff-delete": "tsx src/services/adapters/sync/syncNoDiffDelete.test.ts",
+    "test:sync-persist-helpers": "tsx src/services/adapters/sync/persistHelpers.test.ts",
     "test:attendance-pass-atomic": "tsx src/core/schedules/attendancePassAtomic.test.ts",
     "test:attendance-pipeline": "tsx src/capabilities/attendance/domain/unifiedAttendancePipeline.test.ts",
     "test:roster-schema": "tsx src/capabilities/roster/config/rosterSchemaConfig.test.ts",

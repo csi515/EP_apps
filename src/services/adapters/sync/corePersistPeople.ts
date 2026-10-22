@@ -1,3 +1,4 @@
+import { pendingDeleteIds } from '../pendingMutations';
 import type {
   AcademySettings,
   Parent,
@@ -76,7 +77,12 @@ export async function persistStaff(
         (teacher) => client.from('staff').upsert(teacherToStaffRow(teacher, orgId)),
         (error) => console.error('Failed to upsert staff:', error)
       ),
-    { cachePresent: true, context: 'staff', isAborted }
+    {
+      cachePresent: true,
+      context: 'staff',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.TEACHERS],
+    }
   );
   if (isAborted()) return false;
   writeLocal(STORAGE_KEYS.TEACHERS, teachers);
@@ -165,7 +171,12 @@ export async function persistCustomers(
       }
       return upsertOk;
     },
-    { cachePresent: true, context: 'customers', isAborted }
+    {
+      cachePresent: true,
+      context: 'customers',
+      isAborted,
+      tombstoneKeys: [STORAGE_KEYS.STUDENTS, STORAGE_KEYS.PARENTS],
+    }
   );
 
   if (isAborted()) return false;
@@ -219,10 +230,14 @@ export async function persistParentStudentLinks(
     linkCompositeKey(r.parent_customer_id, r.student_customer_id)
   );
 
+  // 명시적으로 삭제된 링크(id = parentId:studentId)만 원격 삭제
+  const linkTombstones = new Set(pendingDeleteIds(STORAGE_KEYS.PARENT_STUDENT_LINKS, orgId));
+
   const ok = await upsertThenDiffDeleteByKeys({
     context: 'parent_student_links',
     cachePresent: true,
     currentKeys,
+    isExplicitDelete: (key) => linkTombstones.has(key),
     isAborted,
     upsertAll: () =>
       runRowUpserts(

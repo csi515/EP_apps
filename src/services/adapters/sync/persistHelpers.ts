@@ -54,20 +54,29 @@ export async function runRowUpserts<T>(
   return ok;
 }
 
+/** 명시적 삭제 대상(tombstone) 중 현재 로컬 목록에 다시 존재하는 id는 제외 */
+export function resolveTombstoneDeletes(tombstoneIds: string[], currentIds: string[]): string[] {
+  const current = new Set(currentIds);
+  return [...new Set(tombstoneIds)].filter((id) => id && !current.has(id));
+}
+
 /**
- * upsert 후 ID diff-delete.
+ * upsert 후 명시적 삭제(tombstone)만 원격 반영.
+ * 원격에는 있고 로컬 캐시에 없는 row를 "삭제됨"으로 추론하지 않는다
+ * (stale 캐시가 다른 기기의 신규 row를 지우는 사고 방지).
  * 캐시 불완전·abort·upsert 부분 실패 시 false (삭제 생략 → outbox 유지).
  */
 export async function upsertThenDiffDelete(params: {
   context: string;
   cachePresent: boolean;
-  /** false면 stale/부분 목록 — 원격 diff-delete 금지. 생략 시 기존 hydrate persist와 동일 */
+  /** false면 stale/부분 목록 — 원격 삭제 금지. 생략 시 기존 hydrate persist와 동일 */
   snapshotComplete?: boolean;
   currentIds: string[];
+  /** 로컬에서 사용자가 명시적으로 삭제한 id (pending delete mutation) */
+  tombstoneIds: string[];
   isAborted?: PersistAbortGuard;
   /** false면 부분/전체 upsert 실패 — 호출부까지 전파 */
   upsertAll: () => Promise<boolean>;
-  fetchRemoteIds: () => Promise<{ ids: string[]; error: unknown }>;
   deleteIds: (ids: string[]) => Promise<{ error: unknown }>;
 }): Promise<boolean> {
   if (params.isAborted?.()) return false;
@@ -85,18 +94,7 @@ export async function upsertThenDiffDelete(params: {
     return true;
   }
 
-  const { ids, error } = await params.fetchRemoteIds();
-  if (error) {
-    console.error(`Failed to fetch ${params.context} for sync:`, error);
-    return false;
-  }
-  if (params.isAborted?.()) return false;
-
-  const toDelete = safeDiffIds(ids, params.currentIds, {
-    cachePresent: params.cachePresent,
-    context: params.context,
-    snapshotComplete: params.snapshotComplete,
-  });
+  const toDelete = resolveTombstoneDeletes(params.tombstoneIds, params.currentIds);
   if (toDelete.length === 0) return true;
 
   const { error: deleteError } = await params.deleteIds(toDelete);
@@ -110,12 +108,15 @@ export async function upsertThenDiffDelete(params: {
 /**
  * composite-key upsert 후 keyed delete (wipe-all 금지).
  * key 형식은 호출측 정의 (예: parentId:studentId).
+ * 원격에만 있는 key 중 isExplicitDelete(key)가 true인 것만 삭제한다 — 부재만으로 삭제 추론 금지.
  */
 export async function upsertThenDiffDeleteByKeys(params: {
   context: string;
   cachePresent: boolean;
   snapshotComplete?: boolean;
   currentKeys: string[];
+  /** 로컬에서 명시적으로 삭제/편집된 대상에 속한 key인지 */
+  isExplicitDelete: (key: string) => boolean;
   isAborted?: PersistAbortGuard;
   upsertAll: () => Promise<boolean>;
   fetchRemoteKeys: () => Promise<{ keys: string[]; error: unknown }>;
@@ -147,7 +148,7 @@ export async function upsertThenDiffDeleteByKeys(params: {
     cachePresent: params.cachePresent,
     context: params.context,
     snapshotComplete: params.snapshotComplete,
-  });
+  }).filter((key) => params.isExplicitDelete(key));
 
   let ok = true;
   for (const key of toDelete) {
