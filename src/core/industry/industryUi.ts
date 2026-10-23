@@ -2,7 +2,7 @@ import type { NavTab } from '@/shared/navigation/navigationTypes';
 import type { ModuleTheme } from '@/shared/components/layout/moduleTheme';
 import { isBlankIndustryInput, normalizeIndustryType, type IndustryType } from './types';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
-import { getPluginFlag } from './pluginFlagDefaults';
+import { PLUGIN_FLAG_DEFAULTS, getPluginFlag } from './pluginFlagDefaults';
 import type { IndustryAccent, IndustryAttendanceCopy } from './pluginTypes';
 import {
   getIndustryPluginAdapter,
@@ -78,8 +78,8 @@ export function isDaycareIndustry(industry: IndustryType | string | null | undef
 
 /** 회원이 보는 장소 명칭. 피아노 전용 메뉴는 호출하지 않는다. */
 export function getPlaceLabel(industry: IndustryType | string | null | undefined): string {
-  if (!industry) return '사업장';
-  return getIndustryPlugin(industry).placeLabel ?? '사업장';
+  if (!industry) return PLUGIN_FLAG_DEFAULTS.placeLabel;
+  return getPluginFlag(getIndustryPlugin(industry), 'placeLabel');
 }
 
 /** 사업주(owner) 호칭. 교육·돌봄은 원장, 그 외는 대표. */

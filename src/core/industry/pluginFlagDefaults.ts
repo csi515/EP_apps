@@ -2,8 +2,9 @@
  * 업종 플러그인 매니페스트의 선택 플래그 기본값을 한곳에 모은 표.
  * 매니페스트에 값이 없을 때(undefined/null) 이 표의 값이 실제로 쓰인다.
  *
- * 라벨 문자열(placeLabel·ownerLabel·customerLabel·feeLabel 등)은 넣지 않는다.
- * 호출부마다 기본값이 달라서(예: '사업장' vs '학원') 한 값으로 묶으면 동작이 바뀐다.
+ * 장소 명칭(placeLabel) 기본값은 '사업장'으로 통일한다(업종 중립). 업종 플러그인이
+ * 명시한 값(예: piano '학원')은 그대로 쓴다.
+ * 그 외 라벨(ownerLabel·customerLabel·feeLabel·levelLabel)은 호출부마다 기본값이 달라 아직 넣지 않는다.
  */
 import type { IndustryPluginManifest } from './pluginTypes';
 
@@ -27,6 +28,7 @@ export const PLUGIN_FLAG_DEFAULTS = {
   showsPerformanceVideos: false,
   showsSongStamps: false,
   attendanceSummaryMetric: 'indigo',
+  placeLabel: '사업장',
 } as const satisfies Partial<Record<keyof IndustryPluginManifest, unknown>>;
 
 export type PluginFlagName = keyof typeof PLUGIN_FLAG_DEFAULTS;
