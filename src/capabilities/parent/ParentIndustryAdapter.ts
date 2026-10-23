@@ -161,8 +161,7 @@ export class ParentIndustryAdapter {
     }
     if (type === 'gym') return ['notices', 'events', 'more'];
     if (type === 'daycare') return ['notices', 'incidents', 'pickups', 'more'];
-    if (type === 'pilates' || type === 'skin_clinic') return ['notices', 'more'];
-    if (type === 'retail') return ['notices', 'more'];
+    // pilates·skin_clinic·retail은 기본 탭과 같아 따로 비교하지 않는다.
     return ['notices', 'more'];
   }
 
