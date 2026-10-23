@@ -6,7 +6,13 @@
  * 명시한 값(예: piano '학원')은 그대로 쓴다.
  * 그 외 라벨(ownerLabel·customerLabel·feeLabel·levelLabel)은 호출부마다 기본값이 달라 아직 넣지 않는다.
  */
-import type { IndustryPluginManifest } from './pluginTypes';
+import type {
+  AttendanceRecordNoun,
+  IndustryPluginManifest,
+  LoyaltyStampTemplateId,
+  ParentBookingVariant,
+  ParentPortalNavSpec,
+} from './pluginTypes';
 
 export const PLUGIN_FLAG_DEFAULTS = {
   isAppointment: false,
@@ -29,6 +35,14 @@ export const PLUGIN_FLAG_DEFAULTS = {
   showsSongStamps: false,
   attendanceSummaryMetric: 'indigo',
   placeLabel: '사업장',
+  attendanceRecordNounDefault: null as AttendanceRecordNoun | null,
+  portalRoleLabel: '학부모 포털',
+  parentPortalRoleLabel: null as string | null,
+  parentPortalNav: null as readonly ParentPortalNavSpec[] | null,
+  parentPortalSecondaryTabs: ['notices', 'more'] as readonly string[],
+  parentPortalFeeTitle: null as string | null,
+  parentBookingVariant: 'standard' as ParentBookingVariant,
+  loyaltyStampTemplate: 'RETAIL_CAFE' as LoyaltyStampTemplateId,
 } as const satisfies Partial<Record<keyof IndustryPluginManifest, unknown>>;
 
 export type PluginFlagName = keyof typeof PLUGIN_FLAG_DEFAULTS;

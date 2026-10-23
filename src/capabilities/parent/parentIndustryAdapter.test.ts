@@ -5,19 +5,26 @@
 import assert from 'node:assert/strict';
 import { ParentIndustryAdapter } from './ParentIndustryAdapter';
 import { installIndustryPlugin } from '@/core/industry/pluginHost';
+import { pianoPluginManifest } from '@/industries/piano/plugin';
+import { daycarePluginManifest } from '@/industries/daycare/plugin';
+import { skinPluginManifest } from '@/industries/skin/plugin';
+import { pilatesPluginManifest } from '@/industries/pilates/plugin';
 
 // 테스트용 플러그인 설정 설치
+// 업종별 포털 표(네비·역할 라벨·예약 변형 등)는 매니페스트 필드라 실제 매니페스트를 설치한다.
 installIndustryPlugin({
-  id: 'piano',
+  ...pianoPluginManifest,
   showsMakeupList: true,
   showsPracticeRoomTab: true,
-} as any);
+});
 
 installIndustryPlugin({
-  id: 'daycare',
+  ...daycarePluginManifest,
   showPickupFields: true,
   showsMakeupList: false,
-} as any);
+});
+installIndustryPlugin(skinPluginManifest);
+installIndustryPlugin(pilatesPluginManifest);
 
 // 1. 기존 업종 정책 검증 (Backward compatibility)
 const pianoPolicy = ParentIndustryAdapter.getPolicy('piano');

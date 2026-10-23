@@ -22,13 +22,15 @@ export const BASELINE = {
   'src/capabilities/attendance/attendanceIndustryCopy.ts': 1, // attendanceCopy.parentEmpty 변형값 'academy' (업종 아님)
   'src/capabilities/billing/finance/billingIncomeLink.ts': 1, // sourceType 'retail' (업종 아님)
   'src/capabilities/billing/finance/components/IncomeManagementView.tsx': 2, // sourceType 'retail' (업종 아님)
-  'src/capabilities/loyalty_stamp/components/LoyaltyStampView.tsx': 5,
-  'src/capabilities/parent/ParentIndustryAdapter.ts': 15,
-  'src/core/industry/IndustryAdapter.ts': 3,
-  'src/core/industry/genericPlugin.ts': 2,
+  'src/core/industry/genericPlugin.ts': 2, // 카탈로그 정의 → generic 매니페스트 생성(정의 측 값)
   'src/core/industry/industryUi.ts': 5, // isPianoIndustry 등 업종 판별 헬퍼 정의
-  'src/core/terminology/dictionaries.ts': 2,
 };
+
+/**
+ * 전체 상한. 개수는 줄(line)이 아니라 비교 연산 '발생 수'로 센다
+ * (한 줄에 비교가 둘이면 2개 — 예전 35(줄 수) vs 36(발생 수) 차이의 원인).
+ */
+export const TOTAL_CAP = 11;
 
 function isTestFile(rel) {
   return /\.test\.[cm]?[jt]sx?$/.test(rel) || rel.split('/').includes('__tests__') || rel.split('/').includes('__fixtures__');
@@ -67,6 +69,8 @@ function selfTest() {
   if (countComparisons(probe) !== 3) throw new Error('self-test: count mismatch');
   if (collectViolations({ 'src/core/new.ts': 1 }).length !== 1) throw new Error('self-test: new file not caught');
   if (collectViolations({ 'src/core/industry/genericPlugin.ts': 1 }).length !== 0) throw new Error('self-test: under baseline flagged');
+  if (collectViolations({ 'src/capabilities/parent/ParentIndustryAdapter.ts': 1 }).length !== 1) throw new Error('self-test: migrated file not caught');
+  if (countComparisons("if (a === 'piano' || a === 'academy') {}") !== 2) throw new Error('self-test: per-occurrence count');
   console.log('check-industry-id-comparisons: self-test ok');
 }
 
@@ -93,5 +97,9 @@ if (isMain) {
     process.exit(1);
   }
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  if (total > TOTAL_CAP) {
+    console.error(`check-industry-id-comparisons failed: 전체 ${total}개 > 상한 ${TOTAL_CAP}`);
+    process.exit(1);
+  }
   console.log(`check-industry-id-comparisons: ok (${total}개, 기준선 이내)`);
 }

@@ -1499,8 +1499,9 @@ export function getTerminologyDictionary(
     return CATEGORY_DICTIONARIES.daycare;
   }
 
-  // 명시적 교육/학원 업종이면 ACADEMY_TERMINOLOGY_DICTIONARY
-  if (rawKey === 'piano' || rawKey === 'academy' || cat === 'education') {
+  // 교육 카테고리면 ACADEMY_TERMINOLOGY_DICTIONARY.
+  // (piano·academy는 카탈로그 category가 education이라 위 카테고리 사전에서 이미 처리된다 — id 비교 불필요)
+  if (cat === 'education') {
     return ACADEMY_TERMINOLOGY_DICTIONARY;
   }
 

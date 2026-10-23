@@ -20,7 +20,9 @@ import {
   isAppointmentIndustry,
   getIndustryPlugin,
   getIndustryPluginAdapter,
+  getNormalizedIndustryPluginFlag,
 } from '@/core/industry/industryUi';
+import type { ParentBookingVariant, ParentPortalNavIcon, ParentPortalNavSpec } from '@/core/industry/industryUi';
 import type { ParentPortalTab } from '@/types/education';
 
 export type ParentPortalNavItem = {
@@ -39,65 +41,41 @@ export interface ParentPortalPolicy {
 
 const icon = (node: React.ReactNode) => node;
 
-const PIANO_PARENT_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'schedule', label: '일정', icon: icon(React.createElement(CalendarDays, { className: 'w-5 h-5' })) },
-  { id: 'attendance', label: '출결', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '수납', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
+const NAV_ICONS: Record<ParentPortalNavIcon, React.ComponentType<{ className?: string }>> = {
+  home: Home,
+  check: CheckSquare,
+  card: CreditCard,
+  book: BookOpen,
+  pill: Pill,
+  calendarClock: CalendarClock,
+  calendar: CalendarDays,
+  bus: Bus,
+  menu: Menu,
+  coins: Coins,
+  history: History,
+};
 
-const DAYCARE_PARENT_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'journals', label: '알림장', icon: icon(React.createElement(BookOpen, { className: 'w-5 h-5' })) },
-  { id: 'medications', label: '투약', icon: icon(React.createElement(Pill, { className: 'w-5 h-5' })) },
-  { id: 'attendance', label: '등하원', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '보육료', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
+const navCache = new WeakMap<readonly ParentPortalNavSpec[], ParentPortalNavItem[]>();
 
-const GYM_PARENT_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'schedule', label: '수업', icon: icon(React.createElement(CalendarDays, { className: 'w-5 h-5' })) },
-  { id: 'shuttle', label: '차량', icon: icon(React.createElement(Bus, { className: 'w-5 h-5' })) },
-  { id: 'attendance', label: '출결', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '수강료', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
-
-const PILATES_PARENT_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'bookings', label: '예약', icon: icon(React.createElement(CalendarClock, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '수강료', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
-  { id: 'attendance', label: '출입', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
-
-const SKIN_PARENT_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'bookings', label: '예약', icon: icon(React.createElement(CalendarClock, { className: 'w-5 h-5' })) },
-  { id: 'tuition', label: '이용권', icon: icon(React.createElement(CreditCard, { className: 'w-5 h-5' })) },
-  { id: 'attendance', label: '출입', icon: icon(React.createElement(CheckSquare, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
-
-const RETAIL_CUSTOMER_NAV: ParentPortalNavItem[] = [
-  { id: 'home', label: '홈', icon: icon(React.createElement(Home, { className: 'w-5 h-5' })) },
-  { id: 'stamps', label: '포인트', icon: icon(React.createElement(Coins, { className: 'w-5 h-5' })) },
-  { id: 'reports', label: '구매내역', icon: icon(React.createElement(History, { className: 'w-5 h-5' })) },
-  { id: 'more', label: '더보기', icon: icon(React.createElement(Menu, { className: 'w-5 h-5' })) },
-];
+/** 매니페스트의 네비 표(아이콘 키)를 React 네비 항목으로 바꾼다. 같은 표는 같은 배열을 돌려준다. */
+function toNavItems(specs: readonly ParentPortalNavSpec[]): ParentPortalNavItem[] {
+  const cached = navCache.get(specs);
+  if (cached) return cached;
+  const items = specs.map((spec) => ({
+    id: spec.id as ParentPortalTab,
+    label: spec.label,
+    icon: icon(React.createElement(NAV_ICONS[spec.icon], { className: 'w-5 h-5' })),
+  }));
+  navCache.set(specs, items);
+  return items;
+}
 
 export class ParentIndustryAdapter {
   static getPolicy(industryType?: IndustryType | string | null): ParentPortalPolicy {
     const adapter = getIndustryPluginAdapter(industryType);
     const portalConfig = adapter.getPortalConfig();
     const facilityConfig = adapter.getFacilityConfig();
-    const norm = normalizeIndustryType(industryType);
-
-    let bookingVariant: 'skin' | 'pilates' | 'standard' = 'standard';
-    if (norm === 'skin_clinic') bookingVariant = 'skin';
-    else if (norm === 'pilates') bookingVariant = 'pilates';
+    const bookingVariant = getNormalizedIndustryPluginFlag(industryType, 'parentBookingVariant') as ParentBookingVariant;
 
     return {
       showPickupFields: adapter.hasFeature('pickup_fields'),
@@ -112,12 +90,8 @@ export class ParentIndustryAdapter {
 
   static getNav(industryType?: IndustryType | string | null): ParentPortalNavItem[] {
     const resolved = normalizeIndustryType(industryType);
-    if (resolved === 'daycare') return DAYCARE_PARENT_NAV;
-    if (resolved === 'gym') return GYM_PARENT_NAV;
-    if (resolved === 'skin_clinic') return SKIN_PARENT_NAV;
-    if (resolved === 'pilates') return PILATES_PARENT_NAV;
-    if (resolved === 'piano') return PIANO_PARENT_NAV;
-    if (resolved === 'retail') return RETAIL_CUSTOMER_NAV;
+    const fixedNav = getNormalizedIndustryPluginFlag(industryType, 'parentPortalNav');
+    if (fixedNav) return toNavItems(fixedNav);
 
     const adapter = getIndustryPluginAdapter(industryType);
     const fee = adapter.getLabel('fee', '이용료');
@@ -147,27 +121,19 @@ export class ParentIndustryAdapter {
   }
 
   static getRoleLabel(industryType?: IndustryType | string | null): string {
-    const type = normalizeIndustryType(industryType);
-    if (type === 'daycare') return '보호자 포털';
-    if (type === 'skin_clinic') return '고객 포털';
-    if (type === 'retail') return '고객 멤버십';
-    return '학부모 포털';
+    return (
+      getNormalizedIndustryPluginFlag(industryType, 'parentPortalRoleLabel') ??
+      getNormalizedIndustryPluginFlag(industryType, 'portalRoleLabel')
+    );
   }
 
   static getSecondaryTabs(industryType?: IndustryType | string | null): ParentPortalTab[] {
-    const type = normalizeIndustryType(industryType);
-    if (type === 'piano') {
-      return ['notices', 'assignments', 'progress', 'stamps', 'reports', 'events', 'more'];
-    }
-    if (type === 'gym') return ['notices', 'events', 'more'];
-    if (type === 'daycare') return ['notices', 'incidents', 'pickups', 'more'];
-    // pilates·skin_clinic·retail은 기본 탭과 같아 따로 비교하지 않는다.
-    return ['notices', 'more'];
+    return [...getNormalizedIndustryPluginFlag(industryType, 'parentPortalSecondaryTabs')] as ParentPortalTab[];
   }
 
   static getFeeTitle(industryType?: IndustryType | string | null): string {
-    const type = normalizeIndustryType(industryType);
-    if (type === 'daycare') return '보호자 결제/보육료';
+    const fixedTitle = getNormalizedIndustryPluginFlag(industryType, 'parentPortalFeeTitle');
+    if (fixedTitle) return fixedTitle;
     return getIndustryPluginAdapter(industryType).getLabel('fee', '수납');
   }
 }

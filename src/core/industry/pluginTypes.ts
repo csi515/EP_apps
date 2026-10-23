@@ -3,6 +3,17 @@ import type { ModuleTheme } from '@/shared/components/layout/moduleTheme';
 import type { IndustryOption, IndustryType } from './types';
 import type { BookingIndustryAdapter } from './bookingIndustryAdapter';
 
+export type ParentPortalNavIcon =
+  | 'home' | 'check' | 'card' | 'book' | 'pill' | 'calendarClock' | 'calendar' | 'bus' | 'menu' | 'coins' | 'history';
+export interface ParentPortalNavSpec {
+  id: string;
+  label: string;
+  icon: ParentPortalNavIcon;
+}
+export type AttendanceRecordNoun = '등하원' | '출입' | '출결';
+export type ParentBookingVariant = 'skin' | 'pilates' | 'standard';
+export type LoyaltyStampTemplateId = 'RETAIL_CAFE' | 'ACADEMY_PRAISE' | 'FITNESS_BEAUTY';
+
 export interface IndustryExpenseCategory {
   value: string;
   label: string;
@@ -81,7 +92,7 @@ export interface IndustryFinanceHubNav {
  */
 export interface IndustryAttendanceCopy {
   /** 기록 제목 명사. 없으면 isAppointment면 출입, 아니면 출결 */
-  recordNoun?: '등하원' | '출입' | '출결';
+  recordNoun?: AttendanceRecordNoun;
   manageTitle?: string;
   presentLabel?: '등원' | '출석';
   presentTimeLabel?: string;
@@ -258,6 +269,22 @@ export interface IndustryPluginManifest {
   showsSongStamps?: boolean;
   /** 학부모 포털: 일정(이벤트) 섹션 제목 (기본: '일정') */
   parentEventsSectionTitle?: string;
+  /** 출결 기록 명사 기본값(attendanceCopy.recordNoun이 없을 때). 없으면 예약형 '출입', 그 외 '출결'. */
+  attendanceRecordNounDefault?: AttendanceRecordNoun;
+  /** 포털 설정(getPortalConfig)의 역할 라벨. 기본 '학부모 포털'. */
+  portalRoleLabel?: string;
+  /** 보호자/고객 포털 헤더 역할 라벨. 없으면 portalRoleLabel. */
+  parentPortalRoleLabel?: string;
+  /** 보호자/고객 포털 하단 네비 고정 표. 없으면 기능 플래그로 조립한다. */
+  parentPortalNav?: readonly ParentPortalNavSpec[];
+  /** 보호자/고객 포털 보조 탭. 기본 ['notices', 'more']. */
+  parentPortalSecondaryTabs?: readonly string[];
+  /** 보호자/고객 포털 납부 화면 제목. 없으면 fee 라벨. */
+  parentPortalFeeTitle?: string;
+  /** 보호자/고객 포털 예약 화면 변형. 기본 'standard'. */
+  parentBookingVariant?: ParentBookingVariant;
+  /** 스탬프 보드 기본 템플릿. 기본 'RETAIL_CAFE'. */
+  loyaltyStampTemplate?: LoyaltyStampTemplateId;
   /**
    * 공유 명단 목록의 업종 차이.
    * 목록은 업종 id를 비교하지 않고 이 설정만 읽는다.

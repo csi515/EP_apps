@@ -149,6 +149,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:driver-commute-empty-stops', group: 'resources', kind: 'unit', ci: 'always', order: 78 },
   { script: 'test:plugin-flag-defaults', group: 'industry', kind: 'unit', ci: 'always', order: 79 },
   { script: 'test:industry-id-comparisons', group: 'architecture', kind: 'static', ci: 'always', order: 80 },
+  { script: 'test:industry-id-migration', group: 'industry', kind: 'unit', ci: 'always', order: 81 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */

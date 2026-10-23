@@ -18,6 +18,7 @@ import { resolveIndustryContext } from './contextResolver';
 import { DefaultFallbackPluginAdapter, type IndustryFeatureKey } from './IndustryAdapter';
 import type { IndustryPluginManifest } from './pluginTypes';
 import { PLUGIN_FLAG_DEFAULTS, getPluginFlag, type PluginFlagName } from './pluginFlagDefaults';
+import { getTerminologyDictionary } from '@/core/terminology/dictionaries';
 import { pianoPluginManifest } from '@/industries/piano/plugin';
 import { pilatesPluginManifest } from '@/industries/pilates/plugin';
 import { gymPluginManifest } from '@/industries/gym/plugin';
@@ -72,6 +73,13 @@ function resolveAll(input: string | null) {
       fee: adapter.getLabel('fee'),
     },
     context: ctx.labels,
+    // 업종 id 비교를 매니페스트 필드로 옮긴 core 호출부(IndustryAdapter·dictionaries).
+    // ParentIndustryAdapter·LoyaltyStampView는 scripts/industryIdMigration.snapshot.test.ts
+    migrated: {
+      attendanceRecordNoun: adapter.getAttendanceConfig().recordNoun,
+      portalRoleLabel: adapter.getPortalConfig().portalRoleLabel,
+      terminology: JSON.stringify(getTerminologyDictionary(input)),
+    },
     helpers: {
       isAppointmentIndustry: ui.isAppointmentIndustry(input),
       publicLandingAdultFirst: ui.publicLandingAdultFirst(input),

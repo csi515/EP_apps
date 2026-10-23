@@ -55,6 +55,15 @@ export const FROZEN_PLUGIN_MANIFEST_PROPERTIES = new Set([
   'showsPerformanceVideos',
   'showsSongStamps',
   'parentEventsSectionTitle',
+  // 업종 id 비교 이전(동결 해제 승인): 기본값은 PLUGIN_FLAG_DEFAULTS
+  'attendanceRecordNounDefault',
+  'portalRoleLabel',
+  'parentPortalRoleLabel',
+  'parentPortalNav',
+  'parentPortalSecondaryTabs',
+  'parentPortalFeeTitle',
+  'parentBookingVariant',
+  'loyaltyStampTemplate',
 ]);
 
 /**

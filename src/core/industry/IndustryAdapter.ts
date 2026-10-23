@@ -8,6 +8,7 @@ import type {
 import type { BookingIndustryAdapter } from './bookingIndustryAdapter';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
 import { PLUGIN_FLAG_DEFAULTS, getPluginFlag } from './pluginFlagDefaults';
+import type { AttendanceRecordNoun } from './pluginTypes';
 import { buildGenericPluginManifest } from './genericPlugin';
 import { getIndustryDefinition, INDUSTRY_DEFINITIONS } from './catalog';
 import { isBlankIndustryInput, type IndustryType } from './types';
@@ -232,7 +233,7 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
 
   getAttendanceConfig(): AttendanceCapabilityConfig {
     const isAppt = getPluginFlag(this.manifest, 'isAppointment');
-    const defaultNoun = this.manifest.id === 'daycare' ? '등하원' : isAppt ? '출입' : '출결';
+    const defaultNoun = (getPluginFlag(this.manifest, 'attendanceRecordNounDefault') as AttendanceRecordNoun | null) ?? (isAppt ? '출입' : '출결');
     return {
       enabled: this.manifest.attendanceDefault !== false,
       recordNoun: this.manifest.attendanceCopy?.recordNoun ?? defaultNoun,
@@ -245,13 +246,7 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
   }
 
   getPortalConfig(): PortalCapabilityConfig {
-    const id = this.manifest.id;
-    const portalRoleLabel =
-      id === 'daycare'
-        ? '보호자 포털'
-        : id === 'skin_clinic'
-          ? '고객 포털'
-          : '학부모 포털';
+    const portalRoleLabel = getPluginFlag(this.manifest, 'portalRoleLabel');
 
     return {
       enabled: true,

@@ -31,6 +31,13 @@ export const retailPluginManifest: IndustryPluginManifest = {
   showPickupFields: false,
   levelLabel: '회원 등급',
   placeLabel: '매장',
+  parentPortalNav: [
+    { id: 'home', label: '홈', icon: 'home' },
+    { id: 'stamps', label: '포인트', icon: 'coins' },
+    { id: 'reports', label: '구매내역', icon: 'history' },
+    { id: 'more', label: '더보기', icon: 'menu' },
+  ],
+  parentPortalRoleLabel: '고객 멤버십',
   ownerLabel: '대표',
   placeNamePlaceholder: '예: 행복 매장',
   customerLabel: '고객',
