@@ -50,7 +50,7 @@ import {
   OrganizationProfileFields,
   OrganizationBackupCard,
   OrganizationDangerZoneCard,
-} from './OrganizationSettingsView';
+} from './OrganizationSettingsCards';
 import { CustomTermsSettingCard } from '@/pages/settings/CustomTermsSettingCard';
 import { buildWorkplaceSettingsSavePayload } from '../workplaceSettingsSave';
 
