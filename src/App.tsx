@@ -39,10 +39,11 @@ import { Layout } from "./components/layout/Layout";
 import { LoginPage } from "./pages/auth/LoginPage";
 import { SuperAdminGuard } from "./pages/admin/SuperAdminGuard";
 import { ImpersonationFloatingBanner } from "./components/layout/ImpersonationFloatingBanner";
+// E2E 전용 /e2e/shuttle-commute 라우트가 즉시 렌더링을 가정하므로 eager import 유지
+import { VehicleShuttleCommuteView } from "@/capabilities/vehicle_shuttle/ui/VehicleShuttleCommuteView";
 
 // 라우트 단위 코드 스플리팅: 초기 번들에서 부가 화면을 분리한다.
 const VehicleShuttleManagementView = lazy(() => import("@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView").then((m) => ({ default: m.VehicleShuttleManagementView })));
-const VehicleShuttleCommuteView = lazy(() => import("@/capabilities/vehicle_shuttle/ui/VehicleShuttleCommuteView").then((m) => ({ default: m.VehicleShuttleCommuteView })));
 const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
 const KioskAttendancePage = lazy(() => import("@/pages/kiosk/KioskAttendancePage").then((m) => ({ default: m.KioskAttendancePage })));
 const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
