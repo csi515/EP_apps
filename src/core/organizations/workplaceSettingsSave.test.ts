@@ -6,7 +6,6 @@ import assert from 'node:assert/strict';
 import type { AcademySettings } from './settingsTypes';
 import {
   SKIN_ONLY_ORGANIZATION_SETTINGS_KEYS,
-  buildCommonOrganizationSettingsSavePayload,
   buildWorkplaceSettingsSavePayload,
 } from './workplaceSettingsSave';
 
@@ -61,14 +60,5 @@ assert.deepEqual(workplace.rooms, settings.rooms);
 assert.deepEqual(workplace.features, settings.features);
 assert.equal(workplace.address, '서울시 강남구');
 assert.equal(workplace.name, '테스트 샵');
-
-const common = buildCommonOrganizationSettingsSavePayload(settings, '서울시 강남구');
-assertSkinKeysAbsent(common);
-assert.equal(common.depositEnabled, true);
-assert.equal(common.depositAmount, 30000);
-assert.equal(common.defaultTuitionFee, 120000);
-assert.deepEqual(common.rooms, settings.rooms);
-assert.deepEqual(common.features, settings.features);
-assert.equal(common.defaultPaymentDay, 5);
 
 console.log('workplaceSettingsSave.test.ts: ok');

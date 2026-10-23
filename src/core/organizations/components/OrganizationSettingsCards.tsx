@@ -1,19 +1,14 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FC, type FormEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type FC } from 'react';
 import { useWorkUi as useApp } from '@/shared/navigation/useWorkUi';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
-import { PageHeader } from '@/shared/components';
 import {
   FormField,
   FORM_CONTROL_CLASS,
   SettingsCard,
 } from '@/shared/components/ui';
-import { LegalLinks } from '@/core/legal';
 import {
-  Settings,
-  Building,
-  Save,
   Download,
   Upload,
   ShieldCheck,
@@ -23,14 +18,10 @@ import {
 } from 'lucide-react';
 import * as orgService from '@/core/organizations/services/organizationService';
 import {
-  EMPTY_ORGANIZATION_ADDRESS,
   OrganizationAddressFields,
-  formatOrganizationAddress,
   type OrganizationAddressValue,
 } from '@/core/address';
-import type { AcademySettings } from '../settingsTypes';
 import { getDangerZoneSessionLabel } from '@/core/industry/industryUi';
-import { buildCommonOrganizationSettingsSavePayload } from '../workplaceSettingsSave';
 
 export interface OrganizationBasicProfile {
   name: string;
@@ -452,173 +443,5 @@ export const OrganizationDangerZoneCard: FC<OrganizationDangerZoneCardProps> = (
         </div>
       )}
     </>
-  );
-};
-
-/**
- * Core Organization: 독립적인 조직/사업장 설정 화면
- * Core 고유 책임인 기본 프로필, 데이터 백업/복원, 조직 영구 삭제를 제공합니다.
- */
-export const OrganizationSettingsView: FC<{
-  placeLabel?: string;
-  ownerLabel?: string;
-  onSaved?: () => void;
-}> = ({
-  placeLabel = '사업장',
-  ownerLabel = '대표자',
-  onSaved,
-}) => {
-  const { showToast, triggerRefresh } = useApp();
-  const org = useOrganization();
-  const [settings, setSettings] = useState<AcademySettings>(() => StorageService.getSettings());
-  const [addressParts, setAddressParts] = useState<OrganizationAddressValue>(() => {
-    const saved = StorageService.getSettings();
-    const existing = (saved.address || '').trim();
-    return existing
-      ? { ...EMPTY_ORGANIZATION_ADDRESS, roadAddress: existing }
-      : EMPTY_ORGANIZATION_ADDRESS;
-  });
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    const orgId = org.currentOrganization?.id;
-    if (!orgId) return;
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        const loaded = await orgService.fetchOrganizationAddress(orgId);
-        if (cancelled) return;
-        const roadAddress =
-          loaded.roadAddress.trim() || loaded.legacyAddress.trim() || '';
-        setAddressParts({
-          roadAddress,
-          addressDetail: loaded.addressDetail,
-          postal: loaded.postal,
-          sido: loaded.sido,
-          sigungu: loaded.sigungu,
-          dong: loaded.dong,
-          jibun: loaded.jibun,
-        });
-        if (roadAddress || loaded.addressDetail) {
-          setSettings((prev) => ({
-            ...prev,
-            address:
-              formatOrganizationAddress({
-                roadAddress,
-                addressDetail: loaded.addressDetail,
-              }) ||
-              loaded.legacyAddress ||
-              prev.address,
-          }));
-        }
-      } catch {
-        // 로컬 설정 유지
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [org.currentOrganization?.id]);
-
-  const handleSaveSettings = async (e: FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    try {
-      const displayAddress =
-        formatOrganizationAddress(addressParts) || settings.address || '';
-      const nextSettings: AcademySettings = {
-        ...settings,
-        address: displayAddress,
-      };
-      StorageService.saveSettings(nextSettings);
-
-      if (org.currentOrganization) {
-        await orgService.updateOrganization(org.currentOrganization.id, {
-          name: settings.name,
-          addressParts,
-          settings: buildCommonOrganizationSettingsSavePayload(settings, displayAddress),
-        });
-
-        org.patchOrganization(org.currentOrganization.id, { name: settings.name });
-        await org.refreshOrganizations();
-      }
-
-      setSettings(nextSettings);
-      triggerRefresh();
-      showToast('사업장 설정이 저장되었습니다.', 'success');
-      onSaved?.();
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : '설정 저장 중 오류가 발생했습니다.',
-        'error'
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div className="space-y-4 pb-4">
-      <PageHeader
-        icon={<Settings className="w-6 h-6" />}
-        title="사업장 기본 정보 및 데이터 관리"
-        description="조직 기본 정보, 주소, 백업 및 안전 관리"
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SettingsCard
-          className="lg:col-span-2 sm:p-8"
-          title={`${placeLabel} 기본 프로필`}
-          icon={<Building className="w-4 h-4 text-indigo-600" />}
-        >
-          <form onSubmit={handleSaveSettings} className="space-y-4">
-            <OrganizationProfileFields
-              name={settings.name}
-              directorName={settings.directorName || ''}
-              phone={settings.phone}
-              businessNumber={settings.businessNumber || ''}
-              addressParts={addressParts}
-              placeLabel={placeLabel}
-              ownerLabel={ownerLabel}
-              publicCode={org.currentOrganization?.public_code}
-              onProfileChange={(patch) => setSettings((prev) => ({ ...prev, ...patch }))}
-              onAddressChange={(next) => {
-                setAddressParts(next);
-                setSettings((prev) => ({
-                  ...prev,
-                  address: formatOrganizationAddress(next) || prev.address,
-                }));
-              }}
-            />
-
-            <div className="flex justify-end pt-4">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="px-6 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md flex items-center gap-2 cursor-pointer"
-              >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                {isSaving ? '저장 중…' : '설정 정보 저장'}
-              </button>
-            </div>
-          </form>
-        </SettingsCard>
-
-        <div className="space-y-6">
-          <OrganizationBackupCard placeLabel={placeLabel} />
-
-          <div className="pt-2 pb-4">
-            <p className="text-xs text-slate-500 text-center mb-2">
-              계정 탈퇴는 <strong>내 계정</strong> 메뉴에서 진행할 수 있습니다.
-            </p>
-            <LegalLinks className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-slate-500" />
-          </div>
-
-          <OrganizationDangerZoneCard />
-        </div>
-      </div>
-    </div>
   );
 };

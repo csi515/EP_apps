@@ -319,7 +319,7 @@ function run(): void {
 
   const here = dirname(fileURLToPath(import.meta.url));
   const dangerZone = readFileSync(
-    join(here, '../organizations/components/OrganizationSettingsView.tsx'),
+    join(here, '../organizations/components/OrganizationSettingsCards.tsx'),
     'utf8'
   );
   const workplace = readFileSync(

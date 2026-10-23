@@ -74,25 +74,3 @@ export function buildWorkplaceSettingsSavePayload(
 
   return payload;
 }
-
-/** OrganizationSettingsView 처럼 settings 를 펼친 공통 저장에서 skin 키만 제거한다. */
-export function buildCommonOrganizationSettingsSavePayload(
-  settings: AcademySettings,
-  displayAddress: string
-): Partial<AcademySettings> {
-  const sanitized = omitSkinOnlyOrganizationSettings({
-    ...settings,
-    name: settings.name,
-    directorName: settings.directorName,
-    phone: settings.phone,
-    businessNumber: settings.businessNumber,
-    address: displayAddress,
-  });
-
-  const validation = validateWorkplaceSettingsPayload(sanitized);
-  if (!validation.valid) {
-    throw new Error(validation.violations.join(', '));
-  }
-
-  return sanitized;
-}
