@@ -97,6 +97,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:industry-resolver',
   'test:driver-commute-empty-stops',
   'test:plugin-flag-defaults',
+  'test:industry-id-comparisons',
 ];
 
 const scripts = loadPackageScripts();

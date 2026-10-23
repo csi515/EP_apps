@@ -134,6 +134,7 @@
     "test:industry-catalog": "tsx src/core/industry/industryCatalog.test.ts",
     "test:industry-resolver": "tsx src/core/industry/resolveIndustry.test.ts",
     "test:plugin-flag-defaults": "tsx --import ./scripts/tsx-css-stub.mjs src/core/industry/pluginFlagDefaults.test.ts",
+    "test:industry-id-comparisons": "node scripts/check-industry-id-comparisons.mjs --self-test",
     "test:industry-normalize": "tsx src/core/industry/industryNormalize.test.ts",
     "test:industry-manifest": "tsx src/app/industry/industryManifest.parity.test.ts",
     "test:industry-contract": "tsx src/core/industry/industryContract.test.ts",
