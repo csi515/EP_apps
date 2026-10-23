@@ -1,5 +1,5 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import type { Html5Qrcode } from 'html5-qrcode';
 import { Camera, Loader2, X } from 'lucide-react';
 import { parseGuardianLinkCode } from '@/core/platform/deepLinkParser';
 
@@ -52,6 +52,9 @@ export const GuardianLinkQrScanner: React.FC<GuardianLinkQrScannerProps> = ({
       setStarting(true);
       setError(null);
       try {
+        // html5-qrcode 는 스캐너를 열 때만 지연 로드한다 (초기 번들 분리).
+        const { Html5Qrcode } = await import('html5-qrcode');
+        if (cancelled) return;
         const scanner = new Html5Qrcode(elementId);
         scannerRef.current = scanner;
         await scanner.start(

@@ -34,14 +34,18 @@ import {
 import { useApp } from '@/context/AppContext';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useTabGuard } from '@/shared/navigation/useTabGuard';
-import { WorkplaceSettingsView } from '@/core/organizations/components/WorkplaceSettingsView';
 import { accountViewEntry, financeViewEntries } from '@/core/industry/commonViewEntries';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { GettingStartedQuestWidget } from '@/app/onboarding/GettingStartedQuestWidget';
 import { BusinessHealthWidget } from '@/shared/components/diagnostics';
-import { WorkspaceIntranetHubPage } from '@/pages/workspace/WorkspaceIntranetHubPage';
 import { CompanyAppLauncherDashboard } from '@/pages/workspace/CompanyAppLauncherDashboard';
 
+const WorkplaceSettingsView = lazy(() =>
+  import('@/core/organizations/components/WorkplaceSettingsView').then((m) => ({ default: m.WorkplaceSettingsView }))
+);
+const WorkspaceIntranetHubPage = lazy(() =>
+  import('@/pages/workspace/WorkspaceIntranetHubPage').then((m) => ({ default: m.WorkspaceIntranetHubPage }))
+);
 const AttendanceView = lazy(() =>
   import('@/capabilities/attendance').then((m) => ({ default: m.AttendanceManagementView }))
 );
@@ -285,7 +289,12 @@ import type { NavMenuItem, NavMenuSection } from '@/core/auth/navUtils';
 import { filterNavSections } from '@/core/auth/navUtils';
 import { isNavTabAllowed, normalizeRolePermissions } from '@/domain/permissions';
 import { useTerminology } from '@/core/terminology';
-import { StudentListView, StudentFormModal } from '@/capabilities/roster';
+const StudentListView = lazy(() =>
+  import('@/capabilities/roster').then((m) => ({ default: m.StudentListView }))
+);
+const StudentFormModal = lazy(() =>
+  import('@/capabilities/roster').then((m) => ({ default: m.StudentFormModal }))
+);
 import { StorageService } from '@/services/storage';
 import {
   TAB_REQUIRED_CAPABILITIES,
@@ -484,6 +493,7 @@ function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboard
       </div>
 
       {isFormOpen && (
+        <Suspense fallback={null}>
         <StudentFormModal
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
@@ -491,6 +501,7 @@ function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboard
             setIsFormOpen(false);
           }}
         />
+        </Suspense>
       )}
     </div>
   );
@@ -740,7 +751,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
   const defaultViewMap: Record<string, () => ReactNode> = {
     dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
-    'intranet-hub': () => <WorkspaceIntranetHubPage enabledCapabilityIds={enabledCaps} />,
+    'intranet-hub': () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사내 허브를 불러오는 중...</div>}>
+        <WorkspaceIntranetHubPage enabledCapabilityIds={enabledCaps} />
+      </Suspense>
+    ),
     'approval-workflow': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
         <ApprovalWorkflowManagementView />
@@ -751,7 +766,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
         <ApprovalWorkflowManagementView />
       </Suspense>
     ),
-    students: () => <StudentListView />,
+    students: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">명단을 불러오는 중...</div>}>
+        <StudentListView />
+      </Suspense>
+    ),
     bookings: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>
         <BookingView />
@@ -1179,7 +1198,11 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       ])
     ),
     ...financeViewEntries,
-    settings: () => <WorkplaceSettingsView />,
+    settings: () => (
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">설정 화면을 불러오는 중...</div>}>
+        <WorkplaceSettingsView />
+      </Suspense>
+    ),
     ...accountViewEntry,
   };
 

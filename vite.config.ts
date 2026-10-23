@@ -42,6 +42,22 @@ export default defineConfig({
             if (id.includes("lucide-react")) {
               return "icons-vendor";
             }
+            if (
+              id.includes("/framer-motion/") ||
+              id.includes("/motion-dom/") ||
+              id.includes("/motion-utils/")
+            ) {
+              return "motion-vendor";
+            }
+            if (id.includes("/tailwind-merge/") || id.includes("/canvas-confetti/")) {
+              return "ui-vendor";
+            }
+            if (id.includes("/zod/")) {
+              return "zod-vendor";
+            }
+            if (id.includes("/xlsx/")) {
+              return "xlsx-vendor";
+            }
             if (id.includes("recharts")) {
               return "recharts-vendor";
             }
