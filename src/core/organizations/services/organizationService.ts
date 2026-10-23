@@ -191,7 +191,7 @@ export async function fetchUserMembershipsWithContext(): Promise<OrganizationMem
       organization: {
         id: String(row.organization_id),
         name: String(row.organization_name ?? ''),
-        industry_type: String(row.organization_industry_type ?? 'piano'),
+        industry_type: String(row.organization_industry_type ?? ''),
         slug: row.organization_slug ? String(row.organization_slug) : null,
         settings: row.organization_settings ?? {},
         is_active: Boolean(row.organization_is_active),

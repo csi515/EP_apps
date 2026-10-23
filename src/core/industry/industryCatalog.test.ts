@@ -76,7 +76,8 @@ function run(): void {
   assert.equal(INDUSTRY_ALIASES.sauna_jjimjbang, 'sauna_jjimjilbang');
 
   assert.equal(normalizeIndustryType('not_a_real_type'), null);
-  assert.equal(normalizeIndustryType(null), 'piano');
+  assert.equal(normalizeIndustryType(null), null); // 빈 값은 piano로 위장하지 않음
+  assert.equal(normalizeIndustryType(''), null);
   assert.equal(shouldUseGenericShell('not_a_real_type'), true);
 
   assert.equal(normalizeIndustryType('hair_salon'), 'hair_salon');

@@ -28,7 +28,7 @@ function mapEnrollment(raw: Record<string, unknown>): StudentPortalEnrollment {
     enrollmentId: String(raw.enrollment_id),
     organizationId: String(raw.organization_id),
     organizationName: String(raw.organization_name),
-    industryType: String(raw.industry_type || 'piano'),
+    industryType: String(raw.industry_type ?? ''),
     customerId: String(raw.customer_id),
     status: String(raw.status),
     enrolledAt: (raw.enrolled_at as string) || null,

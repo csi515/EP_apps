@@ -78,7 +78,8 @@ export function parseIndustryType(value?: string | null): IndustryType | null {
 export function normalizeIndustryType(value?: string | null): IndustryType | null {
   const parsed = parseIndustryType(value);
   if (parsed) return parsed;
-  return isBlankIndustryInput(value) ? DEFAULT_CREATE_INDUSTRY_TYPE : null;
+  // 빈 값은 piano로 위장하지 않는다 (resolveIndustry.ts 참고).
+  return parsed;
 }
 
 export function getIndustryLabel(value?: string | null): string {
@@ -86,7 +87,6 @@ export function getIndustryLabel(value?: string | null): string {
   if (def) return def.label;
   const parsed = parseIndustryType(value);
   if (parsed) return INDUSTRY_DEFINITIONS[parsed].label;
-  if (isBlankIndustryInput(value)) return INDUSTRY_DEFINITIONS.piano.label;
   return '학원';
 }
 

@@ -51,7 +51,7 @@ export function ParentPortalTabs({
   onSwitchChild?: () => void;
 }) {
   const { portalTree } = useParentPortal();
-  const industryType = (rawIndustryType || industryTypeProp || 'piano') as string;
+  const industryType = (rawIndustryType || industryTypeProp || '') as string;
   const isRetail = normalizeIndustryType(industryType) === 'retail';
 
   const stampChildren = useMemo(() => {

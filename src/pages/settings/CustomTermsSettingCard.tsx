@@ -8,6 +8,7 @@ import {
   getResolvedTerm,
   type StandardTermKey,
 } from '@/core/i18n/termEngine';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 const TERM_META: Record<StandardTermKey, { label: string; placeholder: string; helper: string }> = {
   'term.customer': {
@@ -39,7 +40,7 @@ const TERM_META: Record<StandardTermKey, { label: string; placeholder: string; h
 
 export const CustomTermsSettingCard: React.FC = () => {
   const { currentOrganization, customTerms, updateCustomTerms } = useOrganization();
-  const industryType = currentOrganization?.industry_type ?? 'piano';
+  const industryType = resolveIndustryId(currentOrganization?.industry_type) ?? '';
 
   const [formTerms, setFormTerms] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);

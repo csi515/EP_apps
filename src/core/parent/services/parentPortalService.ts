@@ -16,7 +16,7 @@ function parseEnrollment(raw: Record<string, unknown>): StudentEnrollment {
     enrollmentId: String(raw.enrollment_id),
     organizationId: String(raw.organization_id),
     organizationName: String(raw.organization_name ?? ''),
-    industryType: String(raw.industry_type ?? 'piano'),
+    industryType: String(raw.industry_type ?? ''),
     customerId: String(raw.customer_id),
     status: (raw.status as EnrollmentStatus) ?? 'active',
     enrolledAt: raw.enrolled_at ? String(raw.enrolled_at) : null,

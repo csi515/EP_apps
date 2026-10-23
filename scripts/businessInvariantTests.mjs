@@ -145,6 +145,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:tenant-query', group: 'platform', kind: 'unit', ci: 'always', order: 74 },
   { script: 'test:policy-engine', group: 'capability', kind: 'unit', ci: 'always', order: 75 },
   { script: 'test:app-routing', group: 'platform', kind: 'unit', ci: 'always', order: 76 },
+  { script: 'test:industry-resolver', group: 'industry', kind: 'unit', ci: 'always', order: 77 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */

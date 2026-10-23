@@ -1,6 +1,7 @@
 import type { IndustryPluginManifest } from './pluginTypes';
 import { normalizeIndustryType, type IndustryType } from './types';
 import { getIndustryPlugin } from './registry';
+import { resolveIndustryId } from '@/core/industry/resolveIndustry';
 
 export interface IndustryContext {
   id: IndustryType;
@@ -17,7 +18,7 @@ export function resolveIndustryContext(
   raw: string | null | undefined,
   source: 'user' | 'org' | 'default' = 'default'
 ): IndustryContext {
-  const normalizedId = normalizeIndustryType(raw) ?? 'piano';
+  const normalizedId = resolveIndustryId(raw);
   const plugin = getIndustryPlugin(normalizedId);
 
   const context: IndustryContext = {
