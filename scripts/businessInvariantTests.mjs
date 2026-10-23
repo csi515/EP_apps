@@ -144,6 +144,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:role-matrix', group: 'authorization', kind: 'invariant', ci: 'always', order: 73 },
   { script: 'test:tenant-query', group: 'platform', kind: 'unit', ci: 'always', order: 74 },
   { script: 'test:policy-engine', group: 'capability', kind: 'unit', ci: 'always', order: 75 },
+  { script: 'test:app-routing', group: 'platform', kind: 'unit', ci: 'always', order: 76 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -287,7 +288,6 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:cross-cache-bridge': 'Refine QueryClient & StorageService cross-cache bridge unit',
   'test:book-schedule-slot': 'atomic schedule slot booking client & local mirror unit',
   'test:roles-permissions': 'tenant roles and permission matrix validation unit',
-  'test:app-routing': 'App layout routing and neutral endpoint mapping unit',
   'test:logger': 'Central logger and sensitive data masking unit',
   'test:network-status': 'PWA online and offline state observer unit',
 };

@@ -1,5 +1,6 @@
 import { type FC, type ReactNode, useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
+import { CAPABILITY_LIST_VIEWS } from './capabilityListViews';
 import {
   Home,
   Settings,
@@ -1166,6 +1167,16 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       <Suspense fallback={<div className="p-8 text-center text-slate-400">체험·상담 리드 파이프라인을 불러오는 중...</div>}>
         <TrialFunnelKanbanView />
       </Suspense>
+    ),
+    ...Object.fromEntries(
+      Object.entries(CAPABILITY_LIST_VIEWS).map(([tab, { View }]) => [
+        tab,
+        () => (
+          <Suspense fallback={<div className="p-8 text-center text-slate-400">화면을 불러오는 중...</div>}>
+            <View />
+          </Suspense>
+        ),
+      ])
     ),
     ...financeViewEntries,
     settings: () => <WorkplaceSettingsView />,
