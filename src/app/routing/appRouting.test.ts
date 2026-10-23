@@ -82,6 +82,56 @@ const CAPABILITY_ROUTE_PATHS = [
   "turn-queue",
   "work-payroll",
   "work-orders",
+  "dispatch",
+  "promotions",
+  "promotional-deals",
+  "turnaround",
+  "waitlist",
+  "leads",
+  "patents",
+  "patent-inventors",
+  "research-projects",
+  "research-project-gates",
+  "research-project-deliverables",
+  "leave-balances",
+  "leave-requests",
+  "pos-reconciliations",
+  "rfid-cards",
+  "valet-custody",
+  "coatroom-baggage",
+  "locker-overrides",
+  "sound-broadcasts",
+  "certificates",
+  "blacklist-guard",
+  "supervision-audits",
+  "privacy-audits",
+  "sublease-contracts",
+  "calibration-devices",
+  "access-keys",
+  "hazardous-waste",
+  "consumable-dispenser",
+  "utility-meters",
+  "staff-onboardings",
+  "skills-matrix",
+  "whistleblower-grievances",
+  "uniform-gear",
+  "petty-cash",
+  "tax-withholdings",
+  "profit-share",
+  "warranty-claims",
+  "custom-orders",
+  "media-assets",
+  "art-exhibitions",
+  "vip-profiles",
+  "study-groups",
+  "mentoring-pairs",
+  "pl-cashflows",
+  "fixed-assets",
+  "procurement-3way",
+  "fefo-lots",
+  "budget-ceilings",
+  "audit-trails",
+  "vendor-scorecards",
 ] as const;
 
 function runRoutingTests() {
@@ -104,6 +154,18 @@ function runRoutingTests() {
     "workspace/shuttle/routes",
     "workspace/shuttle/roster",
     "workspace/shuttle/my",
+    "workspace/volunteer",
+    "workspace/volunteer/manage",
+    "workspace/meal-survey",
+    "workspace/meal-survey/manage",
+    "workspace/meal-survey/settings",
+    "workspace/office-supply",
+    "workspace/office-supply/manage",
+    "workspace/office-supply/catalog",
+    "workspace/approvals",
+    // /workspace/:tab → IndustryAppRouter 탭
+    "workspace/dispatch",
+    "workspace/waitlist",
   ];
 
   // 1. 모든 Capability 번들의 리소스 list 경로가 CAPABILITY_ROUTE_PATHS 또는 DEDICATED_ROUTES에 의해 처리 가능한지 검증
@@ -137,3 +199,25 @@ function runRoutingTests() {
 }
 
 runRoutingTests();
+
+// 3. capability list 경로가 실제 App.tsx 라우트와 기존 화면 export에 연결됐는지 검증
+async function runCapabilityListViewWiringTests() {
+  const { readFileSync } = await import('node:fs');
+  const { CAPABILITY_LIST_VIEWS } = await import('@/app/industry/capabilityListViews');
+  const { TAB_REQUIRED_CAPABILITIES } = await import('@/app/industry/genericIndustryTabs');
+  const app = readFileSync(new URL('../../App.tsx', import.meta.url), 'utf8');
+  const block = app.slice(app.indexOf('const CAPABILITY_ROUTE_PATHS'));
+  const appPaths = new Set([...block.slice(0, block.indexOf('] as const')).matchAll(/"([^"]+)"/g)].map((m) => m[1]));
+  for (const [tab, { capability, exportName }] of Object.entries(CAPABILITY_LIST_VIEWS)) {
+    assert.ok(appPaths.has(tab), `App.tsx CAPABILITY_ROUTE_PATHS에 [${tab}] 누락`);
+    assert.deepEqual(TAB_REQUIRED_CAPABILITIES[tab], [capability], `[${tab}] 권한 capability 누락`);
+    const mod = (await import(`@/capabilities/${capability}`)) as Record<string, unknown>;
+    assert.equal(typeof mod[exportName], 'function', `[${capability}] ${exportName} export 없음`);
+  }
+  console.log(`appRouting.test.ts: ok (${Object.keys(CAPABILITY_LIST_VIEWS).length} capability list views wired)`);
+}
+
+void runCapabilityListViewWiringTests().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

@@ -93,6 +93,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:role-matrix',
   'test:tenant-query',
   'test:policy-engine',
+  'test:app-routing',
 ];
 
 const scripts = loadPackageScripts();
