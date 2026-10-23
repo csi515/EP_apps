@@ -85,6 +85,14 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:office-supply-request-engine',
   'test:sync-no-diff-delete',
   'test:sync-persist-helpers',
+  'test:atomic-booking',
+  'test:booking-logic',
+  'test:book-schedule-slot',
+  'test:jwt-revocation',
+  'test:roles-permissions',
+  'test:role-matrix',
+  'test:tenant-query',
+  'test:policy-engine',
 ];
 
 const scripts = loadPackageScripts();

@@ -136,6 +136,14 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:office-supply-request-engine', group: 'capability', kind: 'unit', ci: 'always', order: 65 },
   { script: 'test:sync-no-diff-delete', group: 'persistence', kind: 'unit', ci: 'always', order: 66 },
   { script: 'test:sync-persist-helpers', group: 'persistence', kind: 'unit', ci: 'always', order: 67 },
+  { script: 'test:atomic-booking', group: 'booking', kind: 'contract', ci: 'always', order: 68 },
+  { script: 'test:booking-logic', group: 'booking', kind: 'unit', ci: 'always', order: 69 },
+  { script: 'test:book-schedule-slot', group: 'booking', kind: 'unit', ci: 'always', order: 70 },
+  { script: 'test:jwt-revocation', group: 'authorization', kind: 'contract', ci: 'always', order: 71 },
+  { script: 'test:roles-permissions', group: 'authorization', kind: 'unit', ci: 'always', order: 72 },
+  { script: 'test:role-matrix', group: 'authorization', kind: 'invariant', ci: 'always', order: 73 },
+  { script: 'test:tenant-query', group: 'platform', kind: 'unit', ci: 'always', order: 74 },
+  { script: 'test:policy-engine', group: 'capability', kind: 'unit', ci: 'always', order: 75 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
