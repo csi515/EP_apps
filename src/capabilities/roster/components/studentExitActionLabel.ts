@@ -1,5 +1,6 @@
 import { getIndustryPlugin } from '@/core/industry/pluginHost';
 import { parseIndustryType } from '@/core/industry/types';
+import { getPluginFlag } from '@/core/industry/pluginFlagDefaults';
 
 /**
  * 학생 상세의 소프트 종료 확인·버튼에만 쓰는 동작 라벨.
@@ -13,5 +14,5 @@ export function getStudentExitActionLabel(
 ): '퇴원' | '종료' {
   const resolved = parseIndustryType(industry);
   if (!resolved) return '종료';
-  return getIndustryPlugin(resolved).usesWithdrawalExitLabel ? '퇴원' : '종료';
+  return getPluginFlag(getIndustryPlugin(resolved), 'usesWithdrawalExitLabel') ? '퇴원' : '종료';
 }

@@ -2,6 +2,7 @@ import type { NavTab } from '@/shared/navigation/navigationTypes';
 import type { ModuleTheme } from '@/shared/components/layout/moduleTheme';
 import { isBlankIndustryInput, normalizeIndustryType, type IndustryType } from './types';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
+import { getPluginFlag } from './pluginFlagDefaults';
 import type { IndustryAccent, IndustryAttendanceCopy } from './pluginTypes';
 import {
   getIndustryPluginAdapter,
@@ -50,7 +51,7 @@ export function getDangerZoneSessionLabel(
 /** 예약·서비스·이용권 중심 (필라테스·피부관리) */
 export function isAppointmentIndustry(industry: IndustryType | string | null | undefined): boolean {
   if (!industry) return false;
-  return Boolean(getIndustryPlugin(industry).isAppointment);
+  return getPluginFlag(getIndustryPlugin(industry), 'isAppointment');
 }
 
 /**
@@ -62,7 +63,7 @@ export function publicLandingAdultFirst(
   industry: IndustryType | string | null | undefined
 ): boolean {
   if (isBlankIndustryInput(industry)) return false;
-  return Boolean(getIndustryPlugin(industry).publicLandingAdultFirst);
+  return getPluginFlag(getIndustryPlugin(industry), 'publicLandingAdultFirst');
 }
 
 export function isGymIndustry(industry: IndustryType | string | null | undefined): boolean {
@@ -178,7 +179,7 @@ export function runsPinCheckInSideEffects(
   industry: IndustryType | string | null | undefined
 ): boolean {
   if (!industry) return false;
-  return Boolean(getInstalledIndustryPlugin(industry)?.runsPinCheckInSideEffects);
+  return getPluginFlag(getInstalledIndustryPlugin(industry), 'runsPinCheckInSideEffects');
 }
 
 /**
@@ -199,7 +200,7 @@ export function showsMakeupList(industry: IndustryType | string | null | undefin
 export function showsPracticeRoomTab(
   industry: IndustryType | string | null | undefined
 ): boolean {
-  return Boolean(getIndustryPlugin(industry).showsPracticeRoomTab);
+  return getPluginFlag(getIndustryPlugin(industry), 'showsPracticeRoomTab');
 }
 
 /**
@@ -224,7 +225,7 @@ export function showsAdultPracticeGuide(
   industry: IndustryType | string | null | undefined
 ): boolean {
   if (isBlankIndustryInput(industry)) return false;
-  return Boolean(getIndustryPlugin(industry).showsAdultPracticeGuide);
+  return getPluginFlag(getIndustryPlugin(industry), 'showsAdultPracticeGuide');
 }
 
 /**
@@ -237,7 +238,7 @@ export function showsAdultPracticeGuide(
 export function showsStaffPracticeGuide(
   industry: IndustryType | string | null | undefined
 ): boolean {
-  return Boolean(getIndustryPlugin(industry).showsStaffPracticeGuide);
+  return getPluginFlag(getIndustryPlugin(industry), 'showsStaffPracticeGuide');
 }
 
 /**
@@ -250,7 +251,7 @@ export function includesLinkedBillingIncome(
   industry: IndustryType | string | null | undefined
 ): boolean {
   if (isBlankIndustryInput(industry)) return false;
-  return Boolean(getInstalledIndustryPlugin(industry)?.includesLinkedBillingIncome);
+  return getPluginFlag(getInstalledIndustryPlugin(industry), 'includesLinkedBillingIncome');
 }
 
 /** 실(강의실·관리실 등) UI 설정 */
