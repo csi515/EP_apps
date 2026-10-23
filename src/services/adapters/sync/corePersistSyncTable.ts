@@ -2,10 +2,15 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../../../lib/supabase/database.types';
 import type { PersistAbortGuard } from './syncTypes';
 import { upsertThenDiffDelete } from './persistHelpers';
+import { pendingDeleteIds } from '../pendingMutations';
+import type { StorageKey } from '../storageKeys';
 
 export type CoreClient = SupabaseClient<Database, 'core'>;
 
-/** Core org 테이블 upsert 후 id diff-delete. false면 soft-fail(outbox 유지). */
+/**
+ * Core org 테이블 upsert 후 명시적 삭제(tombstone)만 반영. false면 soft-fail(outbox 유지).
+ * tombstoneKeys의 pending delete mutation id만 삭제한다 — 원격 목록과의 diff로 삭제를 추론하지 않는다.
+ */
 export async function syncTable(
   client: CoreClient,
   table:
@@ -25,7 +30,13 @@ export async function syncTable(
   orgId: string,
   currentIds: string[],
   upsertAll: () => Promise<boolean>,
-  options: { cachePresent: boolean; context: string; isAborted?: PersistAbortGuard }
+  options: {
+    cachePresent: boolean;
+    context: string;
+    isAborted?: PersistAbortGuard;
+    /** 삭제 tombstone을 읽을 로컬 storage key */
+    tombstoneKeys: StorageKey[];
+  }
 ): Promise<boolean> {
   return upsertThenDiffDelete({
     context: options.context,
@@ -33,15 +44,9 @@ export async function syncTable(
     currentIds,
     isAborted: options.isAborted,
     upsertAll,
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from(table)
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.id), error };
-    },
+    tombstoneIds: options.tombstoneKeys.flatMap((key) => pendingDeleteIds(key, orgId)),
     deleteIds: async (ids) => {
-      const { error } = await client.from(table).delete().in('id', ids);
+      const { error } = await client.from(table).delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });

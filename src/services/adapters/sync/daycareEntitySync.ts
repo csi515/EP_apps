@@ -1,3 +1,4 @@
+import { pendingDeleteIds } from '../pendingMutations';
 import type { CareJournal, MedicationRequest } from '@/industries/daycare/care/types';
 import { getCoreClient } from '@/lib/supabase';
 import { writeLocal } from '../localStorageEngine';
@@ -115,15 +116,9 @@ async function persistDaycareTable<T extends { id: string }>(
         (row) => client.from(table).upsert(row as never),
         (error) => console.error(`Failed to upsert core.${table}:`, error)
       ),
-    fetchRemoteIds: async () => {
-      const { data: existing, error } = await client
-        .from(table)
-        .select('id')
-        .eq('organization_id', orgId);
-      return { ids: (existing || []).map((r) => r.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(storageKey, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from(table).delete().in('id', ids);
+      const { error } = await client.from(table).delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });

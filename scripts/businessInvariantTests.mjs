@@ -134,6 +134,8 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:meal-survey-engine', group: 'capability', kind: 'unit', ci: 'always', order: 63 },
   { script: 'test:permission-visibility', group: 'authorization', kind: 'unit', ci: 'always', order: 64 },
   { script: 'test:office-supply-request-engine', group: 'capability', kind: 'unit', ci: 'always', order: 65 },
+  { script: 'test:sync-no-diff-delete', group: 'persistence', kind: 'unit', ci: 'always', order: 66 },
+  { script: 'test:sync-persist-helpers', group: 'persistence', kind: 'unit', ci: 'always', order: 67 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -301,7 +303,6 @@ export const INVENTORY_CANDIDATES = {
   'test:customer-session': 'platform/session 후보',
   'test:hydrate-modules': 'persistence 후보',
   'test:clear-business-caches': 'persistence 후보',
-  'test:sync-persist-helpers': 'persistence 후보',
   'test:create-organization-phone': 'organization 후보',
   'test:deeplink': 'platform. ci-cd에 있음',
   'test:bulk-import': 'students import. ci-cd에 있음',

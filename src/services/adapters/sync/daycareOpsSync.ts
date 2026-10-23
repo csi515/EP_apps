@@ -2,6 +2,7 @@
  * Daycare 운영 7종 hydrate/persist.
  * 로컬 기존 행은 remote에 없을 때만 병합해 유실하지 않는다.
  */
+import { pendingDeleteIds } from '../pendingMutations';
 import { getCoreClient } from '@/lib/supabase';
 import { readLocal, writeLocal } from '../localStorageEngine';
 import { applyDirtyListMerge } from '../pendingMutations';
@@ -180,12 +181,9 @@ async function persistOpsTable(
         (row) => client.from(table).upsert(row as never),
         (error) => console.error(`Failed to upsert core.${table}:`, error)
       ),
-    fetchRemoteIds: async () => {
-      const { data, error } = await client.from(table).select('id').eq('organization_id', orgId);
-      return { ids: (data || []).map((row) => row.id), error };
-    },
+    tombstoneIds: pendingDeleteIds(storageKey, orgId),
     deleteIds: async (ids) => {
-      const { error } = await client.from(table).delete().in('id', ids);
+      const { error } = await client.from(table).delete().eq('organization_id', orgId).in('id', ids);
       return { error };
     },
   });
