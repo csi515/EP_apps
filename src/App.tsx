@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import { Refine, Authenticated } from "@refinedev/core";
 import routerBindings, {
   CatchAllNavigate,
@@ -30,65 +30,58 @@ import { notificationProvider } from "./providers/notificationProvider";
 import { createI18nProvider } from "./providers/i18nProvider";
 import { liveProvider } from "./providers/liveProvider";
 import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/components";
+import { LoadingScreen } from "@/shared/components/LoadingScreen";
 
-import { VehicleShuttleManagementView } from "@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView";
-import { VehicleShuttleCommuteView } from "@/capabilities/vehicle_shuttle/ui/VehicleShuttleCommuteView";
 import { DynamicRoleSettingsPage, FinanceRouteGate } from "@/pages/settings/DynamicRoleSettingsPage";
-import { MemberList } from "@/pages/members/MemberList";
-import { KioskAttendancePage } from "@/pages/kiosk/KioskAttendancePage";
-import { ScheduleCalendarPage } from "@/capabilities/booking/pages/ScheduleCalendarPage";
-import { MemberBookingView } from "@/capabilities/booking/pages/MemberBookingView";
 import { ConsentSignatureModal } from "@/capabilities/safety_consent/ui/ConsentSignatureModal";
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
-import { DashboardPage } from "./pages/dashboard";
-import {
-  StudentListPage,
-  StudentCreatePage,
-  StudentShowPage,
-  StudentEditPage,
-} from "./pages/students";
-import { WeeklyTimetableView } from "@/capabilities/scheduling";
-import { TuitionManagementView } from "@/capabilities/billing";
 import { LoginPage } from "./pages/auth/LoginPage";
-import { ClaimTokenPage } from "./pages/customer/ClaimTokenPage";
-import { MyPassView } from "./pages/customer/MyPassView";
-import { RolesPage } from "./pages/settings/RolesPage";
-import { AcceptStaffInvitePage } from "./pages/invite/AcceptStaffInvitePage";
-import { QuickSetupPage } from "./pages/onboarding/QuickSetupPage";
-import { OrganizationTreePage } from "./pages/organization/OrganizationTreePage";
-import { WorkspaceResourcesPage } from "./pages/workspace/WorkspaceResourcesPage";
-import { WorkspaceFeedbacksPage } from "./pages/workspace/WorkspaceFeedbacksPage";
-import { RndPortalPage } from "./pages/workspace/RndPortalPage";
-import { WorkspaceIntranetHubPage } from "./pages/workspace/WorkspaceIntranetHubPage";
-import { WorkspaceMboPage } from "./pages/workspace/WorkspaceMboPage";
-import { WorkspaceApprovalsPage } from "./pages/workspace/WorkspaceApprovalsPage";
-import { WorkspaceSopRiskPage } from "./pages/workspace/WorkspaceSopRiskPage";
-import {
-  WorkspaceShuttleMyPage,
-  WorkspaceShuttleRosterPage,
-  WorkspaceShuttleRoutesPage,
-} from "./pages/workspace/WorkspaceShuttlePage";
-import {
-  WorkspaceVolunteerListPage,
-  WorkspaceVolunteerManagePage,
-} from "./pages/workspace/WorkspaceVolunteerPage";
-import {
-  WorkspaceMealSurveyMyPage,
-  WorkspaceMealSurveyManagePage,
-  WorkspaceMealSurveySettingsPage,
-} from "./pages/workspace/WorkspaceMealSurveyPage";
-import {
-  WorkspaceOfficeSupplyMyPage,
-  WorkspaceOfficeSupplyManagePage,
-  WorkspaceOfficeSupplyCatalogPage,
-} from "./pages/workspace/WorkspaceOfficeSupplyPage";
-import { PassesListPage } from "./pages/passes/list";
-import { LockersGridPage } from "./pages/lockers/grid";
-import { PublicStoreLandingPage } from "./pages/public/PublicStoreLandingPage";
 import { SuperAdminGuard } from "./pages/admin/SuperAdminGuard";
-import { SuperAdminTenantsPage } from "./pages/admin/SuperAdminTenantsPage";
 import { ImpersonationFloatingBanner } from "./components/layout/ImpersonationFloatingBanner";
+
+// 라우트 단위 코드 스플리팅: 초기 번들에서 부가 화면을 분리한다.
+const VehicleShuttleManagementView = lazy(() => import("@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView").then((m) => ({ default: m.VehicleShuttleManagementView })));
+const VehicleShuttleCommuteView = lazy(() => import("@/capabilities/vehicle_shuttle/ui/VehicleShuttleCommuteView").then((m) => ({ default: m.VehicleShuttleCommuteView })));
+const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
+const KioskAttendancePage = lazy(() => import("@/pages/kiosk/KioskAttendancePage").then((m) => ({ default: m.KioskAttendancePage })));
+const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
+const MemberBookingView = lazy(() => import("@/capabilities/booking/pages/MemberBookingView").then((m) => ({ default: m.MemberBookingView })));
+const DashboardPage = lazy(() => import("./pages/dashboard").then((m) => ({ default: m.DashboardPage })));
+const StudentListPage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentListPage })));
+const StudentCreatePage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentCreatePage })));
+const StudentShowPage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentShowPage })));
+const StudentEditPage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentEditPage })));
+const ClaimTokenPage = lazy(() => import("./pages/customer/ClaimTokenPage").then((m) => ({ default: m.ClaimTokenPage })));
+const MyPassView = lazy(() => import("./pages/customer/MyPassView").then((m) => ({ default: m.MyPassView })));
+const RolesPage = lazy(() => import("./pages/settings/RolesPage").then((m) => ({ default: m.RolesPage })));
+const AcceptStaffInvitePage = lazy(() => import("./pages/invite/AcceptStaffInvitePage").then((m) => ({ default: m.AcceptStaffInvitePage })));
+const QuickSetupPage = lazy(() => import("./pages/onboarding/QuickSetupPage").then((m) => ({ default: m.QuickSetupPage })));
+const OrganizationTreePage = lazy(() => import("./pages/organization/OrganizationTreePage").then((m) => ({ default: m.OrganizationTreePage })));
+const WorkspaceResourcesPage = lazy(() => import("./pages/workspace/WorkspaceResourcesPage").then((m) => ({ default: m.WorkspaceResourcesPage })));
+const WorkspaceFeedbacksPage = lazy(() => import("./pages/workspace/WorkspaceFeedbacksPage").then((m) => ({ default: m.WorkspaceFeedbacksPage })));
+const RndPortalPage = lazy(() => import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndPortalPage })));
+const WorkspaceIntranetHubPage = lazy(() => import("./pages/workspace/WorkspaceIntranetHubPage").then((m) => ({ default: m.WorkspaceIntranetHubPage })));
+const WorkspaceMboPage = lazy(() => import("./pages/workspace/WorkspaceMboPage").then((m) => ({ default: m.WorkspaceMboPage })));
+const WorkspaceApprovalsPage = lazy(() => import("./pages/workspace/WorkspaceApprovalsPage").then((m) => ({ default: m.WorkspaceApprovalsPage })));
+const WorkspaceSopRiskPage = lazy(() => import("./pages/workspace/WorkspaceSopRiskPage").then((m) => ({ default: m.WorkspaceSopRiskPage })));
+const WorkspaceShuttleMyPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleMyPage })));
+const WorkspaceShuttleRosterPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleRosterPage })));
+const WorkspaceShuttleRoutesPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleRoutesPage })));
+const WorkspaceVolunteerListPage = lazy(() => import("./pages/workspace/WorkspaceVolunteerPage").then((m) => ({ default: m.WorkspaceVolunteerListPage })));
+const WorkspaceVolunteerManagePage = lazy(() => import("./pages/workspace/WorkspaceVolunteerPage").then((m) => ({ default: m.WorkspaceVolunteerManagePage })));
+const WorkspaceMealSurveyMyPage = lazy(() => import("./pages/workspace/WorkspaceMealSurveyPage").then((m) => ({ default: m.WorkspaceMealSurveyMyPage })));
+const WorkspaceMealSurveyManagePage = lazy(() => import("./pages/workspace/WorkspaceMealSurveyPage").then((m) => ({ default: m.WorkspaceMealSurveyManagePage })));
+const WorkspaceMealSurveySettingsPage = lazy(() => import("./pages/workspace/WorkspaceMealSurveyPage").then((m) => ({ default: m.WorkspaceMealSurveySettingsPage })));
+const WorkspaceOfficeSupplyMyPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyMyPage })));
+const WorkspaceOfficeSupplyManagePage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyManagePage })));
+const WorkspaceOfficeSupplyCatalogPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyCatalogPage })));
+const PassesListPage = lazy(() => import("./pages/passes/list").then((m) => ({ default: m.PassesListPage })));
+const LockersGridPage = lazy(() => import("./pages/lockers/grid").then((m) => ({ default: m.LockersGridPage })));
+const PublicStoreLandingPage = lazy(() => import("./pages/public/PublicStoreLandingPage").then((m) => ({ default: m.PublicStoreLandingPage })));
+const WeeklyTimetableView = lazy(() => import("@/capabilities/scheduling").then((m) => ({ default: m.WeeklyTimetableView })));
+const TuitionManagementView = lazy(() => import("@/capabilities/billing").then((m) => ({ default: m.TuitionManagementView })));
+const SuperAdminTenantsPage = lazy(() => import("./pages/admin/SuperAdminTenantsPage").then((m) => ({ default: m.SuperAdminTenantsPage })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -290,6 +283,7 @@ const RefineApp: React.FC = () => {
         liveMode: "auto",
       }}
     >
+      <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route
           element={
@@ -326,7 +320,9 @@ const RefineApp: React.FC = () => {
                   <Header />
                   <div className="flex min-h-0 flex-1 flex-col">
                     <Layout>
-                      <Outlet />
+                      <Suspense fallback={<LoadingScreen message="화면을 불러오는 중..." />}>
+                        <Outlet />
+                      </Suspense>
                     </Layout>
                   </div>
                   <ConfirmDialog />
@@ -420,6 +416,7 @@ const RefineApp: React.FC = () => {
           <Route path="/login" element={<LoginPage />} />
         </Route>
       </Routes>
+      </Suspense>
       <UnsavedChangesNotifier />
     </Refine>
   );

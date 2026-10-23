@@ -1,14 +1,30 @@
-import React, { useCallback, type FC, type ReactNode } from 'react';
+import React, { Suspense, lazy, useCallback, type FC, type ReactNode } from 'react';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageHydrator } from '@/StorageHydrator';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
-import { ParentShell } from '@/modules/parent/ParentShell';
-import { CustomerShell } from '@/core/customer/CustomerShell';
 import { OwnerOperationStoppedView } from '@/core/organizations/OwnerOperationStoppedView';
 import { OrganizationSelector } from '@/core/organizations/OrganizationSelector';
 import { PendingStaffInviteGate } from '@/core/staff/components/PendingStaffInviteGate';
 import { IndustryAppRouter } from '@/app/industry/IndustryAppRouter';
+
+// 포털 셸은 해당 역할 진입 시에만 로드한다 (초기 번들 분리).
+const LazyParentShell = lazy(() =>
+  import('@/modules/parent/ParentShell').then((m) => ({ default: m.ParentShell }))
+);
+const LazyCustomerShell = lazy(() =>
+  import('@/core/customer/CustomerShell').then((m) => ({ default: m.CustomerShell }))
+);
+const ParentShell: FC = () => (
+  <Suspense fallback={<LoadingScreen />}>
+    <LazyParentShell />
+  </Suspense>
+);
+const CustomerShell: FC = () => (
+  <Suspense fallback={<LoadingScreen />}>
+    <LazyCustomerShell />
+  </Suspense>
+);
 
 interface SupabaseAppGateProps {
   children?: ReactNode;
