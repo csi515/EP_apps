@@ -200,6 +200,7 @@
     "test:volunteer-activity-engine": "tsx src/capabilities/volunteer_activity/domain/volunteerActivityEngine.test.ts",
     "test:meal-survey-engine": "tsx src/capabilities/meal_survey/domain/mealSurveyEngine.test.ts",
     "test:office-supply-request-engine": "tsx src/capabilities/office_supply_request/domain/officeSupplyRequestEngine.test.ts",
+    "test:driver-commute-empty-stops": "tsx src/capabilities/vehicle_shuttle/ui/DriverCommuteDashboardView.test.ts",
     "test:permissions-invariant": "tsx src/core/auth/permissions.invariant.test.ts",
     "test:org-access-invariant": "tsx src/core/invariants/orgAccess.invariant.test.ts",
     "test:point-balance-invariant": "tsx src/core/invariants/pointBalance.invariant.test.ts",

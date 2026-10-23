@@ -54,6 +54,15 @@ export function DriverCommuteDashboardView({
   const isFirstStop = currentStopIndex === 0;
   const isLastStop = currentStopIndex >= stopsWithStaff.length - 1;
 
+  // 정류장이 없는 노선은 운행표를 그릴 수 없으므로 빈 상태를 보여준다
+  if (!currentStop) {
+    return (
+      <div className="max-w-md mx-auto text-center py-12 text-slate-400" data-testid="driver-commute-empty-stops">
+        등록된 정류장이 없습니다.
+      </div>
+    );
+  }
+
   // 탑승 체크 토글
   const handleToggleBoarding = async (requestId: string, staffName: string) => {
     const currentStatus = boardingMap[requestId] || 'SCHEDULED';

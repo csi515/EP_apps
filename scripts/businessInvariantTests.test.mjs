@@ -95,6 +95,7 @@ const P20_1_BUSINESS_INVARIANT_CHAIN = [
   'test:policy-engine',
   'test:app-routing',
   'test:industry-resolver',
+  'test:driver-commute-empty-stops',
 ];
 
 const scripts = loadPackageScripts();
