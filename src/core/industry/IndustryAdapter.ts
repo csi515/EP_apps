@@ -7,6 +7,7 @@ import type {
 } from './pluginTypes';
 import type { BookingIndustryAdapter } from './bookingIndustryAdapter';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
+import { getPluginFlag } from './pluginFlagDefaults';
 import { buildGenericPluginManifest } from './genericPlugin';
 import { getIndustryDefinition, INDUSTRY_DEFINITIONS } from './catalog';
 import { isBlankIndustryInput, type IndustryType } from './types';
@@ -120,39 +121,39 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
   hasFeature(feature: IndustryFeatureKey): boolean {
     switch (feature) {
       case 'class_based_schedule':
-        return Boolean(this.manifest.usesClassBasedSchedule);
+        return getPluginFlag(this.manifest, 'usesClassBasedSchedule');
       case 'deposit':
-        return Boolean(this.manifest.supportsDeposit);
+        return getPluginFlag(this.manifest, 'supportsDeposit');
       case 'textbooks_link':
-        return Boolean(this.manifest.showsTextbooksLink);
+        return getPluginFlag(this.manifest, 'showsTextbooksLink');
       case 'pin_side_effects':
-        return Boolean(this.manifest.runsPinCheckInSideEffects);
+        return getPluginFlag(this.manifest, 'runsPinCheckInSideEffects');
       case 'makeup_list':
-        return Boolean(this.manifest.showsMakeupList);
+        return getPluginFlag(this.manifest, 'showsMakeupList');
       case 'withdrawal_exit_label':
-        return Boolean(this.manifest.usesWithdrawalExitLabel);
+        return getPluginFlag(this.manifest, 'usesWithdrawalExitLabel');
       case 'attendance_with_pass':
-        return Boolean(this.manifest.savesAttendanceWithPass);
+        return getPluginFlag(this.manifest, 'savesAttendanceWithPass');
       case 'practice_room_tab':
-        return Boolean(this.manifest.showsPracticeRoomTab);
+        return getPluginFlag(this.manifest, 'showsPracticeRoomTab');
       case 'customer_points':
-        return Boolean(this.manifest.showsCustomerPoints);
+        return getPluginFlag(this.manifest, 'showsCustomerPoints');
       case 'adult_practice_guide':
-        return Boolean(this.manifest.showsAdultPracticeGuide);
+        return getPluginFlag(this.manifest, 'showsAdultPracticeGuide');
       case 'staff_practice_guide':
-        return Boolean(this.manifest.showsStaffPracticeGuide);
+        return getPluginFlag(this.manifest, 'showsStaffPracticeGuide');
       case 'linked_billing_income':
-        return Boolean(this.manifest.includesLinkedBillingIncome);
+        return getPluginFlag(this.manifest, 'includesLinkedBillingIncome');
       case 'performance_videos':
-        return Boolean(this.manifest.showsPerformanceVideos);
+        return getPluginFlag(this.manifest, 'showsPerformanceVideos');
       case 'song_stamps':
-        return Boolean(this.manifest.showsSongStamps);
+        return getPluginFlag(this.manifest, 'showsSongStamps');
       case 'public_landing_adult_first':
-        return Boolean(this.manifest.publicLandingAdultFirst);
+        return getPluginFlag(this.manifest, 'publicLandingAdultFirst');
       case 'school_fields':
-        return Boolean(this.manifest.showSchoolFields);
+        return getPluginFlag(this.manifest, 'showSchoolFields');
       case 'pickup_fields':
-        return Boolean(this.manifest.showPickupFields);
+        return getPluginFlag(this.manifest, 'showPickupFields');
       default:
         return false;
     }
@@ -230,14 +231,14 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
   }
 
   getAttendanceConfig(): AttendanceCapabilityConfig {
-    const isAppt = Boolean(this.manifest.isAppointment);
+    const isAppt = getPluginFlag(this.manifest, 'isAppointment');
     const defaultNoun = this.manifest.id === 'daycare' ? '등하원' : isAppt ? '출입' : '출결';
     return {
       enabled: this.manifest.attendanceDefault !== false,
       recordNoun: this.manifest.attendanceCopy?.recordNoun ?? defaultNoun,
       usesClassBasedSchedule: this.hasFeature('class_based_schedule'),
       passDeductionMode: this.hasFeature('attendance_with_pass') ? 'atomic_rpc' : 'none',
-      summaryMetricColor: (this.manifest.attendanceSummaryMetric as any) ?? 'indigo',
+      summaryMetricColor: getPluginFlag(this.manifest, 'attendanceSummaryMetric') as any,
       runKioskSideEffects: this.hasFeature('pin_side_effects'),
       attendanceCopy: this.attendanceCopy,
     };
@@ -286,8 +287,8 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
         attendance: this.getAttendanceConfig(),
         portal: this.getPortalConfig(),
         booking: {
-          enabled: Boolean(this.manifest.isAppointment || this.manifest.bookingAdapter),
-          isAppointment: Boolean(this.manifest.isAppointment),
+          enabled: getPluginFlag(this.manifest, 'isAppointment') || Boolean(this.manifest.bookingAdapter),
+          isAppointment: getPluginFlag(this.manifest, 'isAppointment'),
           supportsDeposit: this.hasFeature('deposit'),
           bookingAdapter: this.bookingAdapter,
         },

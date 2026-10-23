@@ -10,6 +10,7 @@ import type { IndustryType } from '@/core/industry/types';
 import { CheckCircle2, AlertCircle, Award, Plus } from 'lucide-react';
 import { Section } from './shared';
 import { getIndustryPlugin } from '@/core/industry/pluginHost';
+import { getPluginFlag } from '@/core/industry/pluginFlagDefaults';
 import { EmptyState } from '@/shared/components';
 import { getStudentStampBoardSlot } from '../slots/parentPortalSlots';
 
@@ -76,7 +77,7 @@ export function ParentProgressView({
   const levelItems = studentLevel ? items.filter((i) => i.levelId === studentLevel.id) : [];
   
   const plugin = getIndustryPlugin(industryType);
-  const showSongStamps = plugin.showsSongStamps && Boolean(organizationId);
+  const showSongStamps = getPluginFlag(plugin, 'showsSongStamps') && Boolean(organizationId);
 
   const openCreate = () => {
     setForm({

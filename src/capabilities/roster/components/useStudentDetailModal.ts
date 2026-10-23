@@ -36,6 +36,7 @@ import {
   nextManualAttendanceClassId,
   resolveManualAttendanceClass,
 } from './detail/studentManualAttendanceClass';
+import { getPluginFlag } from '@/core/industry/pluginFlagDefaults';
 
 const WEEKDAY_KO: DayOfWeek[] = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -292,7 +293,7 @@ export function useStudentDetailModal({
     const existing = StorageService.getAttendance().find(
       (r) => r.date === newAttDate && r.studentId === student.id && r.classId === classId
     );
-    if (industryPlugin.savesAttendanceWithPass) {
+    if (getPluginFlag(industryPlugin, 'savesAttendanceWithPass')) {
       const result = await saveAttendanceWithPass({
         student,
         nextStatus: status,

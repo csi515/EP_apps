@@ -11,6 +11,7 @@ import type {
   RosterPresentationPolicy,
   UnifiedRosterConfig,
 } from '../types/rosterSchema';
+import { getPluginFlag } from '@/core/industry/pluginFlagDefaults';
 
 export interface RosterConfigOptions {
   customerLabel?: string;
@@ -28,14 +29,14 @@ export function getRosterConfigForIndustry(
 ): UnifiedRosterConfig {
   const plugin = getIndustryPlugin(industry);
   const showSchool = getShowSchoolFields(industry);
-  const showPickup = Boolean(plugin.showPickupFields);
+  const showPickup = getPluginFlag(plugin, 'showPickupFields');
   const customFieldsDef = getCustomFieldsForIndustry(industry);
 
   const entityLabel = options?.customerLabel || plugin.customerLabel || '고객';
   const staffLabel = options?.staffLabel || '강사';
   const serviceLabel = options?.serviceLabel || '수업';
   const feeLabel = plugin.feeLabel || '수강료';
-  const exitActionLabel = plugin.usesWithdrawalExitLabel ? '퇴원' : '종료';
+  const exitActionLabel = getPluginFlag(plugin, 'usesWithdrawalExitLabel') ? '퇴원' : '종료';
 
   const presentation: RosterPresentationPolicy = {
     entityLabel,
