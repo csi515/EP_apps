@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthProvider';
 import * as authService from '../services/authService';
 import { consumeOAuthCallbackError } from '../oauthCallbackError';
@@ -6,9 +7,22 @@ import { saveOAuthSignupIntent } from '../utils/oauthSignupIntent';
 
 export type AuthMode = 'login' | 'signup' | 'forgot';
 
+function resolveInitialMode(pathname: string, search: string): AuthMode {
+  const params = new URLSearchParams(search);
+  const queryMode = params.get('mode');
+  if (queryMode === 'forgot') return 'forgot';
+  if (queryMode === 'signup') return 'signup';
+  if (queryMode === 'login') return 'login';
+  if (pathname.endsWith('/signup')) return 'signup';
+  return 'login';
+}
+
 export function useAuthForm() {
   const { signIn, signUp, signInWithNaver } = useAuth();
-  const [mode, setMode] = useState<AuthMode>('login');
+  const location = useLocation();
+  const [mode, setMode] = useState<AuthMode>(() =>
+    resolveInitialMode(location.pathname, location.search)
+  );
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -19,16 +33,20 @@ export function useAuthForm() {
   const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
+    setMode(resolveInitialMode(location.pathname, location.search));
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
     const oauthError = consumeOAuthCallbackError();
     if (!oauthError) return;
     setError(oauthError);
   }, []);
 
-  const switchMode = (next: AuthMode) => {
+  const switchMode = useCallback((next: AuthMode) => {
     setMode(next);
     setError(null);
     setInfo(null);
-  };
+  }, []);
 
   const handleNaver = async () => {
     setError(null);

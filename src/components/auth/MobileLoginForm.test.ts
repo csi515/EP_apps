@@ -72,7 +72,19 @@ async function runTests() {
     'Kakao and Naver must be arranged in a 2-column grid'
   );
 
-  // 4. Apple guideline compliance check
+  // 4. SNS login temporarily disabled until OAuth is wired
+  assert.match(
+    code,
+    /SNS_LOGIN_ENABLED\s*=\s*false/,
+    'SNS_LOGIN_ENABLED must be false until social login is ready'
+  );
+  assert.match(
+    code,
+    /data-testid=["']sns-login-disabled-hint["']/,
+    'Disabled SNS login must show a coming-soon hint'
+  );
+
+  // 4b. Apple guideline compliance check
   assert.match(
     code,
     /Apple로 계속하기|Sign in with Apple/,
@@ -84,7 +96,46 @@ async function runTests() {
     'Apple button must conform to Apple design guidelines (black background)'
   );
 
-  // 5. LoginPage integration check
+  // 5. Signup / forgot entry points on login form
+  assert.match(
+    code,
+    /data-testid=["']link-signup["']/,
+    'MobileLoginForm must expose a signup link'
+  );
+  assert.match(
+    code,
+    /to=["']\/signup["']/,
+    'Signup link must navigate to /signup'
+  );
+  assert.match(
+    code,
+    /data-testid=["']link-forgot-password["']/,
+    'MobileLoginForm must expose a forgot-password link'
+  );
+  assert.match(
+    code,
+    /to=["']\/signup\?mode=forgot["']/,
+    'Forgot-password link must navigate to /signup?mode=forgot'
+  );
+
+  // 5b. LoginPage must surface auth failure on success:false (Refine contract)
+  assert.match(
+    loginPageCode,
+    /!data\?\.success/,
+    'LoginPage must check data.success before navigating after login'
+  );
+  assert.match(
+    loginPageCode,
+    /mapLoginErrorMessage/,
+    'LoginPage must map login errors for Korean user feedback'
+  );
+  assert.doesNotMatch(
+    loginPageCode,
+    /Project Moa v2/,
+    'LoginPage must not show Project Moa v2 branding'
+  );
+
+  // 5c. LoginPage integration check
   assert.match(
     loginPageCode,
     /<MobileLoginForm/,

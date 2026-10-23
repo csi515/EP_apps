@@ -37,6 +37,7 @@ import { ConsentSignatureModal } from "@/capabilities/safety_consent/ui/ConsentS
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
 import { LoginPage } from "./pages/auth/LoginPage";
+import { AuthPage } from "./core/auth/AuthPage";
 import { SuperAdminGuard } from "./pages/admin/SuperAdminGuard";
 import { ImpersonationFloatingBanner } from "./components/layout/ImpersonationFloatingBanner";
 // E2E 전용 /e2e/shuttle-commute 라우트가 즉시 렌더링을 가정하므로 eager import 유지
@@ -415,6 +416,7 @@ const RefineApp: React.FC = () => {
           }
         >
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<AuthPage />} />
         </Route>
       </Routes>
       </Suspense>

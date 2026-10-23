@@ -27,8 +27,9 @@ export function AuthLayout({ mode, children }: AuthLayoutProps) {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-lg mb-4">
             <Layers className="w-7 h-7" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">{appBrand.fullName}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">모아</h1>
           <p className="text-sm text-slate-500 mt-2">{subtitle}</p>
+          <p className="text-xs text-slate-400 mt-1">{appBrand.description}</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8">

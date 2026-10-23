@@ -13,6 +13,8 @@ import { MobileLoginForm } from "@/components/auth/MobileLoginForm";
 import { useAuth } from "@/core/auth/AuthProvider";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 import { loginWithToss } from "@/core/auth/services/tossAuthService";
+import { mapLoginErrorMessage } from "@/core/auth/utils/mapLoginErrorMessage";
+import { appBrand } from "@/core/brand";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -103,13 +105,16 @@ export const LoginPage: React.FC = () => {
       { email, password, rememberMe } as any,
       {
         onSuccess: (data: any) => {
-          const redirectTo = data?.redirectTo || "/workspace";
-          navigate(redirectTo);
+          // Refine authProvider는 실패 시에도 resolve({ success: false }) 하므로
+          // onError가 아니라 onSuccess에서 success를 반드시 검사한다.
+          if (!data?.success) {
+            setErrorMessage(mapLoginErrorMessage(data?.error?.message));
+            return;
+          }
+          navigate(data?.redirectTo || "/workspace");
         },
         onError: (error: any) => {
-          setErrorMessage(
-            error?.message || "이메일 또는 비밀번호가 올바르지 않습니다."
-          );
+          setErrorMessage(mapLoginErrorMessage(error?.message));
         },
       }
     );
@@ -136,15 +141,15 @@ export const LoginPage: React.FC = () => {
             </div>
             <div>
               <span className="text-xs font-semibold tracking-wider text-indigo-400 uppercase">
-                Enterprise Cloud
+                {appBrand.acronym}
               </span>
-              <h2 className="text-xl font-extrabold tracking-tight">Project Moa v2</h2>
+              <h2 className="text-xl font-extrabold tracking-tight">모아</h2>
             </div>
           </div>
 
           <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-indigo-200 text-xs font-medium mb-6">
             <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
-            <span>Multi-vertical Atomic OS</span>
+            <span>{appBrand.tagline}</span>
           </div>
 
           {/* 서비스 가치 메인 카피 */}
@@ -155,7 +160,7 @@ export const LoginPage: React.FC = () => {
             </span>
           </h1>
           <p className="text-sm xl:text-base text-slate-400 leading-relaxed max-w-lg">
-            비용 0원으로 시작하는 올인원 매장 파트너. 출결, 회원권, 수납을 사업주 화면에서 바로 이어갑니다.
+            {appBrand.description}. 출결·회원권·수납을 사업주 화면에서 바로 이어갑니다.
           </p>
         </div>
 
@@ -205,9 +210,9 @@ export const LoginPage: React.FC = () => {
             <div className="inline-flex items-center justify-center w-13 h-13 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100 mb-3">
               <Layers className="w-7 h-7" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Project Moa v2</h1>
+            <h1 className="text-2xl font-bold text-slate-900">모아</h1>
             <p className="text-xs text-slate-500 mt-1">
-              출결, 회원권, 매장 운영을 종이 장부 없이 한 손으로
+              {appBrand.description}
             </p>
           </div>
 

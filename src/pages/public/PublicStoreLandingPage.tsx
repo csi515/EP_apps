@@ -413,7 +413,7 @@ export const PublicStoreLandingPage: React.FC = () => {
           <AdSlotPlaceholder format="leaderboard" className="mt-12 mb-4" />
 
           <div className="flex flex-col items-center justify-between gap-3 text-xs text-slate-500 sm:flex-row">
-            <p>© {new Date().getFullYear()} {store.name}. Powered by MOA v2.</p>
+            <p>© {new Date().getFullYear()} {store.name}. Powered by MOA.</p>
             <div className="flex items-center gap-4">
               <Link to="/login" className="hover:text-indigo-600">
                 관리자/직원 로그인
