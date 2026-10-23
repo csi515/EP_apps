@@ -1,1 +1,4 @@
-/* /index.html 200
+# Cloudflare Pages / Workers Static Assets SPA Routing
+# Do not add global SPA wildcard rewrite here. Cloudflare URL normalization strips .html or /index,
+# which triggers an infinite redirect loop error [code: 100324].
+# Cloudflare Pages natively falls back to root index.html for Single-Page Applications when 404.html is absent.

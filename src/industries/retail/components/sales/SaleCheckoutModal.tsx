@@ -15,6 +15,7 @@ import {
   type SaleCartLine,
   type SaleCreateInput,
   type SalePaymentMethod,
+  type SaleWithItems,
 } from '../../types/sale';
 import { POS_PAYMENT_OPTIONS, SALE_POS_COPY as COPY } from './salePosCopy';
 import { SaleCustomerPicker } from './SaleCustomerPicker';
@@ -24,7 +25,7 @@ interface Props {
   organizationId: string;
   lines: SaleCartLine[];
   onClose: () => void;
-  onCompleted: (totalAmount: number) => void;
+  onCompleted: (totalAmount: number, sale?: SaleWithItems) => void;
   onError: (message: string) => void;
 }
 
@@ -141,7 +142,7 @@ export const SaleCheckoutModal: FC<Props> = ({
         items: buildSaleItems(),
       });
       const paid = Math.max(0, sale.totalAmount - (sale.pointsUsed ?? 0));
-      onCompleted(paid);
+      onCompleted(paid, sale);
       onClose();
     } catch (err) {
       onError(err instanceof Error ? err.message : COPY.saleError);

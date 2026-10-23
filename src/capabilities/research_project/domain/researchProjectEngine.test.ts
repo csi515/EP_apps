@@ -8,6 +8,11 @@ import {
   createResearchProject,
   decideGate,
   recordBudgetSpend,
+  formatDeliverableTitle,
+  parseDeliverableType,
+  DELIVERABLE_TYPE_LABELS,
+  DELIVERABLE_STATUS_LABELS,
+  MEMBER_ROLE_LABELS,
   getCurrentGate,
   getLeadName,
   getCoLeadNames,
@@ -166,6 +171,30 @@ function run() {
     assert.equal(canDirectDecideGate(marked.project!.gates[0]), false);
   }
 
+
+  // 7. 학술/연구 산출물 유형 포맷팅 및 파싱 (대학 연구실 대응)
+  {
+    assert.equal(formatDeliverableTitle('paper', 'SCI 저널 투고 논문'), '[학술논문] SCI 저널 투고 논문');
+    assert.equal(formatDeliverableTitle('thesis', '[논문] 석사학위 디펜스 논문'), '[학위논문] 석사학위 디펜스 논문');
+    assert.equal(formatDeliverableTitle('conference', 'KIISE 학회 구두발표 초록'), '[학회발표] KIISE 학회 구두발표 초록');
+    assert.equal(formatDeliverableTitle('patent', 'AI 특허 출원서'), '[특허] AI 특허 출원서');
+
+    const parsedPaper = parseDeliverableType('[학술논문] 강화학습 기반 공정제어');
+    assert.equal(parsedPaper.type, 'paper');
+    assert.equal(parsedPaper.cleanTitle, '강화학습 기반 공정제어');
+
+    const parsedThesis = parseDeliverableType('[학위논문] 박사학위 최종 논문');
+    assert.equal(parsedThesis.type, 'thesis');
+    assert.equal(parsedThesis.cleanTitle, '박사학위 최종 논문');
+
+    const parsedRaw = parseDeliverableType('기타 일반 보고서');
+    assert.equal(parsedRaw.type, 'other');
+    assert.equal(parsedRaw.cleanTitle, '기타 일반 보고서');
+
+    assert.ok(MEMBER_ROLE_LABELS.lead.includes('PI'));
+    assert.ok(MEMBER_ROLE_LABELS.co_lead.includes('랩장'));
+    assert.ok(MEMBER_ROLE_LABELS.member.includes('대학원생'));
+  }
   console.log('[test:research-project-engine] ok');
 }
 

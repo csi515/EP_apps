@@ -305,6 +305,7 @@ export interface IndustryPresetDefinition {
   roles?: readonly PresetRoleTemplate[];
   onboardingSteps?: readonly string[];
   readinessLevel?: PresetReadinessLevel;
+  hiddenInMoa?: boolean;
 }
 
 export interface AssembledPresetResult {

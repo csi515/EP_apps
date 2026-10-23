@@ -65,10 +65,62 @@ export function buildMemberProjectLoad(
 }
 
 export const MEMBER_ROLE_LABELS: Record<ResearchMemberRole, string> = {
-  lead: '연구 담당자',
-  co_lead: '부담당자',
-  member: '참여연구원',
+  lead: '연구 책임자 (PI/연구담당)',
+  co_lead: '부책임자 (랩장/부담당)',
+  member: '참여연구원 (대학원생/팀원)',
 };
+
+/** 학술 및 R&D 산출물 세부 분류 */
+export type DeliverableType =
+  | 'paper'      // 학술 논문 (SCI/KCI 등)
+  | 'conference' // 학회 발표 (구두/포스터)
+  | 'thesis'     // 학위 논문 (석사/박사)
+  | 'report'     // 연구 보고서 (연차/최종)
+  | 'patent'     // 특허 출원/등록
+  | 'code'       // 소스코드/데이터셋
+  | 'other';     // 기타
+
+export const DELIVERABLE_TYPE_LABELS: Record<DeliverableType, string> = {
+  paper: '학술논문',
+  conference: '학회발표',
+  thesis: '학위논문',
+  report: '연구보고서',
+  patent: '특허',
+  code: '코드/데이터',
+  other: '기타',
+};
+
+export const DELIVERABLE_STATUS_LABELS: Record<DeliverableStatus, string> = {
+  planned: '계획',
+  submitted: '제출/투고',
+  accepted: '게재/승인',
+  rejected: '반려/거절',
+};
+
+/** 산출물 제목에 유형 태그 결합 */
+export function formatDeliverableTitle(type: DeliverableType, rawTitle: string): string {
+  const clean = rawTitle.replace(/^\[(논문|학술논문|학회|학회발표|학위논문|디펜스|보고서|연구보고서|특허|코드|데이터|코드\/데이터|기타)\]\s*/i, '').trim();
+  const label = DELIVERABLE_TYPE_LABELS[type] || '기타';
+  return '[' + label + '] ' + (clean || rawTitle.trim());
+}
+
+/** 산출물 제목에서 유형 태그와 실제 제목 분리 파싱 */
+export function parseDeliverableType(title: string): { type: DeliverableType; cleanTitle: string } {
+  const trimmed = title.trim();
+  const match = trimmed.match(/^\[(.*?)\]\s*(.*)$/);
+  if (!match) {
+    return { type: 'other', cleanTitle: trimmed };
+  }
+  const tag = match[1].trim().toLowerCase();
+  const cleanTitle = match[2].trim();
+  if (tag === '학술논문' || tag === '논문' || tag === 'paper') return { type: 'paper', cleanTitle };
+  if (tag === '학회발표' || tag === '학회' || tag === 'conference') return { type: 'conference', cleanTitle };
+  if (tag === '학위논문' || tag === '디펜스' || tag === 'thesis') return { type: 'thesis', cleanTitle };
+  if (tag === '연구보고서' || tag === '보고서' || tag === 'report') return { type: 'report', cleanTitle };
+  if (tag === '특허' || tag === 'patent') return { type: 'patent', cleanTitle };
+  if (tag === '코드/데이터' || tag === '코드' || tag === '데이터' || tag === 'code') return { type: 'code', cleanTitle };
+  return { type: 'other', cleanTitle };
+}
 
 export interface ResearchMember {
   memberId: string;

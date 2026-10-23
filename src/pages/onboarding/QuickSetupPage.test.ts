@@ -37,4 +37,38 @@ assert.equal(isEnterpriseOrManufacturingPreset('general_enterprise', 'enterprise
 assert.equal(isEnterpriseOrManufacturingPreset('iso_ims_enterprise', 'enterprise'), true, 'ISO 인증 기업은 부서 설정 노출');
 assert.equal(isEnterpriseOrManufacturingPreset('rnd_lab_management', 'enterprise'), true, 'R&D 연구소는 부서 설정 노출');
 
+// 3. personal_plant_ops 프리셋 EP_apps 명칭 및 moa 앱 비노출/선택 불가 검증
+import {
+  getIndustryPreset,
+  listMoaVisiblePresets,
+  isPresetVisibleInMoa,
+} from '@/app/presets/presetRegistry';
+
+const plantPreset = getIndustryPreset('personal_plant_ops');
+assert.ok(plantPreset, 'personal_plant_ops 프리셋이 존재해야 합니다.');
+assert.equal(plantPreset.name, 'EP_apps', 'personal_plant_ops 프리셋의 이름은 EP_apps 여야 합니다.');
+assert.equal(plantPreset.hiddenInMoa, true, 'personal_plant_ops는 moa 앱에서 숨김 처리되어야 합니다.');
+
+assert.equal(
+  isPresetVisibleInMoa('personal_plant_ops'),
+  false,
+  'personal_plant_ops는 moa 앱에서 표시 및 선택 불가능해야 합니다.'
+);
+assert.equal(
+  isPresetVisibleInMoa('piano'),
+  true,
+  '일반 moa 프리셋(piano)은 moa 앱에서 표시 및 선택 가능해야 합니다.'
+);
+
+const moaPresets = listMoaVisiblePresets();
+assert.equal(
+  moaPresets.some((p) => p.id === 'personal_plant_ops'),
+  false,
+  'moa 앱 프리셋 목록에 personal_plant_ops가 노출되지 않아야 합니다.'
+);
+assert.ok(
+  moaPresets.some((p) => p.id === 'piano'),
+  'moa 앱 프리셋 목록에 일반 업종이 노출되어야 합니다.'
+);
+
 console.log('QuickSetupPage.test.ts: ok');

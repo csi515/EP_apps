@@ -266,6 +266,9 @@ export const ResearchProjectManagementView: React.FC = () => {
               ws.submitGateToApproval(ws.selected!, gateId, note, getLeadName(ws.selected!))
             }
             onDeliverableStatus={ws.updateDeliverableStatusPersisted}
+            onAddDeliverable={(title, dueDate, evidenceUrl) =>
+              ws.addDeliverablePersisted(ws.selected!.id, title, dueDate, evidenceUrl)
+            }
           />
         ) : (
           <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">

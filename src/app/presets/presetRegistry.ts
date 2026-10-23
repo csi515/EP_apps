@@ -1857,7 +1857,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   personal_plant_ops: {
     id: 'personal_plant_ops',
-    name: '개인용 현장·공용자원',
+    name: 'EP_apps',
+    hiddenInMoa: true,
     description:
       '소규모 현장용: 결재·안전·자재·공용자원·노경 건의·조직도·MBO·연구과제·연구소 포털. 급여·휴가·전사 장부는 포함하지 않습니다.',
     category: 'manufacturing',
@@ -2169,8 +2170,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   rnd_lab_management: {
     id: 'rnd_lab_management',
-    name: '기업부설연구소 & R&D 센터',
-    description: '연구 프로젝트 파이프라인, 연구 장비 예약 및 자동 사용일지, 특허/직무발명 보상 관리, 연구 설비 자산/수리 이력, 연구실안전법 일일점검 및 시약 MSDS 관리',
+    name: '연구소 & 랩실 관리 (기업 R&D / 대학 연구실)',
+    description: '연구 프로젝트 및 학술 논문/특허 파이프라인, 연구 장비 예약 및 자동 사용일지, 특허/직무발명 보상 관리, 연구 설비 자산/수리 이력, 연구실안전법 일일점검 및 시약 MSDS 관리',
     category: 'other',
     capabilities: [
       'task_pipeline',
@@ -2203,16 +2204,17 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'vehicle_shuttle',
     ] as const,
     roles: [
-      { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
-      { name: '수석/책임연구원', rank_order: 2, permissions: ['research_project:*', 'task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
-      { name: '선임/전임연구원', rank_order: 3, permissions: ['research_project:update', 'task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
-      { name: '연구지원/안전관리자', rank_order: 2, permissions: ['sop_risk_assessment:*', 'supply_restock:*', 'facility_incident_report:*', 'approval_workflow:*', 'research_project:view'] },
+      { name: '연구책임자(PI) / 연구소장', rank_order: 1, permissions: ['*'] },
+      { name: '부책임자 / 랩장 / 박사후연구원', rank_order: 2, permissions: ['research_project:*', 'task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
+      { name: '참여연구원 / 석·박사과정생', rank_order: 3, permissions: ['research_project:update', 'task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
+      { name: '학부연구생 / 연구보조원', rank_order: 4, permissions: ['resources:book', 'task_pipeline:view', 'sop_risk_assessment:view'] },
+      { name: '연구실 안전관리담당자', rank_order: 2, permissions: ['sop_risk_assessment:*', 'supply_restock:*', 'facility_incident_report:*', 'approval_workflow:*', 'research_project:view'] },
     ],
     resourceTypes: [
-      { name: '정밀분석기기실 (FE-SEM/XRD)', type: 'equipment', capacity: 1 },
-      { name: '항온항습 신뢰성평가실', type: 'equipment', capacity: 2 },
-      { name: '제1합성실험실 (Lab 1)', type: 'room', capacity: 8 },
-      { name: 'R&D 프로젝트 대회의실', type: 'room', capacity: 12 },
+      { name: '정밀분석기기 (FE-SEM / XRD / NMR)', type: 'equipment', capacity: 1 },
+      { name: '공용 분석대 (클린벤치 / 흄후드)', type: 'equipment', capacity: 2 },
+      { name: '제1실험실 (합성·배양실)', type: 'room', capacity: 8 },
+      { name: '랩 세미나실 / 프로젝트 미팅룸', type: 'room', capacity: 12 },
     ],
     defaultSettings: {
       lab_safety_inspection_cycle: 'daily',
@@ -2236,6 +2238,8 @@ export const PRESET_ALIASES: Record<string, string> = {
   rnd: 'rnd_lab_management',
   personal_plant: 'personal_plant_ops',
   plant_ops: 'personal_plant_ops',
+  ep_apps: 'personal_plant_ops',
+  EP_apps: 'personal_plant_ops',
   gym: 'gym_fitness',
   academy: 'general_academy',
   private_tutoring: 'exam_tutoring',
@@ -2262,6 +2266,23 @@ export function getIndustryPreset(presetId: string): IndustryPresetDefinition | 
 
 export function listIndustryPresets(): IndustryPresetDefinition[] {
   return Object.values(INDUSTRY_PRESETS);
+}
+
+/**
+ * moa 앱(일반 매장·사업장 온보딩 및 카탈로그)에서 표시 및 선택 가능한 프리셋 목록 조회.
+ * hiddenInMoa 플래그가 설정된 프리셋(예: 기업 전용 EP_apps 등)은 제외됩니다.
+ */
+export function listMoaVisiblePresets(): IndustryPresetDefinition[] {
+  return Object.values(INDUSTRY_PRESETS).filter((p) => !p.hiddenInMoa);
+}
+
+/**
+ * 특정 프리셋이 moa 앱에서 노출 및 선택 가능한지 여부 판정
+ */
+export function isPresetVisibleInMoa(presetId: string): boolean {
+  const preset = getIndustryPreset(presetId);
+  if (!preset) return false;
+  return !preset.hiddenInMoa;
 }
 
 /**

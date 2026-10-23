@@ -8,14 +8,19 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 async function runTests() {
   console.log('Running Cloudflare & AdSlotPlaceholder verification tests...');
 
-  // 1. public/_redirects verification
+  // 1. Cloudflare Pages SPA configuration verification
   const redirectsPath = join(root, 'public/_redirects');
   assert.ok(existsSync(redirectsPath), 'public/_redirects file must exist');
   const redirectsContent = readFileSync(redirectsPath, 'utf8').trim();
-  assert.match(
-    redirectsContent,
-    /^\/\*\s+\/index\.html\s+200$/m,
-    'public/_redirects must contain SPA single routing rule: /* /index.html 200'
+  assert.ok(
+    !redirectsContent.includes('/* /index.html 200'),
+    'public/_redirects must NOT contain "/* /index.html 200" (causes Cloudflare error 100324: infinite loop)'
+  );
+  // Cloudflare Pages natively falls back to index.html for SPAs when 404.html does not exist
+  const custom404Path = join(root, 'public/404.html');
+  assert.ok(
+    !existsSync(custom404Path),
+    'public/404.html must not exist so Cloudflare Pages enables native SPA fallback to index.html'
   );
 
   // 2. public/ads.txt verification

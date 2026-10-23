@@ -33,7 +33,9 @@ import { useTenant } from '@/core/auth/context/TenantContext';
 import { applyDomainErrorToForm } from '@/core/utils/formErrorAdapter';
 import {
   listIndustryPresets,
+  listMoaVisiblePresets,
   getIndustryPreset,
+  isPresetVisibleInMoa,
 } from '@/app/presets/presetRegistry';
 import {
   recommendIndustryPreset,
@@ -235,7 +237,7 @@ export const QuickSetupPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchKeyword, setSearchKeyword] = useState('');
 
-  const allPresets = useMemo(() => listIndustryPresets(), []);
+  const allPresets = useMemo(() => listMoaVisiblePresets(), []);
 
   const filteredPresets = useMemo(() => {
     return allPresets.filter((p) => {
@@ -362,6 +364,10 @@ export const QuickSetupPage: React.FC = () => {
 
   // 업종 선택 시 추천값 자동 주입 (Pre-fill)
   const applyIndustryDefaults = (industry: string) => {
+    if (industry !== 'custom' && (!isPresetVisibleInMoa(industry) || industry === 'personal_plant_ops')) {
+      setGeneralError('해당 프리셋은 moa 앱에서 선택할 수 없습니다.');
+      return;
+    }
     setSelectedIndustry(industry);
     setValue('industry', industry);
     setGeneralError(null);
@@ -396,6 +402,16 @@ export const QuickSetupPage: React.FC = () => {
     setIsAiPanelOpen(true);
     setTimeout(() => {
       const result = recommendIndustryPreset(aiQuery);
+      if (
+        result.topRecommendation &&
+        (!isPresetVisibleInMoa(result.topRecommendation.presetId) ||
+          result.topRecommendation.presetId === 'personal_plant_ops')
+      ) {
+        result.topRecommendation = null;
+      }
+      result.alternativeRecommendations = result.alternativeRecommendations.filter(
+        (alt) => isPresetVisibleInMoa(alt.presetId) && alt.presetId !== 'personal_plant_ops'
+      );
       setAiResult(result);
       setIsAiAnalyzing(false);
 
@@ -475,6 +491,14 @@ export const QuickSetupPage: React.FC = () => {
 
     if (roles.length === 0) {
       setGeneralError('사업장 운영을 위해 최소 1개 이상의 직급(예: 대표, 원장, 사장 등)이 필요합니다.');
+      return;
+    }
+
+    if (
+      selectedIndustry !== 'custom' &&
+      (!isPresetVisibleInMoa(selectedIndustry) || selectedIndustry === 'personal_plant_ops')
+    ) {
+      setGeneralError('해당 프리셋은 moa 앱에서 선택할 수 없습니다.');
       return;
     }
 

@@ -409,6 +409,25 @@ export function useResearchProjectWorkspace() {
     [updateDeliverable]
   );
 
+  const addDeliverablePersisted = useCallback(
+    (projectId: string, title: string, dueDate?: string | null, evidenceUrl?: string | null) => {
+      if (!orgId) return;
+      createDeliverable({
+        resource: 'research_project_deliverables',
+        values: {
+          organization_id: orgId,
+          project_id: projectId,
+          title,
+          due_date: dueDate || null,
+          evidence_url: evidenceUrl || null,
+          status: 'planned',
+          sort_order: 10,
+        },
+      });
+    },
+    [createDeliverable, orgId]
+  );
+
   return {
     orgId,
     isLoading,
@@ -426,6 +445,7 @@ export function useResearchProjectWorkspace() {
     directGateDecision,
     submitGateToApproval,
     updateDeliverableStatusPersisted,
+    addDeliverablePersisted,
     syncApprovalOutcomes,
   };
 }
