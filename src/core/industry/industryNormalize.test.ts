@@ -19,6 +19,7 @@ import { resolveIndustryAppKind } from './industryAppResolve';
 import { INDUSTRY_DEFINITIONS } from './catalog';
 import { buildGenericPluginManifest } from './genericPlugin';
 import { installIndustryPlugin } from './pluginHost';
+import { pianoPluginManifest } from '@/industries/piano/plugin';
 import { resolveHydrateModules } from '../../services/adapters/hydrateModules';
 import {
   getParentPortalNav,
@@ -35,6 +36,9 @@ function run() {
   installIndustryPlugin({
     ...buildGenericPluginManifest(INDUSTRY_DEFINITIONS.piano),
     syncCapabilities: declaredSyncCapabilities('../../industries/piano/plugin.ts'),
+    // 포털 고정 표는 업종 id 비교 대신 매니페스트 필드로 읽는다.
+    parentPortalNav: pianoPluginManifest.parentPortalNav,
+    parentPortalSecondaryTabs: pianoPluginManifest.parentPortalSecondaryTabs,
   });
 
   assert.equal(DEFAULT_CREATE_INDUSTRY_TYPE, 'piano');

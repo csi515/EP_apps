@@ -21,7 +21,49 @@
       "showsPerformanceVideos": true,
       "showsSongStamps": true,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "학원"
+      "placeLabel": "학원",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "schedule",
+          "label": "일정",
+          "icon": "calendar"
+        },
+        {
+          "id": "attendance",
+          "label": "출결",
+          "icon": "check"
+        },
+        {
+          "id": "tuition",
+          "label": "수납",
+          "icon": "card"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "assignments",
+        "progress",
+        "stamps",
+        "reports",
+        "events",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "ACADEMY_PRAISE"
     },
     "features": {
       "class_based_schedule": true,
@@ -54,6 +96,11 @@
       "ownerLabel": "원장",
       "feeLabel": "수강료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusPaused\":\"휴원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"반\",\"plural\":\"반\",\"management\":\"반 관리\",\"section\":\"반\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출결\",\"checkIn\":\"등원\",\"checkOut\":\"하원\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"회차권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"연습실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -98,7 +145,44 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "teal",
-      "placeLabel": "스튜디오"
+      "placeLabel": "스튜디오",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "bookings",
+          "label": "예약",
+          "icon": "calendarClock"
+        },
+        {
+          "id": "tuition",
+          "label": "수강료",
+          "icon": "card"
+        },
+        {
+          "id": "attendance",
+          "label": "출입",
+          "icon": "check"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "pilates",
+      "loyaltyStampTemplate": "FITNESS_BEAUTY"
     },
     "features": {
       "class_based_schedule": false,
@@ -131,6 +215,11 @@
       "ownerLabel": "대표",
       "feeLabel": "수강료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출입",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"휴회\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"attendance\":{\"noun\":\"출석\",\"checkIn\":\"출석\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": true,
@@ -175,7 +264,50 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "amber",
-      "placeLabel": "체육관"
+      "placeLabel": "체육관",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "schedule",
+          "label": "수업",
+          "icon": "calendar"
+        },
+        {
+          "id": "shuttle",
+          "label": "차량",
+          "icon": "bus"
+        },
+        {
+          "id": "attendance",
+          "label": "출결",
+          "icon": "check"
+        },
+        {
+          "id": "tuition",
+          "label": "수강료",
+          "icon": "card"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "events",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "FITNESS_BEAUTY"
     },
     "features": {
       "class_based_schedule": true,
@@ -208,6 +340,11 @@
       "ownerLabel": "대표",
       "feeLabel": "수강료",
       "levelLabel": "수업 레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원 및 보호자\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"수련중\",\"statusWithdrawn\":\"퇴관\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"지도진\"},\"service\":{\"singular\":\"수업반\",\"plural\":\"수업반\",\"management\":\"수업반 관리\",\"section\":\"수업 및 출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"수업 일정\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"회원권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"체육관\",\"owner\":\"관장\",\"room\":\"수련실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -252,7 +389,50 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "amber",
-      "placeLabel": "체육관"
+      "placeLabel": "체육관",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "schedule",
+          "label": "수업",
+          "icon": "calendar"
+        },
+        {
+          "id": "shuttle",
+          "label": "차량",
+          "icon": "bus"
+        },
+        {
+          "id": "attendance",
+          "label": "출결",
+          "icon": "check"
+        },
+        {
+          "id": "tuition",
+          "label": "수강료",
+          "icon": "card"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "events",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "FITNESS_BEAUTY"
     },
     "features": {
       "class_based_schedule": true,
@@ -285,6 +465,11 @@
       "ownerLabel": "대표",
       "feeLabel": "수강료",
       "levelLabel": "수업 레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원 및 보호자\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"수련중\",\"statusWithdrawn\":\"퇴관\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"지도진\"},\"service\":{\"singular\":\"수업반\",\"plural\":\"수업반\",\"management\":\"수업반 관리\",\"section\":\"수업 및 출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"수업 일정\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"회원권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"체육관\",\"owner\":\"관장\",\"room\":\"수련실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -329,7 +514,50 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "amber",
-      "placeLabel": "체육관"
+      "placeLabel": "체육관",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "schedule",
+          "label": "수업",
+          "icon": "calendar"
+        },
+        {
+          "id": "shuttle",
+          "label": "차량",
+          "icon": "bus"
+        },
+        {
+          "id": "attendance",
+          "label": "출결",
+          "icon": "check"
+        },
+        {
+          "id": "tuition",
+          "label": "수강료",
+          "icon": "card"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "events",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "FITNESS_BEAUTY"
     },
     "features": {
       "class_based_schedule": true,
@@ -362,6 +590,11 @@
       "ownerLabel": "대표",
       "feeLabel": "수강료",
       "levelLabel": "수업 레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원 및 보호자\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"수련중\",\"statusWithdrawn\":\"퇴관\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"지도진\"},\"service\":{\"singular\":\"수업반\",\"plural\":\"수업반\",\"management\":\"수업반 관리\",\"section\":\"수업 및 출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"수업 일정\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"회원권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"체육관\",\"owner\":\"관장\",\"room\":\"수련실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -406,7 +639,51 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "원"
+      "placeLabel": "원",
+      "attendanceRecordNounDefault": "등하원",
+      "portalRoleLabel": "보호자 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "journals",
+          "label": "알림장",
+          "icon": "book"
+        },
+        {
+          "id": "medications",
+          "label": "투약",
+          "icon": "pill"
+        },
+        {
+          "id": "attendance",
+          "label": "등하원",
+          "icon": "check"
+        },
+        {
+          "id": "tuition",
+          "label": "보육료",
+          "icon": "card"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "incidents",
+        "pickups",
+        "more"
+      ],
+      "parentPortalFeeTitle": "보호자 결제/보육료",
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "ACADEMY_PRAISE"
     },
     "features": {
       "class_based_schedule": true,
@@ -439,6 +716,11 @@
       "ownerLabel": "원장",
       "feeLabel": "보육료",
       "levelLabel": "연령반"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "등하원",
+      "portalRoleLabel": "보호자 포털",
+      "terminology": "{\"customer\":{\"singular\":\"원아\",\"plural\":\"원아\",\"management\":\"원아 관리\",\"section\":\"원아 및 보호자\",\"add\":\"원아 등록\",\"search\":\"원아 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴소\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"교사\",\"plural\":\"교사\",\"management\":\"교사 관리\",\"section\":\"보육 인력\"},\"service\":{\"singular\":\"반\",\"plural\":\"반\",\"management\":\"반 관리\",\"section\":\"반·출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"일과\"},\"billing\":{\"fee\":\"보육료\",\"unpaid\":\"미납 보육료\",\"pass\":\"이용권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"어린이집\",\"owner\":\"원장\",\"room\":\"보육실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -483,7 +765,44 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "rose",
-      "placeLabel": "샵"
+      "placeLabel": "샵",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "고객 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "bookings",
+          "label": "예약",
+          "icon": "calendarClock"
+        },
+        {
+          "id": "tuition",
+          "label": "이용권",
+          "icon": "card"
+        },
+        {
+          "id": "attendance",
+          "label": "출입",
+          "icon": "check"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "skin",
+      "loyaltyStampTemplate": "FITNESS_BEAUTY"
     },
     "features": {
       "class_based_schedule": false,
@@ -516,6 +835,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "관리 단계"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출입",
+      "portalRoleLabel": "고객 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"피부관리실\",\"owner\":\"원장\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": true,
@@ -560,7 +884,39 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "매장"
+      "placeLabel": "매장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": "고객 멤버십",
+      "parentPortalNav": [
+        {
+          "id": "home",
+          "label": "홈",
+          "icon": "home"
+        },
+        {
+          "id": "stamps",
+          "label": "포인트",
+          "icon": "coins"
+        },
+        {
+          "id": "reports",
+          "label": "구매내역",
+          "icon": "history"
+        },
+        {
+          "id": "more",
+          "label": "더보기",
+          "icon": "menu"
+        }
+      ],
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -593,6 +949,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "회원 등급"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"활동\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"상품\",\"plural\":\"상품\",\"management\":\"상품 관리\",\"section\":\"상품\"},\"schedule\":{\"singular\":\"판매\",\"plural\":\"판매\",\"management\":\"판매\",\"section\":\"판매\"},\"billing\":{\"fee\":\"결제액\",\"unpaid\":\"미수금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"매장\",\"owner\":\"대표\",\"room\":\"매장\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -637,7 +998,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -670,6 +1042,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "이용 등급"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"근무 인력\"},\"service\":{\"singular\":\"시설\",\"plural\":\"시설\",\"management\":\"시설 관리\",\"section\":\"시설\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사우나\",\"owner\":\"대표\",\"room\":\"시설\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -714,7 +1091,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -747,6 +1135,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "이용 등급"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"근무 인력\"},\"service\":{\"singular\":\"시설\",\"plural\":\"시설\",\"management\":\"시설 관리\",\"section\":\"시설\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사우나\",\"owner\":\"대표\",\"room\":\"시설\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -791,7 +1184,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -824,6 +1228,11 @@
       "ownerLabel": "원장",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -868,7 +1277,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -901,6 +1321,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -945,7 +1370,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -978,6 +1414,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1022,7 +1463,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1055,6 +1507,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1099,7 +1556,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1132,6 +1600,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1176,7 +1649,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1209,6 +1693,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1253,7 +1742,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1286,6 +1786,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1330,7 +1835,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1363,6 +1879,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"학생\",\"plural\":\"학생\",\"management\":\"학생 관리\",\"section\":\"학생\",\"add\":\"학생 등록\",\"search\":\"학생 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴원\"},\"contact\":{\"singular\":\"학부모\",\"plural\":\"학부모\",\"management\":\"학부모 관리\"},\"staff\":{\"singular\":\"선생님\",\"plural\":\"선생님\",\"management\":\"선생님 관리\",\"section\":\"선생님\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 관리\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"주간 시간표\",\"section\":\"일정\"},\"billing\":{\"fee\":\"수강료\",\"unpaid\":\"미납 수강료\",\"pass\":\"수강권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"학원\",\"owner\":\"원장\",\"room\":\"강의실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1407,7 +1928,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1440,6 +1972,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1484,7 +2021,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1517,6 +2065,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1561,7 +2114,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1594,6 +2158,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1638,7 +2207,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1671,6 +2251,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1715,7 +2300,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1748,6 +2344,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1792,7 +2393,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1825,6 +2437,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"회원\",\"plural\":\"회원\",\"management\":\"회원 관리\",\"section\":\"회원\",\"add\":\"회원 등록\",\"search\":\"회원 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"탈퇴\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사\"},\"service\":{\"singular\":\"수업\",\"plural\":\"수업\",\"management\":\"수업 종류\",\"section\":\"수업\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"회비\",\"unpaid\":\"미납 회비\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"스튜디오\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1869,7 +2486,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1902,6 +2530,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술 관리\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"샵\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -1946,7 +2579,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -1979,6 +2623,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술 관리\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"샵\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2023,7 +2672,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2056,6 +2716,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술 관리\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"샵\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2100,7 +2765,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2133,6 +2809,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술 관리\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"샵\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2177,7 +2858,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2210,6 +2902,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"관리사\"},\"service\":{\"singular\":\"시술\",\"plural\":\"시술\",\"management\":\"시술 관리\",\"section\":\"시술\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약\"},\"billing\":{\"fee\":\"시술비\",\"unpaid\":\"미납금\",\"pass\":\"관리권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"샵\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2254,7 +2951,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2287,6 +2995,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"테라피스트\",\"plural\":\"테라피스트\",\"management\":\"테라피스트 관리\",\"section\":\"근무 인력\"},\"service\":{\"singular\":\"프로그램\",\"plural\":\"프로그램\",\"management\":\"프로그램 관리\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 일정\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스파\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2331,7 +3044,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2364,6 +3088,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"테라피스트\",\"plural\":\"테라피스트\",\"management\":\"테라피스트 관리\",\"section\":\"근무 인력\"},\"service\":{\"singular\":\"프로그램\",\"plural\":\"프로그램\",\"management\":\"프로그램 관리\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 일정\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스파\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2408,7 +3137,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2441,6 +3181,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"테라피스트\",\"plural\":\"테라피스트\",\"management\":\"테라피스트 관리\",\"section\":\"근무 인력\"},\"service\":{\"singular\":\"프로그램\",\"plural\":\"프로그램\",\"management\":\"프로그램 관리\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 일정\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스파\",\"owner\":\"대표\",\"room\":\"관리실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2485,7 +3230,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2518,6 +3274,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"원아\",\"plural\":\"원아\",\"management\":\"원아 관리\",\"section\":\"원아 및 보호자\",\"add\":\"원아 등록\",\"search\":\"원아 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴소\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"교사\",\"plural\":\"교사\",\"management\":\"교사 관리\",\"section\":\"보육 인력\"},\"service\":{\"singular\":\"반\",\"plural\":\"반\",\"management\":\"반 관리\",\"section\":\"반·출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"일과\"},\"billing\":{\"fee\":\"보육료\",\"unpaid\":\"미납 보육료\",\"pass\":\"이용권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"어린이집\",\"owner\":\"원장\",\"room\":\"보육실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2562,7 +3323,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2595,6 +3367,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"원아\",\"plural\":\"원아\",\"management\":\"원아 관리\",\"section\":\"원아 및 보호자\",\"add\":\"원아 등록\",\"search\":\"원아 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴소\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"교사\",\"plural\":\"교사\",\"management\":\"교사 관리\",\"section\":\"보육 인력\"},\"service\":{\"singular\":\"반\",\"plural\":\"반\",\"management\":\"반 관리\",\"section\":\"반·출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"일과\"},\"billing\":{\"fee\":\"보육료\",\"unpaid\":\"미납 보육료\",\"pass\":\"이용권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"어린이집\",\"owner\":\"원장\",\"room\":\"보육실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2639,7 +3416,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2672,6 +3460,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"원아\",\"plural\":\"원아\",\"management\":\"원아 관리\",\"section\":\"원아 및 보호자\",\"add\":\"원아 등록\",\"search\":\"원아 검색\",\"statusActive\":\"재원\",\"statusWithdrawn\":\"퇴소\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"교사\",\"plural\":\"교사\",\"management\":\"교사 관리\",\"section\":\"보육 인력\"},\"service\":{\"singular\":\"반\",\"plural\":\"반\",\"management\":\"반 관리\",\"section\":\"반·출결\"},\"schedule\":{\"singular\":\"시간표\",\"plural\":\"시간표\",\"management\":\"주간 시간표\",\"section\":\"일과\"},\"billing\":{\"fee\":\"보육료\",\"unpaid\":\"미납 보육료\",\"pass\":\"이용권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"어린이집\",\"owner\":\"원장\",\"room\":\"보육실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2716,7 +3509,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2749,6 +3553,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"내담자\",\"plural\":\"내담자\",\"management\":\"내담자 관리\",\"section\":\"내담자\",\"add\":\"내담자 등록\",\"search\":\"내담자 검색\",\"statusActive\":\"상담중\",\"statusWithdrawn\":\"종결\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"상담사\",\"plural\":\"상담사\",\"management\":\"상담사 관리\",\"section\":\"전문 인력\"},\"service\":{\"singular\":\"상담\",\"plural\":\"상담\",\"management\":\"상담 프로그램\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"상담 일정\",\"section\":\"상담 일정\"},\"billing\":{\"fee\":\"상담료\",\"unpaid\":\"미납금\",\"pass\":\"상담권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"상담실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2793,7 +3602,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2826,6 +3646,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"내담자\",\"plural\":\"내담자\",\"management\":\"내담자 관리\",\"section\":\"내담자\",\"add\":\"내담자 등록\",\"search\":\"내담자 검색\",\"statusActive\":\"상담중\",\"statusWithdrawn\":\"종결\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"상담사\",\"plural\":\"상담사\",\"management\":\"상담사 관리\",\"section\":\"전문 인력\"},\"service\":{\"singular\":\"상담\",\"plural\":\"상담\",\"management\":\"상담 프로그램\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"상담 일정\",\"section\":\"상담 일정\"},\"billing\":{\"fee\":\"상담료\",\"unpaid\":\"미납금\",\"pass\":\"상담권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"상담실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2870,7 +3695,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2903,6 +3739,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"내담자\",\"plural\":\"내담자\",\"management\":\"내담자 관리\",\"section\":\"내담자\",\"add\":\"내담자 등록\",\"search\":\"내담자 검색\",\"statusActive\":\"상담중\",\"statusWithdrawn\":\"종결\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"상담사\",\"plural\":\"상담사\",\"management\":\"상담사 관리\",\"section\":\"전문 인력\"},\"service\":{\"singular\":\"상담\",\"plural\":\"상담\",\"management\":\"상담 프로그램\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"상담 일정\",\"section\":\"상담 일정\"},\"billing\":{\"fee\":\"상담료\",\"unpaid\":\"미납금\",\"pass\":\"상담권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"상담실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -2947,7 +3788,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -2980,6 +3832,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"내담자\",\"plural\":\"내담자\",\"management\":\"내담자 관리\",\"section\":\"내담자\",\"add\":\"내담자 등록\",\"search\":\"내담자 검색\",\"statusActive\":\"상담중\",\"statusWithdrawn\":\"종결\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"상담사\",\"plural\":\"상담사\",\"management\":\"상담사 관리\",\"section\":\"전문 인력\"},\"service\":{\"singular\":\"상담\",\"plural\":\"상담\",\"management\":\"상담 프로그램\",\"section\":\"프로그램\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"상담 일정\",\"section\":\"상담 일정\"},\"billing\":{\"fee\":\"상담료\",\"unpaid\":\"미납금\",\"pass\":\"상담권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"센터\",\"owner\":\"대표\",\"room\":\"상담실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3024,7 +3881,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3057,6 +3925,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"환자\",\"plural\":\"환자\",\"management\":\"환자 관리\",\"section\":\"환자\",\"add\":\"환자 등록\",\"search\":\"환자 검색\",\"statusActive\":\"진료중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"의료진\",\"plural\":\"의료진\",\"management\":\"의료진 관리\",\"section\":\"의료진\"},\"service\":{\"singular\":\"진료\",\"plural\":\"진료\",\"management\":\"진료 관리\",\"section\":\"진료과목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"진료 예약\",\"section\":\"진료 일정\"},\"billing\":{\"fee\":\"진료비\",\"unpaid\":\"미수금\",\"pass\":\"진료권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"클리닉\",\"owner\":\"원장\",\"room\":\"진료실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3101,7 +3974,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3134,6 +4018,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"환자\",\"plural\":\"환자\",\"management\":\"환자 관리\",\"section\":\"환자\",\"add\":\"환자 등록\",\"search\":\"환자 검색\",\"statusActive\":\"진료중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"의료진\",\"plural\":\"의료진\",\"management\":\"의료진 관리\",\"section\":\"의료진\"},\"service\":{\"singular\":\"진료\",\"plural\":\"진료\",\"management\":\"진료 관리\",\"section\":\"진료과목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"진료 예약\",\"section\":\"진료 일정\"},\"billing\":{\"fee\":\"진료비\",\"unpaid\":\"미수금\",\"pass\":\"진료권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"클리닉\",\"owner\":\"원장\",\"room\":\"진료실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3178,7 +4067,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3211,6 +4111,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"환자\",\"plural\":\"환자\",\"management\":\"환자 관리\",\"section\":\"환자\",\"add\":\"환자 등록\",\"search\":\"환자 검색\",\"statusActive\":\"진료중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"의료진\",\"plural\":\"의료진\",\"management\":\"의료진 관리\",\"section\":\"의료진\"},\"service\":{\"singular\":\"진료\",\"plural\":\"진료\",\"management\":\"진료 관리\",\"section\":\"진료과목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"진료 예약\",\"section\":\"진료 일정\"},\"billing\":{\"fee\":\"진료비\",\"unpaid\":\"미수금\",\"pass\":\"진료권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"클리닉\",\"owner\":\"원장\",\"room\":\"진료실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3255,7 +4160,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3288,6 +4204,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"환자\",\"plural\":\"환자\",\"management\":\"환자 관리\",\"section\":\"환자\",\"add\":\"환자 등록\",\"search\":\"환자 검색\",\"statusActive\":\"진료중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"보호자 관리\"},\"staff\":{\"singular\":\"의료진\",\"plural\":\"의료진\",\"management\":\"의료진 관리\",\"section\":\"의료진\"},\"service\":{\"singular\":\"진료\",\"plural\":\"진료\",\"management\":\"진료 관리\",\"section\":\"진료과목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"진료 예약\",\"section\":\"진료 일정\"},\"billing\":{\"fee\":\"진료비\",\"unpaid\":\"미수금\",\"pass\":\"진료권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"클리닉\",\"owner\":\"원장\",\"room\":\"진료실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3332,7 +4253,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3365,6 +4297,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"수강생\",\"plural\":\"수강생\",\"management\":\"수강생 관리\",\"section\":\"수강생\",\"add\":\"수강생 등록\",\"search\":\"수강생 검색\",\"statusActive\":\"수강중\",\"statusWithdrawn\":\"수료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사진\"},\"service\":{\"singular\":\"레슨\",\"plural\":\"레슨\",\"management\":\"레슨 관리\",\"section\":\"레슨\"},\"schedule\":{\"singular\":\"레슨 일정\",\"plural\":\"레슨 일정\",\"management\":\"레슨 시간표\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출결\",\"checkIn\":\"출석\",\"checkOut\":\"종료\"},\"billing\":{\"fee\":\"레슨비\",\"unpaid\":\"미납 레슨비\",\"pass\":\"레슨권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"레슨실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3409,7 +4346,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3442,6 +4390,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"수강생\",\"plural\":\"수강생\",\"management\":\"수강생 관리\",\"section\":\"수강생\",\"add\":\"수강생 등록\",\"search\":\"수강생 검색\",\"statusActive\":\"수강중\",\"statusWithdrawn\":\"수료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사진\"},\"service\":{\"singular\":\"레슨\",\"plural\":\"레슨\",\"management\":\"레슨 관리\",\"section\":\"레슨\"},\"schedule\":{\"singular\":\"레슨 일정\",\"plural\":\"레슨 일정\",\"management\":\"레슨 시간표\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출결\",\"checkIn\":\"출석\",\"checkOut\":\"종료\"},\"billing\":{\"fee\":\"레슨비\",\"unpaid\":\"미납 레슨비\",\"pass\":\"레슨권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"레슨실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3486,7 +4439,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3519,6 +4483,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"수강생\",\"plural\":\"수강생\",\"management\":\"수강생 관리\",\"section\":\"수강생\",\"add\":\"수강생 등록\",\"search\":\"수강생 검색\",\"statusActive\":\"수강중\",\"statusWithdrawn\":\"수료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사진\"},\"service\":{\"singular\":\"레슨\",\"plural\":\"레슨\",\"management\":\"레슨 관리\",\"section\":\"레슨\"},\"schedule\":{\"singular\":\"레슨 일정\",\"plural\":\"레슨 일정\",\"management\":\"레슨 시간표\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출결\",\"checkIn\":\"출석\",\"checkOut\":\"종료\"},\"billing\":{\"fee\":\"레슨비\",\"unpaid\":\"미납 레슨비\",\"pass\":\"레슨권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"레슨실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3563,7 +4532,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3596,6 +4576,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"수강생\",\"plural\":\"수강생\",\"management\":\"수강생 관리\",\"section\":\"수강생\",\"add\":\"수강생 등록\",\"search\":\"수강생 검색\",\"statusActive\":\"수강중\",\"statusWithdrawn\":\"수료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"강사\",\"plural\":\"강사\",\"management\":\"강사 관리\",\"section\":\"강사진\"},\"service\":{\"singular\":\"레슨\",\"plural\":\"레슨\",\"management\":\"레슨 관리\",\"section\":\"레슨\"},\"schedule\":{\"singular\":\"레슨 일정\",\"plural\":\"레슨 일정\",\"management\":\"레슨 시간표\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출결\",\"checkIn\":\"출석\",\"checkOut\":\"종료\"},\"billing\":{\"fee\":\"레슨비\",\"unpaid\":\"미납 레슨비\",\"pass\":\"레슨권\",\"payment\":\"수납\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"레슨실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3640,7 +4625,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3673,6 +4669,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"공간\",\"plural\":\"공간\",\"management\":\"공간 관리\",\"section\":\"공간\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 현황\",\"section\":\"예약 일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"룸·부스\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3717,7 +4718,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3750,6 +4762,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"공간\",\"plural\":\"공간\",\"management\":\"공간 관리\",\"section\":\"공간\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 현황\",\"section\":\"예약 일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"룸·부스\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3794,7 +4811,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3827,6 +4855,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"공간\",\"plural\":\"공간\",\"management\":\"공간 관리\",\"section\":\"공간\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 현황\",\"section\":\"예약 일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"룸·부스\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3871,7 +4904,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3904,6 +4948,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"공간\",\"plural\":\"공간\",\"management\":\"공간 관리\",\"section\":\"공간\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 현황\",\"section\":\"예약 일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"스튜디오\",\"owner\":\"대표\",\"room\":\"룸·부스\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -3948,7 +4997,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -3981,6 +5041,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"고객/반려동물 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"비상연락처\",\"plural\":\"비상연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"케어 인력\"},\"service\":{\"singular\":\"케어\",\"plural\":\"케어\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"호텔·샵\",\"owner\":\"대표\",\"room\":\"케어룸\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4025,7 +5090,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4058,6 +5134,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"고객/반려동물 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"비상연락처\",\"plural\":\"비상연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"케어 인력\"},\"service\":{\"singular\":\"케어\",\"plural\":\"케어\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"호텔·샵\",\"owner\":\"대표\",\"room\":\"케어룸\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4102,7 +5183,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4135,6 +5227,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"보호자\",\"plural\":\"보호자\",\"management\":\"고객/반려동물 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"만료\"},\"contact\":{\"singular\":\"비상연락처\",\"plural\":\"비상연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"관리사\",\"plural\":\"관리사\",\"management\":\"관리사 관리\",\"section\":\"케어 인력\"},\"service\":{\"singular\":\"케어\",\"plural\":\"케어\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"예약 캘린더\",\"section\":\"예약 일정\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"호텔·샵\",\"owner\":\"대표\",\"room\":\"케어룸\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4179,7 +5276,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4212,6 +5320,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"정비사\",\"plural\":\"정비사\",\"management\":\"엔지니어 관리\",\"section\":\"기술 인력\"},\"service\":{\"singular\":\"정비\",\"plural\":\"정비\",\"management\":\"정비 관리\",\"section\":\"정비 항목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"정비 예약\",\"section\":\"정비 일정\"},\"billing\":{\"fee\":\"정비료\",\"unpaid\":\"미수금\",\"pass\":\"정비권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"정비소\",\"owner\":\"대표\",\"room\":\"베이\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4256,7 +5369,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4289,6 +5413,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"정비사\",\"plural\":\"정비사\",\"management\":\"엔지니어 관리\",\"section\":\"기술 인력\"},\"service\":{\"singular\":\"정비\",\"plural\":\"정비\",\"management\":\"정비 관리\",\"section\":\"정비 항목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"정비 예약\",\"section\":\"정비 일정\"},\"billing\":{\"fee\":\"정비료\",\"unpaid\":\"미수금\",\"pass\":\"정비권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"정비소\",\"owner\":\"대표\",\"room\":\"베이\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4333,7 +5462,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4366,6 +5506,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusWithdrawn\":\"완료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"정비사\",\"plural\":\"정비사\",\"management\":\"엔지니어 관리\",\"section\":\"기술 인력\"},\"service\":{\"singular\":\"정비\",\"plural\":\"정비\",\"management\":\"정비 관리\",\"section\":\"정비 항목\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"정비 예약\",\"section\":\"정비 일정\"},\"billing\":{\"fee\":\"정비료\",\"unpaid\":\"미수금\",\"pass\":\"정비권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"정비소\",\"owner\":\"대표\",\"room\":\"베이\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4410,7 +5555,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4443,6 +5599,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"진행중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"담당자\",\"plural\":\"담당자\",\"management\":\"담당자 관리\",\"section\":\"서비스 인력\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스 항목\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"방문 일정\",\"section\":\"서비스 일정\"},\"billing\":{\"fee\":\"서비스료\",\"unpaid\":\"미수금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"작업공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4487,7 +5648,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4520,6 +5692,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"진행중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"담당자\",\"plural\":\"담당자\",\"management\":\"담당자 관리\",\"section\":\"서비스 인력\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스 항목\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"방문 일정\",\"section\":\"서비스 일정\"},\"billing\":{\"fee\":\"서비스료\",\"unpaid\":\"미수금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"작업공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4564,7 +5741,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4597,6 +5785,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"진행중\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"담당자\",\"plural\":\"담당자\",\"management\":\"담당자 관리\",\"section\":\"서비스 인력\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스 항목\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"방문 일정\",\"section\":\"서비스 일정\"},\"billing\":{\"fee\":\"서비스료\",\"unpaid\":\"미수금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"작업공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4641,7 +5834,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4674,6 +5878,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4718,7 +5927,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4751,6 +5971,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4795,7 +6020,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4828,6 +6064,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4872,7 +6113,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4905,6 +6157,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -4949,7 +6206,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -4982,6 +6250,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5026,7 +6299,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5059,6 +6343,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5103,7 +6392,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5136,6 +6436,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5180,7 +6485,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5213,6 +6529,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"투숙객\",\"plural\":\"투숙객\",\"management\":\"투숙객 관리\",\"section\":\"고객\",\"add\":\"투숙객 등록\",\"search\":\"투숙객 검색\",\"statusActive\":\"투숙중\",\"statusWithdrawn\":\"체크아웃\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"객실\",\"plural\":\"객실\",\"management\":\"객실 관리\",\"section\":\"객실\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"숙박 예약\",\"section\":\"숙박 일정\"},\"attendance\":{\"noun\":\"입퇴실\",\"checkIn\":\"체크인\",\"checkOut\":\"체크아웃\"},\"billing\":{\"fee\":\"숙박료\",\"unpaid\":\"미수금\",\"pass\":\"숙박권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"게스트하우스\",\"owner\":\"대표\",\"room\":\"객실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5257,7 +6578,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5290,6 +6622,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"투숙객\",\"plural\":\"투숙객\",\"management\":\"투숙객 관리\",\"section\":\"고객\",\"add\":\"투숙객 등록\",\"search\":\"투숙객 검색\",\"statusActive\":\"투숙중\",\"statusWithdrawn\":\"체크아웃\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"매니저\",\"plural\":\"매니저\",\"management\":\"매니저 관리\",\"section\":\"운영 인력\"},\"service\":{\"singular\":\"객실\",\"plural\":\"객실\",\"management\":\"객실 관리\",\"section\":\"객실\"},\"schedule\":{\"singular\":\"예약\",\"plural\":\"예약\",\"management\":\"숙박 예약\",\"section\":\"숙박 일정\"},\"attendance\":{\"noun\":\"입퇴실\",\"checkIn\":\"체크인\",\"checkOut\":\"체크아웃\"},\"billing\":{\"fee\":\"숙박료\",\"unpaid\":\"미수금\",\"pass\":\"숙박권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"게스트하우스\",\"owner\":\"대표\",\"room\":\"객실\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5334,7 +6671,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5367,6 +6715,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"방문\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"매장 인력\"},\"service\":{\"singular\":\"메뉴\",\"plural\":\"메뉴\",\"management\":\"메뉴 관리\",\"section\":\"메뉴\"},\"schedule\":{\"singular\":\"주문·예약\",\"plural\":\"주문·예약\",\"management\":\"예약 관리\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"결제액\",\"unpaid\":\"미수금\",\"pass\":\"쿠폰\",\"payment\":\"결제\"},\"facility\":{\"place\":\"매장\",\"owner\":\"대표\",\"room\":\"홀·테이블\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5411,7 +6764,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5444,6 +6808,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"방문\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"매장 인력\"},\"service\":{\"singular\":\"메뉴\",\"plural\":\"메뉴\",\"management\":\"메뉴 관리\",\"section\":\"메뉴\"},\"schedule\":{\"singular\":\"주문·예약\",\"plural\":\"주문·예약\",\"management\":\"예약 관리\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"결제액\",\"unpaid\":\"미수금\",\"pass\":\"쿠폰\",\"payment\":\"결제\"},\"facility\":{\"place\":\"매장\",\"owner\":\"대표\",\"room\":\"홀·테이블\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5488,7 +6857,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5521,6 +6901,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"방문\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"매장 인력\"},\"service\":{\"singular\":\"메뉴\",\"plural\":\"메뉴\",\"management\":\"메뉴 관리\",\"section\":\"메뉴\"},\"schedule\":{\"singular\":\"주문·예약\",\"plural\":\"주문·예약\",\"management\":\"예약 관리\",\"section\":\"운영 일정\"},\"billing\":{\"fee\":\"결제액\",\"unpaid\":\"미수금\",\"pass\":\"쿠폰\",\"payment\":\"결제\"},\"facility\":{\"place\":\"매장\",\"owner\":\"대표\",\"room\":\"홀·테이블\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5565,7 +6950,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5598,6 +6994,11 @@
       "ownerLabel": "대표",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5642,7 +7043,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5675,6 +7087,11 @@
       "ownerLabel": "원장",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5719,7 +7136,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5752,6 +7180,11 @@
       "ownerLabel": "원장",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5796,7 +7229,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5829,6 +7273,11 @@
       "ownerLabel": "원장",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,
@@ -5873,7 +7322,18 @@
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
       "attendanceSummaryMetric": "indigo",
-      "placeLabel": "사업장"
+      "placeLabel": "사업장",
+      "attendanceRecordNounDefault": null,
+      "portalRoleLabel": "학부모 포털",
+      "parentPortalRoleLabel": null,
+      "parentPortalNav": null,
+      "parentPortalSecondaryTabs": [
+        "notices",
+        "more"
+      ],
+      "parentPortalFeeTitle": null,
+      "parentBookingVariant": "standard",
+      "loyaltyStampTemplate": "RETAIL_CAFE"
     },
     "features": {
       "class_based_schedule": false,
@@ -5906,6 +7366,11 @@
       "ownerLabel": "원장",
       "feeLabel": "이용료",
       "levelLabel": "레벨"
+    },
+    "migrated": {
+      "attendanceRecordNoun": "출결",
+      "portalRoleLabel": "학부모 포털",
+      "terminology": "{\"customer\":{\"singular\":\"고객\",\"plural\":\"고객\",\"management\":\"고객 관리\",\"section\":\"고객\",\"add\":\"고객 등록\",\"search\":\"고객 검색\",\"statusActive\":\"이용중\",\"statusPaused\":\"정지\",\"statusWithdrawn\":\"종료\"},\"contact\":{\"singular\":\"연락처\",\"plural\":\"연락처\",\"management\":\"연락처 관리\"},\"staff\":{\"singular\":\"직원\",\"plural\":\"직원\",\"management\":\"직원 관리\",\"section\":\"직원\"},\"service\":{\"singular\":\"서비스\",\"plural\":\"서비스\",\"management\":\"서비스 관리\",\"section\":\"서비스\"},\"schedule\":{\"singular\":\"일정\",\"plural\":\"일정\",\"management\":\"일정\",\"section\":\"일정\"},\"attendance\":{\"noun\":\"출입\",\"checkIn\":\"입실\",\"checkOut\":\"퇴실\"},\"billing\":{\"fee\":\"이용료\",\"unpaid\":\"미납금\",\"pass\":\"이용권\",\"payment\":\"결제\"},\"facility\":{\"place\":\"사업장\",\"owner\":\"대표\",\"room\":\"공간\"}}"
     },
     "helpers": {
       "isAppointmentIndustry": false,

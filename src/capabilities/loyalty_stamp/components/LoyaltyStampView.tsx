@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { resolveLoyaltyStampTemplate } from '../domain/loyaltyStampTemplate';
 import { useTerminology } from '@/core/terminology';
 import { useApp } from '@/context/AppContext';
 import { StorageService } from '@/services/storage';
@@ -86,15 +87,7 @@ export const LoyaltyStampView: React.FC = () => {
         createCustomerDefaultBoard({
           customerId: c.id,
           customerName: c.name,
-          templateType:
-            currentOrganization?.industry_type === 'piano' ||
-            currentOrganization?.industry_type === 'daycare'
-              ? 'ACADEMY_PRAISE'
-              : currentOrganization?.industry_type === 'gym' ||
-                currentOrganization?.industry_type === 'pilates' ||
-                currentOrganization?.industry_type === 'skin_clinic'
-              ? 'FITNESS_BEAUTY'
-              : 'RETAIL_CAFE',
+          templateType: resolveLoyaltyStampTemplate(currentOrganization?.industry_type),
         })
       );
       setBoards(initialBoards);

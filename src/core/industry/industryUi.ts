@@ -2,7 +2,7 @@ import type { NavTab } from '@/shared/navigation/navigationTypes';
 import type { ModuleTheme } from '@/shared/components/layout/moduleTheme';
 import { isBlankIndustryInput, normalizeIndustryType, type IndustryType } from './types';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
-import { PLUGIN_FLAG_DEFAULTS, getPluginFlag } from './pluginFlagDefaults';
+import { PLUGIN_FLAG_DEFAULTS, getPluginFlag, type PluginFlagName, type PluginFlagValue } from './pluginFlagDefaults';
 import type { IndustryAccent, IndustryAttendanceCopy } from './pluginTypes';
 import {
   getIndustryPluginAdapter,
@@ -11,7 +11,13 @@ import {
   type IndustryPluginAdapter,
 } from './IndustryAdapter';
 
-export type { IndustryAccent } from './pluginTypes';
+export type {
+  IndustryAccent,
+  LoyaltyStampTemplateId,
+  ParentBookingVariant,
+  ParentPortalNavIcon,
+  ParentPortalNavSpec,
+} from './pluginTypes';
 export { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
 export {
   getIndustryPluginAdapter,
@@ -19,6 +25,25 @@ export {
   type IndustryFeatureKey,
   type IndustryPluginAdapter,
 };
+
+/**
+ * 설치된 업종 플러그인 중 id가 정확히 같은 것의 플래그(별칭·공유 모듈·generic 폴백 없음).
+ * 없으면 PLUGIN_FLAG_DEFAULTS. raw industry_type 정확 비교를 대체한다.
+ */
+export function getInstalledIndustryPluginFlag<F extends PluginFlagName>(
+  industryId: string | null | undefined,
+  flag: F
+): PluginFlagValue<F> {
+  return getPluginFlag(industryId ? getInstalledIndustryPlugin(industryId) : undefined, flag);
+}
+
+/** normalizeIndustryType 결과와 id가 같은 설치 플러그인의 플래그. `normalizeIndustryType(x) === 'id'` 비교를 대체한다. */
+export function getNormalizedIndustryPluginFlag<F extends PluginFlagName>(
+  industry: IndustryType | string | null | undefined,
+  flag: F
+): PluginFlagValue<F> {
+  return getInstalledIndustryPluginFlag(normalizeIndustryType(industry), flag);
+}
 
 export function resolveIndustry(
   industry: IndustryType | string | null | undefined
