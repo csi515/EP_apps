@@ -100,6 +100,10 @@ function runRoutingTests() {
     "customer/pass",
     "settings/roles",
     "onboarding/quick",
+    // App.tsx 전용 workspace 셔틀 라우트 (shuttle_dispatch)
+    "workspace/shuttle/routes",
+    "workspace/shuttle/roster",
+    "workspace/shuttle/my",
   ];
 
   // 1. 모든 Capability 번들의 리소스 list 경로가 CAPABILITY_ROUTE_PATHS 또는 DEDICATED_ROUTES에 의해 처리 가능한지 검증
