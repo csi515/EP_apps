@@ -7,7 +7,7 @@ import type {
 } from './pluginTypes';
 import type { BookingIndustryAdapter } from './bookingIndustryAdapter';
 import { getIndustryPlugin, getInstalledIndustryPlugin } from './registry';
-import { getPluginFlag } from './pluginFlagDefaults';
+import { PLUGIN_FLAG_DEFAULTS, getPluginFlag } from './pluginFlagDefaults';
 import { buildGenericPluginManifest } from './genericPlugin';
 import { getIndustryDefinition, INDUSTRY_DEFINITIONS } from './catalog';
 import { isBlankIndustryInput, type IndustryType } from './types';
@@ -104,7 +104,7 @@ export class DefaultFallbackPluginAdapter implements IndustryPluginAdapter {
   getLabel(key: IndustryLabelKey, fallback = ''): string {
     switch (key) {
       case 'place':
-        return this.manifest.placeLabel ?? fallback ?? '사업장';
+        return this.manifest.placeLabel ?? (fallback || PLUGIN_FLAG_DEFAULTS.placeLabel);
       case 'customer':
         return this.manifest.customerLabel ?? fallback ?? '고객';
       case 'owner':

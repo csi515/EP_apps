@@ -3,6 +3,7 @@ import type { IndustryPluginManifest } from './pluginTypes';
 import type { IndustryDefinition } from './catalog';
 import { withNoticesTabs } from './pluginTypes';
 import { defaultExpenseCategories } from './defaultExpenseCategories';
+import { PLUGIN_FLAG_DEFAULTS } from './pluginFlagDefaults';
 
 const GENERIC_CORE_TABS: NavTab[] = [
   'dashboard',
@@ -52,7 +53,7 @@ export function buildGenericPluginManifest(definition: IndustryDefinition): Indu
     showSchoolFields: false,
     showPickupFields: false,
     levelLabel: '레벨',
-    placeLabel: '사업장',
+    placeLabel: PLUGIN_FLAG_DEFAULTS.placeLabel,
     ownerLabel: definition.id === 'academy' ? '원장' : '대표',
     placeNamePlaceholder: '예: 행복 사업장',
     customerLabel: '고객',

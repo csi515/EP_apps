@@ -20,7 +20,8 @@
       "includesLinkedBillingIncome": true,
       "showsPerformanceVideos": true,
       "showsSongStamps": true,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "학원"
     },
     "features": {
       "class_based_schedule": true,
@@ -96,7 +97,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "teal"
+      "attendanceSummaryMetric": "teal",
+      "placeLabel": "스튜디오"
     },
     "features": {
       "class_based_schedule": false,
@@ -172,7 +174,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "amber"
+      "attendanceSummaryMetric": "amber",
+      "placeLabel": "체육관"
     },
     "features": {
       "class_based_schedule": true,
@@ -248,7 +251,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "amber"
+      "attendanceSummaryMetric": "amber",
+      "placeLabel": "체육관"
     },
     "features": {
       "class_based_schedule": true,
@@ -324,7 +328,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "amber"
+      "attendanceSummaryMetric": "amber",
+      "placeLabel": "체육관"
     },
     "features": {
       "class_based_schedule": true,
@@ -400,7 +405,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "원"
     },
     "features": {
       "class_based_schedule": true,
@@ -476,7 +482,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "rose"
+      "attendanceSummaryMetric": "rose",
+      "placeLabel": "샵"
     },
     "features": {
       "class_based_schedule": false,
@@ -552,7 +559,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "매장"
     },
     "features": {
       "class_based_schedule": false,
@@ -628,7 +636,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -704,7 +713,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -780,7 +790,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -856,7 +867,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -932,7 +944,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1008,7 +1021,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1084,7 +1098,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1160,7 +1175,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1236,7 +1252,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1312,7 +1329,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1388,7 +1406,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1464,7 +1483,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1540,7 +1560,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1616,7 +1637,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1692,7 +1714,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1768,7 +1791,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1844,7 +1868,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1920,7 +1945,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -1996,7 +2022,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2072,7 +2099,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2148,7 +2176,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2224,7 +2253,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2300,7 +2330,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2376,7 +2407,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2452,7 +2484,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2528,7 +2561,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2604,7 +2638,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2680,7 +2715,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2756,7 +2792,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2832,7 +2869,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2908,7 +2946,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -2984,7 +3023,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3060,7 +3100,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3136,7 +3177,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3212,7 +3254,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3288,7 +3331,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3364,7 +3408,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3440,7 +3485,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3516,7 +3562,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3592,7 +3639,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3668,7 +3716,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3744,7 +3793,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3820,7 +3870,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3896,7 +3947,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -3972,7 +4024,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4048,7 +4101,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4124,7 +4178,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4200,7 +4255,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4276,7 +4332,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4352,7 +4409,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4428,7 +4486,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4504,7 +4563,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4580,7 +4640,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4656,7 +4717,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4732,7 +4794,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4808,7 +4871,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4884,7 +4948,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -4960,7 +5025,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5036,7 +5102,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5112,7 +5179,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5188,7 +5256,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5264,7 +5333,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5340,7 +5410,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5416,7 +5487,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5492,7 +5564,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5568,7 +5641,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5644,7 +5718,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5720,7 +5795,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,
@@ -5796,7 +5872,8 @@
       "includesLinkedBillingIncome": false,
       "showsPerformanceVideos": false,
       "showsSongStamps": false,
-      "attendanceSummaryMetric": "indigo"
+      "attendanceSummaryMetric": "indigo",
+      "placeLabel": "사업장"
     },
     "features": {
       "class_based_schedule": false,

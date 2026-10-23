@@ -15,7 +15,7 @@ import { getIndustryPlugin } from './registry';
 import { INDUSTRY_DEFINITIONS } from './definitions';
 import * as ui from './industryUi';
 import { resolveIndustryContext } from './contextResolver';
-import type { IndustryFeatureKey } from './IndustryAdapter';
+import { DefaultFallbackPluginAdapter, type IndustryFeatureKey } from './IndustryAdapter';
 import type { IndustryPluginManifest } from './pluginTypes';
 import { PLUGIN_FLAG_DEFAULTS, getPluginFlag, type PluginFlagName } from './pluginFlagDefaults';
 import { pianoPluginManifest } from '@/industries/piano/plugin';
@@ -112,5 +112,11 @@ if (process.env.UPDATE_SNAPSHOT === '1') {
     assert.equal(getPluginFlag(null, f), PLUGIN_FLAG_DEFAULTS[f]);
     assert.equal(getPluginFlag({}, f), PLUGIN_FLAG_DEFAULTS[f]);
   }
+  // 장소 명칭 기본값은 호출부와 무관하게 '사업장'(플러그인이 명시한 값은 유지).
+  assert.equal(PLUGIN_FLAG_DEFAULTS.placeLabel, '사업장');
+  const noPlace = { ...pianoPluginManifest, placeLabel: undefined };
+  assert.equal(getPluginFlag(noPlace, 'placeLabel'), '사업장');
+  assert.equal(new DefaultFallbackPluginAdapter('piano', noPlace).getLabel('place'), '사업장');
+  assert.equal(new DefaultFallbackPluginAdapter('piano', pianoPluginManifest).getLabel('place'), '학원');
   console.log('pluginFlagDefaults.test.ts: ok');
 }

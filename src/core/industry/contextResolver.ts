@@ -1,3 +1,4 @@
+import { getPluginFlag } from './pluginFlagDefaults';
 import type { IndustryPluginManifest } from './pluginTypes';
 import { normalizeIndustryType, type IndustryType } from './types';
 import { getIndustryPlugin } from './registry';
@@ -26,7 +27,7 @@ export function resolveIndustryContext(
     plugin,
     capabilities: plugin.syncCapabilities ? [...plugin.syncCapabilities] : [],
     labels: {
-      placeLabel: plugin.placeLabel ?? '학원',
+      placeLabel: getPluginFlag(plugin, 'placeLabel'),
       customerLabel: plugin.customerLabel ?? '원생',
       ownerLabel: plugin.ownerLabel ?? '원장',
       feeLabel: plugin.feeLabel ?? '수강료',
