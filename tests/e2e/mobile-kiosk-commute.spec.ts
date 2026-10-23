@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { injectAuthContext } from '../../e2e/fixtures/authContext';
+import { installShuttleMocks } from '../../e2e/mocks/shuttleMocks';
 
 /**
  * Mobile & Kiosk Viewport E2E Test Suite
@@ -9,6 +11,18 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('모바일 및 키오스크 실기기 뷰포트 E2E 검증', () => {
+  // 다른 셔틀 스펙과 동일한 e2e 세션/모킹 패턴 (VITE_E2E 전용 /e2e/shuttle-commute 라우트)
+  test.beforeEach(async ({ page }) => {
+    await injectAuthContext(page);
+    await installShuttleMocks(page);
+    // 출퇴근 노선·탑승 신청 조회는 빈 응답 → 서비스 기본 시드(정류장·탑승자 포함) 사용
+    for (const table of ['shuttle_routes', 'shuttle_ride_requests']) {
+      await page.route(`**/mock-supabase.moa.local/**/${table}*`, (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
+      );
+    }
+  });
+
   // 모바일 스마트폰 뷰포트 (iPhone 14 규격: 390x844)
   test.use({
     viewport: { width: 390, height: 844 },
@@ -18,7 +32,7 @@ test.describe('모바일 및 키오스크 실기기 뷰포트 E2E 검증', () =>
 
   test('1. 기사용 모바일 운행표: 모바일 카드 뷰포트 렌더링 및 원클릭 탑승 확인', async ({ page }) => {
     // 셔틀 관리 화면 접속
-    await page.goto('/shuttle');
+    await page.goto('/e2e/shuttle-commute');
 
     // 기사용 모바일 운행표 탭 클릭 (VehicleShuttleCommuteView)
     const driverTab = page.getByRole('button', { name: /기사용 모바일 운행표/ });
@@ -27,7 +41,7 @@ test.describe('모바일 및 키오스크 실기기 뷰포트 E2E 검증', () =>
     }
 
     // 상단 기사 운행표 헤더 확인
-    await expect(page.locator('text=기사용 모바일 운행표')).toBeVisible();
+    await expect(page.locator('div:text-is("기사용 모바일 운행표")')).toBeVisible();
 
     // 현재 정차지 카드 확인
     await expect(page.locator('text=현재 정차지')).toBeVisible();
@@ -42,7 +56,7 @@ test.describe('모바일 및 키오스크 실기기 뷰포트 E2E 검증', () =>
   });
 
   test('2. 모바일 탑승 신청 모달: 노선 및 정류장 선택 인터랙션', async ({ page }) => {
-    await page.goto('/shuttle');
+    await page.goto('/e2e/shuttle-commute');
 
     // 신규 탑승 신청 등록 버튼 클릭
     const openModalBtn = page.getByRole('button', { name: /신규 탑승 신청 등록/ });
@@ -72,17 +86,17 @@ test.describe('모바일 및 키오스크 실기기 뷰포트 E2E 검증', () =>
     });
 
     test('3. 태블릿 키오스크 뷰포트: 정차 순서 스케줄러 반응형 렌더링', async ({ page }) => {
-      await page.goto('/shuttle');
+      await page.goto('/e2e/shuttle-commute');
 
       // 스케줄러 탭 기본 활성화 확인
       await expect(page.locator('text=임직원 셔틀 정차 순서 및 탑승 스케줄러')).toBeVisible();
 
       // 출근 노선 / 퇴근 노선 전환 버튼 인터랙션
-      const commuteOutBtn = page.getByRole('button', { name: /퇴근 노선/ });
+      const commuteOutBtn = page.getByRole('button', { name: /^퇴근 노선 \(Commute Out\)$/ });
       await commuteOutBtn.click();
       await expect(commuteOutBtn).toBeVisible();
 
-      const commuteInBtn = page.getByRole('button', { name: /출근 노선/ });
+      const commuteInBtn = page.getByRole('button', { name: /^출근 노선 \(Commute In\)$/ });
       await commuteInBtn.click();
       await expect(commuteInBtn).toBeVisible();
     });
