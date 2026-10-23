@@ -32,6 +32,7 @@ import { liveProvider } from "./providers/liveProvider";
 import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/components";
 
 import { VehicleShuttleManagementView } from "@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView";
+import { VehicleShuttleCommuteView } from "@/capabilities/vehicle_shuttle/ui/VehicleShuttleCommuteView";
 import { DynamicRoleSettingsPage, FinanceRouteGate } from "@/pages/settings/DynamicRoleSettingsPage";
 import { MemberList } from "@/pages/members/MemberList";
 import { KioskAttendancePage } from "@/pages/kiosk/KioskAttendancePage";
@@ -352,7 +353,10 @@ const RefineApp: React.FC = () => {
         </Route>
 
         {import.meta.env.VITE_E2E === "1" ? (
-          <Route path="/e2e/shuttle" element={<VehicleShuttleManagementView />} />
+          <>
+            <Route path="/e2e/shuttle" element={<VehicleShuttleManagementView />} />
+            <Route path="/e2e/shuttle-commute" element={<VehicleShuttleCommuteView />} />
+          </>
         ) : null}
         <Route path="/p/:slug" element={<PublicStoreLandingPage />} />
         <Route path="/claim/:token" element={<ClaimTokenPage />} />
