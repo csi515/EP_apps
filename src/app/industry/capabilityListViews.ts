@@ -62,4 +62,10 @@ export const CAPABILITY_LIST_VIEWS: Record<string, CapabilityListView> = {
   'budget-ceilings': view('budget_ceiling_quota', 'BudgetCeilingListPage', () => import('@/capabilities/budget_ceiling_quota')),
   'audit-trails': view('field_audit_trail', 'FieldAuditListPage', () => import('@/capabilities/field_audit_trail')),
   'vendor-scorecards': view('vendor_scorecard', 'VendorScorecardListPage', () => import('@/capabilities/vendor_scorecard')),
+  'hazardous-substances': view('hazardous_substance_msds', 'HazardousSubstanceManagementView', () => import('@/capabilities/hazardous_substance_msds')),
+  'chemical-usage-logs': view('hazardous_substance_msds', 'HazardousSubstanceManagementView', () => import('@/capabilities/hazardous_substance_msds')),
+  'electronic-lab-notebooks': view('electronic_lab_notebook', 'ElectronicLabNotebookManagementView', () => import('@/capabilities/electronic_lab_notebook')),
+  'lab-notebook-signatures': view('electronic_lab_notebook', 'ElectronicLabNotebookManagementView', () => import('@/capabilities/electronic_lab_notebook')),
+  'vehicle-mileage-logs': view('vehicle_mileage_log', 'VehicleMileageLogManagementView', () => import('@/capabilities/vehicle_mileage_log')),
+  'safety-work-permits': view('safety_work_permit', 'SafetyWorkPermitManagementView', () => import('@/capabilities/safety_work_permit')),
 };

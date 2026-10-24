@@ -26,6 +26,7 @@ console.log('✓ Pilates default business rules passed');
 assert.equal(isBusinessRuleTrue('climbing_activity', 'mandatorySafetyWaiver'), true);
 assert.equal(isBusinessRuleTrue('boxing_mma', 'mandatorySafetyWaiver'), true);
 assert.equal(isBusinessRuleTrue('piano', 'mandatorySafetyWaiver'), false);
+assert.equal(getBusinessRule('piano', 'practiceMode', ''), 'free');
 console.log('✓ Mandatory safety waiver checks passed');
 
 // 3. Beauty and salon scheduling rules

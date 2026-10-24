@@ -1,11 +1,11 @@
 import React from 'react';
-import { StorageService } from '@/services/storage';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import { normalizeRolePermissions } from '@/domain/permissions';
 import { canManageVolunteerActivity } from '../domain/volunteerActivityEngine';
 import { AccessDeniedBanner } from '@/pages/settings/DynamicRoleSettingsPage';
 
 export function useVolunteerManageAccess(): boolean {
-  const active = StorageService.getActiveUser();
+  const active = useActiveUser();
   const flags = normalizeRolePermissions(active?.customRole?.permissions ?? null);
   const permissions: Record<string, boolean> = { ...(flags ?? {}) };
   return canManageVolunteerActivity({

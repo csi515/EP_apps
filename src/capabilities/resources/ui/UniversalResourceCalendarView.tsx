@@ -23,7 +23,7 @@ import {
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { evaluateMemberAccess } from '@/domain/permissions';
-import { StorageService } from '@/services/storage';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import type {
   Resource,
   ResourceReservation,
@@ -52,9 +52,10 @@ export type UniversalResourceCalendarViewProps = {
   bookingMode?: 'member' | 'customer';
 };
 
-function canManageResources(): boolean {
+function useCanManageResources(): boolean {
+  const active = useActiveUser();
   try {
-    const active = StorageService.getActiveUser();
+
     return evaluateMemberAccess(
       {
         role: active?.role === 'owner' ? 'owner' : 'staff',
@@ -98,7 +99,7 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   const { currentOrganization, currentStaffId, currentRole } = useOrganization();
   const { user } = useAuth();
   const orgId = currentOrganization?.id || '';
-  const allowResourceWrite = canManageResources();
+  const allowResourceWrite = useCanManageResources();
 
   const [activeTab, setActiveTab] = useState<'calendar' | 'inbox'>('calendar');
   const [viewMode, setViewMode] = useState<ViewMode>('day');

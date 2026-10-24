@@ -3,4 +3,4 @@ export { seat_roomCapability as seatRoomCapability } from './manifest';
 export * from './domain/seatRoomEngine';
 export { seatRoomSetupSchema } from './setupSchema';
 export { seatRoomResources } from './resources';
-export { SeatRoomManagementView } from './ui/SeatRoomManagementView';
+export { SeatRoomManagementView, type SeatRoomManagementViewProps } from './ui/SeatRoomManagementView';

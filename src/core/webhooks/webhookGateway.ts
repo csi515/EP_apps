@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import type { LeadSource } from '@/capabilities/trial_funnel/domain/trialFunnelEngine';
+export type LeadSource = 'INSTAGRAM' | 'BLOG' | 'REFERRAL' | 'WALK_IN' | 'OTHER' | (string & {});
 
 export interface WebhookHeaderVerificationInput {
   signatureHeader: string | null | undefined;

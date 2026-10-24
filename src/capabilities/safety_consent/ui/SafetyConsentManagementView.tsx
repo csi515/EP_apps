@@ -13,7 +13,7 @@ import {
   User,
   Hash,
 } from 'lucide-react';
-import { StorageService } from '@/services/storage';
+
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { insertOpsRow, listOpsRows } from '@/core/organizations/services/opsPersistenceService';

@@ -85,6 +85,36 @@ function tileAllowed(
   return tile.requiredAnyCapability.some((c) => enabledCaps.includes(c));
 }
 
+
+const APP_FEATURE_PERM_MAP: Record<string, string> = {
+  resources: 'resources:manage',
+  grievances: 'grievances_manage',
+  volunteer: 'volunteer:manage',
+  shuttle: 'shuttle:manage',
+  inventory: 'inventory:manage',
+  supply_restock: 'inventory:manage',
+  office_supply: 'office_supply_request:manage',
+  meal_survey: 'meal_survey:manage',
+  sop_risk: 'sop:manage',
+  hazardous_substance: 'hazardous_materials:manage',
+  vehicle_mileage: 'vehicle_mileage:manage',
+  safety_permit: 'safety_permit:manage',
+};
+
+const FEATURE_LABEL_MAP: Record<string, string> = {
+  'resources:manage': '공용자원 담당',
+  'volunteer:manage': '봉사활동 담당',
+  'grievances_manage': '노경·고충 담당',
+  'shuttle:manage': '통근셔틀 담당',
+  'inventory:manage': '자재·재고 담당',
+  'office_supply_request:manage': '사무용품 담당',
+  'meal_survey:manage': '식수조사 담당',
+  'sop:manage': '안전보건·SOP 담당',
+  'hazardous_materials:manage': '유해화학물질 MSDS 담당',
+  'vehicle_mileage:manage': '법인차량 운행일지 담당',
+  'safety_permit:manage': '안전작업허가(PTW) 담당',
+};
+
 export const CompanyAppLauncherDashboard: React.FC<{
   onSelectApp?: (appId: string) => void;
   /** 셸에서 넘기면 동일 소스 사용; 없으면 org·프리셋에서 계산 */
@@ -101,6 +131,17 @@ export const CompanyAppLauncherDashboard: React.FC<{
   const activeUser = StorageService.getActiveUser();
   const userName = user?.name || activeUser?.name || '임직원';
   const orgName = currentOrganization?.name || '사내 업무 포털';
+
+  const userFeaturePermissions = useMemo<Record<string, boolean>>(() => {
+    const raw = (activeUser as any)?.feature_permissions || {};
+    return typeof raw === 'object' && raw !== null ? raw : {};
+  }, [activeUser]);
+
+  const assignedRoleBadges = useMemo(() => {
+    return Object.entries(userFeaturePermissions)
+      .filter(([key, val]) => Boolean(val) && FEATURE_LABEL_MAP[key])
+      .map(([key]) => FEATURE_LABEL_MAP[key]);
+  }, [userFeaturePermissions]);
 
   const enabledCaps = useMemo(() => {
     if (enabledCapabilityIds && enabledCapabilityIds.length > 0) {
@@ -278,10 +319,22 @@ export const CompanyAppLauncherDashboard: React.FC<{
       permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
       customRole: activeUser?.customRole ?? null,
     });
-    return all.filter((t) => {
-      const permOk = t.requiresPermissionCheck && t.id === 'research' ? rndOk : true;
-      return tileAllowed(t, enabledCaps, permOk);
-    });
+    return all
+      .filter((t) => {
+        const permOk = t.requiresPermissionCheck && t.id === 'research' ? rndOk : true;
+        return tileAllowed(t, enabledCaps, permOk);
+      })
+      .map((t) => {
+        const permKey = APP_FEATURE_PERM_MAP[t.id];
+      const isFeatureManager = permKey ? Boolean(userFeaturePermissions[permKey]) : false;
+      const finalBadge = t.badge ?? (isFeatureManager ? '담당' : null);
+      const finalBadgeColor = t.badge ? t.badgeColor : (isFeatureManager ? 'bg-indigo-600 text-white' : undefined);
+      return {
+        ...t,
+        badge: finalBadge,
+        badgeColor: finalBadgeColor,
+      };
+      });
   }, [enabledCaps, pendingApprovals.length, activeUser?.role, activeUser?.customRole]);
 
   const handleTileClick = (tile: CompanyAppTile, e: React.MouseEvent) => {
@@ -320,6 +373,28 @@ export const CompanyAppLauncherDashboard: React.FC<{
                 안녕하세요, {userName}님
               </h1>
               <p className="mt-1 text-sm text-slate-500">{todayStr} · 사내 업무 런처</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                  🏢 {(activeUser as any)?.department || '본사'}
+                </span>
+                <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
+                  👤 {(activeUser as any)?.role || (activeUser as any)?.customRole?.name || '임직원'}
+                </span>
+                {assignedRoleBadges.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 ml-1">
+                    <span className="text-slate-300">|</span>
+                    <span className="text-slate-500 font-medium text-[11px]">지정 직무:</span>
+                    {assignedRoleBadges.map((badge) => (
+                      <span
+                        key={badge}
+                        className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-md text-[11px] border border-indigo-200 shadow-2xs"
+                      >
+                        ★ {badge}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {pendingApprovals.length > 0 ? (

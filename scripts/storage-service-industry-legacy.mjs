@@ -48,4 +48,5 @@ export const STORAGE_SERVICE_INDUSTRY_LEGACY_FILES = new Set([
   'src/industries/skin/components/dashboard/SkinDashboardView.tsx',
   'src/industries/skin/services/skinRetailCatalogMigrate.ts',
   'src/industries/skin/services/skinRetailService.ts',
+  'src/industries/bath/viewMap.tsx',
 ]);

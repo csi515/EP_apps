@@ -17,8 +17,8 @@ import {
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { resolveLoyaltyStampTemplate } from '../domain/loyaltyStampTemplate';
 import { useTerminology } from '@/core/terminology';
-import { useApp } from '@/context/AppContext';
-import { StorageService } from '@/services/storage';
+import { showToast } from '@/shared/feedback/uiFeedback';
+import { useList } from '@refinedev/core';
 import {
   stampCard,
   redeemRewardCoupon,
@@ -59,7 +59,7 @@ function playStampSound() {
 export const LoyaltyStampView: React.FC = () => {
   const { currentOrganization } = useOrganization();
   const { t } = useTerminology(currentOrganization?.industry_type);
-  const { showToast } = useApp();
+
 
   const customerWord = t('customer.singular', '고객');
   const orgId = currentOrganization?.id || 'demo-org';
@@ -67,6 +67,11 @@ export const LoyaltyStampView: React.FC = () => {
   // 실제 고객 목록 로드
   const [customers, setCustomers] = useState<Array<{ id: string; name: string }>>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { query: customersQuery } = useList<any>({
+    resource: 'customers',
+    pagination: { mode: 'off' },
+  });
+
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
 
   // 스탬프 보드 & 쿠폰 상태
@@ -76,7 +81,7 @@ export const LoyaltyStampView: React.FC = () => {
 
   useEffect(() => {
     // 초기 고객 로드
-    const students = StorageService.getStudents();
+    const students = (customersQuery?.data?.data as Array<{ id: string; name: string }>) || [];
     if (students.length > 0) {
       const mapped = students.map((s) => ({ id: s.id, name: s.name }));
       setCustomers(mapped);
@@ -108,7 +113,7 @@ export const LoyaltyStampView: React.FC = () => {
         )
       );
     }
-  }, [currentOrganization?.industry_type]);
+  }, [currentOrganization?.industry_type, customersQuery?.data?.data]);
 
   const activeCustomer = useMemo(
     () => customers.find((c) => c.id === selectedCustomerId) || customers[0],

@@ -23,6 +23,7 @@ export type DynamicMemberRow = {
   joined_at?: string;
   email?: string;
   name?: string;
+  feature_permissions?: Record<string, boolean>;
 };
 
 export async function listDynamicRoles(organizationId: string): Promise<DynamicRoleRow[]> {
@@ -37,9 +38,9 @@ export async function listDynamicRoles(organizationId: string): Promise<DynamicR
 
 export async function listRoleMembers(organizationId: string): Promise<DynamicMemberRow[]> {
   const client = getCoreClient();
-  const memberRes = await client
+  const memberRes = await (client as any)
     .from('organization_members')
-    .select('id,user_id,role,organization_role_id,custom_role_id,is_active,joined_at')
+    .select('id,user_id,role,organization_role_id,custom_role_id,is_active,joined_at,feature_permissions')
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: true });
   if (memberRes.error) {
@@ -49,9 +50,9 @@ export async function listRoleMembers(organizationId: string): Promise<DynamicMe
       .select('id,user_id,role,organization_role_id')
       .eq('organization_id', organizationId);
     if (fallbackRes.error) throw new Error(fallbackRes.error.message);
-    return fallbackRes.data as DynamicMemberRow[];
+    return fallbackRes.data as unknown as DynamicMemberRow[];
   }
-  return (memberRes.data ?? []) as DynamicMemberRow[];
+  return (memberRes.data ?? []) as unknown as DynamicMemberRow[];
 }
 
 export async function saveDynamicRole(input: {
@@ -104,6 +105,43 @@ export async function assignOrganizationRole(
         .update({ organization_role_id: roleId } as any)
         .eq('id', memberId);
       if (result.error) throw new Error(result.error.message);
+      return;
+    }
+    throw new Error(msg);
+  }
+}
+
+/**
+ * 특정 회원에게 원자적 직무 기능 권한(총무, 노경, 봉사, 셔틀, 소모품 등)을 부여하거나 회수.
+ * DB RPC core.grant_member_feature_permission을 호출하여 세션 즉시 만료(token_version 증가)를 수행한다.
+ */
+export async function grantMemberFeaturePermission(
+  memberId: string,
+  featureKey: string,
+  enabled: boolean
+): Promise<void> {
+  const client = getCoreClient();
+  const rpcRes = await (client as any).rpc('grant_member_feature_permission', {
+    p_target_member_id: memberId,
+    p_feature_key: featureKey,
+    p_enabled: enabled,
+  });
+
+  if (rpcRes.error) {
+    const msg = rpcRes.error.message || '';
+    if (msg.includes('does not exist') || msg.includes('not found in schema')) {
+      // 로컬/테스트 환경 fallback
+      const { data: member } = await (client as any)
+        .from('organization_members')
+        .select('feature_permissions')
+        .eq('id', memberId)
+        .single();
+      const nextPerms = { ...((member as any)?.feature_permissions || {}), [featureKey]: enabled };
+      const { error } = await (client as any)
+        .from('organization_members')
+        .update({ feature_permissions: nextPerms })
+        .eq('id', memberId);
+      if (error) throw new Error(error.message);
       return;
     }
     throw new Error(msg);

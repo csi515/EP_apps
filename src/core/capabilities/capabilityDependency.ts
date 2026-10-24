@@ -7,7 +7,7 @@
  *  - 모든 연산은 불변(Immutable) 순수 함수로 수행
  */
 
-import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import type { PresetCapabilityId as CapabilityId } from '../presets/types';
 
 /**
  * Capability 간 필수 선행 의존 관계 맵 (DAG)

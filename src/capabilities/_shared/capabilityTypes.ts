@@ -131,6 +131,10 @@ export const CAPABILITY_IDS = [
   'vendor_scorecard',
   'field_dispatch',
   'waitlist_queue',
+  'hazardous_substance_msds',
+  'electronic_lab_notebook',
+  'vehicle_mileage_log',
+  'safety_work_permit',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

@@ -541,7 +541,7 @@ export const QuickSetupPage: React.FC = () => {
       const presetCaps = (activePreset?.capabilities ?? []) as CapabilityId[];
       const activationResult = resolveToolSetActivation(selectedToolSetIds, presetCaps);
       const additionalCaps = activationResult.nextCapabilities.filter(
-        (id) => !presetCaps.includes(id)
+        (id) => !presetCaps.includes(id as CapabilityId)
       );
 
       const activeCapabilitiesPayload =
@@ -1446,6 +1446,16 @@ export const QuickSetupPage: React.FC = () => {
                       #{idx + 1}
                     </span>
                     <span>{r.name}</span>
+                    {idx === 0 && (
+                      <span className="text-[9px] font-medium bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-100">
+                        최종결재
+                      </span>
+                    )}
+                    {idx === roles.length - 1 && roles.length > 1 && (
+                      <span className="text-[9px] font-medium bg-slate-200/80 text-slate-600 px-1.5 py-0.5 rounded">
+                        일반실무
+                      </span>
+                    )}
                     <span className="text-[10px] text-slate-400">({r.rank_order})</span>
                     <div className="flex items-center space-x-0.5 ml-1">
                       <button

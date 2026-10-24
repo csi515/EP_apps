@@ -132,6 +132,12 @@ const CAPABILITY_ROUTE_PATHS = [
   "budget-ceilings",
   "audit-trails",
   "vendor-scorecards",
+  "hazardous-substances",
+  "chemical-usage-logs",
+  "electronic-lab-notebooks",
+  "lab-notebook-signatures",
+  "vehicle-mileage-logs",
+  "safety-work-permits",
 ] as const;
 
 function runRoutingTests() {

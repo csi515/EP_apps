@@ -249,6 +249,14 @@ import { fieldDispatchSetupSchema } from '@/capabilities/field_dispatch/setupSch
 import { fieldDispatchResources } from '@/capabilities/field_dispatch/resources';
 import { waitlistQueueSetupSchema } from '@/capabilities/waitlist_queue/setupSchema';
 import { waitlistQueueResources } from '@/capabilities/waitlist_queue/resources';
+import { hazardousSubstanceMsdsSetupSchema } from '@/capabilities/hazardous_substance_msds/setupSchema';
+import { hazardousSubstanceMsdsResources } from '@/capabilities/hazardous_substance_msds/resources';
+import { electronicLabNotebookSetupSchema } from '@/capabilities/electronic_lab_notebook/setupSchema';
+import { electronicLabNotebookResources } from '@/capabilities/electronic_lab_notebook/resources';
+import { vehicleMileageLogSetupSchema } from '@/capabilities/vehicle_mileage_log/setupSchema';
+import { vehicleMileageLogResources } from '@/capabilities/vehicle_mileage_log/resources';
+import { safetyWorkPermitSetupSchema } from '@/capabilities/safety_work_permit/setupSchema';
+import { safetyWorkPermitResources } from '@/capabilities/safety_work_permit/resources';
 
 
 /**
@@ -931,6 +939,26 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: waitlistQueueSetupSchema,
     resources: waitlistQueueResources,
   },
+  hazardous_substance_msds: {
+    capabilityId: 'hazardous_substance_msds',
+    setupSchema: hazardousSubstanceMsdsSetupSchema,
+    resources: hazardousSubstanceMsdsResources,
+  },
+  electronic_lab_notebook: {
+    capabilityId: 'electronic_lab_notebook',
+    setupSchema: electronicLabNotebookSetupSchema,
+    resources: electronicLabNotebookResources,
+  },
+  vehicle_mileage_log: {
+    capabilityId: 'vehicle_mileage_log',
+    setupSchema: vehicleMileageLogSetupSchema,
+    resources: vehicleMileageLogResources,
+  },
+  safety_work_permit: {
+    capabilityId: 'safety_work_permit',
+    setupSchema: safetyWorkPermitSetupSchema,
+    resources: safetyWorkPermitResources,
+  },
 };
 
 
@@ -955,9 +983,10 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     description: '원생 출결, 1:1 레슨 피아노 연습실 배정, 교습비 정기 청구, 교재 및 진도 관리',
     category: 'education',
     capabilities: ['seat_room', 'attendance', 'passes', 'billing_invoicing', 'consultation_crm', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'membership_referral_tree'] as const,
-    requiredCapabilities: ['seat_room', 'attendance', 'passes', 'billing_invoicing'] as const,
-    optionalCapabilities: ['consultation_crm', 'inventory', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'membership_referral_tree'] as const,
+    requiredCapabilities: ['attendance', 'passes', 'billing_invoicing'] as const,
+    optionalCapabilities: ['seat_room', 'consultation_crm', 'inventory', 'curriculum_progress', 'retention_marketing', 'vehicle_shuttle', 'membership_referral_tree'] as const,
     businessRules: {
+      practiceMode: 'free',
       lessonDurationMinutes: 30,
       autoCheckInDeduct: true,
       unpaidNoticeDayOfMonth: 25,
@@ -1846,6 +1875,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'leave_management',
       'supply_restock',
       'shuttle_dispatch',
+      'hazardous_substance_msds',
     ] as const,
     roles: [
       { name: '대표이사/임원', rank_order: 1, permissions: ['*'] },
@@ -1884,6 +1914,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'meal_survey',
       'office_supply_request',
       'shuttle_dispatch',
+      'hazardous_substance_msds',
     ] as const,
     requiredCapabilities: [
       'approval_workflow',
@@ -2157,6 +2188,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'approval_workflow',
       'leave_management',
       'vehicle_shuttle',
+      'hazardous_substance_msds',
+      'electronic_lab_notebook',
     ] as const,
     requiredCapabilities: [
       'task_pipeline',
@@ -2173,6 +2206,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'approval_workflow',
       'leave_management',
       'vehicle_shuttle',
+      'hazardous_substance_msds',
+      'electronic_lab_notebook',
     ] as const,
     roles: [
       { name: '연구책임자(PI) / 연구소장', rank_order: 1, permissions: ['*'] },

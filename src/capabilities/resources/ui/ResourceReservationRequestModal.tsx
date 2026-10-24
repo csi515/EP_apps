@@ -14,7 +14,7 @@ import {
   requestResourceReservation,
   requestMemberResourceReservation,
 } from '../reservationService';
-import { StorageService } from '@/services/storage';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 
 interface ResourceReservationRequestModalProps {
   organizationId: string;
@@ -63,7 +63,7 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const sessionUser = StorageService.getActiveUser();
+  const sessionUser = useActiveUser();
   const displayName =
     requesterDisplayName?.trim() ||
     sessionUser?.name ||

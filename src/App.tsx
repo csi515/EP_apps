@@ -78,6 +78,9 @@ const WorkspaceMealSurveySettingsPage = lazy(() => import("./pages/workspace/Wor
 const WorkspaceOfficeSupplyMyPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyMyPage })));
 const WorkspaceOfficeSupplyManagePage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyManagePage })));
 const WorkspaceOfficeSupplyCatalogPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyCatalogPage })));
+const WorkspaceHazardousSubstancesPage = lazy(() => import("./pages/workspace/WorkspaceHazardousSubstancesPage").then((m) => ({ default: m.WorkspaceHazardousSubstancesPage })));
+const WorkspaceVehicleMileagePage = lazy(() => import("./pages/workspace/WorkspaceVehicleMileagePage").then((m) => ({ default: m.WorkspaceVehicleMileagePage })));
+const WorkspaceSafetyPermitsPage = lazy(() => import("./pages/workspace/WorkspaceSafetyPermitsPage").then((m) => ({ default: m.WorkspaceSafetyPermitsPage })));
 const PassesListPage = lazy(() => import("./pages/passes/list").then((m) => ({ default: m.PassesListPage })));
 const LockersGridPage = lazy(() => import("./pages/lockers/grid").then((m) => ({ default: m.LockersGridPage })));
 const PublicStoreLandingPage = lazy(() => import("./pages/public/PublicStoreLandingPage").then((m) => ({ default: m.PublicStoreLandingPage })));
@@ -224,6 +227,12 @@ const CAPABILITY_ROUTE_PATHS = [
   "budget-ceilings",
   "audit-trails",
   "vendor-scorecards",
+  "hazardous-substances",
+  "chemical-usage-logs",
+  "electronic-lab-notebooks",
+  "lab-notebook-signatures",
+  "vehicle-mileage-logs",
+  "safety-work-permits",
 ] as const;
 
 const RefineApp: React.FC = () => {
@@ -354,6 +363,9 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/office-supply" element={<WorkspaceOfficeSupplyMyPage />} />
             <Route path="/workspace/office-supply/manage" element={<WorkspaceOfficeSupplyManagePage />} />
             <Route path="/workspace/office-supply/catalog" element={<WorkspaceOfficeSupplyCatalogPage />} />
+            <Route path="/workspace/hazardous-substances" element={<WorkspaceHazardousSubstancesPage />} />
+            <Route path="/workspace/vehicle-mileage" element={<WorkspaceVehicleMileagePage />} />
+            <Route path="/workspace/safety-permits" element={<WorkspaceSafetyPermitsPage />} />
             <Route path="/rnd" element={<RndPortalPage />} />
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />

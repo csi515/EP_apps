@@ -2,16 +2,17 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Car, Plus, Power } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { evaluateMemberAccess } from '@/domain/permissions';
-import { StorageService } from '@/services/storage';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import { listResources, setResourceActive, upsertBookableResource } from '../resourceService';
 import type { Resource } from '../types';
 import { showToast } from '@/shared/feedback/uiFeedback';
 
 export const VEHICLE_RESOURCE_KIND = 'vehicle';
 
-function canManageResources(): boolean {
+function useCanManageResources(): boolean {
+  const user = useActiveUser();
   try {
-    const user = StorageService.getActiveUser();
+
     const member = {
       role: user?.role === 'owner' ? 'owner' : 'staff',
       customRole: { permissions: user?.customRole?.permissions ?? null },
@@ -26,7 +27,7 @@ function canManageResources(): boolean {
 export function SharedVehicleCatalogView() {
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id ?? '';
-  const canWrite = canManageResources();
+  const canWrite = useCanManageResources();
 
   const [rows, setRows] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);

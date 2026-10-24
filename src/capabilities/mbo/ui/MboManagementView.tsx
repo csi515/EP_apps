@@ -45,6 +45,7 @@ import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import { MboService } from '../services/mboService';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
   ensureDefaultProjectCategories,
   listProjectCategories,
@@ -278,6 +279,7 @@ export const MboManagementView: React.FC = () => {
   const [newVisibility, setNewVisibility] = useState<MboVisibilityType>('PRIVATE');
   const [shareMemberIds, setShareMemberIds] = useState<string[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [mboFilterScope, setMboFilterScope] = useState<'all' | 'my' | 'dept'>('all');
   const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
 
@@ -362,6 +364,22 @@ export const MboManagementView: React.FC = () => {
       targetValue: obj.weight,
     }));
   }, [refineObjectives, localObjectives]);
+
+  const activeUser = useActiveUser();
+  const filteredObjectives = useMemo(() => {
+    if (mboFilterScope === 'all') return objectives;
+    const currentUserName = activeUser?.name;
+    const currentUserDept = (activeUser as any)?.department;
+    if (mboFilterScope === 'my') {
+      if (!currentUserName) return objectives;
+      return objectives.filter((o) => o.ownerName === currentUserName || o.level === 'company');
+    }
+    if (mboFilterScope === 'dept') {
+      if (!currentUserDept) return objectives;
+      return objectives.filter((o) => o.departmentName === currentUserDept || o.level === 'company');
+    }
+    return objectives;
+  }, [objectives, mboFilterScope, activeUser]);
 
   const logs: ProgressLogItem[] = useMemo(() => {
     if (refineLogs && refineLogs.length > 0) {

@@ -120,6 +120,10 @@ import { field_audit_trailCapability } from './field_audit_trail/manifest';
 import { vendor_scorecardCapability } from './vendor_scorecard/manifest';
 import { field_dispatchCapability } from './field_dispatch/manifest';
 import { waitlist_queueCapability } from './waitlist_queue/manifest';
+import { hazardous_substance_msdsCapability } from './hazardous_substance_msds/manifest';
+import { electronic_lab_notebookCapability } from './electronic_lab_notebook/manifest';
+import { vehicle_mileage_logCapability } from './vehicle_mileage_log/manifest';
+import { safety_work_permitCapability } from './safety_work_permit/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -253,6 +257,10 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   vendor_scorecardCapability,
   field_dispatchCapability,
   waitlist_queueCapability,
+  hazardous_substance_msdsCapability,
+  electronic_lab_notebookCapability,
+  vehicle_mileage_logCapability,
+  safety_work_permitCapability,
 ];
 
 export * from './trial_funnel';
@@ -319,6 +327,10 @@ export * from './field_audit_trail';
 export * from './vendor_scorecard';
 export * from './field_dispatch';
 export * from './waitlist_queue';
+export * from './hazardous_substance_msds';
+export * from './electronic_lab_notebook';
+export * from './vehicle_mileage_log';
+export * from './safety_work_permit';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

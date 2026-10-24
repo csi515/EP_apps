@@ -76,7 +76,7 @@
   },
   {
     "file": "src/core/capabilities/capabilityDependency.ts",
-    "spec": "@/capabilities/_shared/capabilityTypes",
+    "spec": "../presets/types",
     "kind": "core-out"
   },
   {
@@ -276,12 +276,7 @@
   },
   {
     "file": "src/core/presets/operationBundles.ts",
-    "spec": "@/capabilities/_shared/capabilityTypes",
-    "kind": "core-out"
-  },
-  {
-    "file": "src/core/presets/operationBundles.ts",
-    "spec": "@/core/capabilities/capabilityDependency",
+    "spec": "../capabilities/capabilityDependency",
     "kind": "core-out"
   },
   {
@@ -392,11 +387,6 @@
   {
     "file": "src/core/waitlist/waitlistService.ts",
     "spec": "@/capabilities/booking/waitlist/waitlistService",
-    "kind": "core-out"
-  },
-  {
-    "file": "src/core/webhooks/webhookGateway.ts",
-    "spec": "@/capabilities/trial_funnel/domain/trialFunnelEngine",
     "kind": "core-out"
   },
   {

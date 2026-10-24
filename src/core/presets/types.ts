@@ -180,6 +180,10 @@ export type BundledPresetCapabilityId =
   | 'vendor_scorecard'
   | 'field_dispatch'
   | 'waitlist_queue'
+  | 'hazardous_substance_msds'
+  | 'electronic_lab_notebook'
+  | 'vehicle_mileage_log'
+  | 'safety_work_permit'
   // 향후 지속적인 신규 Capability 추가를 위한 Open Union 확장 (자동완성 유지 + 유연한 확장)
   | (string & {});
 

@@ -326,6 +326,20 @@ function run() {
   assert.equal(auditSlip.status, 'DRAFT');
   assert.match(auditSlip.slipNumber, /AUDIT-SLIP-20261018/);
 
+  // 17. itemType 및 JSONB 메타데이터(교재 등) 지원 검증
+  const textbookItem: InventoryItem = {
+    id: 'bk-1',
+    name: '체르니 30',
+    sku: 'BK-CZERNY-30',
+    itemType: 'textbook',
+    currentStock: 12,
+    safetyStock: 3,
+    unitPrice: 10000,
+    metadata: { publisher: '세광', level: '체르니 30', author: 'Czerny' },
+  };
+  assert.equal(textbookItem.itemType, 'textbook');
+  assert.equal(textbookItem.metadata?.publisher, '세광');
+
   console.log('inventoryEngine.test.ts: ok (with Auto-PO, Bundle, Barcode Gen, Label Print, FEFO Lot, Expiry & Stock Audit)');
 }
 

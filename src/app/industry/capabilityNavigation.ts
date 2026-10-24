@@ -190,6 +190,10 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   vendor_scorecard: ['vendor-scorecards', 'vendor-evaluations'],
   field_dispatch: ['dispatch', 'field-dispatch'],
   waitlist_queue: ['waitlist', 'waitlist-queue'],
+  hazardous_substance_msds: ['hazardous-substances', 'msds'],
+  electronic_lab_notebook: ['lab-notebooks', 'eln'],
+  vehicle_mileage_log: ['vehicle-mileage', 'mileage-logs'],
+  safety_work_permit: ['safety-permits', 'work-permits'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

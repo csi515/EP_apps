@@ -47,10 +47,16 @@ export interface SaleCartLine {
   variantName: string | null;
   unitPrice: number;
   quantity: number;
+  /** 품목 즉석 할인 금액 (원) */
+  discountAmount?: number;
 }
 
-export function cartLineAmount(line: Pick<SaleCartLine, 'unitPrice' | 'quantity'>): number {
-  return Math.max(0, line.unitPrice) * Math.max(0, line.quantity);
+export function cartLineAmount(
+  line: Pick<SaleCartLine, 'unitPrice' | 'quantity'> & { discountAmount?: number }
+): number {
+  const base = Math.max(0, line.unitPrice) * Math.max(0, line.quantity);
+  const discount = Math.max(0, line.discountAmount ?? 0);
+  return Math.max(0, base - discount);
 }
 
 export function cartTotalAmount(lines: SaleCartLine[]): number {

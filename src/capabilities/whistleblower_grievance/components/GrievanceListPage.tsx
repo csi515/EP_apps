@@ -11,20 +11,20 @@ import {
 } from '../domain/grievanceEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { canReadAllFeedbacks, type AccessMember } from '@/domain/permissions';
-import { StorageService } from '@/services/storage';
+import { useActiveUser } from '@/shared/session/useActiveUser';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
-import { getIndustryPreset } from '@/app/presets/presetRegistry';
+
 
 function resolveAccessMember(): AccessMember {
-  const active = StorageService.getActiveUser();
+  const active = useActiveUser();
   return {
     role: active?.role === 'owner' ? 'owner' : 'staff',
     customRole: { permissions: active?.customRole?.permissions ?? null },
   };
 }
 
-function canManageGrievances(): boolean {
+function useCanManageGrievances(): boolean {
   try {
     return canReadAllFeedbacks(resolveAccessMember());
   } catch {
@@ -38,8 +38,8 @@ function resolveDefaultGrievanceVisibility(
 ): GrievanceVisibility {
   if (settings?.grievances_named_default === true) return 'named';
   if (settings?.grievances_named_default === false) return 'anonymous';
-  const preset = industryType ? getIndustryPreset(industryType) : null;
-  if (preset?.defaultSettings?.grievances_named_default === true) return 'named';
+
+
   return 'named';
 }
 
@@ -51,7 +51,7 @@ export const GrievanceListPage: React.FC = () => {
     () => resolveDefaultGrievanceVisibility(settings, currentOrganization?.industry_type),
     [settings, currentOrganization?.industry_type],
   );
-  const isHandler = canManageGrievances();
+  const isHandler = useCanManageGrievances();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visibility, setVisibility] = useState<GrievanceVisibility>(defaultVisibility);

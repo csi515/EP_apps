@@ -36,7 +36,7 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
     <main className="mx-auto max-w-3xl space-y-4 p-4">
       <header>
         <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-        <p className="text-sm text-slate-500">룸·좌석을 등록하고 예약 캘린더와 분리해 관리합니다.</p>
+        <p className="text-sm text-slate-500">{subtitle}</p>
       </header>
       {loading ? <p className="text-sm text-slate-500">불러오는 중…</p> : null}
       {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -57,7 +57,7 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
       >
         <input
           className="min-h-11 flex-1 rounded-lg border px-3 text-sm"
-          placeholder="룸·좌석 이름"
+          placeholder={`${roomLabel} 이름`}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />

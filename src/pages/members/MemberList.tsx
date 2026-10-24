@@ -20,6 +20,7 @@ import {
   listDynamicRoles,
   listRoleMembers,
   assignOrganizationRole,
+  grantMemberFeaturePermission,
   type DynamicMemberRow,
   type DynamicRoleRow,
 } from '@/core/organizations/services/dynamicRoleService';
@@ -63,6 +64,19 @@ export function MemberList(): React.JSX.Element {
 
   // 권한 회수(강등) 컨펌 모달 상태
   const [revokeTarget, setRevokeTarget] = useState<DynamicMemberRow | null>(null);
+
+  // 직무 기능 권한 토글 모달 상태
+  const [featureTarget, setFeatureTarget] = useState<DynamicMemberRow | null>(null);
+  const [featureSavingKey, setFeatureSavingKey] = useState<string | null>(null);
+
+  const FEATURE_ASSIGNMENT_OPTIONS = [
+    { key: 'resources:manage', label: '공용자원/총무 담당', desc: '회의실·업무차량 자원 등록 및 승인' },
+    { key: 'volunteer:manage', label: '봉사활동 담당', desc: '봉사 프로그램 개설 및 신청자 확정' },
+    { key: 'grievances_manage', label: '노경 건의함 담당', desc: '고충 건의함 열람 및 답변 등록' },
+    { key: 'shuttle:manage', label: '통근 셔틀 담당', desc: '셔틀 노선 및 배차 스케줄 관리' },
+    { key: 'office_supply_request:manage', label: '사무 소모품 담당', desc: '소모품 신청 검토 및 재고 불출' },
+    { key: 'safety:manage', label: '현장 안전/SOP 담당', desc: '위험성평가 및 작업표준 관리' },
+  ] as const;
 
   const activeUser = StorageService.getActiveUser();
   const canViewRoleAudit =
@@ -315,54 +329,38 @@ export function MemberList(): React.JSX.Element {
                       <td className="px-5 py-4">
                         {assignedRole ? (
                           <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1 rounded-lg bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 border border-indigo-200/60">
-                              <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
+                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">
+                              <ShieldCheck className="h-3 w-3 text-indigo-600" />
                               {assignedRole.name}
                             </span>
-                            {(() => {
-                              const labels = listEnabledPermissionLabels(
-                                assignedRole.permissions,
-                                scopedCapIds
-                              );
-                              const expanded = expandedPermMemberIds.has(member.id);
-                              const visible = expanded ? labels : labels.slice(0, 4);
-                              return (
-                                <div className="space-y-1">
-                                  <div className="flex flex-wrap gap-1">
-                                    {visible.map((item) => (
-                                      <span
-                                        key={item.key}
-                                        title={item.key}
-                                        className="rounded-sm bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-700"
-                                      >
-                                        {item.label}
-                                      </span>
-                                    ))}
-                                  </div>
-                                  {labels.length > 4 ? (
-                                    <button
-                                      type="button"
-                                      className="text-[10px] font-semibold text-indigo-600 hover:underline"
-                                      onClick={() => {
-                                        setExpandedPermMemberIds((prev) => {
-                                          const next = new Set(prev);
-                                          if (next.has(member.id)) next.delete(member.id);
-                                          else next.add(member.id);
-                                          return next;
-                                        });
-                                      }}
-                                    >
-                                      {expanded
-                                        ? '접기'
-                                        : `권한 ${labels.length - 4}개 더 보기`}
-                                    </button>
-                                  ) : null}
-                                </div>
-                              );
-                            })()}
+                            <span className="block text-[11px] text-slate-400">
+                              {assignedRole.description || '지정 직급'}
+                            </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-slate-400 font-medium">기본 직급 (미배정)</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
+                            미배정 (기본 사원)
+                          </span>
+                        )}
+                        {/* 회원별 개별 기능 권한 칩 */}
+                        {member.feature_permissions && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {Object.entries(member.feature_permissions)
+                              .filter(([_, enabled]) => Boolean(enabled))
+                              .map(([k]) => {
+                                const opt = FEATURE_ASSIGNMENT_OPTIONS.find((f) => f.key === k);
+                                if (!opt) return null;
+                                return (
+                                  <span
+                                    key={k}
+                                    className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/60"
+                                  >
+                                    <span>⚙️</span>
+                                    <span>{opt.label.replace(' 담당', '')}</span>
+                                  </span>
+                                );
+                              })}
+                          </div>
                         )}
                       </td>
 
@@ -644,6 +642,102 @@ export function MemberList(): React.JSX.Element {
       <section className="pt-6">
         <OwnershipTransferCard />
       </section>
+    
+      {/* ------------------------------------------------------------------------ */}
+      {/* 회원별 직무 기능 권한(총무/봉사/노경/셔틀 등) 개별 토글 모달 */}
+      {/* ------------------------------------------------------------------------ */}
+      {featureTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  직무 기능 권한 배정
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  대상: <span className="font-semibold text-slate-800">{featureTarget.name || featureTarget.email}</span> (직급과 무관하게 독립 부여)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFeatureTarget(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {FEATURE_ASSIGNMENT_OPTIONS.map((feat) => {
+                const isEnabled = Boolean(featureTarget.feature_permissions?.[feat.key]);
+                const isBusy = featureSavingKey === feat.key;
+
+                return (
+                  <label
+                    key={feat.key}
+                    className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                      isEnabled
+                        ? 'border-indigo-500 bg-indigo-50/50 shadow-2xs'
+                        : 'border-slate-200 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isEnabled}
+                      disabled={isBusy}
+                      onChange={async (e) => {
+                        const checked = e.target.checked;
+                        setFeatureSavingKey(feat.key);
+                        try {
+                          await grantMemberFeaturePermission(featureTarget.id, feat.key, checked);
+                          // 로컬 상태 동기화
+                          const updated = {
+                            ...featureTarget,
+                            feature_permissions: {
+                              ...(featureTarget.feature_permissions || {}),
+                              [feat.key]: checked,
+                            },
+                          };
+                          setFeatureTarget(updated);
+                          setMembers((prev) =>
+                            prev.map((m) => (m.id === featureTarget.id ? updated : m))
+                          );
+                          setSuccessMessage(`'${feat.label}' 권한이 ${checked ? '부여' : '회수'}되었습니다.`);
+                        } catch (err) {
+                          setError(err instanceof Error ? err.message : '권한 변경에 실패했습니다.');
+                        } finally {
+                          setFeatureSavingKey(null);
+                        }
+                      }}
+                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                        <span>{feat.label}</span>
+                        {isBusy && <span className="text-[10px] text-indigo-600 font-normal">저장 중...</span>}
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                        {feat.desc}
+                      </p>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setFeatureTarget(null)}
+                className="h-10 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

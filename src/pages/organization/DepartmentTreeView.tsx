@@ -30,6 +30,9 @@ interface Props {
   onSelect: (id: string) => void;
   onMove: (departmentId: string, newParentId: string | null) => void;
   canManage: boolean;
+  departmentMembers?: DepartmentMemberRow[];
+  members?: DynamicMemberRow[];
+  roles?: DynamicRoleRow[];
 }
 
 export const DepartmentTreeView: React.FC<Props> = ({
@@ -38,6 +41,9 @@ export const DepartmentTreeView: React.FC<Props> = ({
   onSelect,
   onMove,
   canManage,
+  departmentMembers = [],
+  members = [],
+  roles = [],
 }) => {
   const childrenMap = useMemo(() => buildChildrenMap(nodes), [nodes]);
   const [dragId, setDragId] = React.useState<string | null>(null);
@@ -103,7 +109,8 @@ export const DepartmentTreeView: React.FC<Props> = ({
         </div>
         <ul role="group">{renderBranch(node.id, depth + 1)}</ul>
       </li>
-    ));
+    );
+  });
   };
 
   return (

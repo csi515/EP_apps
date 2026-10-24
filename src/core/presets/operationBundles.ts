@@ -8,12 +8,12 @@
  *  - 세트 비활성화 시 다른 활성 세트가 공유하는 도구는 안전하게 보존된다.
  */
 
-import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import type { PresetCapabilityId as CapabilityId } from './types';
 import {
   CAPABILITY_DEPENDENCY_GRAPH,
   collectRequiredPrerequisites,
   collectDependentDependents,
-} from '@/core/capabilities/capabilityDependency';
+} from '../capabilities/capabilityDependency';
 
 /**
  * 9대 [우리 매장 맞춤 세트] 식별자

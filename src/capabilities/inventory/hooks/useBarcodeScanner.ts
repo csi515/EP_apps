@@ -47,9 +47,9 @@ export function triggerScannerHaptic(type: 'success' | 'error' = 'success'): voi
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       if (type === 'success') {
-        navigator.vibrate(40);
+        navigator.vibrate(20);
       } else {
-        navigator.vibrate([60, 40, 80]);
+        navigator.vibrate([100, 60, 100]);
       }
     } catch {
       // noop

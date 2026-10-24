@@ -112,6 +112,12 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'research-projects': ['research_project'],
   'change-management': ['change_management'],
   'leave-management': ['leave_management'],
+  'hazardous-substances': ['hazardous_substance_msds'],
+  'chemical-usage-logs': ['hazardous_substance_msds'],
+  'electronic-lab-notebooks': ['electronic_lab_notebook'],
+  'lab-notebook-signatures': ['electronic_lab_notebook'],
+  'vehicle-mileage-logs': ['vehicle_mileage_log'],
+  'safety-work-permits': ['safety_work_permit'],
 };
 
 /**
@@ -659,6 +665,34 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '시간(Hour) 단위 차감형 유연근무제 연동 휴가 신청 및 전자결재 승인 대장',
     tier: 'tier1_ready',
     primaryCapability: 'leave_management',
+  },
+  'hazardous-substances': {
+    tab: 'hazardous-substances',
+    label: '화학시약·MSDS 대장',
+    description: '유해화학물질 성상별 격리 보관, CAS 번호 검증, GHS 경고표지 및 위험물 관리',
+    tier: 'tier1_ready',
+    primaryCapability: 'hazardous_substance_msds',
+  },
+  'electronic-lab-notebooks': {
+    tab: 'electronic-lab-notebooks',
+    label: '전자 연구노트',
+    description: '작성자 전자서명, 제3자 목격자(Witness) 검증, 위변조 방지 해시 체이닝',
+    tier: 'tier1_ready',
+    primaryCapability: 'electronic_lab_notebook',
+  },
+  'vehicle-mileage-logs': {
+    tab: 'vehicle-mileage-logs',
+    label: '차량 운행일지',
+    description: '업무용 차량 주행거리, 주유비, 하이패스 통행료 정산 및 운행일지 대장',
+    tier: 'tier1_ready',
+    primaryCapability: 'vehicle_mileage_log',
+  },
+  'safety-work-permits': {
+    tab: 'safety-work-permits',
+    label: '안전작업허가서 (PTW)',
+    description: '화기·밀폐·고소·정전 위험 작업 사전 안전 허가 및 가스 농도 측정 승인 대장',
+    tier: 'tier1_ready',
+    primaryCapability: 'safety_work_permit',
   },
   capabilities: {
     tab: 'capabilities',
