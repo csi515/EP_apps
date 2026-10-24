@@ -8,6 +8,8 @@ export interface MboGoalVisibilityInput {
   visibilityType: MboVisibilityType;
   /** organization_members.id 목록 (PARTIAL) */
   sharedMemberIds?: readonly string[];
+  /** 목표 작성자의 조직도 부서 경로 (예: /root/dev/plat/core/) */
+  authorDepartmentPath?: string | null;
 }
 
 export interface MboGoalShareRow {
@@ -18,12 +20,24 @@ export function canViewMboGoal(
   goal: MboGoalVisibilityInput,
   currentMemberId: string | null | undefined,
   currentUserId: string | null | undefined,
-  options?: { isOwnerOrAdmin?: boolean },
+  options?: {
+    isOwnerOrAdmin?: boolean;
+    viewerLeadDepartmentPath?: string | null;
+  },
 ): boolean {
   if (!currentUserId) return false;
   if (options?.isOwnerOrAdmin) return true;
   if (goal.authorId === currentUserId) return true;
   if (goal.evaluatorId && goal.evaluatorId === currentUserId) return true;
+
+  // 조직도 트리 기반 부서장 계층 열람:
+  // 조회자가 리더로 있는 부서 경로 하위에 있는 팀원의 MBO는 자동 열람 허용 (상위 리더 상속)
+  if (options?.viewerLeadDepartmentPath && goal.authorDepartmentPath) {
+    if (goal.authorDepartmentPath.startsWith(options.viewerLeadDepartmentPath)) {
+      return true;
+    }
+  }
+
   if (goal.visibilityType === 'PUBLIC') return true;
   if (goal.visibilityType === 'PRIVATE') return false;
   if (goal.visibilityType === 'PARTIAL') {

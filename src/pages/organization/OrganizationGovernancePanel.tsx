@@ -6,6 +6,21 @@ import { ORG_CHART_COPY } from './orgChartCopy';
 
 const SCOPE_OPTIONS: DepartmentScopeType[] = ['SELF_ONLY', 'DESCENDANTS', 'GLOBAL'];
 
+export const SCOPE_LABELS: Record<DepartmentScopeType, { title: string; hint: string }> = {
+  SELF_ONLY: {
+    title: '해당 부서만 (기본 팀원/실무자)',
+    hint: '소속된 해당 부서의 데이터만 열람 및 관리할 수 있습니다.',
+  },
+  DESCENDANTS: {
+    title: '해당 부서 및 모든 하위 부서 (부서장/실장 권장)',
+    hint: '본인 부서뿐 아니라 산하 하위 팀/파트의 데이터까지 포괄 관리합니다.',
+  },
+  GLOBAL: {
+    title: '전사 전체 (대표이사/임원 전용)',
+    hint: '조직도 트리 전체의 모든 부서 데이터를 포괄 관리합니다.',
+  },
+};
+
 function memberLabel(member: DynamicMemberRow): string {
   if (member.name?.trim()) return member.name.trim();
   if (member.email?.trim()) return member.email.trim();
@@ -125,16 +140,21 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             </select>
           </label>
           <label className="block text-sm">
-            {ORG_CHART_COPY.scope}
+            <span className="font-medium text-slate-800">{ORG_CHART_COPY.scope}</span>
             <select
-              className="mt-1 min-h-11 w-full rounded-lg border px-3"
+              className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none"
               value={scopeType}
               onChange={(event) => setScopeType(event.target.value as DepartmentScopeType)}
             >
               {SCOPE_OPTIONS.map((option) => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option}>
+                  {SCOPE_LABELS[option].title}
+                </option>
               ))}
             </select>
+            <p className="mt-1 text-[11px] text-indigo-600">
+              💡 {SCOPE_LABELS[scopeType].hint}
+            </p>
           </label>
           <button
             type="button"

@@ -14,6 +14,7 @@ export interface CurriculumItemDefinition {
   title: string;
   sortOrder: number;
   required?: boolean;
+  metadata?: Record<string, unknown>; // 음악·체육 등 업종별 JSONB 확장 메타데이터 (e.g. { composer, songKey, bookTitle })
 }
 
 export interface StudentProgressRecord {
@@ -22,6 +23,7 @@ export interface StudentProgressRecord {
   score?: number; // 0 ~ 100
   completedAt?: string;
   notes?: string;
+  metadata?: Record<string, unknown>; // 승인·스탬프 등 업종별 확장 메타데이터 (e.g. { stampsCount, approvedBy, audioUrl })
 }
 
 export interface CurriculumProgressSummary {

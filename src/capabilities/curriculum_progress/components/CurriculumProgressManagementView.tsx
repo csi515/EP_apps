@@ -1,5 +1,6 @@
 import { getTenantStorageKey } from '@/shared/utils/tenantStorage';
 import React, { useState, useEffect, useMemo } from 'react';
+import { useList } from '@refinedev/core';
 import {
   GraduationCap,
   Award,
@@ -62,6 +63,24 @@ const STORAGE_KEY_REPORTS = 'moa_curriculum_monthly_reports';
 
 export function CurriculumProgressManagementView() {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('std-1');
+
+  // Refine v5 원생 목록 연동 (DB 실시간 데이터 우선)
+  const { query: customersQuery } = useList<any>({
+    resource: 'customers',
+    pagination: { mode: 'off' },
+  });
+
+  const studentsList: StudentItem[] = useMemo(() => {
+    const remote = customersQuery?.data?.data as Array<{ id: string; name: string; metadata?: any; level?: string }> | undefined;
+    if (remote && remote.length > 0) {
+      return remote.map((c) => ({
+        id: c.id,
+        name: c.name,
+        targetLevel: c.level || c.metadata?.target_level || 'lv-piano-1',
+      }));
+    }
+    return DEFAULT_STUDENTS;
+  }, [customersQuery?.data?.data]);
   const [activeTab, setActiveTab] = useState<'progress' | 'reports'>('progress');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -113,7 +132,7 @@ export function CurriculumProgressManagementView() {
     localStorage.setItem(getTenantStorageKey(STORAGE_KEY_REPORTS), JSON.stringify(reports));
   }, [reports]);
 
-  const currentStudent = DEFAULT_STUDENTS.find((s) => s.id === selectedStudentId) || DEFAULT_STUDENTS[0];
+  const currentStudent = studentsList.find((s) => s.id === selectedStudentId) || studentsList[0];
   const currentStudentProgress = progressRecords[currentStudent.id] || [];
 
   // 학생의 대상 레벨에 해당하는 단원 목록
@@ -193,7 +212,7 @@ export function CurriculumProgressManagementView() {
     showToast(`${currentStudent.name} 학생의 ${reportInput.yearMonth} 리포트가 학부모 포털로 발행되었습니다.`, 'success');
   };
 
-  const filteredStudents = DEFAULT_STUDENTS.filter((s) =>
+  const filteredStudents = studentsList.filter((s) =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

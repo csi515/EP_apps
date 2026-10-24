@@ -223,6 +223,13 @@ const CATEGORY_TABS = [
   { id: 'other', label: '기타 서비스' },
 ];
 
+export function normalizeRankOrders<T extends { rank_order: number }>(roles: readonly T[]): T[] {
+  return roles.map((r, index) => ({
+    ...r,
+    rank_order: (index + 1) * 100,
+  }));
+}
+
 export const QuickSetupPage: React.FC = () => {
   const navigate = useNavigate();
   const { switchTenant } = useTenant();
@@ -265,6 +272,7 @@ export const QuickSetupPage: React.FC = () => {
 
   // Pre-fill 상태 관리
   const [roles, setRoles] = useState<PresetRoleConfig[]>([]);
+  const [hasUserEditedRoles, setHasUserEditedRoles] = useState(false);
   const [rooms, setRooms] = useState<PresetRoomConfig[]>([]);
   const [lockerCount, setLockerCount] = useState<number>(50);
   const [operatingHours, setOperatingHours] = useState<PresetOperatingHoursConfig>({
@@ -373,7 +381,9 @@ export const QuickSetupPage: React.FC = () => {
     setGeneralError(null);
 
     const defaults = getStandardPresetsForIndustry(industry);
-    setRoles([...defaults.roles]);
+    if (!hasUserEditedRoles) {
+      setRoles(normalizeRankOrders(defaults.roles));
+    }
     setRooms(defaults.rooms ? [...defaults.rooms] : []);
     if (defaults.locker_count !== undefined) {
       setLockerCount(defaults.locker_count);
@@ -433,7 +443,21 @@ export const QuickSetupPage: React.FC = () => {
 
   // 직급 조작
   const handleRemoveRole = (index: number) => {
-    setRoles((prev) => prev.filter((_, i) => i !== index));
+    setHasUserEditedRoles(true);
+    setRoles((prev) => normalizeRankOrders(prev.filter((_, i) => i !== index)));
+  };
+
+  const handleMoveRole = (index: number, direction: 'up' | 'down') => {
+    setHasUserEditedRoles(true);
+    setRoles((prev) => {
+      const targetIdx = direction === 'up' ? index - 1 : index + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[targetIdx];
+      next[targetIdx] = temp;
+      return normalizeRankOrders(next);
+    });
   };
 
   const handleAddRole = () => {
@@ -443,14 +467,17 @@ export const QuickSetupPage: React.FC = () => {
       setGeneralError('이미 등록된 직급명입니다.');
       return;
     }
-    setRoles((prev) => [
-      ...prev,
-      {
-        name: roleName,
-        rank_order: (prev.length + 1) * 10,
-        permissions: ['attendance:checkin'],
-      },
-    ]);
+    setHasUserEditedRoles(true);
+    setRoles((prev) =>
+      normalizeRankOrders([
+        ...prev,
+        {
+          name: roleName,
+          rank_order: (prev.length + 1) * 100,
+          permissions: ['attendance:checkin'],
+        },
+      ])
+    );
     setNewRoleName('');
     setAddingRole(false);
     setGeneralError(null);
@@ -1413,14 +1440,37 @@ export const QuickSetupPage: React.FC = () => {
                 {roles.map((r, idx) => (
                   <div
                     key={`${r.name}-${idx}`}
-                    className="h-9 pl-3 pr-2 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold flex items-center space-x-1.5 border border-slate-200/60"
+                    className="h-9 pl-2.5 pr-2 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold flex items-center space-x-1.5 border border-slate-200/60"
                   >
+                    <span className="text-[10px] font-bold text-indigo-600 bg-white px-1.5 py-0.5 rounded shadow-2xs">
+                      #{idx + 1}
+                    </span>
                     <span>{r.name}</span>
-                    <span className="text-[10px] text-slate-400">#{r.rank_order}</span>
+                    <span className="text-[10px] text-slate-400">({r.rank_order})</span>
+                    <div className="flex items-center space-x-0.5 ml-1">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => handleMoveRole(idx, 'up')}
+                        className="w-4 h-4 rounded hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent text-slate-500 flex items-center justify-center transition"
+                        title="순서 올리기"
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === roles.length - 1}
+                        onClick={() => handleMoveRole(idx, 'down')}
+                        className="w-4 h-4 rounded hover:bg-slate-200 disabled:opacity-30 disabled:hover:bg-transparent text-slate-500 flex items-center justify-center transition"
+                        title="순서 내리기"
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </button>
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveRole(idx)}
-                      className="w-5 h-5 rounded-md hover:bg-slate-200/80 text-slate-400 hover:text-slate-600 flex items-center justify-center transition"
+                      className="w-5 h-5 rounded-md hover:bg-slate-200/80 text-slate-400 hover:text-slate-600 flex items-center justify-center transition ml-0.5"
                     >
                       <X className="w-3 h-3" />
                     </button>

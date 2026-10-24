@@ -109,4 +109,53 @@ assert.ok(hangulToChosung('김민수').startsWith('ㄱ'));
 assert.equal(memberMatchesQuery('김민수', 'ㄱㅁ'), true);
 assert.equal(memberMatchesQuery('김민수', '이'), false);
 
+// 케이스 4: 조직도 트리 기반 부서장 계층 열람 (상위 리더 상속 및 타 부서 차단)
+const teamMemberGoal = {
+  authorId: 'emp-core-1',
+  visibilityType: 'PRIVATE' as const,
+  authorDepartmentPath: '/root/dev/plat/core/',
+};
+
+// 4-1. 소속 팀장 열람 승인 (경로 동일)
+assert.equal(
+  canViewMboGoal(teamMemberGoal, 'm-lead', 'u-lead', {
+    viewerLeadDepartmentPath: '/root/dev/plat/core/',
+  }),
+  true,
+  '팀장은 소속 팀원의 PRIVATE MBO를 열람할 수 있어야 함'
+);
+
+// 4-2. 상위 그룹장/본부장 열람 승인 (경로 접두사 일치 상속)
+assert.equal(
+  canViewMboGoal(teamMemberGoal, 'm-director', 'u-director', {
+    viewerLeadDepartmentPath: '/root/dev/plat/',
+  }),
+  true,
+  '상위 그룹장은 하위 코어팀 팀원의 MBO를 열람할 수 있어야 함'
+);
+
+assert.equal(
+  canViewMboGoal(teamMemberGoal, 'm-vp', 'u-vp', {
+    viewerLeadDepartmentPath: '/root/dev/',
+  }),
+  true,
+  '개발본부장은 산하 모든 팀원의 MBO를 열람할 수 있어야 함'
+);
+
+// 4-3. 타 본부(디자인본부) 리더의 열람 시도 차단
+assert.equal(
+  canViewMboGoal(teamMemberGoal, 'm-design-lead', 'u-design-lead', {
+    viewerLeadDepartmentPath: '/root/design/',
+  }),
+  false,
+  '타 본부 리더는 개발팀 팀원의 PRIVATE MBO를 열람할 수 없어야 함'
+);
+
+// 4-4. 일반 팀원 (리더 경로 없음) 열람 시도 차단
+assert.equal(
+  canViewMboGoal(teamMemberGoal, 'm-peer', 'u-peer', {}),
+  false,
+  '일반 동료 직원은 PRIVATE MBO를 열람할 수 없어야 함'
+);
+
 console.log('mboVisibilityEngine.test.ts: ok');

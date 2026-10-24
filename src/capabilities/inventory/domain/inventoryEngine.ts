@@ -4,12 +4,16 @@
 
 export type StockMovementType = 'IN' | 'OUT' | 'ADJUST' | 'DISCARD';
 
+export type InventoryItemType = 'goods' | 'textbook' | 'consumable';
+
 export interface InventoryItem {
   id: string;
   name: string;
   sku: string;
   barcode?: string; // 바코드 (EAN-13, Code-128 등)
   qrCodeUrl?: string; // 모바일 스캔용 QR 딥링크 또는 URL
+  itemType?: InventoryItemType; // 품목 분류: 일반상품(goods), 교재(textbook), 소모품(consumable)
+  metadata?: Record<string, unknown>; // 업종별 확장 JSONB 메타데이터 (e.g. 교재의 경우 { publisher, level, author, edition })
   currentStock: number;
   safetyStock: number;
   unitPrice: number;

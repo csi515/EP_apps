@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import type { OrgNode } from './useOrganizationTree';
+import type { OrgNode, DepartmentMemberRow } from './useOrganizationTree';
+import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
 import { ORG_CHART_COPY } from './orgChartCopy';
 
 function isDescendant(nodes: OrgNode[], ancestorId: string, nodeId: string): boolean {
@@ -43,7 +44,13 @@ export const DepartmentTreeView: React.FC<Props> = ({
 
   const renderBranch = (parentId: string | null, depth: number): React.ReactNode => {
     const children = childrenMap.get(parentId) ?? [];
-    return children.map((node) => (
+    return children.map((node) => {
+      const deptMembers = departmentMembers.filter((dm) => dm.department_id === node.id);
+      const leadDm = deptMembers.find((dm) => dm.scope_type === 'DESCENDANTS');
+      const leadMember = leadDm ? members.find((m) => m.id === leadDm.member_id) : null;
+      const leadRole = leadDm?.custom_role_id ? roles.find((r) => r.id === leadDm.custom_role_id)?.name : null;
+
+      return (
       <li key={node.id} className="list-none">
         <div
           role="treeitem"
@@ -70,13 +77,24 @@ export const DepartmentTreeView: React.FC<Props> = ({
           }`}
           style={{ marginLeft: depth * 12 }}
         >
-          <button
-            type="button"
-            className="min-h-12 flex-1 text-left font-medium text-slate-900"
-            onClick={() => onSelect(node.id)}
-          >
-            {node.name}
-          </button>
+          <div className="min-h-12 flex-1 flex items-center justify-between gap-2">
+            <button
+              type="button"
+              className="text-left font-medium text-slate-900 hover:text-indigo-600 transition-colors flex items-center gap-2"
+              onClick={() => onSelect(node.id)}
+            >
+              <span>{node.name}</span>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/70 text-slate-700">
+                {deptMembers.length}명
+              </span>
+            </button>
+            {leadMember ? (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center gap-1 shrink-0">
+                <span>👑</span>
+                <span>{leadRole ? `${leadRole}: ` : '부서장: '}{leadMember.name || leadMember.email || '지정됨'}</span>
+              </span>
+            ) : null}
+          </div>
           {canManage ? (
             <span className="text-xs text-slate-400" title="다른 부서로 드래그하여 이동">
               ⋮⋮

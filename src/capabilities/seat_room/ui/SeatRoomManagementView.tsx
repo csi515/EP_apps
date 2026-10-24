@@ -11,19 +11,31 @@ type SeatRoomRow = {
   department_id?: string | null;
 };
 
-export const SeatRoomManagementView: React.FC = () => {
+export interface SeatRoomManagementViewProps {
+  title?: string;
+  subtitle?: string;
+  roomLabel?: string;
+  defaultCapacity?: number;
+}
+
+export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
+  title = '공간·좌석 현황',
+  subtitle = '룸·좌석을 등록하고 예약 캘린더와 분리해 관리합니다.',
+  roomLabel = '룸·좌석',
+  defaultCapacity,
+}) => {
   const { currentOrganization } = useOrganization();
   const runtime = readOpsRuntimeSettings(
     (currentOrganization?.settings ?? null) as Record<string, unknown> | null,
   );
   const { rows, loading, error, create } = useOpsTable<SeatRoomRow>('seat_rooms');
   const [name, setName] = useState('');
-  const [capacity, setCapacity] = useState(String(runtime.seat_capacity_default ?? 1));
+  const [capacity, setCapacity] = useState(String(defaultCapacity ?? runtime.seat_capacity_default ?? 1));
 
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4">
       <header>
-        <h1 className="text-xl font-bold text-slate-900">공간·좌석 현황</h1>
+        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
         <p className="text-sm text-slate-500">룸·좌석을 등록하고 예약 캘린더와 분리해 관리합니다.</p>
       </header>
       {loading ? <p className="text-sm text-slate-500">불러오는 중…</p> : null}

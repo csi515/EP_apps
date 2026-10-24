@@ -1,6 +1,6 @@
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
-import { Package, Plus, FolderOpen } from 'lucide-react';
+import { Package, Plus, FolderOpen, FileSpreadsheet } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { isSupabaseConfigured } from '@/lib/supabase';
@@ -15,6 +15,7 @@ import type {
 } from '../../types/product';
 import { ProductFormModal } from './ProductFormModal';
 import { ProductCategoryManageModal } from './ProductCategoryManageModal';
+import { ProductBulkImportModal } from './ProductBulkImportModal';
 import { PRODUCT_LIST_COPY as COPY } from './productListCopy';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 
@@ -36,6 +37,7 @@ export const ProductListView: FC = () => {
   const [statusFilter, setStatusFilter] = useState<ProductStatusFilter>('ALL');
   const [formOpen, setFormOpen] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [editing, setEditing] = useState<ProductListItem | null>(null);
 
   const load = useCallback(async () => {
@@ -116,15 +118,23 @@ export const ProductListView: FC = () => {
             <button
               type="button"
               onClick={() => setCategoryOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-white border border-teal-200 text-teal-800 text-sm font-bold rounded-xl w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-white border border-teal-200 text-teal-800 text-sm font-bold rounded-xl w-full sm:w-auto cursor-pointer"
             >
               <FolderOpen className="w-4 h-4" />
               {COPY.categoryManage}
             </button>
             <button
               type="button"
+              onClick={() => setBulkImportOpen(true)}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-bold rounded-xl w-full sm:w-auto shadow-2xs cursor-pointer"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-teal-600" />
+              엑셀 일괄 등록
+            </button>
+            <button
+              type="button"
               onClick={openCreate}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 text-white text-sm font-bold rounded-xl w-full sm:w-auto"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 text-white text-sm font-bold rounded-xl w-full sm:w-auto cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               {COPY.add}
@@ -161,100 +171,94 @@ export const ProductListView: FC = () => {
             { id: 'INACTIVE', label: COPY.statusInactive },
           ]}
           active={statusFilter}
-          onChange={setStatusFilter}
+          onChange={(id) => setStatusFilter(id as ProductStatusFilter)}
           activeClassName="bg-teal-600 text-white"
         />
       </FilterBar>
 
       {loading ? (
-        <PageListSkeleton rows={3} message="목록을 불러오는 중..." />
+        <PageListSkeleton rows={4} message="상품을 불러오는 중..." />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Package className="w-10 h-10" />}
-          title={COPY.emptyTitle}
-          description={COPY.emptyDescription}
-          action={
-            <button
-              type="button"
-              onClick={openCreate}
-              className="px-4 py-2.5 min-h-[44px] bg-teal-600 text-white text-sm font-bold rounded-xl"
-            >
-              {COPY.add}
-            </button>
-          }
+          title={items.length === 0 ? COPY.emptyTitle : '검색 결과가 없습니다'}
+          description={items.length === 0 ? COPY.emptyDescription : '검색어나 필터 조건을 변경해 보세요.'}
         />
       ) : (
         <>
-          {/* Mobile cards */}
-          <div className="md:hidden space-y-2">
+          {/* 모바일 카드 뷰 */}
+          <ul className="space-y-2 sm:hidden">
             {filtered.map((item) => (
-              <button
+              <li
                 key={item.id}
-                type="button"
-                onClick={() => openEdit(item)}
-                className="w-full text-left bg-white rounded-2xl border border-slate-200 p-4 min-h-[44px] active:bg-slate-50"
+                className="bg-white rounded-2xl border border-slate-200 p-4 space-y-2"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900 truncate">{item.name}</p>
-                    <p className="text-sm text-teal-700 font-semibold mt-0.5">
-                      {formatCurrency(item.price)}
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {item.categoryName ? `${item.categoryName} · ` : ''}
+                      {item.productCode ? `${item.productCode} · ` : ''}
+                      {COPY.optionBadge(item.variantCount)}
                     </p>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      <span
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          item.isActive
-                            ? 'bg-teal-50 text-teal-700'
-                            : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        {item.isActive ? COPY.statusActive : COPY.statusInactive}
-                      </span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                        {COPY.optionBadge(item.variantCount)}
-                      </span>
-                      {item.categoryName && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                          {item.categoryName}
-                        </span>
-                      )}
-                    </div>
                   </div>
-                  <span className="text-xs font-bold text-teal-600 shrink-0">{COPY.edit}</span>
+                  <span
+                    className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                      item.isActive
+                        ? 'bg-teal-50 text-teal-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {item.isActive ? COPY.statusActive : COPY.statusInactive}
+                  </span>
                 </div>
-              </button>
+                <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-sm">
+                  <span className="font-bold tabular-nums text-teal-700">
+                    {formatCurrency(item.price)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(item)}
+                    className="text-xs font-bold text-teal-600 min-h-[44px] px-2 flex items-center cursor-pointer"
+                  >
+                    {COPY.edit}
+                  </button>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
 
-          {/* Desktop table */}
-          <div className="hidden md:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          {/* 데스크톱 테이블 뷰 */}
+          <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-500 uppercase tracking-wide">
+              <thead className="bg-slate-50 text-slate-600 text-xs font-bold border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 font-bold">상품명</th>
-                  <th className="px-4 py-3 font-bold">카테고리</th>
-                  <th className="px-4 py-3 font-bold">기본 판매가</th>
-                  <th className="px-4 py-3 font-bold">옵션</th>
-                  <th className="px-4 py-3 font-bold">상태</th>
-                  <th className="px-4 py-3 font-bold text-right"> </th>
+                  <th className="p-4">{COPY.nameLabel}</th>
+                  <th className="p-4">{COPY.codeLabel}</th>
+                  <th className="p-4">{COPY.categoryLabel}</th>
+                  <th className="p-4">{COPY.optionModeLabel}</th>
+                  <th className="p-4 text-right">{COPY.priceLabel}</th>
+                  <th className="p-4 text-center">{COPY.activeLabel}</th>
+                  <th className="p-4 text-right"> </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50/80">
-                    <td className="px-4 py-3 font-semibold text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {item.categoryName || COPY.categoryNone}
+                  <tr key={item.id} className="hover:bg-slate-50/60">
+                    <td className="p-4 font-bold text-slate-900">{item.name}</td>
+                    <td className="p-4 font-mono text-xs text-slate-600">
+                      {item.productCode || '-'}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-teal-700">
-                      {formatCurrency(item.price)}
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
+                    <td className="p-4 text-slate-600">{item.categoryName || '-'}</td>
+                    <td className="p-4 text-slate-600">
                       {COPY.optionBadge(item.variantCount)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="p-4 text-right font-bold tabular-nums text-teal-700">
+                      {formatCurrency(item.price)}
+                    </td>
+                    <td className="p-4 text-center">
                       <span
-                        className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                        className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
                           item.isActive
                             ? 'bg-teal-50 text-teal-700'
                             : 'bg-slate-100 text-slate-500'
@@ -263,11 +267,11 @@ export const ProductListView: FC = () => {
                         {item.isActive ? COPY.statusActive : COPY.statusInactive}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="p-4 text-right">
                       <button
                         type="button"
                         onClick={() => openEdit(item)}
-                        className="text-xs font-bold text-teal-600 min-h-[44px] px-2"
+                        className="text-xs font-bold text-teal-600 min-h-[44px] px-2 cursor-pointer"
                       >
                         {COPY.edit}
                       </button>
@@ -304,6 +308,16 @@ export const ProductListView: FC = () => {
         onChanged={() => void load()}
         onError={(message) => showToast(message, 'error')}
         onToast={showToast}
+      />
+
+      <ProductBulkImportModal
+        isOpen={bulkImportOpen}
+        organizationId={orgId!}
+        onClose={() => setBulkImportOpen(false)}
+        onSuccess={() => {
+          showToast('상품 일괄 등록이 완료되었습니다.', 'success');
+          void load();
+        }}
       />
     </div>
   );

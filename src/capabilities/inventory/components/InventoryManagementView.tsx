@@ -44,6 +44,10 @@ const STORAGE_KEY_LOTS = 'moa_inventory_lots';
 export interface InventoryManagementViewProps {
   title?: string;
   subtitle?: string;
+  defaultItemType?: 'goods' | 'textbook' | 'consumable';
+  allowedItemTypes?: ('goods' | 'textbook' | 'consumable')[];
+  itemTypeLabel?: string;
+  showItemTypeFilter?: boolean;
 }
 
 const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation })[] = [
@@ -51,6 +55,7 @@ const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation }
     id: 'inv-01',
     name: '스페셜티 에스프레소 원두',
     sku: 'COF-ESP-01',
+    itemType: 'goods',
     barcode: '8801234560012',
     currentStock: 45,
     safetyStock: 15,
@@ -62,6 +67,7 @@ const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation }
     id: 'inv-02',
     name: '신선 1등급 우유 1000ml',
     sku: 'DAIRY-MILK-01',
+    itemType: 'consumable',
     barcode: '8801234560029',
     currentStock: 12,
     safetyStock: 20, // 안전재고 미달
@@ -73,6 +79,7 @@ const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation }
     id: 'inv-03',
     name: '수제 바닐라 빈 시럽 750ml',
     sku: 'SYR-VAN-01',
+    itemType: 'consumable',
     barcode: '8801234560036',
     currentStock: 18,
     safetyStock: 8,
@@ -82,14 +89,29 @@ const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation }
   },
   {
     id: 'inv-04',
-    name: '유기농 말차 파우더 500g',
-    sku: 'TEA-MAL-01',
-    barcode: '8801234560043',
-    currentStock: 8,
+    name: '바이엘 1 (기초 피아노 교본)',
+    sku: 'BK-PIANO-B01',
+    itemType: 'textbook',
+    barcode: '9788932612341',
+    currentStock: 15,
     safetyStock: 5,
-    unitPrice: 32000,
-    vendorName: '제주유기농농원',
-    location: { zoneId: 'ZONE-B (건조)', rackNo: 'RACK-01', binNo: 'BIN-02' },
+    unitPrice: 8000,
+    vendorName: '세광음악출판사',
+    metadata: { publisher: '세광음악출판사', level: '바이엘 상', author: 'F. Beyer' },
+    location: { zoneId: 'BOOK-A (교재보관함)', rackNo: 'RACK-01', binNo: 'BIN-01' },
+  },
+  {
+    id: 'inv-05',
+    name: '체르니 100번 연습곡',
+    sku: 'BK-PIANO-C100',
+    itemType: 'textbook',
+    barcode: '9788932612358',
+    currentStock: 10,
+    safetyStock: 4,
+    unitPrice: 9000,
+    vendorName: '세광음악출판사',
+    metadata: { publisher: '세광음악출판사', level: '체르니 100', author: 'C. Czerny' },
+    location: { zoneId: 'BOOK-A (교재보관함)', rackNo: 'RACK-01', binNo: 'BIN-02' },
   },
 ];
 
@@ -131,9 +153,14 @@ const DEFAULT_LOTS: (StockLotItem & { location?: WarehouseLocation })[] = [
 export const InventoryManagementView: React.FC<InventoryManagementViewProps> = ({
   title = '엔터프라이즈 스마트 재고·자재 관제',
   subtitle = '로트 번호, 유효기간(FEFO), 창고 랙/빈 위치 및 정기 실사 대사표',
+  defaultItemType,
+  allowedItemTypes,
+  itemTypeLabel = '품목',
+  showItemTypeFilter = true,
 }) => {
   const [activeTab, setActiveTab] = useState<'items' | 'lots' | 'audit'>('items');
   const [searchTerm, setSearchTerm] = useState('');
+  const [itemTypeFilter, setItemTypeFilter] = useState<string>(defaultItemType || 'ALL');
   const [expiryFilter, setExpiryFilter] = useState<string>('ALL');
   const [isStockInModalOpen, setIsStockInModalOpen] = useState(false);
   const [isStockOutFefoModalOpen, setIsStockOutFefoModalOpen] = useState(false);
@@ -233,15 +260,19 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
 
   // 필터링된 품목 목록
   const filteredItems = useMemo(() => {
-    if (!searchTerm.trim()) return items;
+    let result = items;
+    if (itemTypeFilter !== 'ALL') {
+      result = result.filter((it) => (it.itemType || 'goods') === itemTypeFilter);
+    }
+    if (!searchTerm.trim()) return result;
     const term = searchTerm.toLowerCase();
-    return items.filter(
+    return result.filter(
       (it) =>
         it.name.toLowerCase().includes(term) ||
         it.sku.toLowerCase().includes(term) ||
         (it.barcode && it.barcode.includes(term))
     );
-  }, [items, searchTerm]);
+  }, [items, itemTypeFilter, searchTerm]);
 
   // 필터링된 로트 목록
   const filteredLots = useMemo(() => {
@@ -377,19 +408,50 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
       {/* 탭 1: 품목 및 랙/빈 위치 목록 */}
       {activeTab === 'items' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="품목명, SKU, 바코드 검색"
-                className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="flex flex-wrap items-center gap-2 flex-1">
+              <div className="relative flex-1 min-w-[200px] max-w-sm">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={`${itemTypeLabel}명, SKU, 바코드 검색`}
+                  className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {showItemTypeFilter && (
+                <div className="inline-flex items-center rounded-xl bg-slate-100 p-0.5 text-xs font-semibold">
+                  {(allowedItemTypes ?? ['ALL', 'goods', 'textbook', 'consumable']).map((typeKey) => {
+                    const isAll = typeKey === 'ALL';
+                    const label = isAll
+                      ? '전체 유형'
+                      : typeKey === 'goods'
+                        ? '일반상품'
+                        : typeKey === 'textbook'
+                          ? '교재'
+                          : '소모품';
+                    const isSelected = itemTypeFilter === typeKey;
+                    return (
+                      <button
+                        key={typeKey}
+                        type="button"
+                        onClick={() => setItemTypeFilter(typeKey)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-white text-blue-700 shadow-2xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <div className="text-xs text-slate-400 font-semibold">
-              전체 <strong className="text-blue-600">{items.length}</strong>개 품목
+            <div className="text-xs text-slate-400 font-semibold text-right">
+              전체 <strong className="text-blue-600">{filteredItems.length}</strong>/{items.length}개 {itemTypeLabel}
             </div>
           </div>
 
@@ -413,7 +475,21 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
                     return (
                       <tr key={it.id} className="hover:bg-slate-50/60 transition-colors">
                         <td className="px-4 py-3 font-mono font-bold text-slate-600">{it.sku}</td>
-                        <td className="px-4 py-3 font-bold text-slate-900">{it.name}</td>
+                        <td className="px-4 py-3 font-bold text-slate-900">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span>{it.name}</span>
+                            {it.itemType === 'textbook' && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold">
+                                {it.metadata?.level ? String(it.metadata.level) : '교재'}
+                              </span>
+                            )}
+                            {it.itemType === 'consumable' && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-700 font-semibold">
+                                소모품
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-mono text-[11px] font-semibold">
                             <Warehouse className="w-3 h-3 text-blue-600" />

@@ -71,4 +71,28 @@ assert.ok(
   'moa 앱 프리셋 목록에 일반 업종이 노출되어야 합니다.'
 );
 
+// 4. 온보딩 직급 순서 정규화(100단위 간격) 및 불변식 검증
+import { normalizeRankOrders } from './QuickSetupPage';
+
+const inputRoles = [
+  { name: '대표이사', rank_order: 1 },
+  { name: '본부장', rank_order: 2 },
+  { name: '팀장', rank_order: 3 },
+  { name: '팀원', rank_order: 4 },
+];
+
+const normalized = normalizeRankOrders(inputRoles);
+assert.equal(normalized[0].rank_order, 100, '첫 번째 직급은 100');
+assert.equal(normalized[1].rank_order, 200, '두 번째 직급은 200');
+assert.equal(normalized[2].rank_order, 300, '세 번째 직급은 300');
+assert.equal(normalized[3].rank_order, 400, '네 번째 직급은 400');
+
+// 순서 역전(이동) 후 재정규화 검증
+const reordered = [inputRoles[1], inputRoles[0], inputRoles[2], inputRoles[3]];
+const reorderedNormalized = normalizeRankOrders(reordered);
+assert.equal(reorderedNormalized[0].name, '본부장');
+assert.equal(reorderedNormalized[0].rank_order, 100);
+assert.equal(reorderedNormalized[1].name, '대표이사');
+assert.equal(reorderedNormalized[1].rank_order, 200);
+
 console.log('QuickSetupPage.test.ts: ok');
