@@ -407,29 +407,18 @@ export const SalePosView: FC = () => {
           description={COPY.description}
           actions={
             <div className="flex items-center gap-2 flex-wrap">
-              {/* [승격 Capability] promotional_deal (특가 프로모션) */}
-              <button
-                type="button"
-                onClick={() => setPromoModalOpen(true)}
-                className="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 flex items-center gap-1.5 cursor-pointer"
-                title="기간 한정 특가 및 프로모션 관리"
-              >
-                <Flame className="w-4 h-4 text-rose-500" />
-                <span>특가 프로모션</span>
-              </button>
+              {/* 실시간 접객 핵심 액션 */}
+              {heldCarts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setHeldModalOpen(true)}
+                  className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold hover:bg-amber-100 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  <span>보류 주문 ({heldCarts.length})</span>
+                </button>
+              )}
 
-              {/* [승격 Capability] daily_pos_reconciliation (일일 POS 마감) */}
-              <button
-                type="button"
-                onClick={() => setReconciliationModalOpen(true)}
-                className="px-3 py-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-200 flex items-center gap-1.5 cursor-pointer"
-                title="일일 현금 시재 정산 및 POS 마감"
-              >
-                <Calculator className="w-4 h-4 text-slate-600" />
-                <span>POS 마감 정산</span>
-              </button>
-
-              {/* [개선안 2] 단말기 영수증 스마트 반품 */}
               <button
                 type="button"
                 onClick={() => setQuickReturnOpen(true)}
@@ -440,27 +429,38 @@ export const SalePosView: FC = () => {
                 <span>영수증 반품</span>
               </button>
 
-              {/* [사용자 친절도] POS 실무 사용 가이드 & 단축키 치트시트 */}
               <button
                 type="button"
                 onClick={() => setGuideOpen(true)}
-                className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-50 flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 title="POS 실무 사용 가이드 및 키보드 단축키 모음"
               >
                 <HelpCircle className="w-4 h-4 text-teal-600" />
                 <span>사용 가이드</span>
               </button>
 
-              {heldCarts.length > 0 && (
+              {/* 보조 관리 도구 (프로모션 / 마감 정산 - 데스크톱 전용 콤팩트 링크) */}
+              <div className="hidden sm:flex items-center gap-1 pl-1 border-l border-slate-200">
                 <button
                   type="button"
-                  onClick={() => setHeldModalOpen(true)}
-                  className="px-3 py-2 rounded-xl bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold hover:bg-amber-100 flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => setPromoModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  title="기간 한정 특가 및 프로모션 관리"
                 >
-                  <Clock className="w-4 h-4 text-amber-600" />
-                  <span>보류 주문 ({heldCarts.length})</span>
+                  <Flame className="w-3.5 h-3.5 text-rose-500" />
+                  <span>프로모션</span>
                 </button>
-              )}
+
+                <button
+                  type="button"
+                  onClick={() => setReconciliationModalOpen(true)}
+                  className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                  title="일일 현금 시재 정산 및 POS 마감"
+                >
+                  <Calculator className="w-3.5 h-3.5 text-slate-500" />
+                  <span>시재 마감</span>
+                </button>
+              </div>
             </div>
           }
         />
@@ -532,15 +532,6 @@ export const SalePosView: FC = () => {
             </span>
             <span>·</span>
             <span><kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[9px] shadow-2xs">Del</kbd> 비우기</span>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={() => setGuideOpen(true)}
-              className="text-teal-700 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
-            >
-              <HelpCircle className="w-3 h-3" />
-              가이드
-            </button>
           </div>
         </div>
 

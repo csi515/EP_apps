@@ -66,6 +66,11 @@ export const RetailHomeView: FC = () => {
     else if (canAccess('income')) setActiveTab('income');
   };
 
+  const goSalesHistory = () => {
+    if (canAccess('income')) setActiveTab('income');
+    else if (canAccess('reports')) setActiveTab('reports');
+  };
+
   const [sales, setSales] = useState<SaleListItem[]>([]);
   const [stockRows, setStockRows] = useState<InventoryStockRow[]>([]);
   const [revenueSummary, setRevenueSummary] = useState<RetailRevenueSummary | null>(null);
@@ -200,7 +205,7 @@ export const RetailHomeView: FC = () => {
 
             <button
               type="button"
-              onClick={goRevenueSummary}
+              onClick={goSalesHistory}
               className="min-h-[88px] rounded-2xl border border-slate-200 bg-white p-4 text-left hover:bg-slate-50 active:bg-slate-50"
             >
               <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
