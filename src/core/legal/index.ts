@@ -7,3 +7,4 @@ export {
 } from './legalPaths';
 export { LegalPageView } from './LegalPageView';
 export { LegalLinks } from './LegalLinks';
+export { LegalModal } from './LegalModal';

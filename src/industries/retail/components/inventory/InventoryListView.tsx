@@ -1,5 +1,5 @@
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
-import { useCallback, useEffect, useMemo, useState, type FC } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FC } from 'react';
 import {
   ArrowLeftRight,
   PackagePlus,
@@ -10,6 +10,8 @@ import {
   QrCode,
   Plus,
   Barcode,
+  ChevronDown,
+  Wrench,
 } from 'lucide-react';
 import { useList } from '@refinedev/core';
 import { useApp } from '@/context/AppContext';
@@ -97,6 +99,19 @@ export const InventoryListView: FC = () => {
   const [selectedLabelItem, setSelectedLabelItem] = useState<InventoryItem | null>(null);
   const [storePopOpen, setStorePopOpen] = useState(false);
   const [stocktakeOpen, setStocktakeOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const toolsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!toolsOpen) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (toolsRef.current && !toolsRef.current.contains(e.target as Node)) {
+        setToolsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [toolsOpen]);
 
   const { query: deptQuery } = useList<{ id: string; name: string }>({
     resource: 'departments',

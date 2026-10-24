@@ -1,6 +1,6 @@
-import type { FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react';
 import { Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
-import { legalPageHref } from '@/core/legal/legalPaths';
+import { LegalModal } from '@/core/legal';
 import type { AuthMode } from '../hooks/useAuthForm';
 
 interface AuthFormCardProps {
@@ -40,15 +40,32 @@ export function AuthFormCard({
   onSwitchMode,
   onSubmit,
 }: AuthFormCardProps) {
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<'terms' | 'privacy'>('terms');
+
+  const openLegalModal = (tab: 'terms' | 'privacy', e: React.MouseEvent) => {
+    e.preventDefault();
+    setModalTab(tab);
+    setLegalModalOpen(true);
+  };
+
   const termsLabel = (
     <span>
-      <a href={legalPageHref('terms')} className="text-indigo-600 underline">
+      <button
+        type="button"
+        onClick={(e) => openLegalModal('terms', e)}
+        className="text-indigo-600 underline font-semibold hover:text-indigo-800"
+      >
         이용약관
-      </a>
+      </button>
       과{' '}
-      <a href={legalPageHref('privacy')} className="text-indigo-600 underline">
+      <button
+        type="button"
+        onClick={(e) => openLegalModal('privacy', e)}
+        className="text-indigo-600 underline font-semibold hover:text-indigo-800"
+      >
         개인정보처리방침
-      </a>
+      </button>
       에 동의합니다 (필수)
     </span>
   );
@@ -83,90 +100,77 @@ export function AuthFormCard({
       )}
 
       {mode === 'forgot' && (
-        <button
-          type="button"
-          onClick={() => onSwitchMode('login')}
-          className="text-xs font-bold text-indigo-600 mb-4 min-h-[44px]"
-        >
-          ← 로그인으로 돌아가기
-        </button>
-      )}
-
-      {mode === 'signup' && (
-        <div className="mb-5 space-y-4">
-          <p className="text-xs text-slate-500 leading-relaxed">
-            MOA 계정을 만든 뒤, 사업장 개설·초대·연결로 역할을 선택합니다.
-          </p>
-
-          <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={agreedToTerms}
-              onChange={(event) => onAgreedToTermsChange(event.target.checked)}
-              className="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            {termsLabel}
-          </label>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-600 mb-1.5">이름</label>
-            <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={fullName}
-                onChange={(event) => onFullNameChange(event.target.value)}
-                placeholder="홍길동"
-                autoComplete="name"
-                className="w-full pl-10 pr-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[44px]"
-              />
-            </div>
-          </div>
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900">비밀번호 찾기</h2>
+          <button
+            type="button"
+            onClick={() => onSwitchMode('login')}
+            className="text-sm font-bold text-indigo-600 hover:text-indigo-800 min-h-[44px] flex items-center"
+          >
+            로그인으로 돌아가기
+          </button>
         </div>
       )}
 
       <form onSubmit={onSubmit} className="space-y-4">
+        {mode === 'signup' && (
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-1">
+              이름 (원장님 또는 담당자명)
+            </label>
+            <div className="relative">
+              <User className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => onFullNameChange(e.target.value)}
+                placeholder="홍길동"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+        )}
+
         <div>
-          <label className="block text-xs font-bold text-slate-600 mb-1.5">이메일</label>
+          <label className="block text-sm font-bold text-slate-700 mb-1">이메일</label>
           <div className="relative">
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="email"
+              required
               value={email}
-              onChange={(event) => onEmailChange(event.target.value)}
-              placeholder="예: name@example.com"
-              autoComplete="email"
-              required={mode === 'login' || mode === 'forgot' || mode === 'signup'}
-              className="w-full pl-10 pr-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[44px]"
+              onChange={(e) => onEmailChange(e.target.value)}
+              placeholder="director@example.com"
+              className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
           </div>
         </div>
 
         {mode !== 'forgot' && (
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-bold text-slate-600">비밀번호</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-bold text-slate-700">비밀번호</label>
               {mode === 'login' && (
                 <button
                   type="button"
                   onClick={() => onSwitchMode('forgot')}
-                  className="text-xs font-bold text-indigo-600 min-h-[44px] px-1"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-bold"
                 >
-                  비밀번호 찾기
+                  비밀번호를 잊으셨나요?
                 </button>
               )}
             </div>
             <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Lock className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(event) => onPasswordChange(event.target.value)}
-                placeholder={mode === 'signup' ? '6자 이상' : '비밀번호'}
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 required
+                value={password}
+                onChange={(e) => onPasswordChange(e.target.value)}
+                placeholder={mode === 'signup' ? '6자 이상 입력' : '••••••••'}
                 minLength={6}
-                className="w-full pl-10 pr-11 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[44px]"
+                className="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
               <button
                 type="button"
@@ -177,6 +181,20 @@ export function AuthFormCard({
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+          </div>
+        )}
+
+        {mode === 'signup' && (
+          <div className="pt-1">
+            <label className="flex items-start gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => onAgreedToTermsChange(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-xs text-slate-600 leading-relaxed">{termsLabel}</span>
+            </label>
           </div>
         )}
 
@@ -206,6 +224,14 @@ export function AuthFormCard({
           {mode === 'forgot' && '재설정 링크 보내기'}
         </button>
       </form>
+
+      {/* 약관 및 개인정보처리방침 팝업 모달 */}
+      <LegalModal
+        isOpen={legalModalOpen}
+        onClose={() => setLegalModalOpen(false)}
+        initialTab={modalTab}
+        onAgree={() => onAgreedToTermsChange(true)}
+      />
     </>
   );
 }

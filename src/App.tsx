@@ -90,6 +90,7 @@ const PublicStoreLandingPage = lazy(() => import("./pages/public/PublicStoreLand
 const WeeklyTimetableView = lazy(() => import("@/capabilities/scheduling").then((m) => ({ default: m.WeeklyTimetableView })));
 const TuitionManagementView = lazy(() => import("@/capabilities/billing").then((m) => ({ default: m.TuitionManagementView })));
 const SuperAdminTenantsPage = lazy(() => import("./pages/admin/SuperAdminTenantsPage").then((m) => ({ default: m.SuperAdminTenantsPage })));
+const LegalPageView = lazy(() => import("@/core/legal").then((m) => ({ default: m.LegalPageView })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -421,6 +422,9 @@ const RefineApp: React.FC = () => {
         <Route path="/claim/:token" element={<ClaimTokenPage />} />
         <Route path="/invite/staff/:token" element={<AcceptStaffInvitePage />} />
         <Route path="/signup/customer" element={<CustomerSignUpFlow />} />
+        <Route path="/terms" element={<LegalPageView page="terms" />} />
+        <Route path="/privacy" element={<LegalPageView page="privacy" />} />
+        <Route path="/support" element={<LegalPageView page="support" />} />
 
         <Route
           element={

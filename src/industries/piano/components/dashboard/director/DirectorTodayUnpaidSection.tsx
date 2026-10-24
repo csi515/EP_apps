@@ -34,9 +34,9 @@ export const DirectorTodayUnpaidSection: FC<DirectorTodayUnpaidSectionProps> = (
           <button
             type="button"
             onClick={onOpenUnpaid}
-            className="text-xs font-bold text-indigo-600 min-h-[44px] px-1"
+            className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-xl transition-all shadow-2xs"
           >
-            미납 전체
+            미납 모아보기 →
           </button>
         )}
       </div>

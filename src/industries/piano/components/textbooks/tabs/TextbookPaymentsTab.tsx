@@ -1,6 +1,7 @@
 import React from 'react';
 import { TextbookSale, TextbookPayment } from '@/types';
 import { CreditCard } from 'lucide-react';
+import { formatCurrency } from '@/utils/formatters';
 
 interface TextbookPaymentsTabProps {
   sales: TextbookSale[];
@@ -62,8 +63,8 @@ export const TextbookPaymentsTab: React.FC<TextbookPaymentsTabProps> = ({
 
                   <div className="mt-2 text-xs space-y-1">
                     <p className="text-slate-700 font-medium">교재: {sale.textbookTitle} ({sale.quantity}권)</p>
-                    <p className="text-slate-500">판매일: {sale.saleDate} | 총액: ₩{sale.totalAmount.toLocaleString()}</p>
-                    <p className="text-slate-500">기수납액: ₩{sale.paidAmount.toLocaleString()}</p>
+                    <p className="text-slate-500">판매일: {sale.saleDate} · 총액: {formatCurrency(sale.totalAmount)}</p>
+                    <p className="text-slate-500">기수납액: {formatCurrency(sale.paidAmount)}</p>
                   </div>
                 </div>
 
@@ -71,7 +72,7 @@ export const TextbookPaymentsTab: React.FC<TextbookPaymentsTabProps> = ({
                   <div>
                     <span className="text-[10px] text-slate-400 block">미납 잔액</span>
                     <span className="font-black text-rose-600 text-sm">
-                      ₩{sale.unpaidAmount.toLocaleString()}
+                      {formatCurrency(sale.unpaidAmount)}
                     </span>
                   </div>
                   <button
@@ -128,7 +129,7 @@ export const TextbookPaymentsTab: React.FC<TextbookPaymentsTabProps> = ({
                       <td className="py-2.5 px-3 font-bold text-slate-900">{p.studentName}</td>
                       <td className="py-2.5 px-3 text-slate-700">{p.textbookTitle}</td>
                       <td className="py-2.5 px-3 text-right font-bold text-emerald-600">
-                        ₩{p.amount.toLocaleString()}
+                        {formatCurrency(p.amount)}
                       </td>
                       <td className="py-2.5 px-3 text-center text-slate-600">
                         {p.paymentMethod === 'card'
@@ -180,7 +181,7 @@ export const TextbookPaymentsTab: React.FC<TextbookPaymentsTabProps> = ({
                       <p className="font-bold text-slate-900 text-sm">{p.studentName}</p>
                       <p className="text-[11px] text-slate-500">{p.paymentDate} · {methodLabel}</p>
                     </div>
-                    <p className="font-black text-emerald-600 text-sm">₩{p.amount.toLocaleString()}</p>
+                    <p className="font-black text-emerald-600 text-sm">{formatCurrency(p.amount)}</p>
                   </div>
                   <p className="text-xs text-slate-600">{p.textbookTitle}</p>
                   {p.memo && <p className="text-[11px] text-slate-400">{p.memo}</p>}
