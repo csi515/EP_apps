@@ -17,6 +17,7 @@ import {
   type SaleCreateInput,
   type SalePaymentMethod,
   type SaleWithItems,
+  type SplitPaymentDetail,
 } from '../../types/sale';
 import { POS_PAYMENT_OPTIONS, SALE_POS_COPY as COPY } from './salePosCopy';
 import { SaleCustomerPicker } from './SaleCustomerPicker';
@@ -26,7 +27,12 @@ interface Props {
   organizationId: string;
   lines: SaleCartLine[];
   onClose: () => void;
-  onCompleted: (totalAmount: number, sale?: SaleWithItems, changeInfo?: { received: number; change: number }) => void;
+  onCompleted: (
+    totalAmount: number,
+    sale?: SaleWithItems,
+    changeInfo?: { received: number; change: number },
+    splitDetail?: SplitPaymentDetail
+  ) => void;
   onError: (message: string) => void;
 }
 
@@ -40,6 +46,7 @@ export const SaleCheckoutModal: FC<Props> = ({
 }) => {
   const { openConfirmDialog } = useApp();
   const [paymentMethod, setPaymentMethod] = useState<SalePaymentMethod>('card');
+  const [selectedMethod, setSelectedMethod] = useState<SalePaymentMethod | 'split'>('card');
   const [customer, setCustomer] = useState<CustomerSearchResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [pointsEnabled, setPointsEnabled] = useState(false);
@@ -49,6 +56,10 @@ export const SaleCheckoutModal: FC<Props> = ({
 
   // 현금 결제용 받은 금액 & 거스름돈 계산기
   const [receivedInput, setReceivedInput] = useState<string>('');
+
+  // 복합 결제용 (현금 + 카드) 분할 입력값
+  const [splitCashInput, setSplitCashInput] = useState<string>('');
+  const [splitReceivedInput, setSplitReceivedInput] = useState<string>('');
 
   const total = useMemo(() => cartTotalAmount(lines), [lines]);
 
@@ -76,14 +87,38 @@ export const SaleCheckoutModal: FC<Props> = ({
     return receivedAmount - payable;
   }, [receivedAmount, payable]);
 
+  // 복합 결제 계산
+  const splitCashAmount = useMemo(() => {
+    const n = Number(splitCashInput.replace(/[^\d]/g, ''));
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.min(n, payable);
+  }, [splitCashInput, payable]);
+
+  const splitCardAmount = useMemo(() => {
+    return Math.max(0, payable - splitCashAmount);
+  }, [payable, splitCashAmount]);
+
+  const splitReceivedAmount = useMemo(() => {
+    const n = Number(splitReceivedInput.replace(/[^\d]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  }, [splitReceivedInput]);
+
+  const splitChangeAmount = useMemo(() => {
+    if (splitReceivedAmount <= 0) return 0;
+    return splitReceivedAmount - splitCashAmount;
+  }, [splitReceivedAmount, splitCashAmount]);
+
   useEffect(() => {
     if (!isOpen) return;
+    setSelectedMethod('card');
     setPaymentMethod('card');
     setCustomer(null);
     setPointsUseInput('');
     setPointBalance(0);
     setPointsEnabled(false);
     setReceivedInput('');
+    setSplitCashInput('');
+    setSplitReceivedInput('');
   }, [isOpen]);
 
   useEffect(() => {
@@ -148,19 +183,27 @@ export const SaleCheckoutModal: FC<Props> = ({
       if (pointsToUse > maxRedeemablePoints(pointBalance, total)) {
         throw new Error(COPY.pointsExceed);
       }
+      const actualPaymentMethod = selectedMethod === 'split' ? 'other' : selectedMethod;
       const sale = await saleService.createSale({
         organizationId,
         customerId: customer?.id ?? null,
-        paymentMethod,
+        paymentMethod: actualPaymentMethod,
         pointsUsed: pointsToUse > 0 ? pointsToUse : 0,
         items: buildSaleItems(),
       });
       const paid = Math.max(0, sale.totalAmount - (sale.pointsUsed ?? 0));
-      const changeInfo =
-        paymentMethod === 'cash' && receivedAmount > 0
-          ? { received: receivedAmount, change: Math.max(0, changeAmount) }
-          : undefined;
-      onCompleted(paid, sale, changeInfo);
+      let changeInfo: { received: number; change: number } | undefined;
+      let splitDetail: SplitPaymentDetail | undefined;
+
+      if (selectedMethod === 'cash' && receivedAmount > 0) {
+        changeInfo = { received: receivedAmount, change: Math.max(0, changeAmount) };
+      } else if (selectedMethod === 'split') {
+        splitDetail = { cashAmount: splitCashAmount, cardAmount: splitCardAmount };
+        if (splitReceivedAmount > 0) {
+          changeInfo = { received: splitReceivedAmount, change: Math.max(0, splitChangeAmount) };
+        }
+      }
+      onCompleted(paid, sale, changeInfo, splitDetail);
       onClose();
     } catch (err) {
       onError(err instanceof Error ? err.message : COPY.saleError);
@@ -198,7 +241,7 @@ export const SaleCheckoutModal: FC<Props> = ({
       onError(COPY.needItems);
       return;
     }
-    if (!paymentMethod) {
+    if (!selectedMethod) {
       onError(COPY.needPayment);
       return;
     }
@@ -206,9 +249,19 @@ export const SaleCheckoutModal: FC<Props> = ({
       onError(COPY.pointsExceed);
       return;
     }
-    if (paymentMethod === 'cash' && receivedAmount > 0 && changeAmount < 0) {
+    if (selectedMethod === 'cash' && receivedAmount > 0 && changeAmount < 0) {
       onError(`받은 금액이 ${formatCurrency(-changeAmount)} 부족합니다.`);
       return;
+    }
+    if (selectedMethod === 'split') {
+      if (splitCashAmount <= 0) {
+        onError('복합 결제 시 현금 결제액을 입력해 주세요.');
+        return;
+      }
+      if (splitReceivedAmount > 0 && splitChangeAmount < 0) {
+        onError(`현금 받은 금액이 ${formatCurrency(-splitChangeAmount)} 부족합니다.`);
+        return;
+      }
     }
 
     setSaving(true);
@@ -368,14 +421,17 @@ export const SaleCheckoutModal: FC<Props> = ({
             <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide">
               {COPY.paymentMethod}
             </h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {POS_PAYMENT_OPTIONS.map((opt) => {
-                const active = paymentMethod === opt.id;
+                const active = selectedMethod === opt.id;
                 return (
                   <button
                     key={opt.id}
                     type="button"
-                    onClick={() => setPaymentMethod(opt.id)}
+                    onClick={() => {
+                      setSelectedMethod(opt.id);
+                      setPaymentMethod(opt.id);
+                    }}
                     className={`min-h-[48px] rounded-xl text-sm font-bold border cursor-pointer transition-colors ${
                       active
                         ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
@@ -386,11 +442,26 @@ export const SaleCheckoutModal: FC<Props> = ({
                   </button>
                 );
               })}
+              {/* 복합 결제 옵션 */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMethod('split');
+                  setPaymentMethod('other');
+                }}
+                className={`min-h-[48px] rounded-xl text-sm font-bold border cursor-pointer transition-colors col-span-2 sm:col-span-1 ${
+                  selectedMethod === 'split'
+                    ? 'bg-teal-700 text-white border-teal-700 shadow-xs ring-2 ring-teal-300'
+                    : 'bg-teal-50/50 text-teal-800 border-teal-200 hover:bg-teal-100/50'
+                }`}
+              >
+                복합 결제 (현금+카드)
+              </button>
             </div>
           </section>
 
           {/* [개선안 1] 현금 결제 전용 받은 금액 & 거스름돈 계산기 */}
-          {paymentMethod === 'cash' && (
+          {selectedMethod === 'cash' && (
             <section className="space-y-3 rounded-2xl border border-teal-200 bg-teal-50/40 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800 uppercase tracking-wide">
@@ -495,6 +566,129 @@ export const SaleCheckoutModal: FC<Props> = ({
                       ? formatCurrency(changeAmount)
                       : `${formatCurrency(-changeAmount)} 부족`}
                   </span>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* [개선안 1-2] 복합 결제 (현금 + 카드 분할 수납) 전용 섹션 */}
+          {selectedMethod === 'split' && (
+            <section className="space-y-3 rounded-2xl border border-teal-300 bg-teal-50/50 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-teal-800 uppercase tracking-wide">
+                  <Calculator className="w-4 h-4 text-teal-600" />
+                  <span>복합 결제 (현금 수납 + 카드 분할)</span>
+                </div>
+                <span className="text-xs font-bold text-teal-900">
+                  총 결제액: {formatCurrency(payable)}
+                </span>
+              </div>
+
+              {/* 1단계: 현금 수납액 지정 */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  1. 현금 결제 분할액
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={splitCashInput ? Number(splitCashInput).toLocaleString('ko-KR') : ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d]/g, '');
+                      setSplitCashInput(val);
+                    }}
+                    placeholder="현금으로 받을 금액"
+                    className="w-full min-h-[48px] rounded-xl border border-slate-300 bg-white px-3 pr-10 text-base font-bold tabular-nums text-slate-900 focus:outline-teal-600"
+                  />
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">
+                    원
+                  </span>
+                </div>
+              </div>
+
+              {/* 빠른 현금 분할 버튼 */}
+              <div className="grid grid-cols-4 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSplitCashInput('5000')}
+                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                >
+                  5천원
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitCashInput('10000')}
+                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                >
+                  1만원
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitCashInput('20000')}
+                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                >
+                  2만원
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSplitCashInput('50000')}
+                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                >
+                  5만원
+                </button>
+              </div>
+
+              {/* 2단계: 자동 계산된 카드 결제액 카드 */}
+              <div className="p-3 rounded-xl bg-white border border-teal-200 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-slate-500">2. 카드 단말기 승인 요청액</p>
+                  <p className="text-xs text-slate-400 mt-0.5">외부 카드단말기에 아래 금액을 긁어주세요</p>
+                </div>
+                <p className="text-lg font-black tabular-nums text-teal-700">
+                  {formatCurrency(splitCardAmount)}
+                </p>
+              </div>
+
+              {/* 3단계: 현금 거스름돈 계산 (선택) */}
+              {splitCashAmount > 0 && (
+                <div className="pt-2 border-t border-teal-200/60 space-y-2">
+                  <label className="block text-xs font-bold text-slate-600">
+                    고객에게 실제로 받은 현금 (거스름돈 계산)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={splitReceivedInput ? Number(splitReceivedInput).toLocaleString('ko-KR') : ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^\d]/g, '');
+                        setSplitReceivedInput(val);
+                      }}
+                      placeholder={`현금 수납액: ${formatCurrency(splitCashAmount)}`}
+                      className="w-full min-h-[44px] rounded-xl border border-slate-200 bg-white px-3 pr-10 text-sm font-bold tabular-nums text-slate-900 focus:outline-teal-600"
+                    />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
+                      원
+                    </span>
+                  </div>
+
+                  {splitReceivedAmount > 0 && (
+                    <div
+                      className={`p-2.5 rounded-xl flex items-center justify-between text-xs font-bold ${
+                        splitChangeAmount >= 0
+                          ? 'bg-emerald-100/90 text-emerald-900 border border-emerald-300'
+                          : 'bg-rose-100/90 text-rose-900 border border-rose-300'
+                      }`}
+                    >
+                      <span>{splitChangeAmount >= 0 ? '현금 거스름돈' : '현금 부족액'}</span>
+                      <span className="text-sm tabular-nums">
+                        {splitChangeAmount >= 0
+                          ? formatCurrency(splitChangeAmount)
+                          : `${formatCurrency(-splitChangeAmount)} 부족`}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </section>

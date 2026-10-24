@@ -79,9 +79,20 @@ export const SaleHistoryView: FC = () => {
   }, [load]);
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
+    const raw = search.trim();
+    if (!raw) return rows;
+    const q = raw.toLowerCase();
+    const digitsOnly = raw.replace(/[^\d]/g, '');
+
     return rows.filter((row) => {
+      // 1. 종이 영수증 금액 기반 초고속 매칭 (23500 또는 23,500)
+      if (digitsOnly && String(Math.round(row.totalAmount)).startsWith(digitsOnly)) {
+        return true;
+      }
+      const amountStr = formatCurrency(row.totalAmount).toLowerCase();
+      if (amountStr.includes(q)) return true;
+
+      // 2. 판매번호, 고객명, 상품 요약 매칭
       const saleNo = formatSaleNumber(row.id).toLowerCase();
       const hay = [
         saleNo,

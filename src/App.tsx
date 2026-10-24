@@ -46,7 +46,7 @@ import { VehicleShuttleCommuteView } from "@/capabilities/vehicle_shuttle/ui/Veh
 // 라우트 단위 코드 스플리팅: 초기 번들에서 부가 화면을 분리한다.
 const VehicleShuttleManagementView = lazy(() => import("@/capabilities/vehicle_shuttle/components/VehicleShuttleManagementView").then((m) => ({ default: m.VehicleShuttleManagementView })));
 const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
-const KioskAttendancePage = lazy(() => import("@/pages/kiosk/KioskAttendancePage").then((m) => ({ default: m.KioskAttendancePage })));
+const AttendanceKioskPage = lazy(() => import("@/capabilities/attendance/ui/AttendanceKioskPage").then((m) => ({ default: m.AttendanceKioskPage })));
 const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
 const MemberBookingView = lazy(() => import("@/capabilities/booking/pages/MemberBookingView").then((m) => ({ default: m.MemberBookingView })));
 const DashboardPage = lazy(() => import("./pages/dashboard").then((m) => ({ default: m.DashboardPage })));
@@ -55,6 +55,7 @@ const StudentCreatePage = lazy(() => import("./pages/students").then((m) => ({ d
 const StudentShowPage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentShowPage })));
 const StudentEditPage = lazy(() => import("./pages/students").then((m) => ({ default: m.StudentEditPage })));
 const ClaimTokenPage = lazy(() => import("./pages/customer/ClaimTokenPage").then((m) => ({ default: m.ClaimTokenPage })));
+const CustomerSignUpFlow = lazy(() => import("@/core/customer/CustomerSignUpFlow").then((m) => ({ default: m.CustomerSignUpFlow })));
 const MyPassView = lazy(() => import("./pages/customer/MyPassView").then((m) => ({ default: m.MyPassView })));
 const RolesPage = lazy(() => import("./pages/settings/RolesPage").then((m) => ({ default: m.RolesPage })));
 const AcceptStaffInvitePage = lazy(() => import("./pages/invite/AcceptStaffInvitePage").then((m) => ({ default: m.AcceptStaffInvitePage })));
@@ -308,7 +309,7 @@ const RefineApp: React.FC = () => {
             </Authenticated>
           }
         >
-          <Route path="/kiosk/attendance" element={<KioskAttendancePage />} />
+          <Route path="/kiosk/attendance" element={<AttendanceKioskPage />} />
           {/* 사업장 업종 메인 워크스페이스 화면 */}
           
 
@@ -370,7 +371,7 @@ const RefineApp: React.FC = () => {
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<Navigate to="/workspace" replace />} />
             {/* Roster / Customers 범용 중립 경로 및 하위 호환 /students 경로 */}
             <Route path="/students" element={<StudentListPage />} />
             <Route path="/students/create" element={<StudentCreatePage />} />
@@ -416,6 +417,7 @@ const RefineApp: React.FC = () => {
         <Route path="/p/:slug" element={<PublicStoreLandingPage />} />
         <Route path="/claim/:token" element={<ClaimTokenPage />} />
         <Route path="/invite/staff/:token" element={<AcceptStaffInvitePage />} />
+        <Route path="/signup/customer" element={<CustomerSignUpFlow />} />
 
         <Route
           element={

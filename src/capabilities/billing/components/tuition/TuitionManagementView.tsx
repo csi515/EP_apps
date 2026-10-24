@@ -4,7 +4,7 @@ import { usePermissions } from '@/core/auth/usePermissions';
 import { getCustomerLabel } from '@/core/industry/industryUi';
 import { useModuleLabels } from '@/core/labels';
 import { StudentService } from '@/core/students';
-import { TuitionService } from '@/capabilities/billing/finance';
+import { TuitionService, type MonthlyTuitionWorkFilter } from '@/capabilities/billing/finance';
 import { useTuitionInvoicePayment } from '@/capabilities/billing/finance/application/useTuitionInvoicePayment';
 import type { TuitionInvoice } from '@/capabilities/billing/finance/billingLedgerTypes';
 import type { PaymentMethod } from '@/capabilities/billing/finance/paymentMethod';
@@ -34,6 +34,7 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
 
   const [selectedMonth, setSelectedMonth] = useState(getCurrentYearMonth);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [combinedStatusFilter, setCombinedStatusFilter] = useState<MonthlyTuitionWorkFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('combined');
 
@@ -70,7 +71,11 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
   const filteredInvoices = useMemo(() => {
     return invoices.filter((inv) => {
       if (selectedMonth && inv.yearMonth !== selectedMonth) return false;
-      if (statusFilter !== 'ALL' && inv.status !== statusFilter) return false;
+      if (statusFilter === 'unpaid') {
+        if ((inv.unpaidAmount ?? 0) <= 0) return false;
+      } else if (statusFilter !== 'ALL') {
+        if (inv.status !== statusFilter) return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         if (!inv.studentName.toLowerCase().includes(q)) return false;
@@ -85,10 +90,21 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
     const totalPaid = monthInvoices.reduce((sum, i) => sum + i.paidAmount, 0);
     const totalUnpaid = monthInvoices.reduce((sum, i) => sum + i.unpaidAmount, 0);
     const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
-    const unpaidCount = monthInvoices.filter((i) => i.status === 'unpaid' || i.status === 'partial').length;
+    const unpaidCount = monthInvoices.filter((i) => (i.unpaidAmount ?? 0) > 0).length;
 
     return { totalBilled, totalPaid, totalUnpaid, collectionRate, unpaidCount, totalCount: monthInvoices.length };
   }, [invoices, selectedMonth]);
+
+  const isUnpaidActive =
+    viewMode === 'invoices' ? statusFilter === 'unpaid' : combinedStatusFilter === 'unpaid';
+
+  const handleToggleUnpaidFilter = () => {
+    if (viewMode === 'invoices') {
+      setStatusFilter((prev) => (prev === 'unpaid' ? 'ALL' : 'unpaid'));
+    } else {
+      setCombinedStatusFilter((prev) => (prev === 'unpaid' ? 'all' : 'unpaid'));
+    }
+  };
 
   const handleOpenPayModal = (inv: TuitionInvoice) => {
     setPayModalInvoice(inv);
@@ -149,20 +165,10 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
                 </span>
               </div>
               <p className="text-xs text-rose-700/80 mt-0.5">
-                수납 지연 회원에게 즉시 안내하거나 원터치로 미납 내역을 확인하세요.
+                수납 지연 회원에게 정기 수납 알림을 발송하거나 하단 필터에서 미납 내역을 확인할 수 있습니다.
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setViewMode('invoices');
-              setStatusFilter('unpaid');
-            }}
-            className="self-end sm:self-center px-4 py-2 text-xs font-bold bg-rose-600 text-white rounded-xl hover:bg-rose-700 active:scale-95 transition-all shadow-xs cursor-pointer"
-          >
-            미납자 1초 확인
-          </button>
         </div>
       )}
 
@@ -179,6 +185,9 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
         onSearchQueryChange={setSearchQuery}
         filteredInvoicesCount={filteredInvoices.length}
         studentsCount={students.length}
+        unpaidCount={stats.unpaidCount}
+        isUnpaidActive={isUnpaidActive}
+        onToggleUnpaidFilter={handleToggleUnpaidFilter}
       />
 
       {viewMode === 'combined' ? (
@@ -189,6 +198,8 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
           searchQuery={searchQuery}
           onSelectStudent={setSelectedStudentId}
           onCombinedPay={setCombinedStudentForPay}
+          statusFilter={combinedStatusFilter}
+          onStatusFilterChange={setCombinedStatusFilter}
         />
       ) : (
         <TuitionInvoiceListView

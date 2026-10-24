@@ -4,7 +4,7 @@ import { POS_PAYMENT_METHODS, SALE_PAYMENT_METHOD_LABELS } from '../../types/sal
 export const SALE_HISTORY_COPY = {
   title: '판매 내역',
   description: '날짜별 판매 기록을 확인합니다',
-  searchPlaceholder: '판매번호·고객·상품 검색',
+  searchPlaceholder: '영수증 결제금액(원)·고객명·판매번호·상품 검색',
   noOrg: '사업장을 선택해 주세요',
   loadError: '판매 내역을 불러오지 못했습니다',
   emptyTitle: '판매 내역이 없습니다',

@@ -7,6 +7,7 @@ import {
   SALE_PAYMENT_METHOD_LABELS,
   type SaleItem,
   type SalePaymentMethod,
+  type SplitPaymentDetail,
 } from '../../types/sale';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 
@@ -17,6 +18,7 @@ export interface ReceiptData {
   pointsUsed?: number | null;
   paymentMethod: SalePaymentMethod;
   customerName?: string | null;
+  splitDetail?: SplitPaymentDetail | null;
   items: Array<{
     productNameSnapshot: string;
     quantity: number;
@@ -124,8 +126,20 @@ export const SaleReceiptPrintModal: React.FC<Props> = ({ isOpen, onClose, receip
             <div className="border-t border-dashed border-slate-300 pt-2 space-y-1 text-[11px]">
               <div className="flex justify-between font-bold">
                 <span className="text-slate-600">결제방식</span>
-                <span>{SALE_PAYMENT_METHOD_LABELS[receipt.paymentMethod] || receipt.paymentMethod}</span>
+                <span>{receipt.splitDetail ? '복합 결제 (현금+카드)' : SALE_PAYMENT_METHOD_LABELS[receipt.paymentMethod] || receipt.paymentMethod}</span>
               </div>
+              {receipt.splitDetail && (
+                <div className="bg-slate-50 p-1.5 rounded space-y-0.5 text-[10px] text-slate-600">
+                  <div className="flex justify-between">
+                    <span>· 현금 수납:</span>
+                    <span className="font-bold">{formatCurrency(receipt.splitDetail.cashAmount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>· 카드 결제:</span>
+                    <span className="font-bold">{formatCurrency(receipt.splitDetail.cardAmount)}</span>
+                  </div>
+                </div>
+              )}
               {receipt.pointsUsed != null && receipt.pointsUsed > 0 && (
                 <div className="flex justify-between text-teal-700">
                   <span>포인트 사용</span>

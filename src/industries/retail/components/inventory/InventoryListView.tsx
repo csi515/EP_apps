@@ -9,6 +9,7 @@ import {
   Printer,
   QrCode,
   Plus,
+  Barcode,
 } from 'lucide-react';
 import { useList } from '@refinedev/core';
 import { useApp } from '@/context/AppContext';
@@ -45,6 +46,7 @@ import { INVENTORY_LIST_COPY as COPY } from './inventoryListCopy';
 import { StockAdjustmentModal } from './StockAdjustmentModal';
 import { StockInboundModal } from './StockInboundModal';
 import { StockTransferModal } from './StockTransferModal';
+import { StocktakeAuditModal } from './StocktakeAuditModal';
 
 function matchesStockFilter(row: InventoryStockRow, filter: InventoryStockFilter): boolean {
   if (filter === 'ALL') return true;
@@ -94,6 +96,7 @@ export const InventoryListView: FC = () => {
   const [labelPrintOpen, setLabelPrintOpen] = useState(false);
   const [selectedLabelItem, setSelectedLabelItem] = useState<InventoryItem | null>(null);
   const [storePopOpen, setStorePopOpen] = useState(false);
+  const [stocktakeOpen, setStocktakeOpen] = useState(false);
 
   const { query: deptQuery } = useList<{ id: string; name: string }>({
     resource: 'departments',
@@ -257,6 +260,18 @@ export const InventoryListView: FC = () => {
               <QrCode className="w-4 h-4 text-slate-600" />
               매장 QR POP
             </button>
+            {canMutate && (
+              <button
+                type="button"
+                onClick={() => setStocktakeOpen(true)}
+                disabled={rows.length === 0}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto shadow-sm disabled:opacity-60 cursor-pointer"
+                title="무선 스캐너로 매대를 돌며 실재고 전수조사 및 로스 자동 파악"
+              >
+                <Barcode className="w-4 h-4" />
+                재고 실사 (전수조사)
+              </button>
+            )}
             {canMutate && (
               <>
                 <button
@@ -650,6 +665,20 @@ export const InventoryListView: FC = () => {
         organizationName={currentOrganization?.name || '사업장'}
         organizationCode={currentOrganization?.id?.replace(/-/g, '').slice(0, 8).toUpperCase() || 'MOA-001'}
         industryLabel="스마트 사업장"
+      />
+
+      {/* 바코드 연속 스캔 재고 실사 모달 */}
+      <StocktakeAuditModal
+        isOpen={stocktakeOpen}
+        organizationId={orgId}
+        stockRows={rows}
+        stockLocationId={selectedLocationId}
+        onClose={() => setStocktakeOpen(false)}
+        onCompleted={(adjustedCount) => {
+          showToast(`재고 실사가 완료되었습니다. (${adjustedCount}개 품목 오차 재고 조정 완료)`, 'success');
+          void load();
+        }}
+        onError={(msg) => showToast(msg, 'error')}
       />
     </div>
   );

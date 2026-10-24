@@ -24,6 +24,7 @@ export interface MobileLoginFormProps {
   onLanguageChange?: (lang: 'ko' | 'en') => void;
   rememberMe?: boolean;
   onRememberMeChange?: (remember: boolean) => void;
+  returnUrl?: string;
 }
 
 export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
@@ -44,12 +45,19 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   onLanguageChange,
   rememberMe: externalRememberMe,
   onRememberMeChange,
+  returnUrl,
 }) => {
   const [internalRememberMe, setInternalRememberMe] = React.useState(true);
   const isRemember = externalRememberMe ?? internalRememberMe;
   const setRemember = onRememberMeChange ?? setInternalRememberMe;
   const inToss = isAppsInToss();
   const isEn = language === 'en';
+  const forgotPath = returnUrl
+    ? `/signup?mode=forgot&returnUrl=${encodeURIComponent(returnUrl)}`
+    : "/signup?mode=forgot";
+  const signupPath = returnUrl
+    ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}`
+    : "/signup";
 
   // =========================================================================
   // 토스 환경 (Apps in Toss): 타사 소셜 배제 및 토스 원클릭 로그인 전용 화면
@@ -273,7 +281,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               {isEn ? "Password" : "비밀번호"}
             </label>
             <Link
-              to="/signup?mode=forgot"
+              to={forgotPath}
               className="text-xs text-indigo-600 hover:text-indigo-800 min-h-[44px] inline-flex items-center"
               data-testid="link-forgot-password"
             >
@@ -341,7 +349,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
         <p className="text-center text-xs text-slate-500 pt-2">
           {isEn ? "Don't have an account?" : "계정이 없으신가요?"}{" "}
           <Link
-            to="/signup"
+            to={signupPath}
             className="font-semibold text-indigo-600 hover:text-indigo-800 min-h-[44px] inline-flex items-center"
             data-testid="link-signup"
           >

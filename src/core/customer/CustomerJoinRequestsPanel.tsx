@@ -230,6 +230,7 @@ export function CustomerJoinRequestsPanel({
   hideWhenEmpty = false,
   includeRequest,
   emptyHint,
+  onUpdated,
 }: {
   embedded?: boolean;
   requestType?: JoinRequestType;
@@ -239,6 +240,7 @@ export function CustomerJoinRequestsPanel({
   hideWhenEmpty?: boolean;
   includeRequest?: (row: CustomerJoinRequest) => boolean;
   emptyHint?: string;
+  onUpdated?: () => void;
 } = {}) {
   const { currentOrganization } = useOrganization();
   const [requests, setRequests] = useState<CustomerJoinRequest[]>([]);
@@ -272,6 +274,7 @@ export function CustomerJoinRequestsPanel({
   const handleApprove = async (requestId: string) => {
     try {
       await customerJoinService.approveJoinRequest(requestId);
+      onUpdated?.();
       await loadRequests();
     } catch (err) {
       alert(err instanceof Error ? err.message : '승인에 실패했습니다');
@@ -281,6 +284,7 @@ export function CustomerJoinRequestsPanel({
   const handleReject = async (requestId: string, reason: string) => {
     try {
       await customerJoinService.rejectJoinRequest(requestId, reason);
+      onUpdated?.();
       await loadRequests();
     } catch (err) {
       alert(err instanceof Error ? err.message : '반려에 실패했습니다');

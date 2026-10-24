@@ -1,7 +1,8 @@
-import { useEffect, useState, type FormEvent, type FC } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { useEffect, useState, useCallback, type FormEvent, type FC } from 'react';
+import { Plus, Trash2, Barcode, Camera, Sparkles, RefreshCw } from 'lucide-react';
 import { Modal } from '@/shared/components';
 import { FormField, FORM_CONTROL_CLASS, SegmentedControl } from '@/shared/components/ui';
+import { useBarcodeScanner, playScannerSound } from '@/capabilities/inventory';
 import { productService } from '../../services/productService';
 import type {
   ProductCategory,
@@ -66,6 +67,7 @@ export const ProductFormModal: FC<Props> = ({
 }) => {
   const [name, setName] = useState('');
   const [productCode, setProductCode] = useState('');
+  const [isNoBarcode, setIsNoBarcode] = useState(false);
   const [price, setPrice] = useState('');
   const [cost, setCost] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -75,6 +77,29 @@ export const ProductFormModal: FC<Props> = ({
   const [variants, setVariants] = useState<VariantDraft[]>([emptyVariant()]);
   const [saving, setSaving] = useState(false);
   const [hydrating, setHydrating] = useState(false);
+  const [lastScannedFeedback, setLastScannedFeedback] = useState(false);
+
+  // 기성품 바코드 핸드스캐너(HID) 자동 입력 리스너
+  const handleBarcodeScanned = useCallback(
+    (code: string) => {
+      if (!isOpen || isNoBarcode) return;
+      const clean = code.trim();
+      if (clean) {
+        setProductCode(clean);
+        setIsNoBarcode(false);
+        playScannerSound('success');
+        setLastScannedFeedback(true);
+        setTimeout(() => setLastScannedFeedback(false), 1500);
+      }
+    },
+    [isOpen, isNoBarcode]
+  );
+
+  useBarcodeScanner({
+    onScan: handleBarcodeScanned,
+    enabled: isOpen && !isNoBarcode,
+    feedbackOnScan: false,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -85,6 +110,7 @@ export const ProductFormModal: FC<Props> = ({
       if (!editing) {
         setName('');
         setProductCode('');
+        setIsNoBarcode(false);
         setPrice('');
         setCost('');
         setCategoryId('');
@@ -93,16 +119,16 @@ export const ProductFormModal: FC<Props> = ({
         setOptionMode(requireSizeColorVariants ? 'yes' : 'none');
         setVariants([
           emptyVariant(),
-          ...(requireSizeColorVariants
-            ? [emptyVariant(), emptyVariant()]
-            : []),
+          ...(requireSizeColorVariants ? [emptyVariant(), emptyVariant()] : []),
         ]);
         setHydrating(false);
         return;
       }
 
       setName(editing.name);
-      setProductCode(editing.productCode || '');
+      const code = editing.productCode || '';
+      setProductCode(code);
+      setIsNoBarcode(!code);
       setPrice(String(editing.price));
       setCost(editing.cost != null ? String(editing.cost) : '');
       setCategoryId(editing.categoryId || '');
@@ -149,6 +175,14 @@ export const ProductFormModal: FC<Props> = ({
     setVariants((prev) => prev.map((v) => (v.key === key ? { ...v, ...patch } : v)));
   };
 
+  const handleGenerateInternalCode = () => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+    const generated = `NB-${dateStr}-${randomSuffix}`;
+    setProductCode(generated);
+    setIsNoBarcode(false);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!name.trim() || saving || hydrating) return;
@@ -182,7 +216,7 @@ export const ProductFormModal: FC<Props> = ({
         organizationId,
         {
           name,
-          productCode: productCode.trim() || null,
+          productCode: isNoBarcode ? null : productCode.trim() || null,
           price: priceNum,
           cost: parseOptionalNumber(cost),
           categoryId: categoryId || null,
@@ -216,8 +250,63 @@ export const ProductFormModal: FC<Props> = ({
             onChange={(e) => setName(e.target.value)}
             className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
             autoComplete="off"
+            placeholder="상품명 입력 (예: 코카콜라 500ml, 종량제봉투 20L)"
           />
         </FormField>
+
+        {/* 기성품 바코드 스캔 및 무바코드 토글 섹션 */}
+        <div className="space-y-1.5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Barcode className="w-4 h-4 text-teal-600" />
+              <label className="text-xs font-bold text-slate-700">
+                기성품 바코드 (EAN-13, 880, UPC 등)
+              </label>
+              {lastScannedFeedback && (
+                <span className="text-[11px] font-bold text-teal-600 flex items-center gap-0.5 animate-pulse">
+                  <Sparkles className="w-3.5 h-3.5" /> 스캔 완료!
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleGenerateInternalCode}
+              className="text-[11px] font-bold text-slate-600 hover:text-teal-700 flex items-center gap-1 cursor-pointer"
+              title="바코드가 없는 제품용 임의 고유 코드 생성"
+            >
+              <RefreshCw className="w-3 h-3" /> 관리코드 자동생성
+            </button>
+          </div>
+
+          <div className="relative">
+            <input
+              value={isNoBarcode ? '' : productCode}
+              disabled={isNoBarcode}
+              onChange={(e) => setProductCode(e.target.value)}
+              className={`${FORM_CONTROL_CLASS} min-h-[44px] font-mono text-sm disabled:bg-slate-100 disabled:text-slate-400`}
+              placeholder={isNoBarcode ? '바코드 없는 제품 (무바코드 등록)' : '바코드 스캐너로 삑 찍거나 직접 입력'}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isNoBarcode}
+                onChange={(e) => {
+                  setIsNoBarcode(e.target.checked);
+                  if (e.target.checked) setProductCode('');
+                }}
+                className="w-4 h-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+              />
+              <span>바코드가 없는 제품입니다 (신선/수제식품, 봉투, 서비스 등)</span>
+            </label>
+            <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+              스캐너를 비추면 자동 입력됩니다
+            </span>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <FormField label={COPY.priceLabel} required>
@@ -228,7 +317,8 @@ export const ProductFormModal: FC<Props> = ({
               required
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
+              className={`${FORM_CONTROL_CLASS} min-h-[44px] font-bold tabular-nums`}
+              placeholder="판매가 (원)"
             />
           </FormField>
           <FormField label={COPY.costLabel}>
@@ -238,7 +328,8 @@ export const ProductFormModal: FC<Props> = ({
               step={1}
               value={cost}
               onChange={(e) => setCost(e.target.value)}
-              className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
+              className={`${FORM_CONTROL_CLASS} min-h-[44px] font-bold tabular-nums`}
+              placeholder="원가 (선택)"
             />
           </FormField>
         </div>
@@ -271,15 +362,6 @@ export const ProductFormModal: FC<Props> = ({
             />
           </FormField>
         )}
-
-        <FormField label={COPY.codeLabel}>
-          <input
-            value={productCode}
-            onChange={(e) => setProductCode(e.target.value)}
-            className={`${FORM_CONTROL_CLASS} min-h-[44px]`}
-            autoComplete="off"
-          />
-        </FormField>
 
         <label className="flex items-center gap-2 min-h-[44px] text-sm font-semibold text-slate-700">
           <input

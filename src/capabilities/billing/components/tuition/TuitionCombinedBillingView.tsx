@@ -18,6 +18,8 @@ interface TuitionCombinedBillingViewProps {
   searchQuery: string;
   onSelectStudent: (studentId: string) => void;
   onCombinedPay: (student: Student) => void;
+  statusFilter?: MonthlyTuitionWorkFilter;
+  onStatusFilterChange?: (status: MonthlyTuitionWorkFilter) => void;
 }
 
 const WORK_STATUS_FILTER_ORDER: MonthlyTuitionWorkFilter[] = [
@@ -55,9 +57,13 @@ export const TuitionCombinedBillingView: React.FC<TuitionCombinedBillingViewProp
   selectedMonth,
   searchQuery,
   onSelectStudent,
-  onCombinedPay
+  onCombinedPay,
+  statusFilter: controlledStatusFilter,
+  onStatusFilterChange,
 }) => {
-  const [workStatusFilter, setWorkStatusFilter] = useState<MonthlyTuitionWorkFilter>('all');
+  const [internalStatusFilter, setInternalStatusFilter] = useState<MonthlyTuitionWorkFilter>('all');
+  const workStatusFilter = controlledStatusFilter !== undefined ? controlledStatusFilter : internalStatusFilter;
+  const setWorkStatusFilter = onStatusFilterChange || setInternalStatusFilter;
   const invoices = TuitionService.getInvoices();
 
   const statusCounts = useMemo(

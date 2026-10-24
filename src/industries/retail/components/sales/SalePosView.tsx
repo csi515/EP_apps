@@ -14,6 +14,9 @@ import {
   Check,
   Flame,
   Calculator,
+  PlusCircle,
+  Package,
+  RotateCcw,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -41,8 +44,10 @@ import {
 import { SALE_POS_COPY as COPY } from './salePosCopy';
 import { SaleCartLineRow } from './SaleCartLineRow';
 import { SaleCheckoutModal } from './SaleCheckoutModal';
+import { SaleQuickReturnModal } from './SaleQuickReturnModal';
 import { SaleCameraScannerModal } from './SaleCameraScannerModal';
 import { SaleReceiptPrintModal, type ReceiptData } from './SaleReceiptPrintModal';
+import { SaleQuickProductCreateModal } from './SaleQuickProductCreateModal';
 import { matchCatalogItem } from './saleCatalogMatch';
 
 interface HeldCart {
@@ -67,6 +72,10 @@ export const SalePosView: FC = () => {
   const [completedReceipt, setCompletedReceipt] = useState<ReceiptData | null>(null);
   const [lastAddedKey, setLastAddedKey] = useState<string | null>(null);
 
+  // [기성품 바코드] 미등록 바코드 즉석 등록 모달 상태
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [scannedUnregisteredCode, setScannedUnregisteredCode] = useState('');
+
   // [개선안 3] 주문 보류(Hold / Park) 및 복원 상태
   const [heldCarts, setHeldCarts] = useState<HeldCart[]>([]);
   const [heldModalOpen, setHeldModalOpen] = useState(false);
@@ -79,6 +88,9 @@ export const SalePosView: FC = () => {
   // [승격 Capability 연동] 특가 프로모션 관리 & POS 일일 시재 마감 모달
   const [promoModalOpen, setPromoModalOpen] = useState(false);
   const [reconciliationModalOpen, setReconciliationModalOpen] = useState(false);
+
+  // [개선안 2] 스마트 영수증 반품 모달 상태
+  const [quickReturnOpen, setQuickReturnOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!orgId || !isSupabaseConfigured()) {
@@ -117,6 +129,11 @@ export const SalePosView: FC = () => {
     }
     return map;
   }, [promotionalDeals]);
+
+  // 바코드가 없는 제품 목록 (상단 빠른 터치 매대용)
+  const noBarcodeItems = useMemo(() => {
+    return catalog.filter((item) => !item.productCode || item.productCode.trim() === '');
+  }, [catalog]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -271,16 +288,19 @@ export const SalePosView: FC = () => {
     setHeldCarts((prev) => prev.filter((h) => h.id !== id));
   };
 
-  // [방식 A] USB/블루투스 HID 바코드/QR 스캐너 입력 감지
+  // [기성품 바코드] USB/블루투스 HID 바코드/QR 스캐너 입력 감지
   const handleBarcodeScanned = useCallback(
     (code: string) => {
-      const matched = matchCatalogItem(code, catalog);
+      const cleanCode = code.trim();
+      const matched = matchCatalogItem(cleanCode, catalog);
       if (matched) {
         addToCart(matched);
         showToast(`'${matched.productName}' 상품이 추가되었습니다 (+1)`, 'success');
       } else {
+        // [신규 워크플로우] 미등록 바코드 감지 시 에러로 끝내지 않고 3초 즉석 등록 모달 팝업!
         playScannerSound('error');
-        showToast(`등록되지 않은 바코드입니다: ${code}`, 'error');
+        setScannedUnregisteredCode(cleanCode);
+        setQuickCreateOpen(true);
       }
     },
     [catalog, addToCart, showToast]
@@ -295,7 +315,8 @@ export const SalePosView: FC = () => {
       !totalDiscountModalOpen &&
       !heldModalOpen &&
       !promoModalOpen &&
-      !reconciliationModalOpen,
+      !reconciliationModalOpen &&
+      !quickCreateOpen,
     feedbackOnScan: true,
   });
 
@@ -308,7 +329,8 @@ export const SalePosView: FC = () => {
         totalDiscountModalOpen ||
         heldModalOpen ||
         promoModalOpen ||
-        reconciliationModalOpen
+        reconciliationModalOpen ||
+        quickCreateOpen
       ) {
         return;
       }
@@ -354,6 +376,7 @@ export const SalePosView: FC = () => {
     heldModalOpen,
     promoModalOpen,
     reconciliationModalOpen,
+    quickCreateOpen,
     openConfirmDialog,
   ]);
 
@@ -401,6 +424,17 @@ export const SalePosView: FC = () => {
                 <span>POS 마감 정산</span>
               </button>
 
+              {/* [개선안 2] 단말기 영수증 스마트 반품 */}
+              <button
+                type="button"
+                onClick={() => setQuickReturnOpen(true)}
+                className="px-3 py-2 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold hover:bg-teal-100 flex items-center gap-1.5 cursor-pointer"
+                title="단말기 영수증 금액/고객명으로 즉시 반품"
+              >
+                <RotateCcw className="w-4 h-4 text-teal-600" />
+                <span>영수증 반품</span>
+              </button>
+
               {heldCarts.length > 0 && (
                 <button
                   type="button"
@@ -436,11 +470,44 @@ export const SalePosView: FC = () => {
           </button>
         </div>
 
+        {/* [바코드 없는 제품 전용] 무바코드 빠른 터치 매대 (Quick Touch Goods Bar) */}
+        {noBarcodeItems.length > 0 && (
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5 space-y-1.5">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                <Package className="w-3.5 h-3.5 text-teal-600" />
+                무바코드 빠른 터치 상품 (봉투/수제/서비스)
+              </span>
+              <span className="text-[10px] text-slate-400">터치 시 즉시 +1 담김</span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+              {noBarcodeItems.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => addToCart(item)}
+                  className="shrink-0 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-left transition-all shadow-2xs cursor-pointer flex items-center gap-2"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
+                      {item.productName}
+                    </p>
+                    <p className="text-[11px] font-bold text-teal-700 tabular-nums">
+                      {formatCurrency(item.unitPrice)}
+                    </p>
+                  </div>
+                  <PlusCircle className="w-4 h-4 text-teal-600 shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* HID 스캐너 상시 활성 & 단축키 안내 뱃지 */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-3 py-1.5 bg-slate-100/90 rounded-xl text-[11px] text-slate-600 font-medium gap-1">
           <div className="flex items-center gap-1.5">
             <Barcode className="w-3.5 h-3.5 text-teal-600" />
-            <span>바코드 스캐너 자동 감지 활성 (언제든 바코드/QR을 찍으세요)</span>
+            <span>기성품 바코드 즉각 감지 활성 (미등록 상품은 3초 즉석 등록)</span>
           </div>
           <div className="flex items-center gap-2 text-slate-500 font-mono text-[10px]">
             <span className="flex items-center gap-1">
@@ -488,6 +555,11 @@ export const SalePosView: FC = () => {
                               <Flame className="w-3 h-3 text-rose-500" /> {priceRes.discountRate}% 특가
                             </span>
                           )}
+                          {!item.productCode && (
+                            <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                              무바코드
+                            </span>
+                          )}
                           {isJustAdded && (
                             <span className="text-[10px] font-bold text-teal-600 flex items-center gap-0.5">
                               <Sparkles className="w-3 h-3" /> 담김!
@@ -496,7 +568,7 @@ export const SalePosView: FC = () => {
                         </div>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {item.variantName ?? COPY.singleOption}
-                          {item.productCode && ` · 바코드: ${item.productCode}`}
+                          {item.productCode ? ` · 바코드: ${item.productCode}` : ' · 바코드 없음 (터치 판매)'}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
@@ -658,8 +730,11 @@ export const SalePosView: FC = () => {
         organizationId={orgId}
         lines={cart}
         onClose={() => setCheckoutOpen(false)}
-        onCompleted={(amount, sale, changeInfo) => {
+        onCompleted={(amount, sale, changeInfo, splitDetail) => {
           let msg = COPY.saleDone(formatCurrency(amount));
+          if (splitDetail) {
+            msg += ` [복합결제: 현금 ${formatCurrency(splitDetail.cashAmount)} + 카드 ${formatCurrency(splitDetail.cardAmount)}]`;
+          }
           if (changeInfo && changeInfo.change > 0) {
             msg += ` (거스름돈: ${formatCurrency(changeInfo.change)})`;
           }
@@ -671,6 +746,7 @@ export const SalePosView: FC = () => {
               totalAmount: sale.totalAmount,
               pointsUsed: sale.pointsUsed,
               paymentMethod: sale.paymentMethod,
+              splitDetail,
               items: sale.items.map((i) => ({
                 productNameSnapshot: i.productNameSnapshot,
                 quantity: i.quantity,
@@ -702,6 +778,32 @@ export const SalePosView: FC = () => {
         isOpen={Boolean(completedReceipt)}
         onClose={() => setCompletedReceipt(null)}
         receipt={completedReceipt}
+      />
+
+      {/* [개선안 2] 스마트 영수증 반품 모달 */}
+      <SaleQuickReturnModal
+        isOpen={quickReturnOpen}
+        organizationId={orgId}
+        onClose={() => setQuickReturnOpen(false)}
+        onReturnCompleted={(refundAmount) => {
+          showToast(`반품 환불(${formatCurrency(refundAmount)})이 정상 완료되었습니다. 재고가 복구되었습니다.`, 'success');
+          void load();
+        }}
+        onError={(msg) => showToast(msg, 'error')}
+      />
+
+      {/* [기성품 바코드] 미등록 바코드 즉석 상품 등록 모달 */}
+      <SaleQuickProductCreateModal
+        isOpen={quickCreateOpen}
+        organizationId={orgId}
+        initialBarcode={scannedUnregisteredCode}
+        onClose={() => setQuickCreateOpen(false)}
+        onSuccess={(newItem) => {
+          setCatalog((prev) => [newItem, ...prev]);
+          addToCart(newItem);
+          showToast(`'${newItem.productName}' 등록 및 장바구니 추가 완료!`, 'success');
+        }}
+        onError={(msg) => showToast(msg, 'error')}
       />
 
       {/* [개선안 3] 주문 보류 목록 모달 */}

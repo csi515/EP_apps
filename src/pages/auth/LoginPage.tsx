@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLogin } from "@refinedev/core";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Layers,
   Sparkles,
@@ -25,6 +25,12 @@ export const LoginPage: React.FC = () => {
   const [rememberMe, setRememberMe] = useState(true);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawReturnUrl = searchParams.get("returnUrl");
+  const returnUrl =
+    rawReturnUrl && rawReturnUrl.startsWith("/") && !rawReturnUrl.startsWith("//")
+      ? rawReturnUrl
+      : null;
   const { mutate: login, isPending: isLoading } = useLogin();
   const { signInWithGoogle, signInWithApple, signInWithKakao, signInWithNaver } = useAuth();
 
@@ -75,6 +81,10 @@ export const LoginPage: React.FC = () => {
       const result = await loginWithToss();
       if (result.success) {
         // 고객/수강생 역할은 이용권 지갑으로, 사업주/직원 및 통합 권한은 워크스페이스 대시보드로 이동
+        if (returnUrl) {
+          navigate(returnUrl);
+          return;
+        }
         const targetPath = result.role === "customer" ? "/customer/pass" : "/workspace";
         navigate(targetPath);
       } else {
@@ -109,6 +119,10 @@ export const LoginPage: React.FC = () => {
           // onError가 아니라 onSuccess에서 success를 반드시 검사한다.
           if (!data?.success) {
             setErrorMessage(mapLoginErrorMessage(data?.error?.message));
+            return;
+          }
+          if (returnUrl) {
+            navigate(returnUrl);
             return;
           }
           navigate(data?.redirectTo || "/workspace");
@@ -247,6 +261,7 @@ export const LoginPage: React.FC = () => {
             onLanguageChange={setLanguage}
             rememberMe={rememberMe}
             onRememberMeChange={setRememberMe}
+            returnUrl={returnUrl ?? undefined}
           />
         </div>
       </div>

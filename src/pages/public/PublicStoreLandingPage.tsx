@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Building2,
   Clock,
@@ -12,6 +12,7 @@ import {
   Send,
   AlertCircle,
   ExternalLink,
+  UserPlus,
 } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { shareLink } from "@/core/utils/shareLink";
@@ -42,6 +43,7 @@ const DAYS_KO = ["일", "월", "화", "수", "목", "금", "토"];
 
 export const PublicStoreLandingPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [store, setStore] = useState<StoreData | null>(null);
   const [hours, setHours] = useState<OperatingHour[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -401,6 +403,33 @@ export const PublicStoreLandingPage: React.FC = () => {
                   </button>
                 </form>
               )}
+            </section>
+
+            {/* 수강생/회원 등록 신청 (사업주 승인 필요 안내 포함) */}
+            <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-800">
+                <UserPlus className="h-5 w-5 text-indigo-600" />
+                <h3 className="text-sm font-bold">수강생 / 회원 등록 신청</h3>
+              </div>
+              <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                이 매장의 수강생 또는 회원으로 등록을 희망하시나요? 온라인 신청서 작성 후 사업주(원장님/매니저)의 확인 및 승인을 거쳐 정식 등록됩니다.
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/signup/customer", {
+                    state: {
+                      selectedOrgId: store.id,
+                      publicCode: store.slug,
+                      orgName: store.name,
+                    },
+                  })
+                }
+                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 px-4 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-[0.98]"
+              >
+                <UserPlus className="h-4 w-4" />
+                이용 신청서 작성하기
+              </button>
             </section>
           </div>
         </div>

@@ -11,11 +11,13 @@ import {
 } from "lucide-react";
 import { getCoreClient, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/core/auth/AuthProvider";
+import { useOrganization } from "@/core/organizations/OrganizationProvider";
 
 export const AcceptStaffInvitePage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { refreshOrganizations, selectOrganization } = useOrganization();
   const isAuthenticated = !!user;
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -58,8 +60,15 @@ export const AcceptStaffInvitePage: React.FC = () => {
         if (result?.success) {
           setSuccess(true);
           setRoleName(result?.role_name || null);
-          setTimeout(() => {
-            navigate("/workspace");
+          setTimeout(async () => {
+            try {
+              await refreshOrganizations();
+              if (result?.organization_id) {
+                await selectOrganization(result.organization_id);
+              }
+            } finally {
+              navigate("/workspace");
+            }
           }, 2500);
         } else {
           throw new Error("초대 수락에 실패했습니다.");

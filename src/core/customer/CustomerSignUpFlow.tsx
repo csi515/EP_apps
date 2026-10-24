@@ -193,7 +193,7 @@ export function CustomerSignUpFlow() {
           <p className="text-slate-600 mb-6">가입 신청을 하려면 먼저 로그인해주세요</p>
           <button
             type="button"
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/login?returnUrl=/signup/customer')}
             className="w-full py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors min-h-[44px]"
           >
             로그인하기

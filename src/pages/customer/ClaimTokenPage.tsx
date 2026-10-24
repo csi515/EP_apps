@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, AlertTriangle, RefreshCw, ArrowRight, ShieldCheck } from 'lucide-react';
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
 
 export const ClaimTokenPage: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { refreshOrganizations, enterCustomerPortal } = useOrganization();
   const isAuthenticated = !!user;
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,8 +57,13 @@ export const ClaimTokenPage: React.FC = () => {
 
         if ((data as any)?.success) {
           setSuccess(true);
-          setTimeout(() => {
-            navigate('/customer/pass');
+          setTimeout(async () => {
+            try {
+              await refreshOrganizations();
+              enterCustomerPortal();
+            } finally {
+              navigate('/customer/pass');
+            }
           }, 2000);
         } else {
           throw new Error((data as any)?.error || '토큰 클레임에 실패했습니다.');

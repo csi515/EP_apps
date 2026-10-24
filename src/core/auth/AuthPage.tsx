@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AuthFormCard } from './components/AuthFormCard';
 import { AuthLayout } from './components/AuthLayout';
 import { useAuthForm, type AuthMode } from './hooks/useAuthForm';
@@ -11,22 +11,31 @@ import { useAuthForm, type AuthMode } from './hooks/useAuthForm';
 export const AuthPage: React.FC = () => {
   const form = useAuthForm();
   const navigate = useNavigate();
+  const location = useLocation();
   const { switchMode } = form;
+  const searchParams = new URLSearchParams(location.search);
+  const rawReturnUrl = searchParams.get('returnUrl');
+  const returnUrl =
+    rawReturnUrl && rawReturnUrl.startsWith('/') && !rawReturnUrl.startsWith('//')
+      ? rawReturnUrl
+      : null;
 
   const handleSwitchMode = useCallback(
     (next: AuthMode) => {
       if (next === 'login') {
-        navigate('/login');
+        const loginParam = returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : '';
+        navigate(`/login${loginParam}`);
         return;
       }
       switchMode(next);
       if (next === 'signup') {
-        navigate('/signup', { replace: true });
+        navigate(returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : '/signup', { replace: true });
       } else if (next === 'forgot') {
-        navigate('/signup?mode=forgot', { replace: true });
+        const returnParam = returnUrl ? `&returnUrl=${encodeURIComponent(returnUrl)}` : '';
+        navigate(`/signup?mode=forgot${returnParam}`, { replace: true });
       }
     },
-    [switchMode, navigate]
+    [switchMode, navigate, returnUrl]
   );
 
   return (

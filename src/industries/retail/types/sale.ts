@@ -38,6 +38,12 @@ export const POS_PAYMENT_METHODS: readonly SalePaymentMethod[] = [
   'other',
 ] as const;
 
+/** 복합 결제 (현금 + 카드 분할 수납) 세부 내역 */
+export interface SplitPaymentDetail {
+  cashAmount: number;
+  cardAmount: number;
+}
+
 /** 장바구니 라인 — Retail POS 전용 */
 export interface SaleCartLine {
   key: string;
