@@ -311,7 +311,7 @@ export const TodayLessonView: FC<{ compactHeader?: boolean; embedded?: boolean }
               className="mt-3 w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 text-xs font-bold text-amber-900"
             >
               <CreditCard className="w-4 h-4" />
-              오늘 수업 학생 중 미납 {unpaidTodayStudents}명 · 수강료
+              오늘 수업 학생 중 미납 {unpaidTodayStudents}명 · 수납 내역 확인하기 →
             </button>
           )}
         </div>

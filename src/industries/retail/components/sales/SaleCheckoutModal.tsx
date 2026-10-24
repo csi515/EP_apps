@@ -495,54 +495,54 @@ export const SaleCheckoutModal: FC<Props> = ({
                 </div>
               </div>
 
-              {/* 빠른 지폐 및 금액 버튼 */}
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5">
+              {/* 빠른 지폐 및 금액 버튼 (모바일 터치 최적화) */}
+              <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
                 <button
                   type="button"
                   onClick={() => handleQuickCash(payable)}
-                  className="px-2 py-2 rounded-lg bg-teal-600 text-white text-xs font-bold hover:bg-teal-700 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-teal-600 text-white text-xs sm:text-sm font-bold hover:bg-teal-700 cursor-pointer text-center shadow-2xs"
                 >
                   딱맞게
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(10000)}
-                  className="px-2 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   1만원
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(50000)}
-                  className="px-2 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   5만원
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(1000, true)}
-                  className="px-2 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   +1천
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(5000, true)}
-                  className="px-2 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   +5천
                 </button>
                 <button
                   type="button"
                   onClick={() => handleQuickCash(10000, true)}
-                  className="px-2 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs sm:text-sm font-semibold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   +1만
                 </button>
                 <button
                   type="button"
                   onClick={() => setReceivedInput('')}
-                  className="px-2 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-200 cursor-pointer text-center"
+                  className="col-span-3 sm:col-span-1 min-h-[42px] px-2 py-2 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs sm:text-sm font-semibold hover:bg-slate-200 cursor-pointer text-center"
                 >
                   초기화
                 </button>
@@ -608,32 +608,32 @@ export const SaleCheckoutModal: FC<Props> = ({
               </div>
 
               {/* 빠른 현금 분할 버튼 */}
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setSplitCashInput('5000')}
-                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   5천원
                 </button>
                 <button
                   type="button"
                   onClick={() => setSplitCashInput('10000')}
-                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   1만원
                 </button>
                 <button
                   type="button"
                   onClick={() => setSplitCashInput('20000')}
-                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   2만원
                 </button>
                 <button
                   type="button"
                   onClick={() => setSplitCashInput('50000')}
-                  className="px-2 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs font-bold hover:bg-slate-100 cursor-pointer text-center"
+                  className="min-h-[42px] px-2 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs sm:text-sm font-bold hover:bg-slate-100 cursor-pointer text-center shadow-2xs"
                 >
                   5만원
                 </button>

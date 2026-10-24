@@ -115,9 +115,10 @@ export function AuthFormCard({
       <form onSubmit={onSubmit} className="space-y-4">
         {mode === 'signup' && (
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1">
-              이름 (원장님 또는 담당자명)
-            </label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-semibold text-slate-700">이름 (실명)</label>
+              <span className="text-[11px] text-slate-400">원장님, 직원, 수강생 이름</span>
+            </div>
             <div className="relative">
               <User className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -126,14 +127,14 @@ export function AuthFormCard({
                 value={fullName}
                 onChange={(e) => onFullNameChange(e.target.value)}
                 placeholder="홍길동"
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               />
             </div>
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-bold text-slate-700 mb-1">이메일</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">이메일 계정</label>
           <div className="relative">
             <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -150,15 +151,17 @@ export function AuthFormCard({
         {mode !== 'forgot' && (
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="block text-sm font-bold text-slate-700">비밀번호</label>
-              {mode === 'login' && (
+              <label className="block text-xs font-semibold text-slate-700">비밀번호</label>
+              {mode === 'login' ? (
                 <button
                   type="button"
                   onClick={() => onSwitchMode('forgot')}
-                  className="text-xs text-indigo-600 hover:text-indigo-800 font-bold"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 font-semibold"
                 >
                   비밀번호를 잊으셨나요?
                 </button>
+              ) : (
+                <span className="text-[11px] text-slate-400">영문·숫자 포함 6자 이상</span>
               )}
             </div>
             <div className="relative">
@@ -170,7 +173,7 @@ export function AuthFormCard({
                 onChange={(e) => onPasswordChange(e.target.value)}
                 placeholder={mode === 'signup' ? '6자 이상 입력' : '••••••••'}
                 minLength={6}
-                className="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                className="w-full pl-10 pr-12 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all text-sm"
               />
               <button
                 type="button"

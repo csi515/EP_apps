@@ -4,6 +4,7 @@ import {
   Building2,
   Plus,
   ChevronRight,
+  ChevronDown,
   Loader2,
   GraduationCap,
   LogOut,
@@ -11,6 +12,7 @@ import {
   KeyRound,
   Sparkles,
   UserRound,
+  Compass,
 } from 'lucide-react';
 import { useOrganization } from './OrganizationProvider';
 import { getRoleLabel } from './services/organizationService';
@@ -44,8 +46,12 @@ export const OrganizationSelector: React.FC = () => {
   const [showWizard, setShowWizard] = useState(false);
   const [showTeacherFlow, setShowTeacherFlow] = useState(false);
   const [showStaffInviteAccept, setShowStaffInviteAccept] = useState(false);
+  const [showMoreActions, setShowMoreActions] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const missingEmail = !user?.email?.trim();
+
+  // 기존 소속이 아예 없는 완전 신규 가입자인지 판정
+  const isNewUser = organizations.length === 0 && !canAccessCustomerPortal && !canAccessParentPortal;
 
   const handleSignOut = () => {
     setSigningOut(true);
@@ -75,7 +81,12 @@ export const OrganizationSelector: React.FC = () => {
         className="min-h-screen flex items-center justify-center bg-slate-50"
         data-testid="organization-selector-loading"
       >
-        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mx-auto" />
+          <p className="mt-3 text-xs font-semibold text-slate-500">
+            {signingOut ? '로그아웃 중...' : '사업장 정보를 불러오는 중...'}
+          </p>
+        </div>
       </div>
     );
   }
@@ -86,33 +97,39 @@ export const OrganizationSelector: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-slate-50 flex items-center justify-center p-4 py-8"
+      className="min-h-screen bg-gradient-to-b from-indigo-50/60 via-white to-slate-50 flex items-center justify-center p-4 py-8"
       data-testid="organization-selector"
     >
       <div className="w-full max-w-lg">
-        {/* 상단 액션 바: 계정 식별 및 명시적 로그아웃 */}
-        <div className="mb-4 flex items-center justify-between">
+        {/* 상단 단정화된 계정 식별 및 로그아웃 바 */}
+        <div className="mb-5 flex items-center justify-between bg-white/80 border border-slate-200/80 rounded-2xl p-2 px-3.5 shadow-2xs backdrop-blur-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+              {user?.email?.charAt(0).toUpperCase() || 'M'}
+            </div>
+            <span className="text-xs text-slate-600 font-medium truncate max-w-[200px] sm:max-w-[260px]" title={user?.email || ''}>
+              {user?.email || '로그인 계정'}
+            </span>
+          </div>
           <button
             type="button"
             onClick={handleSignOut}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-rose-600 min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl hover:bg-rose-50/60 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-xl hover:bg-rose-50/70 transition-colors shrink-0"
             aria-label="로그아웃"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
             로그아웃
           </button>
-          {user?.email && (
-            <span className="text-xs text-slate-400 font-medium truncate max-w-[220px]" title={user.email}>
-              {user.email}
-            </span>
-          )}
         </div>
 
+        {/* 메인 타이틀 영역 */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-lg mb-4">
-            <Building2 className="w-7 h-7" />
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100 mb-3.5">
+            {isNewUser ? <Compass className="w-7 h-7" /> : <Building2 className="w-7 h-7" />}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">시작하기</h1>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {isNewUser ? '모아에 오신 것을 환영합니다!' : '사업장 및 포털 선택'}
+          </h1>
           {organizationsStatus === 'error' ? (
             <div className="mt-3 text-left rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3">
               <p className="text-sm font-bold text-rose-800">사업장 정보를 불러오지 못했습니다</p>
@@ -128,223 +145,299 @@ export const OrganizationSelector: React.FC = () => {
               </button>
             </div>
           ) : (
-            <p className="text-sm text-slate-500 mt-2">
-              {organizations.length === 0
-                ? '매장을 운영하거나 수강생·직원으로 가입할 방식을 선택하세요.'
-                : '운영·근무할 사업장을 선택하거나, 새 매장 개설 또는 이용자로 참여하세요.'}
+            <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
+              {isNewUser
+                ? '어떤 목적으로 서비스를 이용하시나요? 시작할 방식을 선택해 주세요.'
+                : '접속하실 사업장이나 이용자 포털을 선택해 주세요.'}
             </p>
           )}
           {missingEmail && (
             <p className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5 text-left leading-relaxed">
-              이 계정에 이메일이 없습니다. 알림·계정 복구를 위해 나중에 설정에서 이메일을
-              연결해 주세요. 이미 다른 방법으로 가입된 이메일은 자동으로 합쳐지지 않습니다.
+              이 계정에 이메일이 등록되지 않았습니다. 알림 및 계정 복구를 위해 설정에서 이메일을 연결해 주세요.
             </p>
           )}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6 sm:p-8 space-y-5">
-          {/* 0. 수강생/고객 또는 학부모 권한 보유 시 즉시 포털 진입 배너 */}
-          {canAccessCustomerPortal && (
-            <button
-              type="button"
-              onClick={enterCustomerPortal}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all text-left min-h-[44px] shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
-                  <UserRound className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-slate-900">내 수강권 · 회원권 포털로 이동</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900 font-bold">
-                      고객 전용
-                    </span>
-                  </div>
-                  <p className="text-xs text-indigo-700 font-medium mt-0.5">
-                    등록된 매장의 출석·이용권·예약 현황을 확인합니다
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-indigo-500 shrink-0" />
-            </button>
-          )}
-
-          {canAccessParentPortal && (
-            <button
-              type="button"
-              onClick={enterParentPortal}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all text-left min-h-[44px] shadow-xs"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold text-slate-900">학부모 포털로 이동</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold">
-                      학부모 전용
-                    </span>
-                  </div>
-                  <p className="text-xs text-emerald-700 font-medium mt-0.5">
-                    자녀 출결 알림 및 교육 과정을 확인합니다
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-emerald-500 shrink-0" />
-            </button>
-          )}
-
-          {/* 내 소속 사업장 목록 */}
-          {organizations.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                내 사업장 ({organizations.length})
-              </p>
-              <div className="space-y-2">
-                {organizations.map((membership) => (
-                  <button
-                    key={membership.id}
-                    type="button"
-                    disabled={Boolean(selectingId)}
-                    data-testid="organization-option"
-                    onClick={() => void handleSelectOrganization(membership.organizationId)}
-                    className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors text-left min-h-[44px] disabled:opacity-60"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-bold text-slate-900 truncate">
-                          {membership.organization.name}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {getIndustryLabel(membership.organization.industry_type as IndustryType)} ·{' '}
-                          {getRoleLabel(
-                            membership.role,
-                            membership.organization.industry_type as IndustryType
-                          )}
-                          {membership.role === 'owner' &&
-                          blockedOwnerOrgIds.includes(membership.organizationId)
-                            ? ' · 운영 중지'
-                            : ''}
-                        </p>
-                      </div>
+        {/* 본문 카드 */}
+        <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-7 space-y-4">
+          {/* =========================================================================
+              CASE A: 신규 가입자 (소속 사업장 0개) — 3대 핵심 역할 선택 경험
+              ========================================================================= */}
+          {isNewUser ? (
+            <div className="space-y-3.5">
+              {/* 1. 사업주 / 원장님: 새 사업장 개설 (10초 빠른 셋업) */}
+              <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/40 p-4 transition-all hover:border-indigo-500 shadow-xs">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
+                      <Sparkles className="w-5 h-5" />
                     </div>
-                    {selectingId === membership.organizationId ? (
-                      <Loader2 className="w-5 h-5 text-indigo-600 animate-spin shrink-0" />
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
-                    )}
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="text-sm font-bold text-slate-900">사업주 · 원장님으로 시작</h3>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold">
+                          추천
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        내 매장·학원을 개설하고 출결·회원권·예약을 관리합니다
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3.5 flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    data-testid="btn-quick-onboarding"
+                    onClick={() => navigate('/onboarding/quick')}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all min-h-[44px]"
+                  >
+                    <span>10초 맞춤 빠른 셋업으로 개설</span>
+                    <ChevronRight className="w-4 h-4" />
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    data-testid="btn-open-create-org-wizard"
+                    onClick={() => setShowWizard(true)}
+                    className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors min-h-[44px]"
+                  >
+                    직접 입력
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. 고객 / 수강생 / 회원: 다니는 매장 검색 후 가입 신청 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:bg-emerald-50/30">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <UserPlus className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900">수강생 · 매장 회원으로 시작</h3>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      다니시는 학원이나 매장을 검색하여 회원으로 연결을 신청합니다
+                    </p>
+                    <button
+                      type="button"
+                      data-testid="btn-customer-signup"
+                      onClick={() => navigate('/signup/customer')}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all min-h-[44px]"
+                    >
+                      <span>다니는 매장 검색하여 등록 신청</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. 직원 / 강사: 초대 코드로 합류 */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                    <GraduationCap className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-slate-900">직원 · 강사로 합류</h3>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      원장님께 전달받은 초대 코드를 입력하거나 사업장을 검색합니다
+                    </p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-testid="btn-staff-invite-code"
+                        onClick={() => setShowStaffInviteAccept(true)}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors min-h-[44px]"
+                      >
+                        <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+                        <span>초대 코드 입력</span>
+                      </button>
+                      <button
+                        type="button"
+                        data-testid="btn-teacher-join"
+                        onClick={() => setShowTeacherFlow(true)}
+                        className="inline-flex items-center justify-center gap-1 px-3 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors min-h-[44px]"
+                      >
+                        <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                        <span>사업장 검색</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* =========================================================================
+               CASE B: 기존 소속 사업장 또는 포털 이용자 — 즉시 진입 최우선 정돈
+               ========================================================================= */
+            <div className="space-y-4">
+              {/* 고객/학부모 포털 진입 배너 */}
+              {canAccessCustomerPortal && (
+                <button
+                  type="button"
+                  onClick={enterCustomerPortal}
+                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all text-left min-h-[44px] shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
+                      <UserRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-slate-900">내 수강권 · 회원권 포털로 이동</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900 font-bold">
+                          고객 전용
+                        </span>
+                      </div>
+                      <p className="text-xs text-indigo-700 font-medium mt-0.5">
+                        등록된 매장의 출석·이용권·예약 현황을 확인합니다
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-indigo-500 shrink-0" />
+                </button>
+              )}
+
+              {canAccessParentPortal && (
+                <button
+                  type="button"
+                  onClick={enterParentPortal}
+                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 transition-all text-left min-h-[44px] shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                      <GraduationCap className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-slate-900">학부모 포털로 이동</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold">
+                          학부모 전용
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-700 font-medium mt-0.5">
+                        자녀 출결 알림 및 교육 과정을 확인합니다
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-emerald-500 shrink-0" />
+                </button>
+              )}
+
+              {/* 내 소속 사업장 목록 */}
+              {organizations.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>운영 · 근무 사업장 ({organizations.length})</span>
+                    <span className="text-[11px] font-normal text-slate-400">클릭하여 즉시 접속</span>
+                  </p>
+                  <div className="space-y-2">
+                    {organizations.map((membership) => (
+                      <button
+                        key={membership.id}
+                        type="button"
+                        disabled={Boolean(selectingId)}
+                        data-testid="organization-option"
+                        onClick={() => void handleSelectOrganization(membership.organizationId)}
+                        className="w-full flex items-center justify-between p-4 rounded-2xl border border-slate-200 bg-white hover:border-indigo-400 hover:bg-indigo-50/40 transition-all text-left min-h-[44px] disabled:opacity-60 shadow-2xs hover:shadow-xs"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 font-bold">
+                            <Building2 className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-bold text-slate-900 truncate text-sm">
+                              {membership.organization.name}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              {getIndustryLabel(membership.organization.industry_type as IndustryType)} ·{' '}
+                              <span className="font-medium text-slate-700">
+                                {getRoleLabel(
+                                  membership.role,
+                                  membership.organization.industry_type as IndustryType
+                                )}
+                              </span>
+                              {membership.role === 'owner' &&
+                              blockedOwnerOrgIds.includes(membership.organizationId)
+                                ? ' · 운영 중지'
+                                : ''}
+                            </p>
+                          </div>
+                        </div>
+                        {selectingId === membership.organizationId ? (
+                          <Loader2 className="w-5 h-5 text-indigo-600 animate-spin shrink-0" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-slate-400 shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 추가 개설 또는 타 사업장 참여 토글 (화면 복잡도 제어) */}
+              <div className="pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowMoreActions((prev) => !prev)}
+                  className="w-full flex items-center justify-between py-2.5 px-3 text-xs font-bold text-slate-600 hover:text-indigo-600 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <Plus className="w-4 h-4 text-slate-400" />
+                    새 매장 개설 또는 다른 사업장 참여하기
+                  </span>
+                  {showMoreActions ? (
+                    <ChevronDown className="w-4 h-4 rotate-180 transition-transform" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 transition-transform" />
+                  )}
+                </button>
+
+                {showMoreActions && (
+                  <div className="mt-3 space-y-2.5 pt-2 border-t border-dashed border-slate-200 animate-in fade-in duration-150">
+                    {/* 10초 빠른 셋업 */}
+                    <button
+                      type="button"
+                      data-testid="btn-quick-onboarding"
+                      onClick={() => navigate('/onboarding/quick')}
+                      className="w-full flex items-center justify-between p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 font-bold hover:bg-indigo-100 transition-all text-left min-h-[44px]"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Sparkles className="w-4 h-4 text-indigo-600" />
+                        <div>
+                          <p className="text-xs font-bold">10초 맞춤 빠른 셋업으로 새 매장 개설</p>
+                          <p className="text-[11px] text-indigo-700/80 font-normal">44개 업종 프리셋 자동 구성</p>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-indigo-500" />
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        data-testid="btn-customer-signup"
+                        onClick={() => navigate('/signup/customer')}
+                        className="p-2.5 border border-slate-200 rounded-xl text-left hover:bg-slate-50 transition-colors"
+                      >
+                        <p className="text-xs font-bold text-slate-800">이용자 신청</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">다른 매장 회원 등록</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        data-testid="btn-staff-invite-code"
+                        onClick={() => setShowStaffInviteAccept(true)}
+                        className="p-2.5 border border-slate-200 rounded-xl text-left hover:bg-slate-50 transition-colors"
+                      >
+                        <p className="text-xs font-bold text-slate-800">직원 초대 코드</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">초대 코드로 합류</p>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
-
-          {/* 역할별 진입 분기 1: 사업장 운영 및 신규 개설 */}
-          <div className="space-y-2.5 pt-2 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" />
-              사업장 운영 및 신규 개설 (사업주/관리자)
-            </p>
-
-            {/* 10초 맞춤 빠른 셋업 (추천) */}
-            <button
-              type="button"
-              data-testid="btn-quick-onboarding"
-              onClick={() => navigate('/onboarding/quick')}
-              className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-bold hover:from-indigo-700 hover:to-indigo-800 shadow-md shadow-indigo-100 transition-all text-left min-h-[44px]"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-bold">10초 맞춤 빠른 셋업</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400 text-amber-950 font-extrabold">
-                      추천
-                    </span>
-                  </div>
-                  <p className="text-xs text-indigo-100 font-normal mt-0.5">
-                    44개 업종 프리셋 & 12대 운영 도구가 자동 구성됩니다
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-indigo-200 shrink-0" />
-            </button>
-
-            <button
-              type="button"
-              data-testid="btn-open-create-org-wizard"
-              onClick={() => setShowWizard(true)}
-              className="w-full flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-2xl text-slate-700 font-bold hover:bg-slate-50 hover:border-slate-300 transition-colors min-h-[44px] text-sm"
-            >
-              <Plus className="w-4 h-4 text-slate-500" />
-              직접 입력하여 사업장 등록하기
-            </button>
-          </div>
-
-          {/* 역할별 진입 분기 2: 고객 / 수강생 이용자 경로 */}
-          <div className="space-y-2.5 pt-3 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <UserRound className="w-3.5 h-3.5" />
-              매장 · 학원 이용자 (수강생 / 회원)
-            </p>
-            <button
-              type="button"
-              data-testid="btn-customer-signup"
-              onClick={() => navigate('/signup/customer')}
-              className="w-full flex items-center justify-between p-3.5 border-2 border-indigo-100 bg-indigo-50/50 rounded-2xl text-slate-800 hover:bg-indigo-50 hover:border-indigo-200 transition-all min-h-[44px] text-left"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                  <UserPlus className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-indigo-950">
-                    매장 · 학원 이용자로 가입 신청하기
-                  </p>
-                  <p className="text-xs text-slate-500 font-normal mt-0.5">
-                    다니시는 매장을 검색하여 수강생/회원으로 연결 신청합니다
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-indigo-400 shrink-0" />
-            </button>
-          </div>
-
-          {/* 역할별 진입 분기 3: 직원 / 강사 합류 경로 */}
-          <div className="space-y-2.5 pt-3 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <GraduationCap className="w-3.5 h-3.5" />
-              직원 · 강사 합류
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <button
-                type="button"
-                data-testid="btn-staff-invite-code"
-                onClick={() => setShowStaffInviteAccept(true)}
-                className="flex items-center justify-center gap-2 p-3 border border-emerald-200 bg-emerald-50/50 rounded-2xl text-emerald-800 font-bold hover:bg-emerald-100/70 transition-colors min-h-[44px] text-xs"
-              >
-                <KeyRound className="w-4 h-4 text-emerald-600" />
-                초대 코드로 합류
-              </button>
-
-              <button
-                type="button"
-                data-testid="btn-teacher-join"
-                onClick={() => setShowTeacherFlow(true)}
-                className="flex items-center justify-center gap-2 p-3 border border-slate-200 rounded-2xl text-slate-700 font-bold hover:bg-slate-50 transition-colors min-h-[44px] text-xs"
-              >
-                <GraduationCap className="w-4 h-4 text-slate-500" />
-                사업장 검색 후 가입
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 

@@ -218,14 +218,23 @@ export function CustomerSignUpFlow() {
               <X className="w-6 h-6" />
             </button>
           </div>
-          <div className="flex items-center gap-2 mt-4">
-            <div className={`flex-1 h-1 rounded ${step === 'search' ? 'bg-indigo-600' : 'bg-indigo-200'}`} />
-            <div
-              className={`flex-1 h-1 rounded ${
-                step === 'form' ? 'bg-indigo-600' : step === 'pending' ? 'bg-indigo-200' : 'bg-slate-200'
-              }`}
-            />
-            <div className={`flex-1 h-1 rounded ${step === 'pending' ? 'bg-indigo-600' : 'bg-slate-200'}`} />
+          {/* 3단계 스텝 인디케이터 */}
+          <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+            <div className={`flex flex-col items-center gap-1 pb-1.5 border-b-2 transition-all ${
+              step === 'search' ? 'border-indigo-600 text-indigo-700 font-bold' : 'border-indigo-200 text-slate-500 font-medium'
+            }`}>
+              <span className="text-[11px]">1. 매장 검색</span>
+            </div>
+            <div className={`flex flex-col items-center gap-1 pb-1.5 border-b-2 transition-all ${
+              step === 'form' ? 'border-indigo-600 text-indigo-700 font-bold' : step === 'pending' ? 'border-indigo-200 text-slate-500 font-medium' : 'border-slate-200 text-slate-400'
+            }`}>
+              <span className="text-[11px]">2. 신청서 작성</span>
+            </div>
+            <div className={`flex flex-col items-center gap-1 pb-1.5 border-b-2 transition-all ${
+              step === 'pending' ? 'border-indigo-600 text-indigo-700 font-bold' : 'border-slate-200 text-slate-400'
+            }`}>
+              <span className="text-[11px]">3. 승인 대기</span>
+            </div>
           </div>
         </div>
       </header>
@@ -347,7 +356,9 @@ export function CustomerSignUpFlow() {
               </div>
 
               <h2 className="text-2xl font-bold text-slate-900 mb-2">가입 신청서</h2>
-              <p className="text-slate-600 mb-6">담당자가 승인하면 알림을 보내드립니다</p>
+              <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-3.5 mb-6 text-xs text-indigo-900 leading-relaxed">
+                <span className="font-bold">안내:</span> 온라인 신청서 작성 후 매장 담당자(원장님/매니저)의 확인 및 승인을 거쳐 정식 등록됩니다.
+              </div>
 
               <form onSubmit={handleSubmitRequest} className="space-y-4">
                 <div>

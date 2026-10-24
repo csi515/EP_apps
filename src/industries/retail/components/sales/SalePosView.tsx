@@ -18,6 +18,8 @@ import {
   Package,
   RotateCcw,
   HelpCircle,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -96,6 +98,9 @@ export const SalePosView: FC = () => {
 
   // [사용자 친절도] POS 사용 가이드 모달 상태
   const [guideOpen, setGuideOpen] = useState(false);
+
+  // [빠른 터치 매대] 펼치기/접기 상태
+  const [quickTouchExpanded, setQuickTouchExpanded] = useState(false);
 
   const load = useCallback(async () => {
     if (!orgId || !isSupabaseConfigured()) {
@@ -488,34 +493,75 @@ export const SalePosView: FC = () => {
 
         {/* [바코드 없는 제품 전용] 무바코드 빠른 터치 매대 (Quick Touch Goods Bar) */}
         {noBarcodeItems.length > 0 && (
-          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5 space-y-1.5">
+          <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-2.5 space-y-1.5 shadow-2xs">
             <div className="flex items-center justify-between px-1">
-              <span className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+              <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
                 <Package className="w-3.5 h-3.5 text-teal-600" />
-                무바코드 빠른 터치 상품 (봉투/수제/서비스)
+                무바코드 빠른 터치 매대
+                <span className="text-[10px] font-normal text-slate-400">({noBarcodeItems.length}종)</span>
               </span>
-              <span className="text-[10px] text-slate-400">터치 시 즉시 +1 담김</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400 hidden sm:inline">터치 시 즉시 +1 담김</span>
+                {noBarcodeItems.length > 3 && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickTouchExpanded((prev) => !prev)}
+                    className="text-[11px] font-bold text-teal-700 hover:text-teal-800 flex items-center gap-0.5 px-1.5 py-0.5 rounded hover:bg-teal-50 cursor-pointer"
+                  >
+                    <span>{quickTouchExpanded ? '접기' : '펼치기'}</span>
+                    {quickTouchExpanded ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
-              {noBarcodeItems.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => addToCart(item)}
-                  className="shrink-0 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-left transition-all shadow-2xs cursor-pointer flex items-center gap-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
+
+            {quickTouchExpanded ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-1 animate-in fade-in duration-150">
+                {noBarcodeItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => addToCart(item)}
+                    className="p-2.5 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/50 text-left transition-all shadow-2xs cursor-pointer flex flex-col justify-between min-h-[58px]"
+                  >
+                    <p className="text-xs font-bold text-slate-900 line-clamp-1">
                       {item.productName}
                     </p>
-                    <p className="text-[11px] font-bold text-teal-700 tabular-nums">
-                      {formatCurrency(item.unitPrice)}
-                    </p>
-                  </div>
-                  <PlusCircle className="w-4 h-4 text-teal-600 shrink-0" />
-                </button>
-              ))}
-            </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-xs font-bold text-teal-700 tabular-nums">
+                        {formatCurrency(item.unitPrice)}
+                      </span>
+                      <PlusCircle className="w-3.5 h-3.5 text-teal-600" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+                {noBarcodeItems.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => addToCart(item)}
+                    className="shrink-0 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-teal-400 hover:bg-teal-50/40 text-left transition-all shadow-2xs cursor-pointer flex items-center gap-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-slate-900 truncate max-w-[130px]">
+                        {item.productName}
+                      </p>
+                      <p className="text-[11px] font-bold text-teal-700 tabular-nums">
+                        {formatCurrency(item.unitPrice)}
+                      </p>
+                    </div>
+                    <PlusCircle className="w-4 h-4 text-teal-600 shrink-0" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

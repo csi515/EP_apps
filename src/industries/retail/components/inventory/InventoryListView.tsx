@@ -259,68 +259,100 @@ export const InventoryListView: FC = () => {
         }
         actions={
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setScannerOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto shadow-sm"
-            >
-              <Camera className="w-4 h-4" />
-              실시간 스캔
-            </button>
-            <button
-              type="button"
-              onClick={() => setStorePopOpen(true)}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl w-full sm:w-auto border border-slate-200/80"
-            >
-              <QrCode className="w-4 h-4 text-slate-600" />
-              매장 QR POP
-            </button>
+            {canMutate && (
+              <button
+                type="button"
+                onClick={() => openInbound()}
+                disabled={rows.length === 0}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl shadow-xs disabled:opacity-60 cursor-pointer flex-1 sm:flex-initial"
+              >
+                <PackagePlus className="w-4 h-4" />
+                {COPY.inbound}
+              </button>
+            )}
             {canMutate && (
               <button
                 type="button"
                 onClick={() => setStocktakeOpen(true)}
                 disabled={rows.length === 0}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto shadow-sm disabled:opacity-60 cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] bg-teal-50 hover:bg-teal-100/80 text-teal-800 border border-teal-200 text-sm font-bold rounded-xl shadow-2xs disabled:opacity-60 cursor-pointer flex-1 sm:flex-initial"
                 title="무선 스캐너로 매대를 돌며 실재고 전수조사 및 로스 자동 파악"
               >
-                <Barcode className="w-4 h-4" />
-                재고 실사 (전수조사)
+                <Barcode className="w-4 h-4 text-teal-700" />
+                재고 실사
               </button>
             )}
-            {canMutate && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTransferInitial(null);
-                    setTransferOpen(true);
-                  }}
-                  disabled={rows.length === 0 || locations.length < 2}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-bold rounded-xl w-full sm:w-auto border border-slate-200/80 disabled:opacity-60"
-                >
-                  <ArrowLeftRight className="w-4 h-4" />
-                  {COPY.transfer}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openAdjust()}
-                  disabled={rows.length === 0}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
-                >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  {COPY.adjust}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openInbound()}
-                  disabled={rows.length === 0}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 min-h-[44px] bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold rounded-xl w-full sm:w-auto disabled:opacity-60"
-                >
-                  <PackagePlus className="w-4 h-4" />
-                  {COPY.inbound}
-                </button>
-              </>
-            )}
+
+            {/* 재고 관리 보조 도구 드롭다운 (스캔, QR POP, 조정, 이동) */}
+            <div className="relative w-full sm:w-auto" ref={toolsRef}>
+              <button
+                type="button"
+                onClick={() => setToolsOpen((prev) => !prev)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 min-h-[44px] bg-white hover:bg-slate-50 text-slate-700 text-sm font-bold rounded-xl border border-slate-200/90 shadow-2xs w-full sm:w-auto cursor-pointer"
+                aria-expanded={toolsOpen}
+              >
+                <Wrench className="w-4 h-4 text-slate-500" />
+                <span>재고 도구</span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${toolsOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {toolsOpen && (
+                <div className="absolute right-0 mt-1.5 w-full sm:w-56 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5 z-40">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setScannerOpen(true);
+                      setToolsOpen(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4 text-indigo-600" />
+                    <span>실시간 카메라 스캔</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStorePopOpen(true);
+                      setToolsOpen(false);
+                    }}
+                    className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <QrCode className="w-4 h-4 text-slate-600" />
+                    <span>매장 안내용 QR POP 인쇄</span>
+                  </button>
+                  {canMutate && (
+                    <>
+                      <div className="my-1 border-t border-slate-100" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          openAdjust();
+                          setToolsOpen(false);
+                        }}
+                        disabled={rows.length === 0}
+                        className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <SlidersHorizontal className="w-4 h-4 text-slate-600" />
+                        <span>{COPY.adjust} (수량 단품 조정)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTransferInitial(null);
+                          setTransferOpen(true);
+                          setToolsOpen(false);
+                        }}
+                        disabled={rows.length === 0 || locations.length < 2}
+                        className="w-full px-3.5 py-2.5 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <ArrowLeftRight className="w-4 h-4 text-slate-600" />
+                        <span>{COPY.transfer} (창고간 이동)</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         }
       />

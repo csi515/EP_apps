@@ -393,47 +393,51 @@ export const ProductListView: FC = () => {
       />
 
       <FilterBar>
-        <SearchField
-          value={search}
-          onChange={setSearch}
-          placeholder="상품명 또는 기성품 바코드 검색"
-          className="w-full sm:flex-1 sm:min-w-[200px]"
-        />
-        <select
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-          className="w-full sm:w-auto min-h-[44px] px-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl"
-          aria-label={COPY.categoryLabel}
-        >
-          <option value="ALL">{COPY.categoryAll}</option>
-          <option value="NONE">{COPY.categoryNone}</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <FilterTabs
-          tabs={[
-            { id: 'ALL', label: COPY.statusAll },
-            { id: 'ACTIVE', label: COPY.statusActive },
-            { id: 'INACTIVE', label: COPY.statusInactive },
-          ]}
-          active={statusFilter}
-          onChange={(id) => setStatusFilter(id as ProductStatusFilter)}
-          activeClassName="bg-teal-600 text-white"
-        />
-        {/* 바코드 유무 필터 */}
-        <FilterTabs
-          tabs={[
-            { id: 'ALL', label: '전체 바코드' },
-            { id: 'HAS_BARCODE', label: '바코드 등록' },
-            { id: 'NO_BARCODE', label: '무바코드' },
-          ]}
-          active={barcodeFilter}
-          onChange={(id) => setBarcodeFilter(id as BarcodeFilter)}
-          activeClassName="bg-slate-800 text-white"
-        />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:flex-1">
+          <SearchField
+            value={search}
+            onChange={setSearch}
+            placeholder="상품명 또는 기성품 바코드 검색"
+            className="w-full sm:flex-1 sm:min-w-[200px]"
+          />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+            className="w-full sm:w-auto min-h-[44px] px-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl"
+            aria-label={COPY.categoryLabel}
+          >
+            <option value="ALL">{COPY.categoryAll}</option>
+            <option value="NONE">{COPY.categoryNone}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          <FilterTabs
+            tabs={[
+              { id: 'ALL', label: COPY.statusAll },
+              { id: 'ACTIVE', label: COPY.statusActive },
+              { id: 'INACTIVE', label: COPY.statusInactive },
+            ]}
+            active={statusFilter}
+            onChange={(id) => setStatusFilter(id as ProductStatusFilter)}
+            activeClassName="bg-teal-600 text-white"
+          />
+          <FilterTabs
+            tabs={[
+              { id: 'ALL', label: '전체 바코드' },
+              { id: 'HAS_BARCODE', label: '바코드' },
+              { id: 'NO_BARCODE', label: '무바코드' },
+            ]}
+            active={barcodeFilter}
+            onChange={(id) => setBarcodeFilter(id as BarcodeFilter)}
+            activeClassName="bg-slate-800 text-white"
+          />
+        </div>
       </FilterBar>
 
       {loading ? (
@@ -446,24 +450,25 @@ export const ProductListView: FC = () => {
         />
       ) : (
         <>
-          {/* 모바일 카드 뷰 */}
+          {/* 모바일 카드 뷰 (슬림 2단 정돈) */}
           <ul className="space-y-2.5 sm:hidden">
             {filtered.map((item) => (
               <li
                 key={item.id}
-                className="bg-white rounded-2xl border border-slate-200 p-4 space-y-2.5"
+                className="bg-white rounded-2xl border border-slate-200 p-3.5 space-y-2 shadow-2xs"
               >
-                <div className="flex items-start justify-between gap-3">
+                {/* 1행: 상품명 및 상태/무바코드 뱃지 */}
+                <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="font-bold text-slate-900 truncate">{item.name}</p>
+                      <p className="font-bold text-slate-900 text-sm truncate">{item.name}</p>
                       {!item.productCode && (
                         <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                           무바코드
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5 truncate">
                       {item.categoryName ? `${item.categoryName} · ` : ''}
                       {item.productCode ? (
                         <span className="font-mono text-slate-600">{item.productCode} · </span>
@@ -472,7 +477,7 @@ export const ProductListView: FC = () => {
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded-full ${
+                    className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${
                       item.isActive
                         ? 'bg-teal-50 text-teal-700'
                         : 'bg-slate-100 text-slate-500'
@@ -482,42 +487,43 @@ export const ProductListView: FC = () => {
                   </span>
                 </div>
 
-                {/* 현재고 뱃지 및 빠른 입고 버튼 */}
-                <div className="flex items-center justify-between text-xs py-1 border-t border-slate-50">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-slate-500 font-medium">현재고:</span>
-                    {renderStockBadge(item.id)}
+                {/* 2행: 단가 & 재고 현황 & 액션 버튼 (컴팩트 1줄 통합) */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs gap-2">
+                  <div className="flex items-center gap-2 flex-wrap min-w-0">
+                    <span className="font-black tabular-nums text-teal-700 text-base">
+                      {formatCurrency(item.price)}
+                    </span>
+                    <span className="text-slate-200">|</span>
+                    <div className="flex items-center gap-1">
+                      {renderStockBadge(item.id)}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setQuickInboundItem(item);
+                          setQuickInboundQty('10');
+                        }}
+                        className="text-teal-700 font-bold hover:bg-teal-50 p-1 rounded transition-colors"
+                        title="10개 빠른 입고"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuickInboundItem(item);
-                      setQuickInboundQty('10');
-                    }}
-                    className="text-teal-700 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <PlusCircle className="w-3.5 h-3.5" /> +빠른입고
-                  </button>
-                </div>
 
-                <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-sm">
-                  <span className="font-bold tabular-nums text-teal-700 text-base">
-                    {formatCurrency(item.price)}
-                  </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => handleOpenPrintLabel(item)}
-                      className="text-xs font-bold text-slate-600 hover:text-teal-700 min-h-[36px] px-2 flex items-center gap-1 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg"
+                      className="text-xs font-bold text-slate-600 hover:text-teal-700 min-h-[32px] px-2 flex items-center gap-1 cursor-pointer bg-slate-50 border border-slate-200 rounded-lg"
                       title="바코드 & 가격 라벨 스티커 인쇄"
                     >
                       <Printer className="w-3.5 h-3.5 text-slate-500" />
-                      <span>라벨인쇄</span>
+                      <span>라벨</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => openEdit(item)}
-                      className="text-xs font-bold text-teal-600 min-h-[36px] px-2 flex items-center cursor-pointer"
+                      className="text-xs font-bold text-teal-700 hover:bg-teal-50 min-h-[32px] px-2.5 rounded-lg border border-teal-200 bg-teal-50/50 flex items-center cursor-pointer"
                     >
                       {COPY.edit}
                     </button>
@@ -526,7 +532,6 @@ export const ProductListView: FC = () => {
               </li>
             ))}
           </ul>
-
           {/* 데스크톱 테이블 뷰 */}
           <div className="hidden sm:block bg-white rounded-2xl border border-slate-200 overflow-hidden">
             <table className="w-full text-left text-sm">
