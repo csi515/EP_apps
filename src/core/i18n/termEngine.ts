@@ -16,6 +16,8 @@ export const STANDARD_TERM_KEYS = [
 
 export type StandardTermKey = (typeof STANDARD_TERM_KEYS)[number];
 
+export type ShortTermKey = 'customer' | 'space' | 'pass' | 'instructor' | 'lesson';
+
 export const DEFAULT_TERMS: Record<StandardTermKey, string> = {
   'term.customer': '고객',
   'term.space': '공간',
@@ -126,17 +128,34 @@ export const PRESET_DEFAULT_TERMS: Record<string, Partial<Record<StandardTermKey
 };
 
 /**
+ * 단축 키('customer') 또는 전체 키('term.customer')를 표준 키 형태로 정규화합니다.
+ */
+export function normalizeTermKey(key: string): StandardTermKey | string {
+  const trimmed = key.trim();
+  if (trimmed.startsWith('term.')) return trimmed;
+  const mapped = `term.${trimmed}` as StandardTermKey;
+  if ((STANDARD_TERM_KEYS as readonly string[]).includes(mapped)) {
+    return mapped;
+  }
+  return trimmed;
+}
+
+/**
  * 1. 단일 용어 키 해석 (우선순위: 사업주 커스텀 설정 > 프리셋 기본값 > 기본 공통값 > fallback)
+ * 'customer' 또는 'term.customer' 형태 모두 지원.
  */
 export function getResolvedTerm(
-  key: string,
+  rawKey: string,
   customTerms?: Record<string, string>,
   presetId?: string,
   fallback?: string
 ): string {
+  const key = normalizeTermKey(rawKey);
+
   // 1. 사업주 커스텀 설정
-  if (customTerms && customTerms[key]?.trim()) {
-    return customTerms[key].trim();
+  if (customTerms) {
+    if (customTerms[rawKey]?.trim()) return customTerms[rawKey].trim();
+    if (customTerms[key]?.trim()) return customTerms[key].trim();
   }
 
   // 2. 업종 프리셋 기본 용어
@@ -153,11 +172,11 @@ export function getResolvedTerm(
   }
 
   // 4. Fallback 또는 key 자체
-  return fallback ?? key;
+  return fallback ?? rawKey;
 }
 
 /**
- * 2. 텍스트 내 {term.xxx} 토큰 실시간 일괄 치환 (순수 함수)
+ * 2. 텍스트 내 {term.xxx} 및 {xxx} 토큰 실시간 일괄 치환 (순수 함수)
  */
 export function replaceTenantTerms(
   text: string,
@@ -166,7 +185,11 @@ export function replaceTenantTerms(
 ): string {
   if (!text) return text;
 
-  return text.replace(/\{(term\.[a-zA-Z0-9_]+)\}/g, (_match, tokenKey) => {
-    return getResolvedTerm(tokenKey, customTerms, presetId);
+  return text.replace(/\{([a-zA-Z0-9_.]+)\}/g, (match, tokenKey: string) => {
+    const normalized = normalizeTermKey(tokenKey);
+    if ((STANDARD_TERM_KEYS as readonly string[]).includes(normalized)) {
+      return getResolvedTerm(normalized, customTerms, presetId);
+    }
+    return match;
   });
 }

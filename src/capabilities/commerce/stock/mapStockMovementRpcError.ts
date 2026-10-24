@@ -2,7 +2,7 @@
 export function mapStockMovementRpcError(message: string | null | undefined): string {
   const raw = (message || '').trim();
   if (!raw) return '재고 처리에 실패했습니다.';
-  if (raw.includes('재고가 부족') || raw.includes('insufficient stock')) {
+  if (raw.includes('INSUFFICIENT_STOCK') || raw.includes('재고가 부족') || raw.includes('insufficient stock')) {
     return raw.includes('재고가 부족') ? raw : '재고가 부족합니다.';
   }
   if (raw.includes('조정 후 재고가 음수')) return raw;

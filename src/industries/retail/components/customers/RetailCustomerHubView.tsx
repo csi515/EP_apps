@@ -108,8 +108,8 @@ export const RetailCustomerHubView: FC = () => {
           purchaseCount: salesRes.data.length,
           latestAmount: salesRes.data[0]?.totalAmount || 0,
         });
-      } catch (err: any) {
-        showToast(err.message, 'error');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : '오류가 발생했습니다.', 'error');
         setPanel('list');
       } finally {
         setDetailLoading(false);
@@ -136,8 +136,8 @@ export const RetailCustomerHubView: FC = () => {
           limit: 100,
         });
         setPointTxs(txs);
-      } catch (err: any) {
-        showToast(err.message, 'error');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : '오류가 발생했습니다.', 'error');
       } finally {
         setPointLoading(false);
       }
@@ -160,17 +160,17 @@ export const RetailCustomerHubView: FC = () => {
         const returns = await saleReturnService.listReturnsForSale(orgId, saleId);
         setSaleModalData({
           ...detail,
-          totalAmount: (detail as any).totalAmount ?? 0,
-          paymentMethod: (detail as any).paymentMethod ?? 'card',
-          status: (detail as any).status ?? 'completed',
+          totalAmount: detail.totalAmount ?? 0,
+          paymentMethod: detail.paymentMethod ?? 'card',
+          status: detail.status ?? 'completed',
           customerName: detail.customerName ?? null,
           items: detail.items,
           returnedQtyByItemId: detail.returnedQtyByItemId,
           returns,
         });
         setSaleModalOpen(true);
-      } catch (err: any) {
-        showToast(err.message, 'error');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : '오류가 발생했습니다.', 'error');
       }
     },
     [orgId, showToast]

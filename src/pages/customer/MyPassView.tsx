@@ -18,6 +18,7 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { CustomerQrDrawer } from '@/core/auth/components/CustomerQrDrawer';
 import { NotificationDrawer } from '@/core/notifications';
 import { AdSlotPlaceholder } from '@/components/ads/AdSlotPlaceholder';
+import { calculateRemainingDays } from '@/core/utils/businessDate';
 
 export const MyPassView: React.FC = () => {
   const { user } = useAuth();
@@ -54,9 +55,9 @@ export const MyPassView: React.FC = () => {
 
   const calculateDDay = (validUntil?: string) => {
     if (!validUntil) return null;
-    const end = new Date(validUntil).getTime();
-    const now = Date.now();
-    const diffDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+    // calculateRemainingDays 엔진 연동
+
+    const diffDays = calculateRemainingDays(validUntil);
     if (diffDays < 0) return '만료';
     if (diffDays === 0) return 'D-Day';
     return `D-${diffDays}`;

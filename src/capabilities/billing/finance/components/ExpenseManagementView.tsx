@@ -3,7 +3,7 @@ import { showToast, openConfirmDialog } from '@/shared/feedback/uiFeedback';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useStorageRefresh } from '@/hooks';
 import { billingStorage } from '@/capabilities/billing/infrastructure/billingStorage';
-import { PaymentMethod } from '@/types';
+import { PaymentMethod, type ExpenseCategory } from '@/types';
 import { formatCurrency } from '@/utils/formatters';
 import {
   getExpenseCategories,
@@ -131,7 +131,7 @@ export const ExpenseManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
       billingStorage.saveExpense({
         ...(editingExpense ? { id: editingExpense.id } : {}),
         date: formData.date,
-        category: formData.category as any,
+        category: formData.category as ExpenseCategory,
         amount: Number(formData.amount) || 0,
         description: formData.description.trim(),
         recipient: formData.recipient.trim(),

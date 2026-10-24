@@ -6,6 +6,7 @@ import {
   deductSharedPassUsage,
   pausePass,
   resumePass,
+  getPassRemainingDays,
   type PassDefinition,
 } from './passesEngine';
 
@@ -114,6 +115,9 @@ function run() {
 
   // 연장된 기간(2026-08-10)에 유효하게 사용 가능
   assert.equal(evaluatePassValidity(resumed.updatedPass, '2026-08-10').canUse, true);
+  assert.equal(getPassRemainingDays({ endDate: '2026-08-21' }, '2026-08-21'), 0);
+  assert.equal(getPassRemainingDays({ endDate: '2026-08-21' }, '2026-08-20'), 1);
+  assert.equal(getPassRemainingDays({ endDate: '2026-08-21' }, '2026-08-22'), -1);
 
   console.log('passesEngine.test.ts: ok');
 }

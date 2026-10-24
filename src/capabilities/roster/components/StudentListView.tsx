@@ -9,6 +9,7 @@ import {
 } from '@/core/industry/industryUi';
 import { useModuleLabels } from '@/core/labels';
 import { useTerminology } from '@/core/terminology';
+import { useTenantTerms } from '@/core/i18n';
 import { studentUsesShuttleService } from '@/capabilities/transport';
 import { useStaffScope, useStorageRefresh } from '@/hooks';
 import { STORAGE_REFRESH_DOMAINS } from '@/hooks/useStorageRefresh';
@@ -78,6 +79,7 @@ export const StudentListView: React.FC = () => {
   const showSessionColumns = rosterList.showSessionColumns;
   const labels = useModuleLabels();
   const { t } = useTerminology();
+  const { t: termT } = useTenantTerms();
   const activeStatusLabel = t('customer.statusActive', '재원');
   const leaveStatusLabel = t('customer.statusPaused', '휴원');
   const endedLabel = t('customer.statusWithdrawn', rosterList.withdrawnLabel);
@@ -507,7 +509,7 @@ export const StudentListView: React.FC = () => {
           variant="hero"
           icon={<Users className="w-8 h-8" />}
           title={`아직 등록된 ${labels.customer.singular}이 없습니다`}
-          description={`첫 ${labels.customer.singular}을 등록하고 수업 배정, 출결, 수강권 관리를 시작해보세요.`}
+          description={`첫 ${labels.customer.singular}을 등록하고 ${termT('lesson', '수업')} 배정, 출결, ${termT('pass', '이용권')} 관리를 시작해보세요.`}
           action={
             !isScoped ? (
               <button

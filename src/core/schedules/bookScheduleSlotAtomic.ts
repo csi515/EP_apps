@@ -13,6 +13,7 @@ import type { Booking } from '@/core/types/schedule';
 import { refreshAffectedPassMirror } from './bookingPassAtomic';
 import { invalidateTenantQueries } from '@/core/query/tenantQueryKeys';
 import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
+import { parseResourceLockError } from '@/core/resource_locks/resourceLockErrors';
 
 export interface BookScheduleSlotParams {
   scheduleId: string;
@@ -42,17 +43,12 @@ export interface BookScheduleSlotResult {
 
 export function parseBookingRpcError(error: { message?: string; details?: string; hint?: string } | null): Error {
   const msg = error?.message || error?.details || '';
-  if (msg.includes('CAPACITY_EXCEEDED') || msg.includes('정원이 초과')) {
-    return new Error('정원이 마감되어 예약할 수 없습니다. (동시 신청 초과)');
-  }
-  if (msg.includes('ALREADY_BOOKED') || msg.includes('이미 예약')) {
-    return new Error('이미 해당 일정에 예약 내역이 존재합니다.');
-  }
-  if (msg.includes('CANNOT_BOOK_PAST_SCHEDULE') || msg.includes('지난 일정')) {
-    return new Error('이미 시작되었거나 지난 일정은 예약할 수 없습니다.');
-  }
-  if (msg.includes('NO_REMAINING_PASS_UNITS') || msg.includes('수강권')) {
+  if (msg.includes('NO_REMAINING_PASS_UNITS') || msg.includes('잔여 수강권')) {
     return new Error('잔여 수강권 횟수가 부족합니다.');
+  }
+  const parsed = parseResourceLockError(error);
+  if (parsed.code !== 'UNKNOWN') {
+    return new Error(parsed.message);
   }
   if (msg.includes('SCHEDULE_NOT_FOUND')) {
     return new Error('존재하지 않거나 삭제된 일정입니다.');
@@ -77,6 +73,7 @@ export async function bookScheduleSlotAtomic(
   if (useRpc) {
     const client = getCoreClient();
     const { data, error } = await client.rpc('book_schedule_slot' as never, {
+      p_tenant_id: orgId,
       p_schedule_id: scheduleId,
       p_customer_id: customerId,
       p_pass_id: passId || null,

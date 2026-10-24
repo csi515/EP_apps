@@ -16,6 +16,8 @@ import { billingStorage } from '@/capabilities/billing/infrastructure/billingSto
 import { commerceStorage } from '@/capabilities/commerce/infrastructure/commerceStorage';
 import type { StorageApi } from '@/services/storage/helpers';
 import { todayIsoLocal } from '@/shared/utils/localDate';
+import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
+import { invalidateBillingQueries } from '@/core/query/tenantQueryKeys';
 import {
   classifyTuitionPaymentRpcResult,
   tuitionPaymentRejectMessage,
@@ -57,6 +59,8 @@ async function refreshInvoiceMirrorFromServer(
     jobs: tuitionPaymentMirrorJobs({ invoice }),
     port: createAdapterFinanceMirrorPort(),
   });
+  notifyStorageFromRefineResource('tuition_invoices');
+  invalidateBillingQueries(getOrganizationId());
   return invoice;
 }
 
@@ -71,7 +75,7 @@ export async function recordTuitionPaymentAtomic(params: {
 }): Promise<TuitionInvoice | null> {
   const orgId = getOrganizationId();
   if (!isSupabaseConfigured() || !orgId) {
-    return billingStorage.recordPayment(
+    const local = billingStorage.recordPayment(
       params.invoiceId,
       params.amount,
       params.method,
@@ -79,6 +83,9 @@ export async function recordTuitionPaymentAtomic(params: {
       params.paymentDate,
       { cashReceiptIssued: params.cashReceiptIssued }
     );
+    notifyStorageFromRefineResource('tuition_invoices');
+    invalidateBillingQueries(orgId);
+    return local;
   }
 
   const client = getCoreClient();
@@ -131,10 +138,12 @@ export async function recordTuitionPaymentAtomic(params: {
     }),
     port: createAdapterFinanceMirrorPort(),
   });
+  notifyStorageFromRefineResource('tuition_invoices');
+  invalidateBillingQueries(orgId);
 
   if (tx && invoice.status === 'paid' && (invoice.linkedTextbookSaleIds || []).length > 0) {
     void settleLinkedTextbookSalesOnTuitionPaid({
-          api: commerceStorage as StorageApi,
+      api: commerceStorage as StorageApi,
       invoice,
       paymentId: tx.id,
       method: params.method,
@@ -182,6 +191,8 @@ export async function ensureMonthlyTuitionInvoiceAtomic(params: {
     jobs: tuitionPaymentMirrorJobs({ invoice }),
     port: createAdapterFinanceMirrorPort(),
   });
+  notifyStorageFromRefineResource('tuition_invoices');
+  invalidateBillingQueries(orgId);
   return invoice;
 }
 

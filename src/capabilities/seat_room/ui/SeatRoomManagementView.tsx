@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useOpsTable } from '@/hooks/useOpsTable';
 import { readOpsRuntimeSettings } from '@/core/capabilities/opsRuntimeSettings';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { useTenantTerms } from '@/core/i18n';
 
 type SeatRoomRow = {
   id: string;
@@ -19,11 +20,17 @@ export interface SeatRoomManagementViewProps {
 }
 
 export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
-  title = '공간·좌석 현황',
-  subtitle = '룸·좌석을 등록하고 예약 캘린더와 분리해 관리합니다.',
-  roomLabel = '룸·좌석',
+  title,
+  subtitle,
+  roomLabel,
   defaultCapacity,
 }) => {
+  const { t } = useTenantTerms();
+  const spaceTerm = t('space', '공간');
+  const resolvedTitle = title ?? `${spaceTerm}·좌석 현황`;
+  const resolvedSubtitle = subtitle ?? `${spaceTerm}·좌석을 등록하고 예약 캘린더와 분리해 관리합니다.`;
+  const resolvedRoomLabel = roomLabel ?? `${spaceTerm}·좌석`;
+
   const { currentOrganization } = useOrganization();
   const runtime = readOpsRuntimeSettings(
     (currentOrganization?.settings ?? null) as Record<string, unknown> | null,
@@ -35,8 +42,8 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
   return (
     <main className="mx-auto max-w-3xl space-y-4 p-4">
       <header>
-        <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-        <p className="text-sm text-slate-500">{subtitle}</p>
+        <h1 className="text-xl font-bold text-slate-900 truncate">{resolvedTitle}</h1>
+        <p className="text-sm text-slate-500">{resolvedSubtitle}</p>
       </header>
       {loading ? <p className="text-sm text-slate-500">불러오는 중…</p> : null}
       {error ? <p className="text-sm text-rose-600">{error}</p> : null}
@@ -56,8 +63,8 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
         }}
       >
         <input
-          className="min-h-11 flex-1 rounded-lg border px-3 text-sm"
-          placeholder={`${roomLabel} 이름`}
+          className="min-h-11 min-w-[200px] flex-1 rounded-lg border px-3 text-sm"
+          placeholder={`${resolvedRoomLabel} 이름`}
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
@@ -69,15 +76,15 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
           onChange={(event) => setCapacity(event.target.value)}
           aria-label="정원"
         />
-        <button type="submit" className="min-h-11 rounded-lg bg-slate-900 px-4 text-sm text-white">
+        <button type="submit" className="min-h-11 min-w-[70px] rounded-lg bg-slate-900 px-4 text-sm text-white">
           추가
         </button>
       </form>
       <ul className="space-y-2">
         {rows.map((row) => (
           <li key={row.id} className="flex items-center justify-between rounded-xl border p-3 text-sm">
-            <span className="font-medium">{row.name}</span>
-            <span className="text-slate-500">정원 {row.capacity} · {row.status}</span>
+            <span className="font-medium truncate mr-2">{row.name}</span>
+            <span className="text-slate-500 shrink-0">정원 {row.capacity} · {row.status}</span>
           </li>
         ))}
       </ul>

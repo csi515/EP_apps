@@ -26,6 +26,24 @@ import {
 import type { SaleCatalogItem, SaleCartLine } from '../../types/sale';
 import { matchCatalogItem } from './saleCatalogMatch';
 
+interface ExtendedMediaTrackCapabilities {
+  torch?: boolean;
+  zoom?: { min: number; max: number; step: number };
+}
+
+interface ExtendedMediaTrack {
+  getCapabilities?: () => ExtendedMediaTrackCapabilities;
+  applyConstraints: (constraints?: { advanced?: Array<Record<string, unknown>> }) => Promise<void>;
+}
+
+interface BarcodeDetectorInstance {
+  detect: (source: ImageBitmapSource) => Promise<Array<{ rawValue: string; boundingBox?: DOMRectReadOnly }>>;
+}
+
+interface BarcodeDetectorConstructor {
+  new (options?: { formats?: string[] }): BarcodeDetectorInstance;
+}
+
 export interface SaleCameraScannerModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -108,9 +126,9 @@ export const SaleCameraScannerModal: React.FC<SaleCameraScannerModalProps> = ({
       }
 
       // 플래시(Torch) 및 Zoom 하드웨어 지원 여부 감지
-      const track = stream.getVideoTracks()[0];
-      if (track && typeof (track as any).getCapabilities === 'function') {
-        const capabilities = (track as any).getCapabilities() || {};
+      const track = stream.getVideoTracks()[0] as unknown as ExtendedMediaTrack | undefined;
+      if (track && typeof track.getCapabilities === 'function') {
+        const capabilities = track.getCapabilities?.() || {};
         setTorchSupported(Boolean(capabilities.torch));
         setZoomSupported(Boolean(capabilities.zoom));
       }
@@ -136,11 +154,11 @@ export const SaleCameraScannerModal: React.FC<SaleCameraScannerModalProps> = ({
   // 플래시(Torch) 토글
   const toggleTorch = async () => {
     if (!streamRef.current) return;
-    const track = streamRef.current.getVideoTracks()[0];
+    const track = streamRef.current.getVideoTracks()[0] as unknown as ExtendedMediaTrack | undefined;
     if (!track) return;
     try {
       const nextTorch = !torchOn;
-      await (track as any).applyConstraints({
+      await track.applyConstraints({
         advanced: [{ torch: nextTorch }],
       });
       setTorchOn(nextTorch);
@@ -152,11 +170,11 @@ export const SaleCameraScannerModal: React.FC<SaleCameraScannerModalProps> = ({
   // 2배 줌 토글
   const toggleZoom = async () => {
     if (!streamRef.current) return;
-    const track = streamRef.current.getVideoTracks()[0];
+    const track = streamRef.current.getVideoTracks()[0] as unknown as ExtendedMediaTrack | undefined;
     if (!track) return;
     try {
       const nextZoom = isZoomed ? 1 : 2;
-      await (track as any).applyConstraints({
+      await track.applyConstraints({
         advanced: [{ zoom: nextZoom }],
       });
       setIsZoomed(!isZoomed);
@@ -203,8 +221,8 @@ export const SaleCameraScannerModal: React.FC<SaleCameraScannerModalProps> = ({
   useEffect(() => {
     if (!isOpen || !hasCamera) return;
 
-    let detector: any = null;
-    const BarcodeDetectorClass = (window as any).BarcodeDetector;
+    let detector: BarcodeDetectorInstance | null = null;
+    const BarcodeDetectorClass = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
     if (BarcodeDetectorClass) {
       try {
         detector = new BarcodeDetectorClass({

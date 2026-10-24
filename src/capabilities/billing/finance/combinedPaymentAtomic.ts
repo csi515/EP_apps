@@ -36,6 +36,7 @@ import {
 import { commerceStorage } from '@/capabilities/commerce/infrastructure/commerceStorage';
 import type { StorageApi } from '@/services/storage/helpers';
 import { todayIsoLocal } from '@/shared/utils/localDate';
+import { invalidateBillingQueries } from '@/core/query/tenantQueryKeys';
 
 export type { CombinedPaymentAtomicResult };
 
@@ -111,11 +112,13 @@ export async function recordCombinedPaymentAtomic(
   }
 
   if (!isSupabaseConfigured() || !orgId) {
-    return recordCombinedPaymentLocal(req, command);
+    const local = recordCombinedPaymentLocal(req, command);
+    invalidateBillingQueries(orgId);
+    return local;
   }
 
   const client = getCoreClient();
-  const { data, error } = await client.rpc('record_combined_payment', {
+  const { data, error } = await client.rpc('record_combined_payment' as never, {
     p_organization_id: orgId,
     p_tuition_items: toJsonItems(
       command.tuitionItems.map((item) => ({
@@ -138,7 +141,7 @@ export async function recordCombinedPaymentAtomic(
     p_memo: req.memo ?? null,
     p_cash_receipt_issued: false,
     p_command_key: command.commandKey,
-  });
+  } as never);
 
   if (error) {
     throw new CombinedPaymentCommandError({
@@ -160,6 +163,7 @@ export async function recordCombinedPaymentAtomic(
   }
 
   const status: CombinedPaymentStatus = payload.action === 'paid' ? 'applied' : 'replay';
+
   let tuitionInvoice: TuitionInvoice | undefined;
   const textbookPayments: TextbookPayment[] = [];
   const appliedTuitionInvoiceIds: string[] = [];
@@ -238,6 +242,8 @@ export async function recordCombinedPaymentAtomic(
     jobs,
     port: createAdapterFinanceMirrorPort(),
   });
+
+  invalidateBillingQueries(orgId);
 
   return {
     status,

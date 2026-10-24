@@ -2,6 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { formatSlotBadge, weekDates } from '../domain/weekStrip';
 import { ResponsiveTable } from '@/components/common/ResponsiveTable';
 import { ActionableEmptyState } from '@/components/common/ActionableEmptyState';
+import {
+  getBusinessStartOfDay,
+  getBusinessEndOfDay,
+  formatBusinessYmd,
+} from '@/core/utils/businessDate';
 
 const SLOTS = [
   { time: '19:00', remaining: 4, capacity: 6 },
@@ -11,22 +16,34 @@ const SLOTS = [
 
 export function ScheduleCalendarPage() {
   const [anchor] = useState(() => new Date());
-  const [selected, setSelected] = useState(() => new Date().toDateString());
+  const [selectedYmd, setSelectedYmd] = useState(() => formatBusinessYmd(new Date()));
   const days = useMemo(() => weekDates(anchor), [anchor]);
   const [rows, setRows] = useState<typeof SLOTS>([]);
 
+  // 자정 경계선(00:00:00.000 ~ 23:59:59.999) 예약 데이터 조회 조건 정규화
+  const dateRange = useMemo(() => {
+    return {
+      startIso: getBusinessStartOfDay(selectedYmd),
+      endIso: getBusinessEndOfDay(selectedYmd),
+    };
+  }, [selectedYmd]);
+
   return (
-    <div className="min-h-[100svh] space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div
+      className="min-h-[100svh] space-y-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+      data-query-start={dateRange.startIso}
+      data-query-end={dateRange.endIso}
+    >
       <div className="flex gap-2 overflow-x-auto">
         {days.map((day) => {
-          const key = day.toDateString();
-          const active = key === selected;
+          const ymd = formatBusinessYmd(day);
+          const active = ymd === selectedYmd;
           return (
             <button
-              key={key}
+              key={ymd}
               type="button"
               className={`min-h-12 min-w-16 shrink-0 rounded-2xl px-3 text-sm font-bold ${active ? 'bg-slate-900 text-white' : 'bg-white'}`}
-              onClick={() => setSelected(key)}
+              onClick={() => setSelectedYmd(ymd)}
             >
               {day.getMonth() + 1}/{day.getDate()}
             </button>

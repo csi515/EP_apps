@@ -412,7 +412,7 @@ export const PublicStoreLandingPage: React.FC = () => {
                 <h3 className="text-sm font-bold">수강생 / 회원 등록 신청</h3>
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
-                이 매장의 수강생 또는 회원으로 등록을 희망하시나요? 온라인 신청서 작성 후 사업주(원장님/매니저)의 확인 및 승인을 거쳐 정식 등록됩니다.
+                이 매장의 수강생 또는 회원으로 등록을 희망하시나요? 온라인 신청서 작성 후 사업주(대표/매니저)의 확인 및 승인을 거쳐 정식 등록됩니다.
               </p>
               <button
                 type="button"

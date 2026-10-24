@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import type { PaymentMethod, TuitionInvoice } from '@/types';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { TuitionService } from '@/capabilities/billing/finance/services/tuitionService';
+import { invalidateBillingQueries } from '@/core/query/tenantQueryKeys';
 import { runTuitionInvoicePayment } from './submitTuitionInvoicePayment';
 
 /** 단일 청구서 수납의 요청 상태와 toast만 담당한다. */
@@ -27,6 +28,7 @@ export function useTuitionInvoicePayment(customerLabel: string) {
         ...params,
       });
       if (result.ok) {
+        invalidateBillingQueries();
         showToast(result.message, 'success');
         return true;
       }

@@ -11,7 +11,7 @@
  * src/core/academy 는 영구 금지 — 디렉터리 또는 하위 파일 존재 시 즉시 실패.
  * 실행: npm run check:architecture
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync, rmdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync, unlinkSync, rmdirSync, rmSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -1098,10 +1098,15 @@ function selfTest() {
     writeFileSync(typesIndexFile, typesIndexOriginal, 'utf8');
     for (const probe of probes) removeIfExists(probe);
     if (existsSync(academyDir)) {
-      try {
-        rmdirSync(academyDir);
-      } catch {
-        // ignore
+      for (let i = 0; i < 15; i++) {
+        try {
+          if (!existsSync(academyDir)) break;
+          rmdirSync(academyDir);
+          break;
+        } catch {
+          // retry
+        }
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 50);
       }
     }
   }

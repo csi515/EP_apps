@@ -136,7 +136,7 @@ export function createSettingsStorage(api: StorageApi) {
     getActiveUser(): User {
       return getItem<User>(STORAGE_KEYS.ACTIVE_USER, {
         id: 'owner',
-        name: '원장님',
+        name: '사업주',
         role: 'owner',
         email: '',
       });

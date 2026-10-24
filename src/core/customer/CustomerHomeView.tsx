@@ -17,7 +17,7 @@ import { CustomerNoticesView } from './CustomerNoticesView';
 import type { getMyPassSummary } from './services/studentPortalService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
-import { showToast } from '@/shared/feedback/uiFeedback';
+import { showToast, showErrorToast } from '@/shared/feedback/uiFeedback';
 
 type PassSummary = ReturnType<typeof getMyPassSummary>;
 
@@ -141,7 +141,7 @@ export function CustomerHomeView({
       setIsPinModalOpen(false);
       setNewPin('');
     } catch (err) {
-      showToast(err instanceof Error ? err.message : '오류가 발생했습니다.');
+      showErrorToast(err);
     } finally {
       setPinSubmitting(false);
     }

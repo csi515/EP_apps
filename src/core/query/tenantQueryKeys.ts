@@ -82,8 +82,12 @@ export function invalidateTenantQueries(domain: string, organizationId?: string)
   if (!registeredQueryClient) return;
   try {
     if (organizationId && organizationId.trim().length > 0) {
+      const tid = organizationId.trim();
       registeredQueryClient.invalidateQueries({
-        queryKey: ['tenant', `org:${organizationId.trim()}`, domain],
+        queryKey: ['tenant', `org:${tid}`, domain],
+      });
+      registeredQueryClient.invalidateQueries({
+        queryKey: ['tenant', tid, domain],
       });
     } else {
       registeredQueryClient.invalidateQueries({
@@ -95,5 +99,48 @@ export function invalidateTenantQueries(domain: string, organizationId?: string)
     }
   } catch (err) {
     console.error('[TenantQuery] Failed to invalidate queries for domain:', domain, err);
+  }
+}
+
+/**
+ * 수납(Billing) 관련 모든 쿼리 캐시를 즉시 무효화 (수납 목록 및 상단 배너 쿼리 캐시 즉시 갱신)
+ * queryKeyFactory 규격: ['tenant', tenantId, 'billing', ... ]
+ */
+export function invalidateBillingQueries(organizationId?: string | null): void {
+  if (!registeredQueryClient) return;
+  const tid = organizationId?.trim();
+  try {
+    registeredQueryClient.invalidateQueries({
+      predicate: (query) => {
+        const key = query.queryKey;
+        if (!Array.isArray(key) || key.length < 3) return false;
+        if (key[0] !== 'tenant') return false;
+        const orgMatch =
+          !tid ||
+          key[1] === tid ||
+          key[1] === `org:${tid}` ||
+          key[1] === 'org:__none__';
+        const domainMatch =
+          key[2] === 'billing' ||
+          key[2] === 'tuition_invoices' ||
+          key[2] === 'billing_invoices' ||
+          key[2] === 'invoices';
+        return orgMatch && domainMatch;
+      },
+    });
+
+    if (tid) {
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', tid, 'billing'] });
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', `org:${tid}`, 'billing'] });
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', tid, 'tuition_invoices'] });
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', `org:${tid}`, 'tuition_invoices'] });
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', tid, 'billing_invoices'] });
+      registeredQueryClient.invalidateQueries({ queryKey: ['tenant', `org:${tid}`, 'billing_invoices'] });
+    }
+    registeredQueryClient.invalidateQueries({ queryKey: ['billing'] });
+    registeredQueryClient.invalidateQueries({ queryKey: ['tuition_invoices'] });
+    registeredQueryClient.invalidateQueries({ queryKey: ['billing_invoices'] });
+  } catch (err) {
+    console.error('[TenantQuery] Failed to invalidate billing queries:', err);
   }
 }

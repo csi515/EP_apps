@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Student } from '@/types';
 import { CustomerPinPanel } from '@/capabilities/attendance';
 import { formatGuardianRelationship } from '@/core/parent';
@@ -14,6 +14,7 @@ import { formatCurrency, formatPhone, getLevelColor } from '@/utils/formatters';
 import { Award, Bus, Link2, MapPin, Star } from 'lucide-react';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useModuleLabels } from '@/core/labels';
+import { useTenantTerms } from '@/core/i18n';
 import { enrollmentModeLabel } from '../form/enrollmentFormCopy';
 import { combineStudentNotes } from '../form/studentFormTypes';
 
@@ -49,9 +50,12 @@ export const StudentDetailInfoTab: React.FC<StudentDetailInfoTabProps> = ({
   onOpenGuardianLink,
 }) => {
   const { industry } = usePermissions();
+  const { t } = useTenantTerms();
   const labels = useModuleLabels();
-  const customerLabel = labels.customer.singular;
+  const customerLabel = labels.customer.singular || t('customer', '고객');
   const contactLabel = labels.contact.singular;
+  const instructorTerm = t('instructor', '선생님');
+  const passTerm = t('pass', '이용권');
   const notes = combineStudentNotes(student.specialNotes, student.memo);
 
   return (
@@ -213,8 +217,8 @@ export const StudentDetailInfoTab: React.FC<StudentDetailInfoTabProps> = ({
       </h4>
       <div className="space-y-2 text-xs">
         <div className="flex justify-between py-1.5 border-b border-slate-200/60">
-          <span className="text-slate-500">담당 선생님</span>
-          <span className="font-bold text-slate-800">{student.teacherName}</span>
+          <span className="text-slate-500">담당 {instructorTerm}</span>
+          <span className="font-bold text-slate-800 truncate ml-2">{student.teacherName}</span>
         </div>
         <div className="flex justify-between py-1.5 border-b border-slate-200/60">
           <span className="text-slate-500">{levelLabel}</span>
@@ -226,13 +230,13 @@ export const StudentDetailInfoTab: React.FC<StudentDetailInfoTabProps> = ({
         <div className="flex justify-between py-1.5 border-b border-slate-200/60">
           <span className="text-slate-500">{enrollmentModeLabel(industry)}</span>
           <span className="font-bold text-slate-800">
-            {student.billingMode === 'session_pass' ? '회차권' : '일반'}
+            {student.billingMode === 'session_pass' ? passTerm : '일반'}
           </span>
         </div>
         )}
         {showTuition && student.billingMode === 'session_pass' ? (
           <div className="flex justify-between py-1.5 border-b border-slate-200/60">
-            <span className="text-slate-500">회차권</span>
+            <span className="text-slate-500">{passTerm}</span>
             <span className="font-bold text-indigo-700 text-sm">
               {(() => {
                 const passes = ScheduleService.getCustomerSessionPasses(student.id).filter(
@@ -258,7 +262,7 @@ export const StudentDetailInfoTab: React.FC<StudentDetailInfoTabProps> = ({
           </>
         ) : null}
         <div className="flex justify-between py-1.5">
-          <span className="text-slate-500">총 누적 연습시간</span>
+          <span className="text-slate-500">총 누적 이용시간</span>
           <span className="font-bold text-emerald-700">
             {totalPracticeMinutes}분 ({Math.round(totalPracticeMinutes / 60)}시간)
           </span>

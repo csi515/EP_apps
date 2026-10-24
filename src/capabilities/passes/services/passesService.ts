@@ -8,6 +8,8 @@
  */
 
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
+import { getOrganizationId } from '@/services/adapters';
+import { getResourceLockErrorMessage } from '@/core/resource_locks/resourceLockErrors';
 import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
 import type { PassType, PassStatus } from '../domain/passesEngine';
 
@@ -153,17 +155,27 @@ export async function fetchPasses(
 
 /**
  * 이용권을 원자적으로 1회 차감한다.
- * deduct_pass_atomic RPC — DB 트랜잭션으로 처리되므로 중복 차감이 발생하지 않는다.
+ * deduct_pass_atomic RPC — DB 트랜잭션 및 FOR UPDATE 행 잠금으로 처리되므로 중복/초과 차감이 방지된다.
  */
-export async function deductPassAtomic(passId: string): Promise<void> {
+export async function deductPassAtomic(passId: string, tenantId?: string): Promise<void> {
   if (!isSupabaseConfigured()) return;
 
   const client = getCoreClient();
-  const { error } = await (client as any).rpc('deduct_pass_atomic', {
-    p_pass_id: passId,
-  });
+  const effectiveTenantId = tenantId || getOrganizationId();
 
-  if (error) throw new Error(error.message);
+  const rpcParams: Record<string, unknown> = {
+    p_pass_id: passId,
+  };
+  if (effectiveTenantId) {
+    rpcParams.p_tenant_id = effectiveTenantId;
+    rpcParams.p_count = 1;
+  }
+
+  const { error } = await (client as any).rpc('deduct_pass_atomic', rpcParams);
+
+  if (error) {
+    throw new Error(getResourceLockErrorMessage(error));
+  }
 
   // StorageService / TanStack Query 캐시 무효화 알림
   notifyStorageFromRefineResource('passes');

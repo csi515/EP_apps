@@ -241,8 +241,8 @@ export function getZeroConfigRoleTemplates(industryType: string = 'general'): Ze
   return [
     {
       code: 'owner',
-      name: '원장님 / 대표',
-      description: '전사 재무, 수강료 청구, 직원 권한 및 학원 운영 전권을 보유합니다.',
+      name: '사업주 / 대표',
+      description: '전사 재무, 수납 청구, 직원 권한 및 사업장 운영 전권을 보유합니다.',
       rank_order: 10,
       permissions: BASE_ROLE_PERMISSIONS.owner,
       isSensitiveRestricted: false,

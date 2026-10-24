@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { FamilyMemberSwitcher, type FamilyProfile } from '@/components/customer/FamilyMemberSwitcher';
 import { weekDates } from '../domain/weekStrip';
 import { shouldDeductPassOnCancel } from '../domain/bookingLogic';
+import { useTenantTerms } from '@/core/i18n';
 
 const FAMILY: FamilyProfile[] = [
   { id: 'self', name: '본인', remainingPasses: 8, todayAttendance: '입실 전' },
@@ -12,6 +13,7 @@ const FAMILY: FamilyProfile[] = [
 const SLOTS = ['18:00', '19:00', '20:00'];
 
 export function MemberBookingView() {
+  const { t } = useTenantTerms();
   const [memberId, setMemberId] = useState(FAMILY[0].id);
   const [selectedDay, setSelectedDay] = useState(() => new Date().toDateString());
   const [warn, setWarn] = useState(false);
@@ -29,11 +31,13 @@ export function MemberBookingView() {
     setWarn(late);
   }
 
+  const passLabel = t('pass', '이용권');
+
   return (
     <main className="min-h-[100svh] space-y-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <FamilyMemberSwitcher members={FAMILY} selectedId={memberId} onSelect={setMemberId} />
       <section className="rounded-2xl bg-emerald-50 p-4">
-        <p className="text-sm text-emerald-800">{member.name} 잔여 수강권</p>
+        <p className="text-sm text-emerald-800 truncate">{member.name} 잔여 {passLabel}</p>
         <p className="text-2xl font-black">{member.remainingPasses}회</p>
       </section>
       <div className="flex gap-2 overflow-x-auto">
@@ -62,7 +66,7 @@ export function MemberBookingView() {
       </button>
       {warn ? (
         <div className="fixed inset-x-0 bottom-0 z-40 rounded-t-2xl bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl">
-          <p className="text-sm font-bold">지금 취소하시면 수강권이 1회 차감됩니다</p>
+          <p className="text-sm font-bold">지금 취소하시면 {passLabel}이(가) 1회 차감됩니다</p>
           <button type="button" className="mt-3 min-h-12 w-full rounded-xl bg-slate-900 text-white" onClick={() => setWarn(false)}>
             확인
           </button>

@@ -2,6 +2,8 @@
  * 수강권·회원권 원자 엔진 (Pure Function Domain)
  */
 
+import { calculateRemainingDays } from '@/core/utils/businessDate';
+
 export type PassType = 'COUNT_BASED' | 'PERIOD_BASED' | 'HYBRID';
 export type PassStatus = 'ACTIVE' | 'EXPIRED' | 'EXHAUSTED' | 'PAUSED';
 
@@ -266,4 +268,17 @@ export function resumePass(
     success: true,
     extendedDays: diffDays,
   };
+}
+
+
+/**
+ * 수강권 만료 잔여일(D-Day)을 계산한다.
+ * 자정 마감 경계 및 타임존을 정규화하여 당일 자정 전까지는 D-0(0일)을 유지한다.
+ */
+export function getPassRemainingDays(
+  pass: Pick<PassDefinition, 'endDate'>,
+  now?: Date | string,
+  timezone?: string
+): number {
+  return calculateRemainingDays(pass.endDate, now, timezone);
 }

@@ -200,7 +200,11 @@ export function createFinanceStorage(api: StorageApi) {
     getUnpaidInvoices(): UnpaidInvoiceItem[] {
       const today = new Date().toISOString().slice(0, 10);
       return (api.getInvoices as () => TuitionInvoice[])()
-        .filter((inv) => inv.unpaidAmount > 0)
+        .filter((inv) => {
+          const unpaid = inv.unpaidAmount ?? Math.max(0, inv.totalAmount - inv.paidAmount);
+          const status = (inv.status ?? '').toLowerCase().trim();
+          return unpaid > 0 || status === 'unpaid' || status === 'partial' || status === 'overdue';
+        })
         .map((inv) => {
           const due = inv.dueDate;
           const diffMs = new Date(today).getTime() - new Date(due).getTime();

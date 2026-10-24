@@ -22,6 +22,8 @@ import { provisionIndustryResources } from "@/app/industry/resourceProvisioner";
 import "@/app/presets/presetManualEngine";
 import { registerQueryClientClear } from "@/core/auth/services/signOutCoordinator";
 import { setTenantQueryClient } from "@/core/query/tenantQueryKeys";
+import { setupStorageToQueryBridge } from "@/core/query/crossCacheBridge";
+import { getStoredOrganizationId } from "@/core/organizations/services/organizationService";
 
 import { authProvider } from "./providers/authProvider";
 import { accessControlProvider } from "./providers/accessControlProvider";
@@ -99,6 +101,7 @@ const queryClient = new QueryClient({
 });
 
 setTenantQueryClient(queryClient);
+setupStorageToQueryBridge(queryClient, () => getStoredOrganizationId());
 
 registerQueryClientClear(() => {
   queryClient.clear();

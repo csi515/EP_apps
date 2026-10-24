@@ -1,5 +1,6 @@
 import type { ConfirmDialogOptions } from './confirmTypes';
 import { feedbackStore } from './feedbackStore';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 export type ShowToast = (
   message: string,
@@ -36,6 +37,15 @@ export function showToast(
   title?: string
 ) {
   feedbackStore.showToast(message, type, title);
+}
+
+/**
+ * 예외 객체(Error, PostgREST 에러, 네트워크 오류 등)를 분석하여
+ * 사용자에게 친절하고 표준화된 한국어 에러 토스트를 표시합니다.
+ */
+export function showErrorToast(error: unknown, fallbackTitle?: string) {
+  const message = userFacingErrorMessage(error);
+  feedbackStore.showToast(message, 'error', fallbackTitle);
 }
 
 export function openConfirmDialog(options: ConfirmDialogOptions) {

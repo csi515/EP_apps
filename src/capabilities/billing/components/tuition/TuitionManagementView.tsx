@@ -21,6 +21,7 @@ import { TuitionCombinedBillingView } from './TuitionCombinedBillingView';
 import { TuitionInvoiceListView } from './TuitionInvoiceListView';
 import { TuitionPaymentModal } from './TuitionPaymentModal';
 import { ViewMode } from './tuitionViewTypes';
+import { filterInvoices, hasOutstandingBalance } from '@/domain/billing/invoiceFilterPredicate';
 import { getCurrentYearMonth, formatYearMonthLabel } from './tuitionUtils';
 
 export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
@@ -69,18 +70,10 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
   }, [selectedMonth, showToast]);
 
   const filteredInvoices = useMemo(() => {
-    return invoices.filter((inv) => {
-      if (selectedMonth && inv.yearMonth !== selectedMonth) return false;
-      if (statusFilter === 'unpaid') {
-        if ((inv.unpaidAmount ?? 0) <= 0) return false;
-      } else if (statusFilter !== 'ALL') {
-        if (inv.status !== statusFilter) return false;
-      }
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        if (!inv.studentName.toLowerCase().includes(q)) return false;
-      }
-      return true;
+    return filterInvoices(invoices, {
+      selectedMonth,
+      statusFilter,
+      searchQuery,
     });
   }, [invoices, selectedMonth, statusFilter, searchQuery]);
 
@@ -90,7 +83,7 @@ export const TuitionManagementView: React.FC<{ embedded?: boolean }> = ({ embedd
     const totalPaid = monthInvoices.reduce((sum, i) => sum + i.paidAmount, 0);
     const totalUnpaid = monthInvoices.reduce((sum, i) => sum + i.unpaidAmount, 0);
     const collectionRate = totalBilled > 0 ? Math.round((totalPaid / totalBilled) * 100) : 0;
-    const unpaidCount = monthInvoices.filter((i) => (i.unpaidAmount ?? 0) > 0).length;
+    const unpaidCount = monthInvoices.filter(hasOutstandingBalance).length;
 
     return { totalBilled, totalPaid, totalUnpaid, collectionRate, unpaidCount, totalCount: monthInvoices.length };
   }, [invoices, selectedMonth]);
