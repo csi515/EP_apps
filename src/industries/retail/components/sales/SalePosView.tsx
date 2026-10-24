@@ -17,6 +17,7 @@ import {
   PlusCircle,
   Package,
   RotateCcw,
+  HelpCircle,
 } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -48,6 +49,7 @@ import { SaleQuickReturnModal } from './SaleQuickReturnModal';
 import { SaleCameraScannerModal } from './SaleCameraScannerModal';
 import { SaleReceiptPrintModal, type ReceiptData } from './SaleReceiptPrintModal';
 import { SaleQuickProductCreateModal } from './SaleQuickProductCreateModal';
+import { SalePosGuideModal } from './SalePosGuideModal';
 import { matchCatalogItem } from './saleCatalogMatch';
 
 interface HeldCart {
@@ -91,6 +93,9 @@ export const SalePosView: FC = () => {
 
   // [개선안 2] 스마트 영수증 반품 모달 상태
   const [quickReturnOpen, setQuickReturnOpen] = useState(false);
+
+  // [사용자 친절도] POS 사용 가이드 모달 상태
+  const [guideOpen, setGuideOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!orgId || !isSupabaseConfigured()) {
@@ -435,6 +440,17 @@ export const SalePosView: FC = () => {
                 <span>영수증 반품</span>
               </button>
 
+              {/* [사용자 친절도] POS 실무 사용 가이드 & 단축키 치트시트 */}
+              <button
+                type="button"
+                onClick={() => setGuideOpen(true)}
+                className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 flex items-center gap-1.5 cursor-pointer"
+                title="POS 실무 사용 가이드 및 키보드 단축키 모음"
+              >
+                <HelpCircle className="w-4 h-4 text-teal-600" />
+                <span>사용 가이드</span>
+              </button>
+
               {heldCarts.length > 0 && (
                 <button
                   type="button"
@@ -516,6 +532,15 @@ export const SalePosView: FC = () => {
             </span>
             <span>·</span>
             <span><kbd className="px-1 py-0.5 bg-white border border-slate-200 rounded text-[9px] shadow-2xs">Del</kbd> 비우기</span>
+            <span>·</span>
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className="text-teal-700 font-bold hover:underline cursor-pointer flex items-center gap-0.5"
+            >
+              <HelpCircle className="w-3 h-3" />
+              가이드
+            </button>
           </div>
         </div>
 
@@ -790,6 +815,12 @@ export const SalePosView: FC = () => {
           void load();
         }}
         onError={(msg) => showToast(msg, 'error')}
+      />
+
+      {/* [사용자 친절도] POS 사용 가이드 모달 */}
+      <SalePosGuideModal
+        isOpen={guideOpen}
+        onClose={() => setGuideOpen(false)}
       />
 
       {/* [기성품 바코드] 미등록 바코드 즉석 상품 등록 모달 */}

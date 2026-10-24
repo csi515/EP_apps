@@ -5,7 +5,7 @@
  * (Node 20은 '@/…'를 테스트 파일 기준 상대 URL로 해석해 CI에서 ERR_MODULE_NOT_FOUND가 난다)
  */
 import assert from 'node:assert/strict';
-import { mock } from 'node:test';
+import { StorageService } from '@/services/storage';
 import type { AttendanceRecord, ClassItem, Student, Teacher } from '@/types';
 
 type Store = {
@@ -64,49 +64,42 @@ function makeClass(partial: Partial<ClassItem> & Pick<ClassItem, 'id' | 'daysOfW
 
 function installStorageMock(store: Store) {
   let classSeq = 100;
-  const StorageService = {
-    getSettings: () => ({ rooms: [{ id: 'r1', name: '연습실1' }] }),
-    getStudents: () => store.students.map((s) => ({ ...s, classIds: [...s.classIds] })),
-    getClasses: () => store.classes.map((c) => ({ ...c, daysOfWeek: [...c.daysOfWeek] })),
-    getAttendance: () => store.attendance.map((a) => ({ ...a })),
-    saveAttendance: () => {
-      store.saveAttendanceCalls += 1;
-      throw new Error('출결 저장이 호출되면 안 됩니다');
-    },
-    saveClass: (cls: Omit<ClassItem, 'id'> & { id?: string }): ClassItem => {
-      const id = cls.id || `cls-auto-${++classSeq}`;
-      const saved: ClassItem = { ...(cls as ClassItem), id };
-      const idx = store.classes.findIndex((c) => c.id === id);
-      if (idx >= 0) store.classes[idx] = saved;
-      else store.classes.push(saved);
-      return saved;
-    },
-    saveStudent: (
-      student: Omit<Student, 'id' | 'createdAt' | 'updatedAt'> & {
-        id?: string;
-        createdAt?: string;
-      }
-    ): Student => {
-      const id = student.id || 's-new';
-      const saved: Student = {
-        ...makeStudent(),
-        ...student,
-        id,
-        classIds: [...(student.classIds || [])],
-        updatedAt: '2024-06-01T00:00:00.000Z',
-        createdAt: student.createdAt || '2024-01-01T00:00:00.000Z',
-      } as Student;
-      const idx = store.students.findIndex((s) => s.id === id);
-      if (idx >= 0) store.students[idx] = saved;
-      else store.students.push(saved);
-      return saved;
-    },
+  StorageService.getSettings = () => ({ rooms: [{ id: 'r1', name: '연습실1' }] } as any);
+  StorageService.getStudents = () => store.students.map((s) => ({ ...s, classIds: [...s.classIds] }));
+  StorageService.getClasses = () => store.classes.map((c) => ({ ...c, daysOfWeek: [...c.daysOfWeek] }));
+  StorageService.getAttendance = () => store.attendance.map((a) => ({ ...a }));
+  StorageService.saveAttendance = () => {
+    store.saveAttendanceCalls += 1;
+    throw new Error('출결 저장이 호출되면 안 됩니다');
   };
-
-  mock.module(new URL('../../../../services/storage.ts', import.meta.url).href, {
-    namedExports: { StorageService },
-  });
-
+  StorageService.saveClass = (cls: Omit<ClassItem, 'id'> & { id?: string }): ClassItem => {
+    const id = cls.id || `cls-auto-${++classSeq}`;
+    const saved: ClassItem = { ...(cls as ClassItem), id };
+    const idx = store.classes.findIndex((c) => c.id === id);
+    if (idx >= 0) store.classes[idx] = saved;
+    else store.classes.push(saved);
+    return saved;
+  };
+  StorageService.saveStudent = (
+    student: Omit<Student, 'id' | 'createdAt' | 'updatedAt'> & {
+      id?: string;
+      createdAt?: string;
+    }
+  ): Student => {
+    const id = student.id || 's-new';
+    const saved: Student = {
+      ...makeStudent(),
+      ...student,
+      id,
+      classIds: [...(student.classIds || [])],
+      updatedAt: '2024-06-01T00:00:00.000Z',
+      createdAt: student.createdAt || '2024-01-01T00:00:00.000Z',
+    } as Student;
+    const idx = store.students.findIndex((s) => s.id === id);
+    if (idx >= 0) store.students[idx] = saved;
+    else store.students.push(saved);
+    return saved;
+  };
   return StorageService;
 }
 
@@ -131,7 +124,7 @@ async function run(): Promise<void> {
 
   installStorageMock(store);
 
-  const placementMod = await import('./pianoTimetablePlacement');
+  const placementMod = await import('./pianoTimetablePlacement.ts');
   const {
     assignStudentToSlot,
     moveStudentToSlot,
