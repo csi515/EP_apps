@@ -7,10 +7,19 @@ import { connectParentOnLogin } from '../parent/services/parentAccountService';
 import { connectStaffOnLogin } from '../staff/services/staffAccountService';
 import { getCoreClient } from '@/lib/supabase';
 
-/** 로그인 시 계정 연결 RPC를 일관된 순서로 실행 */
+/** 로그인 시 계정 연결 RPC를 일관된 순서로 실행 (모든 하위 동기화는 non-blocking soft-fail 처리) */
 export async function runLoginAccountSync(user?: User | null): Promise<void> {
-  await connectStaffOnLogin();
-  await syncAuthProvidersOnLogin();
+  try {
+    await connectStaffOnLogin();
+  } catch (err) {
+    console.warn('[loginBootstrap] connectStaffOnLogin soft-fail:', err);
+  }
+
+  try {
+    await syncAuthProvidersOnLogin();
+  } catch (err) {
+    console.warn('[loginBootstrap] syncAuthProvidersOnLogin soft-fail:', err);
+  }
 
   try {
     const sessionUser =
@@ -25,5 +34,9 @@ export async function runLoginAccountSync(user?: User | null): Promise<void> {
     );
   }
 
-  await connectParentOnLogin();
+  try {
+    await connectParentOnLogin();
+  } catch (err) {
+    console.warn('[loginBootstrap] connectParentOnLogin soft-fail:', err);
+  }
 }

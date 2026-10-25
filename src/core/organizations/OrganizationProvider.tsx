@@ -228,8 +228,16 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
       setOrganizationsError(null);
     }
     try {
-      await applyOAuthSignupIntentIfAny();
-      await runLoginAccountSync();
+      try {
+        await applyOAuthSignupIntentIfAny();
+      } catch (err) {
+        console.warn('[org] applyOAuthSignupIntentIfAny soft-fail:', err);
+      }
+      try {
+        await runLoginAccountSync();
+      } catch (err) {
+        console.warn('[org] runLoginAccountSync soft-fail:', err);
+      }
 
       let portalChildren = 0;
       let parentId: string | null = null;

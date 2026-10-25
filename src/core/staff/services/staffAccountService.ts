@@ -108,16 +108,24 @@ export interface ConnectStaffResult {
  * 2026-09-28 hotfix 이후 서버에서 no-op (connected: 0). 초대는 코드로 명시적 수락.
  */
 export async function connectStaffOnLogin(): Promise<ConnectStaffResult> {
-  const { data, error } = await getCoreClient().rpc('connect_staff_on_login');
-  if (error) throw error;
-  const result = data as {
-    connected: number;
-    memberships: Array<{ organization_id: string; staff_id: string }>;
-  };
-  return {
-    connected: result.connected ?? 0,
-    memberships: result.memberships ?? [],
-  };
+  try {
+    const { data, error } = await getCoreClient().rpc('connect_staff_on_login');
+    if (error) {
+      console.warn('[staffAccountService] connect_staff_on_login soft-fail:', error.message || error);
+      return { connected: 0, memberships: [] };
+    }
+    const result = (data || {}) as {
+      connected?: number;
+      memberships?: Array<{ organization_id: string; staff_id: string }>;
+    };
+    return {
+      connected: result.connected ?? 0,
+      memberships: result.memberships ?? [],
+    };
+  } catch (err) {
+    console.warn('[staffAccountService] connect_staff_on_login network/rpc soft-fail:', err);
+    return { connected: 0, memberships: [] };
+  }
 }
 
 /** 강사 계정 초대 — 1회용 초대 코드 발급 (재호출 시 재발급, 이전 코드 무효) */

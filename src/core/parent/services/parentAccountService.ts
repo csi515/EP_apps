@@ -31,16 +31,24 @@ export interface ConnectParentResult {
 }
 
 export async function connectParentOnLogin(): Promise<ConnectParentResult> {
-  const { data, error } = await getCoreClient().rpc('connect_parent_on_login');
-  if (error) throw error;
-  const result = data as {
-    connected: number;
-    memberships: Array<{ organization_id: string; parent_customer_id: string }>;
-  };
-  return {
-    connected: result.connected ?? 0,
-    memberships: result.memberships ?? [],
-  };
+  try {
+    const { data, error } = await getCoreClient().rpc('connect_parent_on_login');
+    if (error) {
+      console.warn('[parentAccountService] connect_parent_on_login soft-fail:', error.message || error);
+      return { connected: 0, memberships: [] };
+    }
+    const result = (data || {}) as {
+      connected?: number;
+      memberships?: Array<{ organization_id: string; parent_customer_id: string }>;
+    };
+    return {
+      connected: result.connected ?? 0,
+      memberships: result.memberships ?? [],
+    };
+  } catch (err) {
+    console.warn('[parentAccountService] connect_parent_on_login network/rpc soft-fail:', err);
+    return { connected: 0, memberships: [] };
+  }
 }
 
 export async function inviteParentMember(
