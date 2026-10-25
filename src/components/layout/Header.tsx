@@ -15,6 +15,20 @@ import {
 import { requestCommandPalette } from "@/components/common/GlobalCommandPalette";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { getIndustryLabel } from "@/core/industry/types";
+import { getIndustryPreset } from "@/app/presets/presetRegistry";
+import { cn } from "@/shared/lib/utils";
+
+const THEME_BADGE_STYLES: Record<string, string> = {
+  emerald: "text-emerald-700 bg-emerald-50 border-emerald-200/80",
+  rose: "text-rose-700 bg-rose-50 border-rose-200/80",
+  orange: "text-orange-700 bg-orange-50 border-orange-200/80",
+  amber: "text-amber-700 bg-amber-50 border-amber-200/80",
+  sky: "text-sky-700 bg-sky-50 border-sky-200/80",
+  teal: "text-teal-700 bg-teal-50 border-teal-200/80",
+  purple: "text-purple-700 bg-purple-50 border-purple-200/80",
+  slate: "text-slate-700 bg-slate-100 border-slate-200/80",
+  indigo: "text-indigo-700 bg-indigo-50 border-indigo-100/80",
+};
 import { customerJoinService } from "@/core/customer/services/customerJoinService";
 import { CustomerJoinRequestsPanel } from "@/core/customer/CustomerJoinRequestsPanel";
 import { NotificationDrawer } from "@/core/notifications";
@@ -32,6 +46,12 @@ export const Header: React.FC = () => {
     enterCustomerPortal,
     exitCustomerPortal,
   } = useOrganization();
+
+  const preset = currentOrganization?.industry_type
+    ? getIndustryPreset(currentOrganization.industry_type)
+    : null;
+  const badgeEmoji = preset?.theme?.badgeEmoji || "🏢";
+  const badgeColor = preset?.theme?.accentColor || "indigo";
 
   const [pendingJoinCount, setPendingJoinCount] = useState<number>(0);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState<boolean>(false);
@@ -98,18 +118,24 @@ export const Header: React.FC = () => {
             </span>
           </Link>
           {currentOrganization && (
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                <Building2 className="h-3.5 w-3.5 text-slate-500" />
-                {currentOrganization.name}
+            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 min-w-0">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 max-w-[120px] truncate sm:max-w-xs">
+                <Building2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                <span className="truncate">{currentOrganization.name}</span>
               </span>
-              <span className="hidden sm:inline-block text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100/80 px-2 py-0.5 rounded-md">
-                {getIndustryLabel(currentOrganization.industry_type)}
+              <span
+                className={cn(
+                  "hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-0.5 rounded-md shadow-2xs",
+                  THEME_BADGE_STYLES[badgeColor] || THEME_BADGE_STYLES.indigo
+                )}
+              >
+                <span>{badgeEmoji}</span>
+                <span>{preset?.name || getIndustryLabel(currentOrganization.industry_type)}</span>
               </span>
               <button
                 type="button"
                 onClick={() => clearOrganization()}
-                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium hover:underline shrink-0"
                 title="사업장 변경"
               >
                 변경
@@ -124,20 +150,20 @@ export const Header: React.FC = () => {
             <button
               type="button"
               onClick={handleToggleMode}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 sm:px-3 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-xs shrink-0"
               title={isCustomerView ? "사업주 운영 모드로 전환" : "고객 이용권 모드로 전환"}
             >
               {isCustomerView ? (
                 <>
-                  <ArrowLeftRight className="h-3.5 w-3.5 text-indigo-600" />
+                  <ArrowLeftRight className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
                   <span className="hidden sm:inline">사업주 모드로 전환</span>
-                  <span className="sm:hidden">사업주 모드</span>
+                  <span className="sm:hidden">사업주</span>
                 </>
               ) : (
                 <>
-                  <Ticket className="h-3.5 w-3.5 text-indigo-600" />
+                  <Ticket className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
                   <span className="hidden sm:inline">고객 모드로 전환</span>
-                  <span className="sm:hidden">고객 모드</span>
+                  <span className="sm:hidden">고객</span>
                 </>
               )}
             </button>

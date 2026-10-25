@@ -95,8 +95,8 @@ const INDUSTRY_CARDS = [
   },
   {
     id: 'custom',
-    title: '[직접 선택하기 (자유 업종)]',
-    subtitle: '업종 제약 없이 필요한 매장 운영 도구들을 직접 골라 담아 나만의 맞춤 매장을 만듭니다.',
+    title: '자유 맞춤 선택',
+    subtitle: '필요한 운영 도구를 직접 골라 맞춤 매장을 구성합니다.',
     badge: '자유 커스텀',
     icon: Sparkles,
     color: 'indigo',
@@ -282,6 +282,30 @@ export const QuickSetupPage: React.FC = () => {
     slot_minutes: 30,
   });
 
+  const customerTerm = activePreset?.terms?.customer || '회원/고객';
+  const instructorTerm = activePreset?.terms?.instructor || '담당자/직원';
+  const spaceTerm =
+    activePreset?.terms?.space ||
+    activePreset?.resourceTypes?.[0]?.name ||
+    '공간/시설';
+
+  const needsLocker = useMemo(() => {
+    return (
+      activePreset?.facilities?.needsLocker ??
+      (activePreset?.capabilities ?? []).includes('locker')
+    );
+  }, [activePreset]);
+
+  const needsSpace = useMemo(() => {
+    return (
+      (activePreset?.capabilities ?? []).some((c) =>
+        ['seat_room', 'booking', 'resources', 'space_turnaround', 'seat_timer_billing'].includes(c)
+      ) ||
+      Boolean(activePreset?.resourceTypes && activePreset.resourceTypes.length > 0) ||
+      rooms.length > 0
+    );
+  }, [activePreset, rooms.length]);
+
   // 직급 / 룸 인라인 추가 상태
   const [addingRole, setAddingRole] = useState(false);
   const [newRoleName, setNewRoleName] = useState('');
@@ -381,9 +405,8 @@ export const QuickSetupPage: React.FC = () => {
     setGeneralError(null);
 
     const defaults = getStandardPresetsForIndustry(industry);
-    if (!hasUserEditedRoles) {
-      setRoles(normalizeRankOrders(defaults.roles));
-    }
+    setRoles(normalizeRankOrders(defaults.roles));
+    setHasUserEditedRoles(false);
     setRooms(defaults.rooms ? [...defaults.rooms] : []);
     if (defaults.locker_count !== undefined) {
       setLockerCount(defaults.locker_count);
@@ -438,7 +461,9 @@ export const QuickSetupPage: React.FC = () => {
   };
 
   useEffect(() => {
-    applyIndustryDefaults('piano');
+    const params = new URLSearchParams(window.location.search);
+    const initialPreset = params.get('industry') || params.get('preset') || 'piano';
+    applyIndustryDefaults(initialPreset);
   }, []);
 
   // 직급 조작
@@ -567,15 +592,26 @@ export const QuickSetupPage: React.FC = () => {
         ...data,
         name: trimmedName,
         roles: effectiveRoles,
-        rooms,
-        locker_count: selectedIndustry === 'sauna' ? lockerCount : undefined,
+        rooms: needsSpace ? rooms : (rooms.length > 0 ? rooms : undefined),
+        locker_count: needsLocker ? lockerCount : undefined,
         operating_hours: operatingHours,
         active_capabilities: activeCapabilitiesPayload,
       });
       const payload = {
         ...basePayload,
+        custom_terms: activePreset?.terms ? {
+          'term.customer': activePreset.terms.customer,
+          'term.instructor': activePreset.terms.instructor,
+          'term.space': activePreset.terms.space,
+          'term.pass': activePreset.terms.pass,
+          'term.fee': activePreset.terms.fee,
+          'term.lesson': activePreset.terms.lesson,
+        } : undefined,
         ...mergeOpsRuntimeSettings((basePayload as Record<string, unknown>) ?? {}, {
-          turnaround_buffer_minutes: Number((data as { turnaround_buffer_minutes?: number }).turnaround_buffer_minutes) || 15,
+          turnaround_buffer_minutes:
+            Number((data as { turnaround_buffer_minutes?: number }).turnaround_buffer_minutes) ||
+            activePreset?.facilities?.turnaroundBufferMinutes ||
+            15,
           seat_capacity_default: rooms[0]?.capacity || 1,
           require_cleaning_checklist: true,
         }),
@@ -1032,11 +1068,11 @@ export const QuickSetupPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-indigo-600" />
                         <h3 className="text-base font-bold text-slate-900">
-                          [나만의 맞춤 매장] 운영 도구 직접 선택
+                          운영 도구 직접 선택
                         </h3>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
-                        사업주 매장 운영에 꼭 필요한 기능들을 카테고리별로 자유롭게 선택하세요.
+                        매장 운영에 필요한 기능을 카테고리별로 선택하세요.
                       </p>
                     </div>
                     <span className="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
@@ -1259,14 +1295,16 @@ export const QuickSetupPage: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
                   <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>{selectedIndustry === 'sauna' ? '사물함' : '공간/룸'}</span>
+                  <span>{needsLocker && !needsSpace ? '사물함' : spaceTerm}</span>
                 </div>
                 <p className="text-xs text-slate-500 truncate">
-                  {selectedIndustry === 'sauna'
+                  {needsLocker && !needsSpace
                     ? `락커 ${lockerCount}개`
                     : rooms.length > 0
                     ? `${rooms.map((r) => r.name).slice(0, 3).join(', ')}${rooms.length > 3 ? ' 외' : ''}`
-                    : '1개 기본 룸'}
+                    : needsLocker
+                    ? `락커 ${lockerCount}개`
+                    : '기본 설정 적용'}
                 </p>
               </div>
 
@@ -1516,15 +1554,13 @@ export const QuickSetupPage: React.FC = () => {
               </div>
             </div>
 
-            {/* B. 공간 (룸/연습실) 구성 - 피아노, 필라테스 등 */}
-            {(selectedIndustry === 'piano' ||
-              selectedIndustry === 'pilates' ||
-              rooms.length > 0) && (
+            {/* B. 공간 (${spaceTerm}) 구성 */}
+            {needsSpace && (
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
                     <Layers className="w-3.5 h-3.5 text-indigo-600" />
-                    <span>공간 / 룸 목록 ({rooms.length}개)</span>
+                    <span>{spaceTerm} 목록 ({rooms.length}개)</span>
                   </label>
                   {!addingRoom && (
                     <button
@@ -1533,7 +1569,7 @@ export const QuickSetupPage: React.FC = () => {
                       className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center space-x-1"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>공간 추가</span>
+                      <span>{spaceTerm} 추가</span>
                     </button>
                   )}
                 </div>
@@ -1566,7 +1602,7 @@ export const QuickSetupPage: React.FC = () => {
                         type="text"
                         value={newRoomName}
                         onChange={(e) => setNewRoomName(e.target.value)}
-                        placeholder="공간명"
+                        placeholder={`${spaceTerm}명`}
                         className="h-9 px-3 rounded-xl border border-indigo-400 text-xs font-medium focus:outline-none"
                         autoFocus
                       />
@@ -1598,11 +1634,11 @@ export const QuickSetupPage: React.FC = () => {
               </div>
             )}
 
-            {/* C. 락커 수량 - 사우나인 경우 */}
-            {selectedIndustry === 'sauna' && (
+            {/* C. 락커/사물함 수량 구성 */}
+            {needsLocker && (
               <div className="pt-2">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  남탕/여탕 락커 번호 수량 (개)
+                  {selectedIndustry === 'sauna' ? '남탕/여탕 락커 수량 (개)' : '사물함/락커 수량 (개)'}
                 </label>
                 <div className="flex items-center space-x-3">
                   <input
@@ -1614,7 +1650,9 @@ export const QuickSetupPage: React.FC = () => {
                     className="h-12 w-32 px-4 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   />
                   <p className="text-xs text-slate-500">
-                    남탕 1~{lockerCount}번, 여탕 1~{lockerCount}번 사물함이 자동 벌크 생성됩니다.
+                    {selectedIndustry === 'sauna'
+                      ? `남탕 1~${lockerCount}번, 여탕 1~${lockerCount}번 사물함이 자동 벌크 생성됩니다.`
+                      : `1번부터 ${lockerCount}번까지 락커가 자동 생성됩니다.`}
                   </p>
                 </div>
               </div>

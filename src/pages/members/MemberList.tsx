@@ -191,13 +191,13 @@ export function MemberList(): React.JSX.Element {
         <div>
           <div className="flex items-center gap-2">
             <Users className="h-6 w-6 text-slate-800" />
-            <h1 className="text-2xl font-black text-slate-900">사원 및 권한 위임 관리</h1>
+            <h1 className="text-2xl font-black text-slate-900">사원 및 권한 관리</h1>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
               총 {members.length}명
             </span>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            총무팀/운영 관리자 및 사업자가 사내 직원의 직급과 세부 업무 권한을 부여·회수합니다.
+            사내 직원의 직급과 세부 업무 권한을 관리합니다.
           </p>
         </div>
 

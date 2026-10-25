@@ -43,8 +43,8 @@ export function ResponsiveTable<T>({
         {emptyState || (
           <ActionableEmptyState
             iconName="check"
-            title="표시할 항목이 없습니다."
-            description="조건을 바꾸거나 새 항목을 등록하면 이 자리에 나타납니다."
+            title="등록된 항목이 없습니다"
+            description="새 항목을 등록하면 여기에 표시됩니다."
           />
         )}
       </div>

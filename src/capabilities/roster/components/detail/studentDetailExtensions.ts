@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
+import { FileText } from 'lucide-react';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import type {
   Student,
   AttendanceRecord,
@@ -102,6 +104,65 @@ export function resolveStudentDetailTabs(
 ): DetailTabConfigItem[] {
   const ext = getStudentDetailExtension(industryId);
   if (ext?.resolveTabs) return ext.resolveTabs(tabs, counts);
+
+  // ── 업종 프리셋 기반 선언적 탭 자동 조립 (Zero-Duplication Contextual Profile) ──
+  if (industryId) {
+    const preset = getIndustryPreset(industryId);
+    if (preset) {
+      const caps = new Set(preset.capabilities || []);
+      const passTerm = preset.terms?.pass || '이용권';
+      const lessonTerm = preset.terms?.lesson || (caps.has('booking') ? '예약' : '수업');
+      const attendanceTerm = '출결';
+      const isPianoIndustry = industryId === 'piano' || industryId.includes('piano');
+
+      // 1. 피아노 고유 탭 및 비활성 기능 탭 필터링 (Zero-Pollution)
+      let filtered = tabs.filter((tab) => {
+        if (!isPianoIndustry && (tab.id === 'practice' || tab.id === 'videos' || tab.id === 'textbooks')) {
+          return false;
+        }
+        if (!caps.has('attendance') && tab.id === 'attendance') {
+          return false;
+        }
+        return true;
+      });
+
+      // 2. 라벨 동적 치환
+      filtered = filtered.map((tab) => {
+        if (tab.id === 'classes') {
+          return {
+            ...tab,
+            label: `${lessonTerm} (${counts.enrolledClasses})`,
+          };
+        }
+        if (tab.id === 'tuition' && caps.has('passes')) {
+          return {
+            ...tab,
+            label: `${passTerm}·수납 (${counts.invoiceCount})`,
+          };
+        }
+        if (tab.id === 'attendance') {
+          return {
+            ...tab,
+            label: `${attendanceTerm} (${counts.attRate}%)`,
+          };
+        }
+        return tab;
+      });
+
+      // 3. 차트 탭 활성화 (treatment_chart 보유 시)
+      if (caps.has('treatment_chart') && !filtered.some((t) => t.id === 'charts')) {
+        filtered.splice(1, 0, {
+          id: 'charts',
+          label: '시술 차트',
+          icon: React.createElement(FileText, { className: 'w-3.5 h-3.5' }),
+          group: 'primary',
+        });
+      }
+
+      return filtered;
+    }
+  }
+
   return tabs;
 }
 

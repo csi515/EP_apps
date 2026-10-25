@@ -30,8 +30,8 @@ export interface LockerManagementViewProps {
 }
 
 export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
-  title = '사물함·락커 그리드',
-  description = '타일을 탭하여 빈 사물함에 회원을 즉시 배정하거나 이용 기간을 연장/반납합니다.',
+  title = '사물함 관리',
+  description = '터치하여 회원을 배정하거나 기간을 연장합니다.',
 }) => {
   const { currentOrganization } = useOrganization();
   const [lockers, setLockers] = useState<LockerRecord[]>([]);
@@ -230,7 +230,7 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
           className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-md shadow-indigo-100 transition hover:bg-indigo-700 active:scale-95"
         >
           <Plus className="h-4 w-4" />
-          사물함 등록
+          + 사물함 추가
         </button>
       </div>
 
@@ -240,19 +240,19 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-100 px-2.5 py-1 font-bold text-slate-700">
             <span className="h-2 w-2 rounded-full bg-slate-400" />
-            빈 사물함
+            빈자리
           </span>
           <span className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            사용 중
+            사용중
           </span>
           <span className="flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 font-bold text-amber-700">
             <span className="h-2 w-2 rounded-full bg-amber-500" />
-            만료 임박 (7일 내)
+            만료 임박
           </span>
           <span className="flex items-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-2.5 py-1 font-bold text-rose-700">
             <span className="h-2 w-2 rounded-full bg-rose-500" />
-            기간 초과
+            초과
           </span>
         </div>
 
@@ -284,9 +284,9 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
           <EmptyStateHero
             icon={<Lock className="w-8 h-8 text-indigo-600" />}
             title="등록된 사물함이 없습니다"
-            description="구역별(남탕, 여탕, 1구역 등) 번호 사물함을 등록하고 회원 배정 현황을 한눈에 파악하세요."
+            description="사물함을 등록하고 회원 배정 현황을 관리하세요."
             action={{
-              label: '첫 사물함 등록하기',
+              label: '+ 사물함 등록',
               onClick: () => setIsAddModalOpen(true),
               icon: <Plus className="w-4 h-4 mr-1" />,
             }}

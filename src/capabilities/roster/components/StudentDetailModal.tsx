@@ -13,6 +13,7 @@ import type { DetailTab } from './detail/types';
 import { getStudentDetailExtension } from './detail/studentDetailExtensions';
 import { useStaffGrants } from '@/hooks';
 import { useModuleLabels } from '@/core/labels';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 
 export type { DetailTab } from './detail/types';
 
@@ -73,10 +74,16 @@ const StudentDetailModalContent: React.FC<
   const activeInMore = moreTabs.some((tab) => tab.id === modal.currentTab);
   const showMoreSection = showMoreTabs || activeInMore;
 
+  const preset = modal.industryPlugin?.id ? getIndustryPreset(modal.industryPlugin.id) : null;
+  const caps = new Set(preset?.capabilities || []);
+  const lessonTerm = preset?.terms?.lesson || (caps.has('booking') ? '예약' : '수업');
+  const passTerm = preset?.terms?.pass || '수납';
+  const instructorTerm = preset?.terms?.instructor || '담당';
+
   const summaryItems = [
-    { label: '다음 수업', value: modal.summary.nextClass },
-    { label: '최근 출결', value: modal.summary.recentAttendance },
-    ...(canTuition ? [{ label: '이번 달 수납', value: modal.summary.tuition }] : []),
+    { label: `다음 ${lessonTerm}`, value: modal.summary.nextClass },
+    ...(caps.has('attendance') ? [{ label: '최근 출결', value: modal.summary.recentAttendance }] : []),
+    ...(canTuition ? [{ label: `${passTerm} 현황`, value: modal.summary.tuition }] : []),
     { label: contactLabel, value: modal.summary.guardian },
   ];
 
@@ -112,7 +119,7 @@ const StudentDetailModalContent: React.FC<
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                {student.school} {student.grade} | 담당: <strong>{student.teacherName}</strong> | 생년월일: {student.birthDate}
+                {student.school} {student.grade} | {instructorTerm}: <strong>{student.teacherName || '-'}</strong> | 생년월일: {student.birthDate}
               </p>
             </div>
           </div>

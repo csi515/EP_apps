@@ -257,6 +257,8 @@ import { vehicleMileageLogSetupSchema } from '@/capabilities/vehicle_mileage_log
 import { vehicleMileageLogResources } from '@/capabilities/vehicle_mileage_log/resources';
 import { safetyWorkPermitSetupSchema } from '@/capabilities/safety_work_permit/setupSchema';
 import { safetyWorkPermitResources } from '@/capabilities/safety_work_permit/resources';
+import { babyFoodCoopSetupSchema } from '@/capabilities/baby_food_coop/setupSchema';
+import { babyFoodCoopResources } from '@/capabilities/baby_food_coop/resources';
 
 
 /**
@@ -959,6 +961,11 @@ export const CAPABILITY_BUNDLES: Record<BundledPresetCapabilityId, CapabilityMod
     setupSchema: safetyWorkPermitSetupSchema,
     resources: safetyWorkPermitResources,
   },
+  baby_food_coop: {
+    capabilityId: 'baby_food_coop',
+    setupSchema: babyFoodCoopSetupSchema,
+    resources: babyFoodCoopResources,
+  },
 };
 
 
@@ -979,6 +986,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   piano: {
     id: 'piano',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🎹"
+    },
+    starterPassTemplates: [
+        {
+            "name": "월 주2회 정규 클래식 과정",
+            "passType": "PERIOD_BASED",
+            "totalCount": 8,
+            "validityDays": 30,
+            "recommendedPrice": 160000,
+            "badge": "인기"
+        },
+        {
+            "name": "성인 취미 1:1 맞춤 레슨 4회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 45,
+            "recommendedPrice": 180000,
+            "badge": "추천"
+        },
+        {
+            "name": "입시 집중반 (월 주4회 + 연습실 무료)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 16,
+            "validityDays": 30,
+            "recommendedPrice": 380000
+        }
+    ],
+    terms: {
+      "customer": "원생",
+      "instructor": "선생님",
+      "space": "연습실",
+      "pass": "수강권",
+      "fee": "교습비",
+      "lesson": "피아노레슨",
+      "level": "진도"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "13:00",
+      "end_time": "19:00",
+      "slot_minutes": 30
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 5
+    },
+
     name: '피아노·음악학원',
     description: '원생 출결, 1:1 레슨 피아노 연습실 배정, 교습비 정기 청구, 교재 및 진도 관리',
     category: 'education',
@@ -1007,6 +1062,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   general_academy: {
     id: 'general_academy',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🎓"
+    },
+    starterPassTemplates: [
+        {
+            "name": "국영수 단과 월정규 수강권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 12,
+            "validityDays": 30,
+            "recommendedPrice": 250000,
+            "badge": "인기"
+        },
+        {
+            "name": "종합 집중 케어반 (주5회)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 420000,
+            "badge": "추천"
+        },
+        {
+            "name": "내신 파이널 2주 특강",
+            "passType": "COUNT_BASED",
+            "totalCount": 6,
+            "validityDays": 14,
+            "recommendedPrice": 150000
+        }
+    ],
+    terms: {
+      "customer": "원생",
+      "instructor": "선생님/강사",
+      "space": "강의실",
+      "pass": "수강권",
+      "fee": "수강료",
+      "lesson": "수업"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "14:00",
+      "end_time": "22:00",
+      "slot_minutes": 50
+    },
+
     name: '일반 보습학원',
     description: 'PIN/QR 등하원 출결, 월 교습비 정기 청구서, 학부모 상담일지 및 수강권 관리',
     category: 'education',
@@ -1028,6 +1127,51 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   language_academy: {
     id: 'language_academy',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🗣️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "원어민 회화 주2회 월정규권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 8,
+            "validityDays": 30,
+            "recommendedPrice": 220000,
+            "badge": "인기"
+        },
+        {
+            "name": "토익/오픽 단기 완성 패키지",
+            "passType": "PERIOD_BASED",
+            "totalCount": 16,
+            "validityDays": 60,
+            "recommendedPrice": 380000,
+            "badge": "추천"
+        },
+        {
+            "name": "1:1 비즈니스 영어 8회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 8,
+            "validityDays": 45,
+            "recommendedPrice": 350000
+        }
+    ],
+    terms: {
+      "customer": "수강생",
+      "instructor": "강사/원어민강사",
+      "space": "실습실/랩실",
+      "pass": "수강권",
+      "fee": "수강료",
+      "lesson": "회화수업",
+      "level": "레벨"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "21:00",
+      "slot_minutes": 50
+    },
+
     name: '어학원',
     description: '레벨별 수업 예약, 수강권 차감, 어학 실습실 및 원어민 강사 일정 관리',
     category: 'education',
@@ -1045,6 +1189,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   art_academy: {
     id: 'art_academy',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🎨"
+    },
+    starterPassTemplates: [
+        {
+            "name": "유초등 창의미술 주2회 (월)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 8,
+            "validityDays": 30,
+            "recommendedPrice": 160000,
+            "badge": "인기"
+        },
+        {
+            "name": "예고/미대 입시 실기 집중반 (월)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 16,
+            "validityDays": 30,
+            "recommendedPrice": 450000,
+            "badge": "추천"
+        },
+        {
+            "name": "성인 취미 드로잉 4회 쿠폰권",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 45,
+            "recommendedPrice": 140000
+        }
+    ],
+    terms: {
+      "customer": "원생",
+      "instructor": "선생님/작가",
+      "space": "실기실",
+      "pass": "회차수강권",
+      "fee": "교습비",
+      "lesson": "실기수업"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "13:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+
     name: '미술학원',
     description: '회차별 실기 출결, 미술 재료 소모품 재고, 수강료 청구 및 포트폴리오 관리',
     category: 'education',
@@ -1062,6 +1250,51 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   taekwondo_academy: {
     id: 'taekwondo_academy',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🥋"
+    },
+    starterPassTemplates: [
+        {
+            "name": "월 정규 수련권 (주5회 매일반)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 180000,
+            "badge": "인기"
+        },
+        {
+            "name": "월 정규 수련권 (주3회 선택반)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 12,
+            "validityDays": 30,
+            "recommendedPrice": 150000
+        },
+        {
+            "name": "신규 입관 패키지 (도복+수련 1개월)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 220000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "수련생/관원",
+      "instructor": "관장/사범",
+      "space": "수련실/도장",
+      "pass": "월수련권",
+      "fee": "수련비",
+      "lesson": "수련",
+      "level": "품/단"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "13:00",
+      "end_time": "20:30",
+      "slot_minutes": 50
+    },
+
     name: '태권도장',
     description: '수련부 출결, 정기 수련권, 도복/띠 재고, 차량 탑승 및 안전 서약서',
     category: 'education',
@@ -1079,6 +1312,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   dance_academy: {
     id: 'dance_academy',
+    theme: {
+        "accentColor": "purple",
+        "badgeEmoji": "💃"
+    },
+    starterPassTemplates: [
+        {
+            "name": "K-POP 댄스 주2회 월정규권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 8,
+            "validityDays": 30,
+            "recommendedPrice": 150000,
+            "badge": "인기"
+        },
+        {
+            "name": "취미 쿠폰제 10회 수강권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 200000,
+            "badge": "추천"
+        },
+        {
+            "name": "오디션/전문반 월집중 클래스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 16,
+            "validityDays": 30,
+            "recommendedPrice": 350000
+        }
+    ],
+    terms: {
+      "customer": "수강생",
+      "instructor": "강사/안무가",
+      "space": "연습홀",
+      "pass": "쿠폰/수강권",
+      "fee": "수강료",
+      "lesson": "댄스레슨"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "12:00",
+      "end_time": "22:00",
+      "slot_minutes": 60
+    },
+
     name: '무용·댄스학원',
     description: '클래스별 정원 예약, 무용홀 대관, 쿠폰제 수강권 차감 및 발표회 일정',
     category: 'education',
@@ -1096,6 +1373,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   coding_academy: {
     id: 'coding_academy',
+    theme: {
+        "accentColor": "sky",
+        "badgeEmoji": "🤖"
+    },
+    starterPassTemplates: [
+        {
+            "name": "초중등 엔트리/스크래치 월정규권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 4,
+            "validityDays": 30,
+            "recommendedPrice": 160000,
+            "badge": "인기"
+        },
+        {
+            "name": "파이썬/C언어 기초 알고리즘 8회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 8,
+            "validityDays": 60,
+            "recommendedPrice": 320000,
+            "badge": "추천"
+        },
+        {
+            "name": "정보올림피아드 대비 특강",
+            "passType": "COUNT_BASED",
+            "totalCount": 6,
+            "validityDays": 30,
+            "recommendedPrice": 240000
+        }
+    ],
+    terms: {
+      "customer": "수강생",
+      "instructor": "멘토/강사",
+      "space": "PC실습실",
+      "pass": "코스수강권",
+      "fee": "수강료",
+      "lesson": "실습수업"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "21:00",
+      "slot_minutes": 60
+    },
+
     name: '코딩·IT 학원',
     description: 'PC 실습 좌석 배정, 프로젝트 과제 파이프라인, 출결 및 월 교습비 관리',
     category: 'education',
@@ -1113,6 +1434,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   exam_tutoring: {
     id: 'exam_tutoring',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "📝"
+    },
+    starterPassTemplates: [
+        {
+            "name": "1:1 밀착 과외 주2회 월정규권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 8,
+            "validityDays": 30,
+            "recommendedPrice": 400000,
+            "badge": "추천"
+        },
+        {
+            "name": "소수정예 3:1 클리닉 8회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 8,
+            "validityDays": 45,
+            "recommendedPrice": 280000,
+            "badge": "인기"
+        },
+        {
+            "name": "오답노트 & 모의고사 첨삭 4회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 30,
+            "recommendedPrice": 120000
+        }
+    ],
+    terms: {
+      "customer": "학생",
+      "instructor": "선생님/멘토",
+      "space": "상담지도실",
+      "pass": "수강권",
+      "fee": "수업료",
+      "lesson": "개별지도"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "15:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+
     name: '입시·과외 학원',
     description: '1:1 개별지도 스케줄, 학습 플래너 상담 일지, 시급/수강료 정산 관리',
     category: 'education',
@@ -1130,6 +1495,43 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   culture_center: {
     id: 'culture_center',
+    theme: {
+        "accentColor": "purple",
+        "badgeEmoji": "🏛️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "정기 문화강좌 12주 수강권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 12,
+            "validityDays": 90,
+            "recommendedPrice": 180000,
+            "badge": "인기"
+        },
+        {
+            "name": "주말 일일 특강 체험권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 20000,
+            "badge": "체험"
+        }
+    ],
+    terms: {
+      "customer": "회원/수강생",
+      "instructor": "강사",
+      "space": "강의실/실습실",
+      "pass": "학기수강권",
+      "fee": "수강료",
+      "lesson": "강좌"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "20:00",
+      "slot_minutes": 50
+    },
+
     name: '문화센터·평생교육원',
     description: '강의실-강사-시간표 스케줄링, 강사료 수강매출 배분(RS %) 위탁계약서 및 강사 스펙 인쇄 포스터 관리',
     category: 'education',
@@ -1184,6 +1586,56 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   pilates: {
     id: 'pilates',
+    theme: {
+        "accentColor": "teal",
+        "badgeEmoji": "🧘"
+    },
+    starterPassTemplates: [
+        {
+            "name": "1:1 개인레슨 10회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 700000,
+            "badge": "추천"
+        },
+        {
+            "name": "6:1 그룹레슨 30회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 30,
+            "validityDays": 90,
+            "recommendedPrice": 360000,
+            "badge": "인기"
+        },
+        {
+            "name": "체험 1회권 (체형 분석 포함)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 14,
+            "recommendedPrice": 30000,
+            "badge": "체험"
+        }
+    ],
+    terms: {
+      "customer": "회원",
+      "instructor": "강사",
+      "space": "기구룸/개인실",
+      "pass": "회원권/회차권",
+      "fee": "레슨비",
+      "lesson": "필라테스레슨"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "21:00",
+      "slot_minutes": 50
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 30,
+      "turnaroundBufferMinutes": 10
+    },
+
     name: '필라테스 스튜디오',
     description: '리포머/체어 그룹 및 개인레슨 예약, 횟수권 차감, 강사 배정 및 락커 관리',
     category: 'fitness',
@@ -1207,6 +1659,55 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   yoga_studio: {
     id: 'yoga_studio',
+    theme: {
+        "accentColor": "teal",
+        "badgeEmoji": "🧘"
+    },
+    starterPassTemplates: [
+        {
+            "name": "힐링/빈야사 요가 3개월 정기권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 36,
+            "validityDays": 90,
+            "recommendedPrice": 360000,
+            "badge": "인기"
+        },
+        {
+            "name": "자유 예약 10회 쿠폰권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 180000,
+            "badge": "추천"
+        },
+        {
+            "name": "싱잉볼 명상 원데이 클래스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 40000,
+            "badge": "체험"
+        }
+    ],
+    terms: {
+      "customer": "회원/요기",
+      "instructor": "선생님/지도자",
+      "space": "요가룸",
+      "pass": "수련권/기간권",
+      "fee": "월회비",
+      "lesson": "요가수련"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "21:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 20
+    },
+
     name: '요가 스튜디오',
     description: '수련 타임테이블 예약, 기간제/횟수제 이용권, 출결 체크인 및 락커 관리',
     category: 'fitness',
@@ -1224,6 +1725,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   gym_fitness: {
     id: 'gym_fitness',
+    theme: {
+        "accentColor": "orange",
+        "badgeEmoji": "⚡"
+    },
+    starterPassTemplates: [
+        {
+            "name": "헬스 3개월 정기 회원권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 90,
+            "validityDays": 90,
+            "recommendedPrice": 180000,
+            "badge": "인기"
+        },
+        {
+            "name": "1:1 PT 10회권 (락커/운동복 무료)",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 600000,
+            "badge": "추천"
+        },
+        {
+            "name": "헬스 12개월 연간 회원권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 365,
+            "validityDays": 365,
+            "recommendedPrice": 480000
+        }
+    ],
+    terms: {
+      "customer": "회원",
+      "instructor": "트레이너",
+      "space": "운동존/머신존",
+      "pass": "헬스이용권",
+      "fee": "월회비",
+      "lesson": "PT"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "06:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 80
+    },
+
     name: '헬스장 / 피트니스 센터',
     description: '회원권 기간 관리, 입장 바코드/PIN 출결, 개인 락커 배정, 운동복 대여',
     category: 'fitness',
@@ -1245,6 +1794,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   pt_fitness: {
     id: 'pt_fitness',
+    theme: {
+        "accentColor": "orange",
+        "badgeEmoji": "🏋️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "1:1 개인 PT 20회 패키지 (식단 관리)",
+            "passType": "COUNT_BASED",
+            "totalCount": 20,
+            "validityDays": 90,
+            "recommendedPrice": 1200000,
+            "badge": "인기"
+        },
+        {
+            "name": "바디프로필 3개월 집중반 (30회)",
+            "passType": "COUNT_BASED",
+            "totalCount": 30,
+            "validityDays": 100,
+            "recommendedPrice": 1800000,
+            "badge": "추천"
+        },
+        {
+            "name": "1:1 체형교정/재활 10회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 700000
+        }
+    ],
+    terms: {
+      "customer": "회원",
+      "instructor": "트레이너/코치",
+      "space": "PT존/세션룸",
+      "pass": "PT세션권",
+      "fee": "세션비",
+      "lesson": "1:1 PT"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "07:00",
+      "end_time": "22:00",
+      "slot_minutes": 50
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 30
+    },
+
     name: '1:1 피트니스 / PT 샵',
     description: 'PT 세션 차감권, 트레이너 배정, 고객 체형 상담 일지 및 락커 관리',
     category: 'fitness',
@@ -1262,6 +1859,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   indoor_golf: {
     id: 'indoor_golf',
+    theme: {
+        "accentColor": "emerald",
+        "badgeEmoji": "⛳"
+    },
+    starterPassTemplates: [
+        {
+            "name": "60분 타석 10회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 200000,
+            "badge": "인기"
+        },
+        {
+            "name": "1:1 프로 레슨 10회 + 타석 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 550000,
+            "badge": "추천"
+        },
+        {
+            "name": "종일 무제한 3개월 정기권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 90,
+            "validityDays": 90,
+            "recommendedPrice": 450000
+        }
+    ],
+    terms: {
+      "customer": "회원",
+      "instructor": "레슨프로",
+      "space": "타석/룸",
+      "pass": "타석이용권",
+      "fee": "이용료",
+      "lesson": "골프레슨"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "06:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 50
+    },
+
     name: '실내 골프연습장',
     description: '타석/레슨 예약, 정기 회원권, 골프백 락커, 대여채 및 간이 시재 관리',
     category: 'fitness',
@@ -1283,6 +1928,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   swim_school: {
     id: 'swim_school',
+    theme: {
+        "accentColor": "sky",
+        "badgeEmoji": "🏊"
+    },
+    starterPassTemplates: [
+        {
+            "name": "새벽/저녁 수영 정규 강습 (월)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 12,
+            "validityDays": 30,
+            "recommendedPrice": 120000,
+            "badge": "인기"
+        },
+        {
+            "name": "자유수영 10회 입장권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 70000
+        },
+        {
+            "name": "1:1 영법 교정 레슨 5회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 45,
+            "recommendedPrice": 250000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "회원/원생",
+      "instructor": "코치/강사",
+      "space": "수영레인",
+      "pass": "수영강습권",
+      "fee": "강습료",
+      "lesson": "수영강습"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "06:00",
+      "end_time": "21:00",
+      "slot_minutes": 50
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 100
+    },
+
     name: '수영장·수영교실',
     description: '레인별 강습 예약, 정기 회원권, 탈의실 락커 배정 및 안전 서약서',
     category: 'fitness',
@@ -1303,6 +1996,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   climbing_activity: {
     id: 'climbing_activity',
+    theme: {
+        "accentColor": "orange",
+        "badgeEmoji": "🧗"
+    },
+    starterPassTemplates: [
+        {
+            "name": "일일 자유이용권 (암벽화 대여 포함)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 1,
+            "recommendedPrice": 25000,
+            "badge": "체험"
+        },
+        {
+            "name": "정기 10회 이용권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 180000,
+            "badge": "인기"
+        },
+        {
+            "name": "1개월 정기 회원권 (전지점)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 130000
+        }
+    ],
+    terms: {
+      "customer": "클라이머/회원",
+      "instructor": "강사/세터",
+      "space": "볼더링월/지구력존",
+      "pass": "암장패스",
+      "fee": "이용료",
+      "lesson": "강습세션"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "10:00",
+      "end_time": "22:30",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 40
+    },
+
     name: '클라이밍 & 액티비티 짐',
     description: '일일/정기 이용권, 암벽화/장비 대여, 전자 면책 동의서 및 출결/락커 관리',
     category: 'fitness',
@@ -1323,6 +2064,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   boxing_mma: {
     id: 'boxing_mma',
+    theme: {
+        "accentColor": "orange",
+        "badgeEmoji": "🥊"
+    },
+    starterPassTemplates: [
+        {
+            "name": "복싱/MMA 3개월 정기 수련권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 60,
+            "validityDays": 90,
+            "recommendedPrice": 390000,
+            "badge": "인기"
+        },
+        {
+            "name": "월 자유 수련권 (주5회)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 150000
+        },
+        {
+            "name": "1:1 미트 트레이닝 10회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 400000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "관원/회원",
+      "instructor": "관장/코치",
+      "space": "링/샌드백존",
+      "pass": "체육관등록권",
+      "fee": "월회비",
+      "lesson": "미트트레이닝"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "22:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 40
+    },
+
     name: '복싱·격투기 체육관',
     description: '수련 출결 체크, 정기 이용권, 글러브/보호구 대여, 안전 서약 및 락커',
     category: 'fitness',
@@ -1346,6 +2135,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   hair_salon: {
     id: 'hair_salon',
+    theme: {
+        "accentColor": "rose",
+        "badgeEmoji": "✂️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "여성 디자인컷 + 스칼프 케어",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 35000,
+            "badge": "인기"
+        },
+        {
+            "name": "뿌리염색 + 클리닉 3회 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 120,
+            "recommendedPrice": 180000,
+            "badge": "추천"
+        },
+        {
+            "name": "VIP 50만원 정액 선불권 (10% 적립)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 365,
+            "recommendedPrice": 500000,
+            "badge": "VIP"
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "헤어디자이너",
+      "space": "시술체어",
+      "pass": "시술권/정액권",
+      "fee": "시술비",
+      "lesson": "헤어시술"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 10
+    },
+
     name: '헤어샵 / 뷰티 살롱',
     description: '디자이너 예약, 염색약/시술 차트, 스태프 근무표 및 일일 매출 마감',
     category: 'beauty',
@@ -1366,6 +2203,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   barber_shop: {
     id: 'barber_shop',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "💈"
+    },
+    starterPassTemplates: [
+        {
+            "name": "맨즈 클래식컷 + 쉐이빙 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 45000,
+            "badge": "인기"
+        },
+        {
+            "name": "바버컷 5회 정기권 (두피스케일링 포함)",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 120,
+            "recommendedPrice": 200000,
+            "badge": "추천"
+        },
+        {
+            "name": "다운펌 + 디자인컷 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 65000
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "바버",
+      "space": "바버체어",
+      "pass": "회원권",
+      "fee": "커트비",
+      "lesson": "바버링"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "20:00",
+      "slot_minutes": 50
+    },
+
     name: '바버숍',
     description: '바버별 1:1 예약, 면도/커트 시술 이력, 근무표 및 일일 시재 마감',
     category: 'beauty',
@@ -1383,6 +2264,51 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   nail_salon: {
     id: 'nail_salon',
+    theme: {
+        "accentColor": "rose",
+        "badgeEmoji": "💅"
+    },
+    starterPassTemplates: [
+        {
+            "name": "이달의 아트 젤네일 시술권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 60000,
+            "badge": "인기"
+        },
+        {
+            "name": "속눈썹 펌 3회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 120,
+            "recommendedPrice": 100000,
+            "badge": "추천"
+        },
+        {
+            "name": "선불 회원권 30만원 (젤제거 무료)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 300000,
+            "badge": "VIP"
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "시술아티스트",
+      "space": "네일테이블/베드",
+      "pass": "정액권/회차권",
+      "fee": "시술비",
+      "lesson": "네일아트"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+
     name: '네일숍',
     description: '아트/젤네일 예약, 선불 회원권 잔액 차감, 젤네일 컬러 차트 및 재고',
     category: 'beauty',
@@ -1403,6 +2329,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   skin_clinic: {
     id: 'skin_clinic',
+    theme: {
+        "accentColor": "rose",
+        "badgeEmoji": "💆"
+    },
+    starterPassTemplates: [
+        {
+            "name": "수분 진정 맞춤 케어 5회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 60,
+            "recommendedPrice": 350000,
+            "badge": "인기"
+        },
+        {
+            "name": "윤곽 리프팅 프로그램 10회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 120,
+            "recommendedPrice": 900000,
+            "badge": "추천"
+        },
+        {
+            "name": "첫 방문 1회 체험권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 14,
+            "recommendedPrice": 50000,
+            "badge": "체험"
+        }
+    ],
+    terms: {
+      "customer": "고객/회원",
+      "instructor": "에스테티션",
+      "space": "케어룸/스킨케어실",
+      "pass": "관리회차권",
+      "fee": "관리비",
+      "lesson": "스킨케어"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "21:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 15
+    },
+
     name: '피부관리실·에스테틱',
     description: '스킨케어 룸 예약, 코스 티켓팅 차감, 피부 진단 차트 및 에스테틱 화장품 재고',
     category: 'beauty',
@@ -1423,6 +2397,55 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   massage_spa: {
     id: 'massage_spa',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🌿"
+    },
+    starterPassTemplates: [
+        {
+            "name": "아로마 림프 전신 테라피 60분 (5회)",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 90,
+            "recommendedPrice": 450000,
+            "badge": "인기"
+        },
+        {
+            "name": "딥티슈 힐링 바디케어 90분 (10회)",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 180,
+            "recommendedPrice": 1100000,
+            "badge": "추천"
+        },
+        {
+            "name": "풋케어 & 어깨 집중 40분권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 50000
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "테라피스트",
+      "space": "스파룸/베드",
+      "pass": "테라피이용권",
+      "fee": "관리료",
+      "lesson": "테라피세션"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "10:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 20,
+      "turnaroundBufferMinutes": 15
+    },
+
     name: '마사지·스파',
     description: '개인/커플 스파룸 예약, 관리사 근무 교대, 정기 바우처 및 간이 정산',
     category: 'beauty',
@@ -1440,6 +2463,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   tattoo_studio: {
     id: 'tattoo_studio',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "🖋️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "미니/레터링 타투 시술권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 80000,
+            "badge": "인기"
+        },
+        {
+            "name": "원포인트 블랙앤그레이 커스텀 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 250000,
+            "badge": "추천"
+        },
+        {
+            "name": "리터치 & 애프터케어 서비스권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 30000
+        }
+    ],
+    terms: {
+      "customer": "의뢰인/고객",
+      "instructor": "타투이스트/아티스트",
+      "space": "작업부스",
+      "pass": "예약권",
+      "fee": "작업비",
+      "lesson": "타투작업"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "11:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+
     name: '타투 스튜디오',
     description: '도안 상담, 예약 일정, 전자 면책 서약서, 작업 단계 파이프라인 관리',
     category: 'beauty',
@@ -1456,6 +2523,53 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   photo_studio: {
     id: 'photo_studio',
+    theme: {
+        "accentColor": "purple",
+        "badgeEmoji": "📷"
+    },
+    starterPassTemplates: [
+        {
+            "name": "프로필/증명사진 프리미엄 보정권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 60000,
+            "badge": "인기"
+        },
+        {
+            "name": "자율 렌탈 스튜디오 2시간 대관권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 70000,
+            "badge": "추천"
+        },
+        {
+            "name": "정기 촬영 10시간 충전 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 300000
+        }
+    ],
+    terms: {
+      "customer": "고객/모델",
+      "instructor": "포토그래퍼",
+      "space": "스튜디오/호수",
+      "pass": "촬영패키지권",
+      "fee": "촬영료",
+      "lesson": "촬영세션"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "19:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 20
+    },
+
     name: '사진 스튜디오',
     description: '컨셉 촬영실 예약, 장비 대여, 보정/인화 작업 파이프라인 및 정산',
     category: 'beauty',
@@ -1476,6 +2590,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   pet_grooming: {
     id: 'pet_grooming',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🐾"
+    },
+    starterPassTemplates: [
+        {
+            "name": "소형견 위생목욕 5회 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 90,
+            "recommendedPrice": 150000,
+            "badge": "인기"
+        },
+        {
+            "name": "스포팅+가위컷 디자인 미용권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 70000,
+            "badge": "추천"
+        },
+        {
+            "name": "스파+하이드로바스 3회 정기권",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 60,
+            "recommendedPrice": 90000
+        }
+    ],
+    terms: {
+      "customer": "보호자/반려견",
+      "instructor": "그루머/미용사",
+      "space": "미용부스/드라이룸",
+      "pass": "미용회차권",
+      "fee": "미용비",
+      "lesson": "미용/스파"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "19:00",
+      "slot_minutes": 60
+    },
+
     name: '반려동물 미용실',
     description: '반려견 체중/견종별 예약, 미용 특이사항 차트, 스파 관리 및 간이 매출',
     category: 'beauty',
@@ -1498,6 +2656,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   study_cafe: {
     id: 'study_cafe',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "📚"
+    },
+    starterPassTemplates: [
+        {
+            "name": "당일 4시간 시간권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 1,
+            "recommendedPrice": 6000
+        },
+        {
+            "name": "100시간 충전 정액권",
+            "passType": "COUNT_BASED",
+            "totalCount": 100,
+            "validityDays": 90,
+            "recommendedPrice": 120000,
+            "badge": "인기"
+        },
+        {
+            "name": "4주 기간 자유석 정기권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 28,
+            "validityDays": 28,
+            "recommendedPrice": 150000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "이용자/회원",
+      "instructor": "매니저",
+      "space": "좌석/스터디룸",
+      "pass": "시간권/기간권",
+      "fee": "이용료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 30,
+      "needsKiosk": true
+    },
+
     name: '스터디카페 / 공간대여',
     description: '좌석 점유 타이머, 시간제 이용권, 사물함 및 일일 청소 점검 루틴 중심',
     category: 'studio',
@@ -1516,6 +2722,53 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   shared_office: {
     id: 'shared_office',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🏢"
+    },
+    starterPassTemplates: [
+        {
+            "name": "오픈데스크 월 자유 이용권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 200000,
+            "badge": "인기"
+        },
+        {
+            "name": "1인 독립 오피스 3개월 정기권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 90,
+            "validityDays": 90,
+            "recommendedPrice": 1200000,
+            "badge": "추천"
+        },
+        {
+            "name": "회의실 20시간 크레딧 팩",
+            "passType": "COUNT_BASED",
+            "totalCount": 20,
+            "validityDays": 60,
+            "recommendedPrice": 250000
+        }
+    ],
+    terms: {
+      "customer": "입주사/멤버",
+      "instructor": "커뮤니티매니저",
+      "space": "핫데스크/미팅룸",
+      "pass": "멤버십패스",
+      "fee": "월이용료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 50
+    },
+
     name: '공유오피스',
     description: '지정석/독립실 배정, 월간 청구서, 회의실 예약, 전자결재 및 목표관리(MBO)',
     category: 'studio',
@@ -1534,6 +2787,52 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   space_rental: {
     id: 'space_rental',
+    theme: {
+        "accentColor": "purple",
+        "badgeEmoji": "🎉"
+    },
+    starterPassTemplates: [
+        {
+            "name": "파티룸 주간 4시간 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 80000,
+            "badge": "인기"
+        },
+        {
+            "name": "올나잇 패키지 (20:00~08:00)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 150000,
+            "badge": "추천"
+        },
+        {
+            "name": "정기 소모임 10시간 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 180000
+        }
+    ],
+    terms: {
+      "customer": "예약자/게스트",
+      "instructor": "호스트",
+      "space": "파티룸/홀",
+      "pass": "대관권",
+      "fee": "대관료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "09:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 30
+    },
+
     name: '공간대여·대관업',
     description: '파티룸/스튜디오 시간 단위 대관, 보증금/시재 관리 및 퇴실 청소 점검',
     category: 'studio',
@@ -1548,6 +2847,54 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   locker_storage: {
     id: 'locker_storage',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "📦"
+    },
+    starterPassTemplates: [
+        {
+            "name": "S타입 미니 사물함 1개월 이용권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 20000
+        },
+        {
+            "name": "M타입 개인 수납창고 3개월 정기권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 90,
+            "validityDays": 90,
+            "recommendedPrice": 150000,
+            "badge": "인기"
+        },
+        {
+            "name": "골프백/대형 장비 전용 6개월 보관권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 180,
+            "validityDays": 180,
+            "recommendedPrice": 250000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "이용자/회원",
+      "instructor": "관리자",
+      "space": "창고유닛/락커",
+      "pass": "보관권",
+      "fee": "월보관료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 60,
+      "needsKiosk": true
+    },
+
     name: '사물함·개인창고 대여업',
     description: '수납 락커/스토리지 유닛 배정, 정기 자동 청구 및 잠금장치 점검',
     category: 'studio',
@@ -1562,6 +2909,52 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   guesthouse: {
     id: 'guesthouse',
+    theme: {
+        "accentColor": "teal",
+        "badgeEmoji": "🏡"
+    },
+    starterPassTemplates: [
+        {
+            "name": "도미토리 1박 숙박권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 30000,
+            "badge": "인기"
+        },
+        {
+            "name": "워케이션 7일 숙박 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 7,
+            "validityDays": 30,
+            "recommendedPrice": 180000,
+            "badge": "추천"
+        },
+        {
+            "name": "전체 독채 주말 대관권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 350000
+        }
+    ],
+    terms: {
+      "customer": "게스트/투숙객",
+      "instructor": "호스트",
+      "space": "도미토리/객실",
+      "pass": "숙박예약권",
+      "fee": "숙박료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "08:00",
+      "end_time": "22:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 60
+    },
+
     name: '게스트하우스',
     description: '도미토리 베드/객실 예약, 일일 입실/퇴실, 시재 마감 및 침구 교체 점검',
     category: 'travel',
@@ -1579,6 +2972,52 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   small_hotel: {
     id: 'small_hotel',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "🏨"
+    },
+    starterPassTemplates: [
+        {
+            "name": "스탠다드룸 대실 4시간 이용권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 30000,
+            "badge": "인기"
+        },
+        {
+            "name": "디럭스룸 1박 숙박권 (조식 포함)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 80000,
+            "badge": "추천"
+        },
+        {
+            "name": "비즈니스 장기투숙 7박 패키지",
+            "passType": "PERIOD_BASED",
+            "totalCount": 7,
+            "validityDays": 30,
+            "recommendedPrice": 450000
+        }
+    ],
+    terms: {
+      "customer": "투숙객/고객",
+      "instructor": "프런트매니저",
+      "space": "객실",
+      "pass": "숙박/대실권",
+      "fee": "숙박비"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "turnaroundBufferMinutes": 30
+    },
+
     name: '소형 호텔 / 부티크 호텔',
     description: '객실 타입별 숙박 예약, 프론트 교대 근무표, 하우스키핑 룸체크 및 현금 시재',
     category: 'travel',
@@ -1602,6 +3041,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   retail: {
     id: 'retail',
+    theme: {
+        "accentColor": "teal",
+        "badgeEmoji": "🛍️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "VIP 매장 포인트 10만 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 100000,
+            "badge": "VIP"
+        },
+        {
+            "name": "시즌 패스 멤버십 (전품목 10% 할인)",
+            "passType": "PERIOD_BASED",
+            "totalCount": 90,
+            "validityDays": 90,
+            "recommendedPrice": 30000,
+            "badge": "인기"
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "매장직원",
+      "space": "매대/카운터",
+      "pass": "포인트카드",
+      "fee": "판매금액"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "10:00",
+      "end_time": "21:00",
+      "slot_minutes": 60
+    },
+
     name: '일반 소매점',
     description: '바코드 상품 카탈로그, 재고 수불, POS 판매 및 포인트 적립/사용',
     category: 'other',
@@ -1619,6 +3094,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   apparel_store: {
     id: 'apparel_store',
+    theme: {
+        "accentColor": "rose",
+        "badgeEmoji": "👗"
+    },
+    starterPassTemplates: [
+        {
+            "name": "VIP 쇼핑 지원금 20만 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 200000,
+            "badge": "VIP"
+        },
+        {
+            "name": "퍼스널 스타일링 & 쇼핑 컨설팅 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 50000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "스타일리스트/직원",
+      "space": "피팅룸/매대",
+      "pass": "적립멤버십",
+      "fee": "결제금액"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "10:30",
+      "end_time": "21:30",
+      "slot_minutes": 60
+    },
+
     name: '의류매장',
     description: '사이즈/색상 옵션 재고, 피팅룸 관리, 멤버십 포인트 및 스태프 근무',
     category: 'other',
@@ -1636,6 +3147,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   convenience_store: {
     id: 'convenience_store',
+    theme: {
+        "accentColor": "emerald",
+        "badgeEmoji": "🏪"
+    },
+    starterPassTemplates: [
+        {
+            "name": "모바일 편의점 5만원 금액권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 50000,
+            "badge": "인기"
+        },
+        {
+            "name": "원두커피 월 30잔 구독 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 30000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "손님",
+      "instructor": "스태프/점원",
+      "space": "계산대",
+      "pass": "스탬프쿠폰",
+      "fee": "결제금액"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+
     name: '편의점',
     description: '식음료/생필품 고회전 재고, 3교대 알바 근무표, 일일 시재 마감 및 점검',
     category: 'other',
@@ -1653,6 +3200,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   pet_supplies: {
     id: 'pet_supplies',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🐶"
+    },
+    starterPassTemplates: [
+        {
+            "name": "사료/간식 10만 정기 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 100000,
+            "badge": "인기"
+        },
+        {
+            "name": "월간 맞춤 장난감&간식 구독 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 35000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "반려인/고객",
+      "instructor": "매장스태프",
+      "space": "진열존",
+      "pass": "회원포인트",
+      "fee": "결제금액"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "10:00",
+      "end_time": "21:00",
+      "slot_minutes": 60
+    },
+
     name: '반려동물용품점',
     description: '사료/간식 유통기한 재고, 반려동물 등록 상담, 포인트 적립 및 정산',
     category: 'other',
@@ -1667,6 +3250,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   cafe: {
     id: 'cafe',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "☕"
+    },
+    starterPassTemplates: [
+        {
+            "name": "아메리카노 10잔 모바일 선불권 (1잔 무료)",
+            "passType": "COUNT_BASED",
+            "totalCount": 11,
+            "validityDays": 90,
+            "recommendedPrice": 45000,
+            "badge": "인기"
+        },
+        {
+            "name": "월 평일 모닝커피 구독 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 55000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "손님/단골",
+      "instructor": "바리스타",
+      "space": "테이블",
+      "pass": "스탬프쿠폰",
+      "fee": "음료결제"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "08:00",
+      "end_time": "22:00",
+      "slot_minutes": 60
+    },
+
     name: '카페 / 디저트전문점',
     description: '원두/부자재 재고, 테이블 홀 좌석, 바리스타 시프트 근무 및 선불 충전금',
     category: 'food',
@@ -1688,6 +3307,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   restaurant: {
     id: 'restaurant',
+    theme: {
+        "accentColor": "orange",
+        "badgeEmoji": "🍽️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "점심 런치특선 10회 식권 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 95000,
+            "badge": "인기"
+        },
+        {
+            "name": "VIP 디너 코스 2인 식사권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 140000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "손님",
+      "instructor": "서버/홀직원",
+      "space": "식탁/테이블",
+      "pass": "식사권",
+      "fee": "음식값"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "11:00",
+      "end_time": "21:30",
+      "slot_minutes": 60
+    },
+
     name: '소형 음식점 / 식당',
     description: '테이블 좌석 예약, 식자재 식별 재고, 주방/홀 근무 교대 및 일일 결산',
     category: 'food',
@@ -1708,6 +3363,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   auto_repair: {
     id: 'auto_repair',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "🔧"
+    },
+    starterPassTemplates: [
+        {
+            "name": "엔진오일 + 정밀 점검 3회 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 365,
+            "recommendedPrice": 210000,
+            "badge": "추천"
+        },
+        {
+            "name": "에어컨 필터 + 브레이크 점검권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 60000,
+            "badge": "인기"
+        },
+        {
+            "name": "타이어 로테이션 & 얼라인먼트 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 80000
+        }
+    ],
+    terms: {
+      "customer": "고객/차주",
+      "instructor": "엔지니어/정비사",
+      "space": "정비베이",
+      "pass": "정기점검권",
+      "fee": "공임비/정비료",
+      "lesson": "정비작업"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "08:30",
+      "end_time": "18:30",
+      "slot_minutes": 60
+    },
+
     name: '자동차 정비소',
     description: '정비 리프트 배정, 부품 재고, 작업지시서 파이프라인, 차량 수리 이력 및 청구',
     category: 'automotive',
@@ -1728,6 +3427,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   cleaning_service: {
     id: 'cleaning_service',
+    theme: {
+        "accentColor": "teal",
+        "badgeEmoji": "✨"
+    },
+    starterPassTemplates: [
+        {
+            "name": "정기 오피스/매장 청소 월 4회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 30,
+            "recommendedPrice": 280000,
+            "badge": "인기"
+        },
+        {
+            "name": "에어컨/세탁기 분해 살균 세척권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 120000,
+            "badge": "추천"
+        },
+        {
+            "name": "입주/이사 대청소 1회 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 350000
+        }
+    ],
+    terms: {
+      "customer": "고객/의뢰인",
+      "instructor": "방문클리너/매니저",
+      "space": "서비스현장",
+      "pass": "정기청소권",
+      "fee": "용역비",
+      "lesson": "홈클리닝"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "08:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+
     name: '청소·방문 서비스 업체',
     description: '클리너 출장 배정 근무표, 현장 작업 체크리스트, 완료 확인서 및 청구서 발행',
     category: 'property',
@@ -1745,6 +3488,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   pet_hotel: {
     id: 'pet_hotel',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🏨"
+    },
+    starterPassTemplates: [
+        {
+            "name": "소형견 디럭스룸 1박 숙박권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 40000,
+            "badge": "인기"
+        },
+        {
+            "name": "정기 유치원 놀이방 10회 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 250000,
+            "badge": "추천"
+        },
+        {
+            "name": "주말 2박3일 힐링 호텔링 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 90000
+        }
+    ],
+    terms: {
+      "customer": "보호자/반려동물",
+      "instructor": "케어매니저/훈련사",
+      "space": "호텔룸/플레이존",
+      "pass": "숙박권/등원권",
+      "fee": "돌봄료",
+      "lesson": "유치원수업"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "08:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+
     name: '반려동물 호텔·유치원',
     description: '호텔룸/유치원 좌석 점유, 등원 출결 체크, 알림장 상담 일지 및 시설 위생 점검',
     category: 'pet',
@@ -1765,6 +3552,49 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   equipment_rental: {
     id: 'equipment_rental',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "🚜"
+    },
+    starterPassTemplates: [
+        {
+            "name": "전동 공구/촬영 장비 1일 렌탈권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 50000
+        },
+        {
+            "name": "장비 10일 정액 충전 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 400000,
+            "badge": "인기"
+        },
+        {
+            "name": "월간 전속 렌탈 패키지",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 900000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "대여자/고객",
+      "instructor": "장비관리자",
+      "space": "장비보관소",
+      "pass": "렌탈이용권",
+      "fee": "대여료"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+
     name: '장비·렌탈업',
     description: '건설/촬영/파티 장비 대여, 장비 일련번호 재고, 대여료 청구 및 안전 서약',
     category: 'studio',
@@ -1788,6 +3618,50 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   craft_repair: {
     id: 'craft_repair',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "🔨"
+    },
+    starterPassTemplates: [
+        {
+            "name": "명품 신발/가방 케어&수선 기본권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 60,
+            "recommendedPrice": 60000,
+            "badge": "인기"
+        },
+        {
+            "name": "시계 배터리 교체 및 방수 점검 3회권",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 180,
+            "recommendedPrice": 45000
+        },
+        {
+            "name": "가죽 영양 코팅 복원 패키지",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 120000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "수강생/의뢰인",
+      "instructor": "공방장/마스터",
+      "space": "작업대/물레",
+      "pass": "공방이용권",
+      "fee": "수강료/공임",
+      "lesson": "공방클래스"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "10:00",
+      "end_time": "20:00",
+      "slot_minutes": 60
+    },
+
     name: '맞춤 제작 공방 & 수리점',
     description: '단계별 제작/수리 칸반 파이프라인, 원자재 재고 관리 및 픽업 예약',
     category: 'studio',
@@ -1801,6 +3675,49 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   self_carwash: {
     id: 'self_carwash',
+    theme: {
+        "accentColor": "sky",
+        "badgeEmoji": "🚗"
+    },
+    starterPassTemplates: [
+        {
+            "name": "셀프 세차 IC카드 5만 충전권 (1만 보너스)",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 180,
+            "recommendedPrice": 50000,
+            "badge": "인기"
+        },
+        {
+            "name": "개인 베이 2시간 무제한 정액권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 30000,
+            "badge": "추천"
+        },
+        {
+            "name": "월 무제한 폼건&고압수 야간 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 89000
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "스태프/관리인",
+      "space": "세차베이/드라잉존",
+      "pass": "세차충전권",
+      "fee": "세차비"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "00:00",
+      "end_time": "24:00",
+      "slot_minutes": 60
+    },
+
     name: '셀프 세차장 & 코인샵',
     description: 'RF카드 선불 충전금/보너스, 시설 기물 루틴 점검 및 세차 소모품 재고 관리',
     category: 'automotive',
@@ -1815,6 +3732,43 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   daycare: {
     id: 'daycare',
+    theme: {
+        "accentColor": "sky",
+        "badgeEmoji": "👶"
+    },
+    starterPassTemplates: [
+        {
+            "name": "월 정규 안심 보육 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 20,
+            "validityDays": 30,
+            "recommendedPrice": 0,
+            "badge": "정규"
+        },
+        {
+            "name": "시간제 긴급 돌봄 10시간 충전권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 50000,
+            "badge": "인기"
+        }
+    ],
+    terms: {
+      "customer": "원아/학부모",
+      "instructor": "담임교사",
+      "space": "보육실(반)",
+      "pass": "입학/원서",
+      "fee": "보육료",
+      "lesson": "일일활동"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "07:30",
+      "end_time": "19:30",
+      "slot_minutes": 60
+    },
+
     name: '어린이집·유치원',
     description: '원아 등하원 출결, 보육료 결제, 학부모 상담 및 안전 동의서 관리',
     category: 'childcare',
@@ -1831,6 +3785,53 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   sauna_jjimjilbang: {
     id: 'sauna_jjimjilbang',
+    theme: {
+        "accentColor": "amber",
+        "badgeEmoji": "♨️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "사우나 10회 정기 이용권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 90,
+            "recommendedPrice": 90000,
+            "badge": "인기"
+        },
+        {
+            "name": "사우나+찜질방 1개월 정기 회원권",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 160000,
+            "badge": "추천"
+        },
+        {
+            "name": "세신(때밀이) + 사우나 패키지권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 35000
+        }
+    ],
+    terms: {
+      "customer": "고객",
+      "instructor": "카운터/스태프",
+      "space": "사물함",
+      "pass": "입장권/정기권",
+      "fee": "입장료"
+    },
+    operatingHours: {
+      "day_type": "ALL_WEEK",
+      "start_time": "05:00",
+      "end_time": "23:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "needsLocker": true,
+      "defaultLockerCount": 50
+    },
+
     name: '사우나·찜질방',
     description: '남녀 락커 배정, 이용권/회원권, 선불 크레딧 및 시설 점검 루틴 관리',
     category: 'wellness',
@@ -1851,6 +3852,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   general_enterprise: {
     id: 'general_enterprise',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🏢"
+    },
+    starterPassTemplates: [
+        {
+            "name": "사내 공용 회의실 월 40시간 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 40,
+            "validityDays": 30,
+            "recommendedPrice": 0,
+            "badge": "사내"
+        },
+        {
+            "name": "업무용 법인 차량 10회 배차권",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 60,
+            "recommendedPrice": 0
+        }
+    ],
+    terms: {
+      "customer": "고객사/임직원",
+      "instructor": "담당자/팀원",
+      "space": "회의실/집무실",
+      "pass": "사원패스",
+      "fee": "청구금액"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: '일반 기업 / 경영관리',
     description: '전사 다단계 전자결재, 부서별 업무 칸반 파이프라인, MBO 성과관리, 사규 및 피드백 중심',
     category: 'other',
@@ -1887,6 +3926,42 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   personal_plant_ops: {
     id: 'personal_plant_ops',
+    theme: {
+        "accentColor": "emerald",
+        "badgeEmoji": "🌱"
+    },
+    starterPassTemplates: [
+        {
+            "name": "희귀식물 위탁 케어 1개월 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 50000,
+            "badge": "인기"
+        },
+        {
+            "name": "분갈이 및 영양 케어 3회 정기권",
+            "passType": "COUNT_BASED",
+            "totalCount": 3,
+            "validityDays": 90,
+            "recommendedPrice": 90000,
+            "badge": "추천"
+        }
+    ],
+    terms: {
+      "customer": "운영자",
+      "instructor": "작업자",
+      "space": "운영베이",
+      "pass": "작업티켓",
+      "fee": "비용"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+
     name: 'EP_apps',
     hiddenInMoa: true,
     description:
@@ -2004,6 +4079,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   manufacturing_light: {
     id: 'manufacturing_light',
+    theme: {
+        "accentColor": "slate",
+        "badgeEmoji": "🏭"
+    },
+    starterPassTemplates: [
+        {
+            "name": "안전보건 정기 교육 4회 이수권",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 90,
+            "recommendedPrice": 0,
+            "badge": "사내"
+        },
+        {
+            "name": "생산라인 공구 세트 불출 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 10,
+            "validityDays": 30,
+            "recommendedPrice": 0
+        }
+    ],
+    terms: {
+      "customer": "발주처/고객사",
+      "instructor": "작업자/반장",
+      "space": "가공/조립라인",
+      "pass": "작업지시서",
+      "fee": "납품단가"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "08:00",
+      "end_time": "17:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: '제조·가공업 (공정/BOM/품질 관리)',
     description: '생산 공정 파이프라인, 부품표(BOM), 원자재 재고, 설비 점검 및 현장 안전 관리',
     category: 'manufacturing',
@@ -2068,6 +4181,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   procurement_distribution: {
     id: 'procurement_distribution',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🚚"
+    },
+    starterPassTemplates: [
+        {
+            "name": "물류 입출고 독(Dock) 1일 배정권",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 30,
+            "recommendedPrice": 0,
+            "badge": "물류"
+        },
+        {
+            "name": "파렛트 적치 월간 정기 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 0
+        }
+    ],
+    terms: {
+      "customer": "매입/매출처",
+      "instructor": "물류/영업담당",
+      "space": "물류창고",
+      "pass": "납품전표",
+      "fee": "정산금액"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "08:30",
+      "end_time": "17:30",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: '도소매 / 자재 유통업',
     description: '구매 요청(PR) 및 최적 견적 비교, FEFO 로트별 창고 재고, 외상매입금(AP) 및 전자결재',
     category: 'other',
@@ -2083,6 +4234,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   iso_ims_enterprise: {
     id: 'iso_ims_enterprise',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "🛡️"
+    },
+    starterPassTemplates: [
+        {
+            "name": "통합 경영시스템 위험성평가 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 0
+        },
+        {
+            "name": "환경/안전 내부심사 점검권 (5회)",
+            "passType": "COUNT_BASED",
+            "totalCount": 5,
+            "validityDays": 180,
+            "recommendedPrice": 0,
+            "badge": "사내"
+        }
+    ],
+    terms: {
+      "customer": "이해관계자/심사원",
+      "instructor": "품질/안전담당자",
+      "space": "회의실/현장",
+      "pass": "승인문서",
+      "fee": "심사비"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: 'ISO 통합경영시스템 (QEHS)',
     description: 'ISO 9001(품질), ISO 14001(환경), ISO 45001(안전보건) 3대 통합경영시스템 (품질검사, 위험성평가, 환경측면, 사고/CAPA, 전자결재)',
     category: 'other',
@@ -2123,6 +4312,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   iso_human_capital: {
     id: 'iso_human_capital',
+    theme: {
+        "accentColor": "indigo",
+        "badgeEmoji": "📋"
+    },
+    starterPassTemplates: [
+        {
+            "name": "ISO 30414 감사 대비 역량 평가 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 1,
+            "validityDays": 90,
+            "recommendedPrice": 0
+        },
+        {
+            "name": "임직원 필수 직무 트레이닝 4과정",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 60,
+            "recommendedPrice": 0,
+            "badge": "사내"
+        }
+    ],
+    terms: {
+      "customer": "임직원",
+      "instructor": "인사/HR담당자",
+      "space": "세미나실/회의실",
+      "pass": "교육이수증",
+      "fee": "인건비"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: 'ISO 인적자본 경영 (HR & MBO)',
     description: 'ISO 30414 인적자본 보고 지표, MBO 성과관리, 직무 역량 및 법정 자격증, 교육훈련 유효성 평가, 직무 스트레스 및 익명 고충처리',
     category: 'other',
@@ -2172,6 +4399,44 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
 
   rnd_lab_management: {
     id: 'rnd_lab_management',
+    theme: {
+        "accentColor": "purple",
+        "badgeEmoji": "🔬"
+    },
+    starterPassTemplates: [
+        {
+            "name": "정밀 분석 장비 20시간 예약권",
+            "passType": "COUNT_BASED",
+            "totalCount": 20,
+            "validityDays": 60,
+            "recommendedPrice": 0,
+            "badge": "연구"
+        },
+        {
+            "name": "클린룸 출입 및 시약 불출 패스",
+            "passType": "PERIOD_BASED",
+            "totalCount": 30,
+            "validityDays": 30,
+            "recommendedPrice": 0
+        }
+    ],
+    terms: {
+      "customer": "연구원/과제담당자",
+      "instructor": "책임연구원/관리자",
+      "space": "실험실/분석기기실",
+      "pass": "연구과제/승인",
+      "fee": "연구비"
+    },
+    operatingHours: {
+      "day_type": "WEEKDAY",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "slot_minutes": 60
+    },
+    facilities: {
+      "hasDepartments": true
+    },
+
     name: '연구소 & 랩실 관리 (기업 R&D / 대학 연구실)',
     description: '연구 프로젝트 및 학술 논문/특허 파이프라인, 연구 장비 예약 및 자동 사용일지, 특허/직무발명 보상 관리, 연구 설비 자산/수리 이력, 연구실안전법 일일점검 및 시약 MSDS 관리',
     category: 'other',
@@ -2232,6 +4497,80 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       require_fume_hood_daily_check: true,
       auto_generate_logbook_on_reservation: true,
       invention_review_grade_mandatory: true,
+    },
+    readinessLevel: 'basic_ui',
+  },
+
+  // ==========================================
+  // Group 7: 생활·커뮤니티 (Community) - 1종
+  // ==========================================
+  baby_food_coop: {
+    id: 'baby_food_coop',
+    name: '이유식 품앗이 모임',
+    description: '월령별 맞춤 추천 및 알레르기 관리, 1/N 재료비 자동 정산 커뮤니티',
+    category: 'COMMUNITY',
+    theme: {
+      accentColor: 'indigo',
+      badgeEmoji: '🍼',
+    },
+    starterPassTemplates: [
+      {
+        name: '이유식 품앗이 4회 정기 분담권',
+        passType: 'COUNT_BASED',
+        totalCount: 4,
+        validityDays: 30,
+        recommendedPrice: 30000,
+        badge: '정기',
+      },
+    ],
+    terms: {
+      customer: '아기/아이',
+      instructor: '모임장/운영맘',
+      space: '품앗이존/주방',
+      pass: '품앗이분담금',
+      fee: '재료비',
+    },
+    operatingHours: {
+      day_type: 'WEEKDAYS',
+      start_time: '10:00',
+      end_time: '17:00',
+      slot_minutes: 60,
+    },
+    facilities: {
+      hasDepartments: false,
+    },
+    capabilities: [
+      'baby_food_coop',
+      'consultation_crm',
+      'feedbacks',
+      'daily_care_report',
+      'billing_invoicing',
+    ] as const,
+    requiredCapabilities: [
+      'baby_food_coop',
+      'consultation_crm',
+      'billing_invoicing',
+    ] as const,
+    optionalCapabilities: [
+      'feedbacks',
+      'daily_care_report',
+    ] as const,
+    roles: [
+      { name: '모임장 (총무)', rank_order: 1, permissions: ['*'] },
+      { name: '공동 참여맘/보호자', rank_order: 2, permissions: ['baby_food_coop:*', 'billing_invoicing:view', 'consultation_crm:view'] },
+    ],
+    resourceTypes: [
+      { name: '품앗이 공유 조리대', type: 'room', capacity: 6 },
+      { name: '이유식 마스터기/소독기', type: 'equipment', capacity: 2 },
+    ],
+    defaultSettings: {
+      defaultMeetingCycle: '주 1회 (화요일)',
+      settlementRule: '1/N 원단위 절사 분담 (잔여금 모임 적립)',
+      allergyCheckMandatory: true,
+    },
+    businessRules: {
+      auto_calculate_per_person: true,
+      require_allergy_acknowledgement: true,
     },
     readinessLevel: 'basic_ui',
   },

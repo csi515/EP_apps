@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   Zap,
 } from "lucide-react";
-import { MobileLoginForm } from "@/components/auth/MobileLoginForm";
+import { MobileLoginForm, type LoginTargetGroup, type WorkplaceRole } from "@/components/auth/MobileLoginForm";
 import { useAuth } from "@/core/auth/AuthProvider";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 import { loginWithToss } from "@/core/auth/services/tossAuthService";
@@ -23,6 +23,8 @@ export const LoginPage: React.FC = () => {
   const [isTossLoading, setIsTossLoading] = useState(false);
   const [language, setLanguage] = useState<'ko' | 'en'>('ko');
   const [rememberMe, setRememberMe] = useState(true);
+  const [loginTargetGroup, setLoginTargetGroup] = useState<LoginTargetGroup>('workplace');
+  const [workplaceRole, setWorkplaceRole] = useState<WorkplaceRole>('owner');
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -125,7 +127,8 @@ export const LoginPage: React.FC = () => {
             navigate(returnUrl);
             return;
           }
-          navigate(data?.redirectTo || "/workspace");
+          const defaultTarget = loginTargetGroup === 'customer' ? '/customer/pass' : '/workspace';
+          navigate(data?.redirectTo || defaultTarget);
         },
         onError: (error: any) => {
           setErrorMessage(mapLoginErrorMessage(error?.message));

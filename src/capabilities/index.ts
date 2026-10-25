@@ -124,6 +124,7 @@ import { hazardous_substance_msdsCapability } from './hazardous_substance_msds/m
 import { electronic_lab_notebookCapability } from './electronic_lab_notebook/manifest';
 import { vehicle_mileage_logCapability } from './vehicle_mileage_log/manifest';
 import { safety_work_permitCapability } from './safety_work_permit/manifest';
+import { baby_food_coopCapability } from './baby_food_coop/manifest';
 
 export {
   CAPABILITY_IDS,
@@ -261,6 +262,7 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   electronic_lab_notebookCapability,
   vehicle_mileage_logCapability,
   safety_work_permitCapability,
+  baby_food_coopCapability,
 ];
 
 export * from './trial_funnel';
@@ -331,6 +333,7 @@ export * from './hazardous_substance_msds';
 export * from './electronic_lab_notebook';
 export * from './vehicle_mileage_log';
 export * from './safety_work_permit';
+export * from './baby_food_coop';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

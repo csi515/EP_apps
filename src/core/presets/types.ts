@@ -199,7 +199,10 @@ export type PresetCapabilityId =
   | 'roster'
   | 'enrollment'
   | 'parent'
-  | 'transport';
+  | 'transport'
+  | 'retail_inventory'
+  | 'crm_tags'
+  | 'billing_invoices';
 
 /**
  * 중복 Capability 단일화 및 하위 호환 Alias 매핑 테이블
@@ -221,6 +224,9 @@ export const CAPABILITY_ALIASES: Partial<Record<PresetCapabilityId, BundledPrese
   pet_grooming_hotel: 'booking',
   photo_shoot_project: 'task_pipeline',
   qr_smart_stamp: 'loyalty_stamp',
+  retail_inventory: 'inventory',
+  crm_tags: 'consultation_crm',
+  billing_invoices: 'billing_invoicing',
 };
 
 export type SetupFieldType =
@@ -295,6 +301,47 @@ export interface PresetResourceTemplate {
   capacity?: number;
 }
 
+export interface PresetTermsDefinition {
+  customer: string;
+  instructor?: string;
+  space?: string;
+  pass?: string;
+  fee?: string;
+  lesson?: string;
+  level?: string;
+}
+
+export interface PresetFacilityDefinition {
+  needsLocker?: boolean;
+  defaultLockerCount?: number;
+  needsKiosk?: boolean;
+  hasDepartments?: boolean;
+  turnaroundBufferMinutes?: number;
+}
+
+export interface PresetOperatingHoursDefinition {
+  day_type: string;
+  start_time: string;
+  end_time: string;
+  slot_minutes: number;
+}
+
+export interface PassStarterTemplate {
+  name: string;
+  passType: 'COUNT_BASED' | 'PERIOD_BASED' | 'HYBRID';
+  totalCount: number;
+  validityDays: number;
+  description?: string;
+  recommendedPrice?: number;
+  badge?: string;
+}
+
+export interface PresetThemeDefinition {
+  accentColor: 'indigo' | 'emerald' | 'rose' | 'orange' | 'amber' | 'sky' | 'teal' | 'purple' | 'slate';
+  badgeEmoji: string;
+  emblem?: string;
+}
+
 export interface IndustryPresetDefinition {
   id: string;
   name: string;
@@ -303,6 +350,11 @@ export interface IndustryPresetDefinition {
   capabilities: readonly PresetCapabilityId[];
   requiredCapabilities?: readonly PresetCapabilityId[];
   optionalCapabilities?: readonly PresetCapabilityId[];
+  terms?: PresetTermsDefinition;
+  operatingHours?: PresetOperatingHoursDefinition;
+  facilities?: PresetFacilityDefinition;
+  theme?: PresetThemeDefinition;
+  starterPassTemplates?: readonly PassStarterTemplate[];
   defaultSettings?: Record<string, unknown>;
   businessRules?: Record<string, string | number | boolean>;
   resourceTypes?: readonly PresetResourceTemplate[];

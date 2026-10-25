@@ -194,6 +194,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   electronic_lab_notebook: ['lab-notebooks', 'eln'],
   vehicle_mileage_log: ['vehicle-mileage', 'mileage-logs'],
   safety_work_permit: ['safety-permits', 'work-permits'],
+  baby_food_coop: ['baby-food', 'baby-food-coop'],
 };
 
 installCapabilityNavFilter(filterIndustryNavTabs);

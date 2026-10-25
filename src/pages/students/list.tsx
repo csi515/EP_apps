@@ -370,7 +370,7 @@ export const StudentListPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">{customerWord} 관리</h1>
           <p className="text-sm text-slate-500">
-            {customerWord} 목록 조회 및 신규 등록, 수강권 및 출석 상태를 관리합니다. (총 {total}명)
+            {customerWord} 목록과 출결·이용권을 관리합니다. (총 {total}명)
           </p>
         </div>
 
@@ -385,7 +385,7 @@ export const StudentListPage: React.FC = () => {
             }`}
           >
             <QrCode className="h-4 w-4" />
-            <span>QR 빠른 등록</span>
+            <span>QR 등록</span>
           </button>
 
           {canCreate?.can && (
@@ -395,7 +395,7 @@ export const StudentListPage: React.FC = () => {
               className="h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-md shadow-indigo-100 hover:bg-indigo-700 transition-colors"
             >
               <Plus className="h-4 w-4" />
-              <span>{customerWord} 신규 등록</span>
+              <span>{customerWord} 등록</span>
             </button>
           )}
         </div>

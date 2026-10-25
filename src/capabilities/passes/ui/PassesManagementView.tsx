@@ -30,6 +30,9 @@ import {
 } from '../domain/passesFilterPredicate';
 import { invalidateTenantQueries } from '@/core/query/tenantQueryKeys';
 import { notifyStorageFromRefineResource } from '@/core/query/crossCacheBridge';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
+import type { PassStarterTemplate } from '@/core/presets/types';
+import { cn } from '@/shared/lib/utils';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 상태 배지
@@ -54,22 +57,40 @@ function StatusBadge({ status }: { status: PassRecord['status'] }) {
 
 interface IssueModalProps {
   tenantId: string;
+  starterTemplates?: readonly PassStarterTemplate[];
+  initialTemplate?: PassStarterTemplate | null;
   onClose: () => void;
   onSuccess: () => void;
   showToast: (msg: string) => void;
 }
 
-function IssuePassModal({ tenantId, onClose, onSuccess, showToast }: IssueModalProps) {
+function IssuePassModal({
+  tenantId,
+  starterTemplates = [],
+  initialTemplate,
+  onClose,
+  onSuccess,
+  showToast,
+}: IssueModalProps) {
   const { t } = useTenantTerms();
   const customerTerm = t('customer', '고객');
   const passTerm = t('pass', '이용권');
 
-  const [passName, setPassName] = useState(`10회 ${passTerm}`);
-  const [passType, setPassType] = useState<PassType>('COUNT_BASED');
-  const [totalCount, setTotalCount] = useState(10);
+  const defaultTpl = initialTemplate || (starterTemplates.length > 0 ? starterTemplates[0] : null);
+
+  const [passName, setPassName] = useState(defaultTpl?.name || `10회 ${passTerm}`);
+  const [passType, setPassType] = useState<PassType>(defaultTpl?.passType || 'COUNT_BASED');
+  const [totalCount, setTotalCount] = useState(defaultTpl?.totalCount || 10);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [validityDays, setValidityDays] = useState(90);
+  const [validityDays, setValidityDays] = useState(defaultTpl?.validityDays || 90);
+
+  const applyTemplate = (tpl: PassStarterTemplate) => {
+    setPassName(tpl.name);
+    setPassType(tpl.passType);
+    setTotalCount(tpl.totalCount);
+    setValidityDays(tpl.validityDays);
+  };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isSubmittingRef = useRef(false);
 
@@ -117,6 +138,30 @@ function IssuePassModal({ tenantId, onClose, onSuccess, showToast }: IssueModalP
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+          {starterTemplates.length > 0 && (
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/50 p-3">
+              <label className="block text-[11px] font-bold text-indigo-900 mb-1.5">
+                💡 업종 추천 템플릿 원클릭 적용
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {starterTemplates.map((tpl, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => applyTemplate(tpl)}
+                    className={cn(
+                      'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all',
+                      passName === tpl.name
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600'
+                    )}
+                  >
+                    {tpl.badge ? `[${tpl.badge}] ` : ''}{tpl.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-xs font-bold text-slate-700">{customerTerm} 이름 *</label>
             <input
@@ -257,6 +302,15 @@ export const PassesManagementView: React.FC = () => {
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [selectedStarterTemplate, setSelectedStarterTemplate] = useState<PassStarterTemplate | null>(null);
+
+  const preset = useMemo(() => {
+    return getIndustryPreset(currentOrganization?.industry_type || 'general_academy');
+  }, [currentOrganization?.industry_type]);
+
+  const starterTemplates = preset?.starterPassTemplates || [];
+  const badgeEmoji = preset?.theme?.badgeEmoji || '🎟️';
+  const presetName = preset?.name || '매장';
 
   // 입장(-1) 버튼 중복 제출 방지: passId → 처리 중 여부
   const [deductingIds, setDeductingIds] = useState<Set<string>>(new Set());
@@ -379,7 +433,7 @@ export const PassesManagementView: React.FC = () => {
             </span>
           </div>
           <p className="mt-1 text-xs text-slate-500">
-            {customerTerm}별 잔여 횟수를 실시간으로 확인하고 터치 한 번으로 입장을 처리합니다.
+            {customerTerm}별 잔여 횟수 확인 및 빠른 입장 처리
           </p>
         </div>
 
@@ -388,7 +442,7 @@ export const PassesManagementView: React.FC = () => {
           className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-md shadow-indigo-100 transition hover:bg-indigo-700 active:scale-95 min-w-[120px]"
         >
           <Plus className="h-4 w-4 shrink-0" />
-          신규 {passTerm} 발급
+          + {passTerm} 발급
         </button>
       </div>
 
@@ -400,7 +454,7 @@ export const PassesManagementView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder={`${customerTerm}명, ${passTerm} 이름, 전화번호 4자리 검색...`}
+            placeholder={`${customerTerm}명, ${passTerm}, 뒷번호 검색`}
             className="h-10 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-xs text-slate-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
@@ -429,7 +483,7 @@ export const PassesManagementView: React.FC = () => {
                 : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
             }`}
           >
-            이용 가능
+            이용중
           </button>
           <button
             type="button"
@@ -441,7 +495,7 @@ export const PassesManagementView: React.FC = () => {
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            소진됨
+            소진
           </button>
           <button
             type="button"
@@ -453,7 +507,7 @@ export const PassesManagementView: React.FC = () => {
                 : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
             }`}
           >
-            기간 만료
+            만료
           </button>
           <button
             type="button"
@@ -465,7 +519,7 @@ export const PassesManagementView: React.FC = () => {
                 : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
             }`}
           >
-            일시 정지
+            정지
           </button>
         </div>
 
@@ -494,13 +548,64 @@ export const PassesManagementView: React.FC = () => {
             <p className="mt-2 text-xs text-slate-500">{passTerm} 목록을 불러오는 중...</p>
           </div>
         ) : filteredPasses.length === 0 ? (
-          <div className="p-4 sm:p-8">
+          <div className="p-4 sm:p-8 space-y-6">
+            {starterTemplates.length > 0 && (
+              <div className="rounded-2xl border border-indigo-100 bg-linear-to-r from-indigo-50/70 via-white to-purple-50/50 p-5 shadow-xs">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{badgeEmoji}</span>
+                    <h4 className="text-sm font-bold text-slate-900">
+                      {presetName} 전용 {passTerm} 스타터 팩 (추천 템플릿)
+                    </h4>
+                  </div>
+                  <span className="text-xs font-semibold text-indigo-600">클릭 시 즉시 발급</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {starterTemplates.map((tpl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setSelectedStarterTemplate(tpl);
+                        setIsIssueModalOpen(true);
+                      }}
+                      className="group flex flex-col justify-between rounded-xl border border-slate-200/90 bg-white p-4 text-left shadow-2xs hover:border-indigo-400 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700">
+                          {tpl.badge || (tpl.passType === 'PERIOD_BASED' ? '기간제' : '횟수제')}
+                        </span>
+                        {tpl.recommendedPrice ? (
+                          <span className="text-xs font-bold text-slate-900">
+                            {tpl.recommendedPrice.toLocaleString()}원
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-2.5">
+                        <div className="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          {tpl.name}
+                        </div>
+                        <div className="mt-1 text-xs text-slate-500">
+                          {tpl.passType === 'PERIOD_BASED'
+                            ? `${tpl.validityDays}일간 자유 이용`
+                            : `기본 ${tpl.totalCount}회 (유효기간 ${tpl.validityDays}일)`}
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center gap-1 text-xs font-bold text-indigo-600">
+                        <span>이 템플릿으로 발급하기</span>
+                        <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <EmptyStateHero
               icon={<Ticket className="w-8 h-8 text-indigo-600" />}
-              title={`아직 발급된 ${passTerm}이(가) 없습니다`}
-              description={`${customerTerm}에게 횟수제 또는 기간제 ${passTerm}을(를) 발급하고 편리하게 차감 관리를 시작해보세요.`}
+              title={`발급된 ${passTerm}이 없습니다`}
+              description={`${customerTerm}에게 ${passTerm}을 발급하고 편리하게 관리하세요.`}
               action={{
-                label: `첫 ${passTerm} 발급하기`,
+                label: `+ ${passTerm} 발급`,
                 onClick: () => setIsIssueModalOpen(true),
                 icon: <Plus className="w-4 h-4 mr-1" />,
               }}

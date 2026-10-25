@@ -157,88 +157,104 @@ export const OrganizationSelector: React.FC = () => {
         {/* 본문 카드 */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-7 space-y-4">
           {/* =========================================================================
-              CASE A: 신규 가입자 (소속 사업장 0개) — 3대 핵심 역할 선택 경험
+              CASE A: 신규 가입자 (소속 사업장 0개) — 사업장 vs 고객 2대 경로 선택
               ========================================================================= */}
           {isNewUser ? (
-            <div className="space-y-3.5">
-              {/* 1. 사업주 / 원장님: 새 사업장 개설 (10초 빠른 셋업) */}
-              <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/40 p-4 transition-all hover:border-indigo-500 shadow-xs">
+            <div className="space-y-4">
+              {/* 1. 사업장으로 시작 (사업주 또는 직원) */}
+              <div className="rounded-2xl border-2 border-indigo-500/30 bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/40 p-4 sm:p-5 shadow-xs">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
-                      <Sparkles className="w-5 h-5" />
+                      <Building2 className="w-5 h-5" />
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-bold text-slate-900">사업주 · 원장님으로 시작</h3>
+                        <h3 className="text-base font-bold text-slate-900">사업장으로 시작</h3>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold">
-                          추천
+                          매장 운영·근무
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        내 매장·학원을 개설하고 출결·회원권·예약을 관리합니다
+                        매장을 직접 개설·운영하거나, 직급/강사로 합류합니다
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3.5">
-                  <button
-                    type="button"
-                    data-testid="btn-open-create-org-wizard"
-                    onClick={() => setShowWizard(true)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all min-h-[44px]"
-                  >
-                    <span>내 매장 · 사업장 개설하기 (업종 선택)</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                {/* 사업장 내부: 사업주 vs 직원 2분기 */}
+                <div className="mt-4 pt-3.5 border-t border-indigo-100/80 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* 사업주 / 원장님 */}
+                  <div className="p-3 bg-white rounded-xl border border-indigo-200/80 hover:border-indigo-400 transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <span className="text-xs font-bold text-slate-900">사업주 · 원장님</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-normal">
+                        새 매장을 개설하고 출결·회원권·장부를 관리합니다
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="btn-open-create-org-wizard"
+                      onClick={() => setShowWizard(true)}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-lg shadow-2xs transition-all min-h-[38px]"
+                    >
+                      <span>새 매장 개설하기</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {/* 직원 / 강사 */}
+                  <div className="p-3 bg-white rounded-xl border border-slate-200 hover:border-slate-300 transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <GraduationCap className="w-3.5 h-3.5 text-slate-700" />
+                        <span className="text-xs font-bold text-slate-900">직원 · 강사</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-normal">
+                        사업주에게 받은 초대 코드로 매장에 합류합니다
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="btn-staff-invite-code"
+                      onClick={() => setShowStaffInviteAccept(true)}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-1 px-3 py-2 bg-slate-800 hover:bg-slate-900 active:bg-black text-white text-xs font-bold rounded-lg shadow-2xs transition-all min-h-[38px]"
+                    >
+                      <KeyRound className="w-3 h-3 text-slate-300" />
+                      <span>초대 코드로 합류</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* 2. 고객 / 수강생 / 회원: 다니는 매장 검색 후 가입 신청 */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-300 hover:bg-emerald-50/30">
+              {/* 2. 고객으로 시작 (수강생 및 매장 회원) */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 transition-all hover:border-emerald-300 hover:bg-emerald-50/20">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <UserPlus className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900">수강생 · 매장 회원으로 시작</h3>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-base font-bold text-slate-900">고객으로 시작</h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                        수강생 · 회원
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                       다니시는 학원이나 매장을 검색하여 회원으로 연결을 신청합니다
                     </p>
                     <button
                       type="button"
                       data-testid="btn-customer-signup"
                       onClick={() => navigate('/signup/customer')}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all min-h-[44px]"
+                      className="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all min-h-[44px]"
                     >
                       <span>다니는 매장 검색하여 등록 신청</span>
                       <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* 3. 직원 / 강사: 초대 코드로 합류 */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-all hover:border-slate-300">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-slate-900">직원 · 강사로 합류</h3>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      사업주에게 전달받은 초대 코드를 입력하여 안전하게 합류합니다
-                    </p>
-                    <button
-                      type="button"
-                      data-testid="btn-staff-invite-code"
-                      onClick={() => setShowStaffInviteAccept(true)}
-                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 active:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all min-h-[44px]"
-                    >
-                      <KeyRound className="w-3.5 h-3.5 text-slate-300" />
-                      <span>초대 코드로 합류하기</span>
-                      <ChevronRight className="w-4 h-4 text-slate-400" />
                     </button>
                   </div>
                 </div>

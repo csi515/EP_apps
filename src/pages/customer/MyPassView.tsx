@@ -73,24 +73,24 @@ export const MyPassView: React.FC = () => {
           <div className="relative z-10">
             <div className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-indigo-200 text-xs font-medium mb-6">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>스마트 원터치 멤버십</span>
+              <span>스마트 멤버십</span>
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight mb-3">
               {currentOrganization?.name || 'MOA 파트너스'}
             </h1>
             <p className="text-sm text-indigo-200/80 leading-relaxed max-w-sm">
-              PIN 번호 없이 로그인 세션으로 안전하게 수강권 잔여 횟수, D-Day, 배정 락커를 즉시 확인하세요.
+              수강권 잔여 횟수와 배정 락커를 즉시 확인하세요.
             </p>
           </div>
 
           <div className="relative z-10 space-y-4 pt-10 border-t border-white/10">
             <div className="flex items-center space-x-3 text-xs text-indigo-200">
               <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>계정 탈취 방지 2-Way W3C 일회용 QR 프로토콜 적용</span>
+              <span>일회용 보안 QR 적용</span>
             </div>
             <div className="flex items-center space-x-3 text-xs text-indigo-200">
               <Building2 className="w-5 h-5 text-indigo-300 shrink-0" />
-              <span>Multi-tenant 무결성 보장 세션 뷰</span>
+              <span>보안 세션 인증</span>
             </div>
           </div>
         </div>
@@ -179,7 +179,7 @@ export const MyPassView: React.FC = () => {
                   <Ticket className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                   <p className="text-xs font-semibold text-slate-600">등록된 수강권이 없습니다.</p>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    매장 카운터에 QR 코드를 제시하여 수강권을 등록하세요.
+                    카운터에 QR을 제시해 등록하세요.
                   </p>
                 </div>
               )}
@@ -214,7 +214,7 @@ export const MyPassView: React.FC = () => {
               className="w-full h-12 min-h-[48px] flex items-center justify-center space-x-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold transition shadow-md shadow-indigo-100 cursor-pointer"
             >
               <QrCode className="w-5 h-5" />
-              <span>내 정보 등록 / 체크인 QR</span>
+              <span>체크인 QR</span>
               <ChevronRight className="w-4 h-4 ml-auto" />
             </button>
 
@@ -224,7 +224,7 @@ export const MyPassView: React.FC = () => {
               className="w-full h-12 min-h-[48px] flex items-center justify-center space-x-2 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-sm font-semibold transition cursor-pointer"
             >
               <Bell className="w-5 h-5 text-indigo-600" />
-              <span>수신된 인앱 알림 확인</span>
+              <span>알림 확인</span>
               <ChevronRight className="w-4 h-4 ml-auto text-slate-400" />
             </button>
           </div>

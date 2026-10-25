@@ -8,7 +8,7 @@
 
 import type { PresetCapabilityId } from './types';
 
-export type PresetCategory = 'SPORTS' | 'BEAUTY' | 'SPACE' | 'CRAFT' | 'FIELD' | 'CORP';
+export type PresetCategory = 'SPORTS' | 'BEAUTY' | 'SPACE' | 'CRAFT' | 'FIELD' | 'CORP' | 'RETAIL' | 'COMMUNITY';
 
 export interface PresetTermsDefinition {
   customer: string;
@@ -258,6 +258,49 @@ export const PRESET_DEFINITIONS: readonly IndustryPresetDefinitionItem[] = [
     category: 'CORP',
     recommendedCapabilities: ['rental_equipment', 'maintenance_checklist', 'safety_consent', 'equipment_lifecycle'],
     defaultTerms: { customer: '연구원/담당자', space: '장비실', instructor: '장비관리자' },
+  },
+  // ==========================================
+  // [도소매/분양] RETAIL (1종)
+  // ==========================================
+  {
+    id: 'orchid_nursery',
+    name: '난초·희귀식물 배양 및 분양원',
+    category: 'RETAIL',
+    recommendedCapabilities: [
+      'retail_inventory',
+      'treatment_chart',
+      'task_pipeline',
+      'seat_room',
+      'crm_tags',
+      'billing_invoices',
+    ],
+    defaultTerms: {
+      customer: '애란인/고객',
+      space: '온실/배양대',
+      instructor: '재배관리사',
+      pass: '분양/보증서',
+    },
+  },
+  // ==========================================
+  // [생활/커뮤니티] COMMUNITY (1종)
+  // ==========================================
+  {
+    id: 'baby_food_coop',
+    name: '이유식품앗이',
+    category: 'COMMUNITY',
+    recommendedCapabilities: [
+      'baby_food_coop',
+      'consultation_crm',
+      'feedbacks',
+      'daily_care_report',
+      'billing_invoicing',
+    ],
+    defaultTerms: {
+      customer: '아기/아이',
+      instructor: '모임장/운영맘',
+      space: '품앗이존/주방',
+      pass: '품앗이분담금',
+    },
   },
 ] as const;
 

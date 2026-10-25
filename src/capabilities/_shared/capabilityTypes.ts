@@ -135,6 +135,7 @@ export const CAPABILITY_IDS = [
   'electronic_lab_notebook',
   'vehicle_mileage_log',
   'safety_work_permit',
+  'baby_food_coop',
 ] as const;
 
 export type CapabilityId = (typeof CAPABILITY_IDS)[number];

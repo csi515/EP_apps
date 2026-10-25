@@ -107,7 +107,7 @@ export function getQuestionsForIndustry(industry: string): IndustryQuestionField
   return questions;
 }
 
-// 업종별 표준 추천값 (Pre-fill Recommendations)
+// 업종별 표준 추천값 (Pre-fill Recommendations) - Zero-Condition Data-Driven
 export function getStandardPresetsForIndustry(industry: string): {
   roles: PresetRoleConfig[];
   rooms?: PresetRoomConfig[];
@@ -115,225 +115,74 @@ export function getStandardPresetsForIndustry(industry: string): {
   operating_hours: PresetOperatingHoursConfig;
 } {
   const normKey = normalizeIndustryKey(industry);
+  const preset = getIndustryPreset(normKey);
 
-  switch (normKey) {
-    case 'piano':
-      return {
-        roles: [
-          { name: '원장', rank_order: 1, permissions: ['*'] },
-          { name: '전임강사', rank_order: 2, permissions: ['attendance:*', 'passes:view'] },
-          { name: '파트타임', rank_order: 3, permissions: ['attendance:checkin'] },
-        ],
-        rooms: [
-          { name: '그랜드룸', capacity: 2 },
-          { name: '일반 1호', capacity: 1 },
-          { name: '일반 2호', capacity: 1 },
-          { name: '일반 3호', capacity: 1 },
-          { name: '일반 4호', capacity: 1 },
-        ],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '13:00',
-          end_time: '19:00',
-          slot_minutes: 30,
-        },
-      };
+  if (!preset) {
+    return {
+      roles: [{ name: '대표', rank_order: 1, permissions: ['*'] }],
+      operating_hours: {
+        day_type: 'WEEKDAY',
+        start_time: '09:00',
+        end_time: '18:00',
+        slot_minutes: 60,
+      },
+    };
+  }
 
-    case 'sauna':
-      return {
-        roles: [
-          { name: '사장', rank_order: 1, permissions: ['*'] },
-          { name: '주간 카운터', rank_order: 2, permissions: ['passes:*', 'lockers:*'] },
-          { name: '야간 카운터', rank_order: 3, permissions: ['passes:deduct', 'lockers:assign'] },
-        ],
-        locker_count: 50,
-        operating_hours: {
-          day_type: 'ALL_WEEK',
-          start_time: '05:00',
-          end_time: '23:00',
-          slot_minutes: 60,
-        },
-      };
+  // 1. Roles: 프리셋 정의 우선, 없으면 terms.instructor 기반 동적 생성
+  let roles: PresetRoleConfig[];
+  if (preset.roles && preset.roles.length > 0) {
+    roles = preset.roles.map((r) => ({
+      name: r.name,
+      rank_order: r.rank_order,
+      permissions: [...r.permissions],
+    }));
+  } else if (preset.terms?.instructor) {
+    roles = [
+      { name: '대표/관리자', rank_order: 1, permissions: ['*'] },
+      { name: preset.terms.instructor, rank_order: 2, permissions: ['passes:*', 'attendance:*', 'booking:*'] },
+      { name: '스태프/직원', rank_order: 3, permissions: ['attendance:checkin'] },
+    ];
+  } else {
+    roles = [{ name: '대표', rank_order: 1, permissions: ['*'] }];
+  }
 
-    case 'pilates':
-      return {
-        roles: [
-          { name: '대표', rank_order: 1, permissions: ['*'] },
-          { name: '수석강사', rank_order: 2, permissions: ['passes:*', 'booking:*'] },
-          { name: '강사', rank_order: 3, permissions: ['attendance:checkin'] },
-        ],
-        rooms: [
-          { name: '리포머룸', capacity: 6 },
-          { name: '체어룸', capacity: 6 },
-          { name: '개인레슨실', capacity: 1 },
-        ],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '09:00',
-          end_time: '21:00',
-          slot_minutes: 50,
-        },
-      };
-
-    case 'custom':
-      return {
-        roles: [{ name: '관리자', rank_order: 1, permissions: ['*'] }],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '09:00',
-          end_time: '18:00',
-          slot_minutes: 60,
-        },
-      };
-
-    case 'manufacturing_light':
-      return {
-        roles: [
-          { name: '공장장/관리자', rank_order: 1, permissions: ['*'] },
-          { name: '생산반장', rank_order: 2, permissions: ['task_pipeline:*', 'recipe_bom:*', 'inventory:*', 'quality_inspection:*', 'maintenance_checklist:*'] },
-          { name: '현장작업자', rank_order: 3, permissions: ['task_pipeline:view', 'task_pipeline:update', 'sop_risk_assessment:view', 'maintenance_checklist:submit', 'feedbacks:create'] },
-        ],
-        rooms: [
-          { name: '1호 가공 라인', capacity: 10 },
-          { name: '2호 조립 라인', capacity: 10 },
-          { name: '검사실/완제품실', capacity: 5 },
-        ],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '08:00',
-          end_time: '17:00',
-          slot_minutes: 60,
-        },
-      };
-
-    case 'iso_human_capital':
-      return {
-        roles: [
-          { name: '대표이사/총괄임원', rank_order: 1, permissions: ['*'] },
-          { name: '인사팀장/HRD', rank_order: 2, permissions: ['mbo:*', 'work_attendance_payroll:*', 'workplace_policy:*', 'feedbacks:*', 'approval_workflow:*'] },
-          { name: '부서장/팀장', rank_order: 2, permissions: ['mbo:update', 'shift_schedule:*', 'feedbacks:view', 'approval_workflow:submit'] },
-          { name: '사원/팀원', rank_order: 3, permissions: ['mbo:view', 'workplace_policy:view', 'feedbacks:create', 'work_attendance_payroll:view'] },
-        ],
-        rooms: [
-          { name: '본사 대회의실', capacity: 20 },
-          { name: 'HR 상담실', capacity: 4 },
-          { name: '교육 세미나실', capacity: 30 },
-        ],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '09:00',
-          end_time: '18:00',
-          slot_minutes: 60,
-        },
-      };
-
-    case 'rnd_lab_management':
-      return {
-        roles: [
-          { name: '연구소장/센터장', rank_order: 1, permissions: ['*'] },
-          { name: '수석/책임연구원', rank_order: 2, permissions: ['research_project:*', 'task_pipeline:*', 'resources:*', 'patent_ip_asset:*', 'equipment_lifecycle:*', 'mbo:*'] },
-          { name: '선임/전임연구원', rank_order: 3, permissions: ['research_project:update', 'task_pipeline:update', 'resources:book', 'patent_ip_asset:submit', 'sop_risk_assessment:view'] },
-        ],
-        rooms: [
-          { name: '정밀분석기기실 (FE-SEM/XRD)', capacity: 1 },
-          { name: '항온항습 신뢰성평가실', capacity: 2 },
-          { name: '제1합성실험실 (Lab 1)', capacity: 8 },
-        ],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '09:00',
-          end_time: '18:00',
-          slot_minutes: 60,
-        },
-      };
-
-    default: {
-      const preset = getIndustryPreset(normKey);
-      if (preset) {
-        const roles: PresetRoleConfig[] =
-          preset.roles && preset.roles.length > 0
-            ? preset.roles.map((r) => ({
-                name: r.name,
-                rank_order: r.rank_order,
-                permissions: [...r.permissions],
-              }))
-            : [{ name: '대표', rank_order: 1, permissions: ['*'] }];
-
-        const rooms: PresetRoomConfig[] | undefined =
-          preset.resourceTypes && preset.resourceTypes.length > 0
-            ? preset.resourceTypes.map((rt) => ({
-                name: rt.name,
-                capacity:
-                  rt.capacity ?? (rt.type === 'bay' || rt.type === 'court' || rt.type === 'room' || rt.type === 'line' ? 2 : 1),
-              }))
-            : undefined;
-
-        const locker_count = preset.capabilities.includes('locker') ? 50 : undefined;
-
-        let operating_hours: PresetOperatingHoursConfig;
-        if (preset.category === 'fitness' || preset.category === 'wellness') {
-          operating_hours = {
-            day_type: 'ALL_WEEK',
-            start_time: '06:00',
-            end_time: '23:00',
-            slot_minutes: 60,
-          };
-        } else if (preset.category === 'education' || preset.category === 'childcare') {
-          operating_hours = {
-            day_type: 'WEEKDAY',
-            start_time: '13:00',
-            end_time: '21:00',
-            slot_minutes: 30,
-          };
-        } else if (preset.category === 'beauty') {
-          operating_hours = {
-            day_type: 'WEEKDAY',
-            start_time: '10:00',
-            end_time: '20:00',
-            slot_minutes: 60,
-          };
-        } else if (preset.category === 'manufacturing') {
-          operating_hours = {
-            day_type: 'WEEKDAY',
-            start_time: '08:00',
-            end_time: '17:00',
-            slot_minutes: 60,
-          };
-        } else if (preset.category === 'studio' || (preset.category as string) === 'space_rental') {
-          operating_hours = {
-            day_type: 'ALL_WEEK',
-            start_time: '09:00',
-            end_time: '22:00',
-            slot_minutes: 60,
-          };
-        } else {
-          operating_hours = {
-            day_type: 'WEEKDAY',
-            start_time: '09:00',
-            end_time: '18:00',
-            slot_minutes: 60,
-          };
-        }
-
-        return {
-          roles,
-          rooms,
-          locker_count,
-          operating_hours,
-        };
-      }
-
-      return {
-        roles: [{ name: '관리자', rank_order: 1, permissions: ['*'] }],
-        operating_hours: {
-          day_type: 'WEEKDAY',
-          start_time: '09:00',
-          end_time: '18:00',
-          slot_minutes: 60,
-        },
-      };
+  // 2. Rooms: 프리셋 resourceTypes에서 락커를 제외한 공간/베이/룸 변환
+  let rooms: PresetRoomConfig[] | undefined;
+  if (preset.resourceTypes && preset.resourceTypes.length > 0) {
+    const nonLockerResources = preset.resourceTypes.filter((rt) => rt.type !== 'locker');
+    if (nonLockerResources.length > 0) {
+      rooms = nonLockerResources.map((rt) => ({
+        name: rt.name,
+        capacity:
+          rt.capacity ?? (rt.type === 'bay' || rt.type === 'court' || rt.type === 'room' || rt.type === 'line' ? 2 : 1),
+      }));
     }
   }
+
+  // 3. 락커: 프리셋 facilities.needsLocker 또는 capabilities.includes('locker')
+  const locker_count = preset.facilities?.needsLocker
+    ? (preset.facilities.defaultLockerCount ?? 50)
+    : preset.capabilities.includes('locker')
+    ? 50
+    : undefined;
+
+  // 4. 운영 시간: 프리셋 operatingHours 직접 사용
+  const operating_hours: PresetOperatingHoursConfig = preset.operatingHours
+    ? { ...preset.operatingHours }
+    : {
+        day_type: 'WEEKDAY',
+        start_time: '09:00',
+        end_time: '18:00',
+        slot_minutes: 60,
+      };
+
+  return {
+    roles,
+    rooms,
+    locker_count,
+    operating_hours,
+  };
 }
 
 // Zod 검증식: 퀵 온보딩 폼 기본 스키마
@@ -415,6 +264,8 @@ export function buildPresetPayload(
     operating_hours,
     ...(preset?.capabilities ? { capabilities: preset.capabilities } : {}),
     ...(preset?.businessRules ? { business_rules: preset.businessRules } : {}),
+    ...(preset?.terms ? { terms: preset.terms } : {}),
+    ...(preset?.facilities ? { facilities: preset.facilities } : {}),
     ...(preset?.defaultSettings ?? {}),
     ...formValues,
   };
