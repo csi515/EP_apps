@@ -11,7 +11,7 @@ import {
   UserCheck,
   ArrowRight,
 } from 'lucide-react';
-import { type IndustryType } from '../industry/types';
+import { type IndustryType, getIndustryCategoryForType } from '../industry/types';
 import { IndustryPicker } from '../industry/IndustryPicker';
 import {
   getPlaceLabel,
@@ -66,8 +66,10 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
 
   const placeLabel = getPlaceLabel(formData.industryType);
   const appointmentStyle = isAppointmentIndustry(formData.industryType);
+  // 출결 방식 설정 단계는 오직 '교육·학원' 카테고리 업종에만 적용
+  const isEducationIndustry = getIndustryCategoryForType(formData.industryType) === 'education';
 
-  const handleStepInfo = (e: React.FormEvent) => {
+  const handleStepInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       setError(`${placeLabel} 이름을 입력해 주세요.`);
@@ -79,7 +81,13 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
       return;
     }
     setError(null);
-    setStep(1);
+
+    // 교육·학원 카테고리만 출결 방식 선택 단계로 진행, 그 외 업종은 즉시 개설 완료
+    if (isEducationIndustry) {
+      setStep(1);
+    } else {
+      await handleFinish('later');
+    }
   };
 
   const handleFinish = async (choice: AttendanceChoice = attendanceChoice) => {
@@ -135,11 +143,16 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
     }
   };
 
-  const steps = [
-    { icon: Building2, label: '사업장 정보' },
-    { icon: KeyRound, label: '출결 방식' },
-    { icon: CheckCircle2, label: '완료' },
-  ];
+  const steps = isEducationIndustry
+    ? [
+        { icon: Building2, label: '사업장 정보' },
+        { icon: KeyRound, label: '출결 방식' },
+        { icon: CheckCircle2, label: '완료' },
+      ]
+    : [
+        { icon: Building2, label: '사업장 정보' },
+        { icon: CheckCircle2, label: '완료' },
+      ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -164,8 +177,9 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
           <div className="flex items-center gap-2">
             {steps.map((s, i) => {
               const Icon = s.icon;
-              const isActive = i === step;
-              const isDone = i < step;
+              const activeIndex = isEducationIndustry ? step : step === 2 ? 1 : 0;
+              const isActive = i === activeIndex;
+              const isDone = i < activeIndex;
               return (
                 <React.Fragment key={s.label}>
                   <div
@@ -241,20 +255,37 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
               </div>
             )}
 
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-between items-center pt-2">
               <button
                 type="button"
                 onClick={onCancel}
+                disabled={isSaving}
                 className="text-xs text-slate-400 hover:text-slate-600 min-h-[44px] px-3"
               >
                 취소
               </button>
               <button
                 type="submit"
+                disabled={isSaving}
                 data-testid="btn-wizard-next"
-                className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl min-h-[44px]"
+                className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl min-h-[44px] disabled:opacity-50 inline-flex items-center gap-1.5 shadow-xs"
               >
-                다음
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>개설 중...</span>
+                  </>
+                ) : isEducationIndustry ? (
+                  <>
+                    <span>다음 (출결 방식)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    <span>사업장 개설하기</span>
+                    <CheckCircle2 className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </form>

@@ -171,4 +171,24 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
   assert.equal(req.status, 'pending', '신규 가입 신청은 사업주 승인 전까지 항상 pending 이어야 합니다.');
 }
 
+// 6. 교육·학원 카테고리만 출결 설정 단계 적용, 소매업 등 타 업종 생략 불변성 검증
+{
+  const wizardSource = readFileSync(
+    join(process.cwd(), 'src/core/organizations/CreateOrganizationWizard.tsx'),
+    'utf8'
+  );
+
+  assert.match(
+    wizardSource,
+    /getIndustryCategoryForType\(formData\.industryType\)\s*===\s*'education'/,
+    'CreateOrganizationWizard는 교육·학원(education) 카테고리 여부를 판정해야 합니다.'
+  );
+
+  assert.match(
+    wizardSource,
+    /if\s*\(isEducationIndustry\)\s*\{\s*setStep\(1\);\s*\}\s*else\s*\{\s*await handleFinish\('later'\);\s*\}/,
+    '교육 업종만 Step 1(출결 방식)으로 진행하고, 소매업 등 타 업종은 즉시 개설을 완료해야 합니다.'
+  );
+}
+
 console.log('organizationOnboardingAndResilience.test.ts: ok');
