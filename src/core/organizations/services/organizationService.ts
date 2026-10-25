@@ -127,91 +127,142 @@ export function clearStoredOrganizationId(): void {
 }
 
 export async function fetchUserOrganizations(userId: string): Promise<OrganizationMembership[]> {
-  const { data, error } = await getCoreClient()
-    .from('organization_members')
-    .select(
-      `
-        id,
-        role,
-        organization_id,
-        staff_id,
-        parent_customer_id,
-        organizations (
+  try {
+    const { data, error } = await getCoreClient()
+      .from('organization_members')
+      .select(
+        `
           id,
-          name,
-          industry_type,
-          slug,
-          settings,
-          is_active,
-          public_code,
-          postal,
-          sido,
-          sigungu,
-          dong,
-          jibun,
-          road_address,
-          address_detail,
-          created_at,
-          updated_at
-        )
-      `
-    )
-    .eq('user_id', userId)
-    .eq('is_active', true);
+          role,
+          organization_id,
+          staff_id,
+          parent_customer_id,
+          organizations (
+            id,
+            name,
+            industry_type,
+            slug,
+            settings,
+            is_active,
+            public_code,
+            postal,
+            sido,
+            sigungu,
+            dong,
+            jibun,
+            road_address,
+            address_detail,
+            created_at,
+            updated_at
+          )
+        `
+      )
+      .eq('user_id', userId)
+      .eq('is_active', true);
 
-  if (error) throw error;
+    if (error) {
+      console.warn('[org] fetchUserOrganizations joined query failed, trying decoupled query:', error.message || error);
+      const { data: members, error: memError } = await getCoreClient()
+        .from('organization_members')
+        .select('id, role, organization_id, staff_id, parent_customer_id')
+        .eq('user_id', userId)
+        .eq('is_active', true);
 
-  return (data ?? [])
-    .filter((row) => row.organizations)
-    .map((row) => ({
-      id: row.id,
-      organizationId: row.organization_id,
-      role: row.role as MemberRole,
-      staffId: row.staff_id ?? null,
-      parentCustomerId: row.parent_customer_id ?? null,
-      organization: row.organizations as Organization,
-    }));
+      if (memError || !members || members.length === 0) {
+        return [];
+      }
+
+      const orgIds = members.map((m) => m.organization_id).filter(Boolean);
+      if (orgIds.length === 0) return [];
+
+      const { data: orgs, error: orgsError } = await getCoreClient()
+        .from('organizations')
+        .select('*')
+        .in('id', orgIds)
+        .eq('is_active', true);
+
+      if (orgsError || !orgs) {
+        console.warn('[org] fetch organizations by ids failed:', orgsError?.message || orgsError);
+        return [];
+      }
+
+      const orgMap = new Map((orgs ?? []).map((o: any) => [o.id, o]));
+      return members
+        .filter((m) => orgMap.has(m.organization_id))
+        .map((m) => ({
+          id: m.id,
+          organizationId: m.organization_id,
+          role: m.role as MemberRole,
+          staffId: m.staff_id ?? null,
+          parentCustomerId: m.parent_customer_id ?? null,
+          organization: orgMap.get(m.organization_id) as Organization,
+        }));
+    }
+
+    return (data ?? [])
+      .filter((row) => row.organizations)
+      .map((row) => ({
+        id: row.id,
+        organizationId: row.organization_id,
+        role: row.role as MemberRole,
+        staffId: row.staff_id ?? null,
+        parentCustomerId: row.parent_customer_id ?? null,
+        organization: row.organizations as Organization,
+      }));
+  } catch (err) {
+    console.warn('[org] fetchUserOrganizations exception:', err);
+    return [];
+  }
 }
 
 /**
  * Phase 1: 새 RPC를 사용하여 모든 멤버십과 활성 컨텍스트 정보를 함께 가져옴
- * RPC 실패 시 organization_members 직접 조회로 폴백
+ * RPC 실패 시 organization_members 직접 조회로 폴백하며, 모든 예외 상황 시 안전하게 빈 목록 반환
  */
 export async function fetchUserMembershipsWithContext(): Promise<OrganizationMembership[]> {
-  const { data, error } = await getCoreClient().rpc('get_user_memberships' as never);
+  try {
+    const { data, error } = await getCoreClient().rpc('get_user_memberships' as never);
 
-  if (!error && data) {
-    return ((data as Record<string, unknown>[]) ?? []).map((row) => ({
-      id: String(row.membership_id),
-      organizationId: String(row.organization_id),
-      role: row.role as MemberRole,
-      staffId: row.staff_id ? String(row.staff_id) : null,
-      parentCustomerId: row.parent_customer_id ? String(row.parent_customer_id) : null,
-      isCurrentContext: Boolean(row.is_current_context),
-      organization: {
-        id: String(row.organization_id),
-        name: String(row.organization_name ?? ''),
-        industry_type: String(row.organization_industry_type ?? ''),
-        slug: row.organization_slug ? String(row.organization_slug) : null,
-        settings: row.organization_settings ?? {},
-        is_active: Boolean(row.organization_is_active),
-        public_code: String(row.organization_public_code ?? ''),
-        created_at: '',
-        updated_at: '',
-      } as Organization,
-    }));
+    if (!error && data) {
+      return ((data as Record<string, unknown>[]) ?? []).map((row) => ({
+        id: String(row.membership_id),
+        organizationId: String(row.organization_id),
+        role: row.role as MemberRole,
+        staffId: row.staff_id ? String(row.staff_id) : null,
+        parentCustomerId: row.parent_customer_id ? String(row.parent_customer_id) : null,
+        isCurrentContext: Boolean(row.is_current_context),
+        organization: {
+          id: String(row.organization_id),
+          name: String(row.organization_name ?? ''),
+          industry_type: String(row.organization_industry_type ?? ''),
+          slug: row.organization_slug ? String(row.organization_slug) : null,
+          settings: row.organization_settings ?? {},
+          is_active: Boolean(row.organization_is_active),
+          public_code: String(row.organization_public_code ?? ''),
+          created_at: '',
+          updated_at: '',
+        } as Organization,
+      }));
+    }
+
+    console.warn(
+      '[org] get_user_memberships failed, falling back to direct query',
+      error?.message
+    );
+  } catch (rpcErr) {
+    console.warn('[org] get_user_memberships RPC exception, falling back:', rpcErr);
   }
 
-  console.warn(
-    '[org] get_user_memberships failed, falling back to direct query',
-    error?.message
-  );
-
-  const {
-    data: { user },
-  } = await getCoreClient().auth.getUser();
-  if (!user?.id) return [];
-  return fetchUserOrganizations(user.id);
+  try {
+    const {
+      data: { user },
+    } = await getCoreClient().auth.getUser();
+    if (!user?.id) return [];
+    return await fetchUserOrganizations(user.id);
+  } catch (directErr) {
+    console.warn('[org] fetchUserOrganizations fallback failed:', directErr);
+    return [];
+  }
 }
 
 /**

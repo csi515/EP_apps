@@ -292,13 +292,16 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
       setOrganizationsStatus('ready');
     } catch (err) {
       console.error('[org] refreshOrganizations failed', err);
+      const rawMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'message' in err
+            ? String((err as { message: unknown }).message)
+            : String(err ?? '');
       const message =
-        err instanceof TypeError ||
-        (err instanceof Error && /failed to fetch|network|offline|load failed/i.test(err.message))
+        /failed to fetch|network|offline|load failed/i.test(rawMessage)
           ? '네트워크 연결을 확인한 뒤 다시 시도해 주세요.'
-          : err instanceof Error && err.message
-            ? err.message
-            : '사업장 정보를 불러오지 못했습니다.';
+          : rawMessage || '사업장 정보를 불러오지 못했습니다.';
       // quiet + 기존 데이터: 선택 유지. 초기/강제 새로고침 실패만 error.
       if (opts?.quiet && hasMembershipsRef.current) {
         return;
