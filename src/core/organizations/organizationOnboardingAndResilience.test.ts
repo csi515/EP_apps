@@ -173,7 +173,7 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
   assert.equal(req.status, 'pending', '신규 가입 신청은 사업주 승인 전까지 항상 pending 이어야 합니다.');
 }
 
-// 6. 교육·학원 카테고리만 출결 설정 단계 적용, 소매업 등 타 업종 생략 불변성 검증
+// 6. 교육 학원을 포함한 전 업종 공통: 사업장 개설 시 출결 방식 질의 없이 즉시 개설 불변성 검증
 {
   const wizardSource = readFileSync(
     join(process.cwd(), 'src/core/organizations/CreateOrganizationWizard.tsx'),
@@ -182,14 +182,20 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
 
   assert.match(
     wizardSource,
-    /getIndustryCategoryForType\(formData\.industryType\)\s*===\s*'education'/,
-    'CreateOrganizationWizard는 교육·학원(education) 카테고리 여부를 판정해야 합니다.'
+    /await handleFinish\(\);/,
+    '모든 업종은 정보 입력 후 번거로운 출결 방식 설문 없이 즉시 사업장 개설을 완료해야 합니다.'
+  );
+
+  assert.equal(
+    wizardSource.includes('AttendanceChoice'),
+    false,
+    '온보딩 마법사에서 출결 방식 선택(AttendanceChoice) 타입 및 번거로운 설문 단계는 완전히 제거되어야 합니다.'
   );
 
   assert.match(
     wizardSource,
-    /if\s*\(isEducationIndustry\)\s*\{\s*setStep\(1\);\s*\}\s*else\s*\{\s*await handleFinish\('later'\);\s*\}/,
-    '교육 업종만 Step 1(출결 방식)으로 진행하고, 소매업 등 타 업종은 즉시 개설을 완료해야 합니다.'
+    /출결 방식·회원권 등 세부 운영 설정은 사업장 개설 후 언제든 설정 메뉴에서 구성할 수 있습니다\./,
+    '개설 완료 시 세부 운영 설정은 사업장 개설 후 설정 메뉴에서 구성함을 명확히 안내해야 합니다.'
   );
 }
 
@@ -218,25 +224,7 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
   assert.equal(roleSectionLabel('staff', null), '강사 활동');
 }
 
-// 8. 비교육 업종 온보딩 시 출결 모듈 비활성화 격리 불변성 검증
-{
-  const wizardSource = readFileSync(
-    join(process.cwd(), 'src/core/organizations/CreateOrganizationWizard.tsx'),
-    'utf8'
-  );
 
-  assert.match(
-    wizardSource,
-    /const pinEnabled = isEducationIndustry \? choice === 'pin' : false;/,
-    '비교육 업종의 pinEnabled는 항상 false로 평가되어야 합니다.'
-  );
-
-  assert.match(
-    wizardSource,
-    /if \(isEducationIndustry\) \{\s*const local = StorageService\.getSettings\(\);\s*StorageService\.saveSettings\(withAttendanceModuleEnabled\(local, pinEnabled\)\);\s*\}/,
-    '로컬 스토리지의 출결 모듈 강제 저장은 오직 교육 업종에서만 수행되어야 합니다.'
-  );
-}
 
 // 9. 직원·강사 합류 시 무분별한 사업장 검색 차단 및 공식 초대 코드 단일화 검증
 {

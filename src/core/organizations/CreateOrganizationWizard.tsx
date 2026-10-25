@@ -1,5 +1,4 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useOrganization } from './OrganizationProvider';
 import {
   Building2,
@@ -7,20 +6,14 @@ import {
   Sparkles,
   CheckCircle2,
   Loader2,
-  KeyRound,
-  UserCheck,
-  ArrowRight,
 } from 'lucide-react';
 import { type IndustryType, getIndustryCategoryForType } from '../industry/types';
 import { IndustryPicker } from '../industry/IndustryPicker';
 import {
   getPlaceLabel,
   getPlaceNamePlaceholder,
-  isAppointmentIndustry,
 } from '../industry/industryUi';
 import { StorageService } from '@/services/storage';
-import { withAttendanceModuleEnabled } from '@/core/attendance/features';
-import { PIN_ATTENDANCE_DIRECTOR_COPY } from '@/core/attendance/attendanceNotifyCopy';
 import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 import {
   OrganizationLocationSetupError,
@@ -34,19 +27,16 @@ import {
 } from '@/core/address';
 
 interface CreateOrganizationWizardProps {
+  initialIndustryType?: IndustryType;
   onComplete: () => void;
   onCancel: () => void;
-  initialIndustryType?: IndustryType;
 }
 
-type AttendanceChoice = 'pin' | 'manual' | 'later';
-
 export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> = ({
+  initialIndustryType = 'piano',
   onComplete,
   onCancel,
-  initialIndustryType = 'piano',
 }) => {
-  const navigate = useNavigate();
   const org = useOrganization();
   const submittingRef = useRef(false);
   const [step, setStep] = useState(0);
@@ -54,7 +44,6 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
   const [isEntering, setIsEntering] = useState(false);
   const [createdOrgId, setCreatedOrgId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [attendanceChoice, setAttendanceChoice] = useState<AttendanceChoice>('later');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -65,9 +54,6 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
   );
 
   const placeLabel = getPlaceLabel(formData.industryType);
-  const appointmentStyle = isAppointmentIndustry(formData.industryType);
-  // 출결 방식 설정 단계는 오직 '교육·학원' 카테고리 업종에만 적용
-  const isEducationIndustry = getIndustryCategoryForType(formData.industryType) === 'education';
 
   const guideFeatureText = useMemo(() => {
     const cat = getIndustryCategoryForType(formData.industryType);
@@ -103,20 +89,16 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
     }
     setError(null);
 
-    // 교육·학원 카테고리만 출결 방식 선택 단계로 진행, 그 외 업종은 즉시 개설 완료
-    if (isEducationIndustry) {
-      setStep(1);
-    } else {
-      await handleFinish('later');
-    }
+    // 교육·학원을 포함한 모든 업종 공통: 출결 방식을 개설 단계에서 묻지 않고 즉시 사업장 개설
+    await handleFinish();
   };
 
-  const handleFinish = async (choice: AttendanceChoice = attendanceChoice) => {
+  const handleFinish = async () => {
     if (submittingRef.current) return;
     submittingRef.current = true;
     setIsSaving(true);
     setError(null);
-    const pinEnabled = isEducationIndustry ? choice === 'pin' : false;
+
     try {
       let orgId = createdOrgId;
       if (orgId) {
@@ -124,20 +106,14 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
       } else {
         orgId = await org.createOrganization(formData.name.trim(), formData.industryType, {
           directorName: StorageService.getActiveUser().name.trim(),
+          representativeName: StorageService.getActiveUser().name.trim(),
           address: formatOrganizationAddress(addressParts),
           addressParts,
-          features: {
-            attendance: { enabled: pinEnabled },
-          },
         });
-        if (isEducationIndustry) {
-          const local = StorageService.getSettings();
-          StorageService.saveSettings(withAttendanceModuleEnabled(local, pinEnabled));
-        }
         setCreatedOrgId(orgId);
       }
 
-      setStep(2);
+      setStep(1);
     } catch (err) {
       submittingRef.current = false;
       if (err instanceof OrganizationLocationSetupError) {
@@ -166,16 +142,10 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
     }
   };
 
-  const steps = isEducationIndustry
-    ? [
-        { icon: Building2, label: '사업장 정보' },
-        { icon: KeyRound, label: '출결 방식' },
-        { icon: CheckCircle2, label: '완료' },
-      ]
-    : [
-        { icon: Building2, label: '사업장 정보' },
-        { icon: CheckCircle2, label: '완료' },
-      ];
+  const steps = [
+    { icon: Building2, label: '사업장 정보' },
+    { icon: CheckCircle2, label: '완료' },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -185,7 +155,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
             <Sparkles className="w-5 h-5 text-indigo-600" />
             <h2 className="font-bold text-slate-900">새 사업장 등록</h2>
           </div>
-          {step < 2 && (
+          {step < 1 && (
             <button
               onClick={onCancel}
               className="text-slate-400 hover:text-slate-600 p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -200,9 +170,8 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
           <div className="flex items-center gap-2">
             {steps.map((s, i) => {
               const Icon = s.icon;
-              const activeIndex = isEducationIndustry ? step : step === 2 ? 1 : 0;
-              const isActive = i === activeIndex;
-              const isDone = i < activeIndex;
+              const isActive = i === step;
+              const isDone = i < step;
               return (
                 <React.Fragment key={s.label}>
                   <div
@@ -219,11 +188,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
                     </div>
                     <span className="hidden sm:inline">{s.label}</span>
                   </div>
-                  {i < steps.length - 1 && (
-                    <div
-                      className={`flex-1 h-0.5 rounded ${isDone ? 'bg-emerald-300' : 'bg-slate-200'}`}
-                    />
-                  )}
+                  {i < steps.length - 1 && <div className="flex-1 h-0.5 bg-slate-100 mx-1" />}
                 </React.Fragment>
               );
             })}
@@ -298,11 +263,6 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>개설 중...</span>
                   </>
-                ) : isEducationIndustry ? (
-                  <>
-                    <span>다음 (출결 방식)</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
                 ) : (
                   <>
                     <span>사업장 개설하기</span>
@@ -315,108 +275,6 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
         )}
 
         {step === 1 && (
-          <div className="p-6 space-y-4">
-            <div>
-              <h3 className="font-bold text-slate-900">
-                {appointmentStyle ? '방문·출입 관리 방식을 선택해주세요' : '출결 관리 방식을 선택해주세요'}
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">나중에 설정에서 언제든지 변경할 수 있습니다.</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setAttendanceChoice('pin')}
-              className={`w-full text-left p-4 rounded-2xl border-2 min-h-[44px] transition-colors ${
-                attendanceChoice === 'pin'
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <p className="font-bold text-slate-900 flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-indigo-600" />
-                {appointmentStyle ? '회원 PIN 출입' : '학생 PIN 출결'}
-              </p>
-              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                {appointmentStyle
-                  ? PIN_ATTENDANCE_DIRECTOR_COPY.createOrgPinHintAppointment
-                  : PIN_ATTENDANCE_DIRECTOR_COPY.createOrgPinHint}
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setAttendanceChoice('manual')}
-              className={`w-full text-left p-4 rounded-2xl border-2 min-h-[44px] transition-colors ${
-                attendanceChoice === 'manual'
-                  ? 'border-indigo-500 bg-indigo-50'
-                  : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <p className="font-bold text-slate-900 flex items-center gap-2">
-                <UserCheck className="w-4 h-4 text-slate-600" />
-                {appointmentStyle ? '직원이 직접 기록' : '선생님 직접 출결'}
-              </p>
-              <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                {appointmentStyle
-                  ? PIN_ATTENDANCE_DIRECTOR_COPY.createOrgManualHintAppointment
-                  : PIN_ATTENDANCE_DIRECTOR_COPY.createOrgManualHint}
-              </p>
-            </button>
-
-            {error && (
-              <div className="p-3 rounded-xl bg-rose-50 border border-rose-100 text-sm text-rose-700">
-                {error}
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setStep(0)}
-                disabled={isSaving}
-                className="text-xs text-slate-400 hover:text-slate-600 min-h-[44px] px-3"
-              >
-                이전
-              </button>
-              <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:justify-end">
-                {!createdOrgId && (
-                  <button
-                    type="button"
-                    disabled={isSaving}
-                    onClick={() => void handleFinish('later')}
-                    className="px-4 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 rounded-xl min-h-[44px] disabled:opacity-50"
-                  >
-                    나중에 설정하기
-                  </button>
-                )}
-                <button
-                  type="button"
-                  disabled={isSaving}
-                  data-testid="btn-wizard-submit"
-                  onClick={() =>
-                    void handleFinish(attendanceChoice === 'later' ? 'manual' : attendanceChoice)
-                  }
-                  className="px-5 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl flex items-center justify-center gap-1 min-h-[44px] disabled:opacity-50"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />{' '}
-                      {createdOrgId ? '지점 준비 중...' : '등록 중...'}
-                    </>
-                  ) : createdOrgId ? (
-                    '기본 지점 다시 준비'
-                  ) : (
-                    <>
-                      등록하기 <CheckCircle2 className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="p-6 space-y-5 text-center">
             <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8 text-emerald-600" />
@@ -424,9 +282,11 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
             <div>
               <h3 className="font-bold text-lg text-slate-900">사업장 등록이 완료되었습니다</h3>
               <p className="text-sm text-slate-500 mt-2 leading-relaxed">
-                {formData.name}
+                <span className="font-semibold text-slate-800">{formData.name}</span>
                 <br />
-                아래 버튼을 눌러 사업장으로 들어가세요.
+                <span className="text-xs text-slate-400 mt-1 block">
+                  출결 방식·회원권 등 세부 운영 설정은 사업장 개설 후 언제든 설정 메뉴에서 구성할 수 있습니다.
+                </span>
               </p>
             </div>
             {error && (
