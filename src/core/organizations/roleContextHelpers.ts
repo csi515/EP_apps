@@ -1,4 +1,6 @@
 import type { MemberRole } from '@/lib/supabase';
+import type { IndustryType } from '@/core/industry/types';
+import { getTerminologyDictionary } from '@/core/terminology/dictionaries';
 
 export function switchErrorMessage(error: unknown): string {
   if (error instanceof TypeError) {
@@ -11,11 +13,29 @@ export function switchErrorMessage(error: unknown): string {
   return raw || '사업장/역할 전환에 실패했습니다.';
 }
 
-export function roleSectionLabel(role: MemberRole): string {
+export function roleSectionLabel(
+  role: MemberRole,
+  industry?: IndustryType | string | null
+): string {
   if (role === 'owner' || role === 'admin' || role === 'manager') return '사업장 관리';
-  if (role === 'staff' || role === 'instructor') return '강사 활동';
+  if (role === 'staff' || role === 'instructor') {
+    if (industry) {
+      const dict = getTerminologyDictionary(industry);
+      return `${dict.staff?.singular || '직원'} 활동`;
+    }
+    return '강사 활동';
+  }
   if (role === 'member' || role === 'customer') return '내가 다니는 곳';
-  if (role === 'parent' || role === 'guardian') return '학부모 포털';
+  if (role === 'parent' || role === 'guardian') {
+    if (industry) {
+      const dict = getTerminologyDictionary(industry);
+      const contactLabel = dict.contact?.singular;
+      if (contactLabel === '보호자') return '보호자 포털';
+      if (contactLabel === '학부모') return '학부모 포털';
+      return `${contactLabel || '보호자'} 포털`;
+    }
+    return '학부모 포털';
+  }
   return '역할';
 }
 

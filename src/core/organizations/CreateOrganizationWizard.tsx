@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOrganization } from './OrganizationProvider';
 import {
@@ -69,6 +69,27 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
   // 출결 방식 설정 단계는 오직 '교육·학원' 카테고리 업종에만 적용
   const isEducationIndustry = getIndustryCategoryForType(formData.industryType) === 'education';
 
+  const guideFeatureText = useMemo(() => {
+    const cat = getIndustryCategoryForType(formData.industryType);
+    if (formData.industryType === 'retail') {
+      return '재고·판매·정산 관리 등';
+    }
+    switch (cat) {
+      case 'education':
+      case 'lesson':
+        return '출결·수업 일정·수강료 관리 등';
+      case 'fitness':
+        return '회원권·수업 예약·락커 배정 등';
+      case 'beauty':
+      case 'wellness':
+        return '시술 예약·고객 차트·매출 관리 등';
+      case 'food':
+        return '테이블 주문·재고·직원 스케줄 등';
+      default:
+        return '고객 관리·결제·스케줄 등';
+    }
+  }, [formData.industryType]);
+
   const handleStepInfo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
@@ -95,7 +116,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
     submittingRef.current = true;
     setIsSaving(true);
     setError(null);
-    const pinEnabled = choice === 'pin';
+    const pinEnabled = isEducationIndustry ? choice === 'pin' : false;
     try {
       let orgId = createdOrgId;
       if (orgId) {
@@ -109,8 +130,10 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
             attendance: { enabled: pinEnabled },
           },
         });
-        const local = StorageService.getSettings();
-        StorageService.saveSettings(withAttendanceModuleEnabled(local, pinEnabled));
+        if (isEducationIndustry) {
+          const local = StorageService.getSettings();
+          StorageService.saveSettings(withAttendanceModuleEnabled(local, pinEnabled));
+        }
         setCreatedOrgId(orgId);
       }
 
@@ -213,7 +236,7 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
             <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100/90 flex items-center gap-2.5 shadow-2xs">
               <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
               <p className="text-xs text-indigo-900 font-medium">
-                운영하시는 업종을 선택하시면 업종 맞춤형 기능(출결·회원권·스케줄 등)이 자동으로 세팅됩니다.
+                운영하시는 업종을 선택하시면 업종 맞춤형 기능({guideFeatureText})이 자동으로 세팅됩니다.
               </p>
             </div>
 

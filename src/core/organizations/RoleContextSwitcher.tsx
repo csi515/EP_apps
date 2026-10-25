@@ -292,7 +292,7 @@ export const RoleContextSwitcher: React.FC = () => {
                           </div>
                           <div className="min-w-0">
                             <p className="font-bold truncate">{roleLabel}</p>
-                            <p className="text-[10px] text-slate-500">{roleSectionLabel(membership.role)}</p>
+                            <p className="text-[10px] text-slate-500">{roleSectionLabel(membership.role, fullMembership?.organization.industry_type)}</p>
                           </div>
                         </div>
                         {isSelected && !busy && <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />}

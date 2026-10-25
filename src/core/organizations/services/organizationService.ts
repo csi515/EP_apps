@@ -5,6 +5,7 @@ import {
   type IndustryType,
 } from '@/core/industry/types';
 import { getOwnerLabel } from '@/core/industry/industryUi';
+import { getTerminologyDictionary } from '@/core/terminology/dictionaries';
 import {
   formatOrganizationAddress,
   normalizeCreateOrganizationAddress,
@@ -61,6 +62,7 @@ export interface CreateOrganizationOptions {
 /** 가입·마법사 폼 필드 → createOrganization 옵션 매핑 */
 export type CreateOrganizationFormExtras = Partial<AcademySettings> & {
   directorName?: string;
+  representativeName?: string;
   phone?: string;
   address?: string;
   businessNumber?: string;
@@ -79,6 +81,7 @@ export function toCreateOrganizationOptions(
     extras?.address
   );
   const representativeName =
+    extras?.representativeName?.trim() ||
     extras?.directorName?.trim() ||
     StorageService.getActiveUser().name.trim() ||
     name;
@@ -339,21 +342,37 @@ export async function createOrganization(
   return orgId;
 }
 
-/** org 멤버 role 라벨 */
+/** org 멤버 role 라벨 (업종별 용어 사전 연동) */
 export function getRoleLabel(
   role: MemberRole,
   industry?: IndustryType | string | null
 ): string {
+  if (!industry) {
+    const defaultLabels: Record<MemberRole, string> = {
+      owner: '대표',
+      admin: '관리자',
+      manager: '매니저',
+      staff: '강사',
+      parent: '학부모',
+      instructor: '강사',
+      member: '회원',
+      customer: '고객',
+      guardian: '보호자',
+    };
+    return defaultLabels[role];
+  }
+
+  const dict = getTerminologyDictionary(industry);
   const labels: Record<MemberRole, string> = {
-    owner: industry != null ? getOwnerLabel(industry) : '대표',
+    owner: dict.facility?.owner || getOwnerLabel(industry),
     admin: '관리자',
     manager: '매니저',
-    staff: '강사',
-    parent: '학부모',
-    instructor: '강사',
-    member: '회원',
-    customer: '고객',
-    guardian: '보호자',
+    staff: dict.staff?.singular || '직원',
+    parent: dict.contact?.singular || '학부모',
+    instructor: dict.staff?.singular || '강사',
+    member: dict.customer?.singular || '회원',
+    customer: dict.customer?.singular || '고객',
+    guardian: dict.contact?.singular || '보호자',
   };
   return labels[role];
 }

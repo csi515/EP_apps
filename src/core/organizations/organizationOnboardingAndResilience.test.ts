@@ -9,7 +9,9 @@ import {
   applyBootstrapToSession,
   resolveOrganizationBootstrap,
 } from './resolveOrganizationContext';
+import { getRoleLabel } from './services/organizationService';
 import type { OrganizationMembership } from './services/organizationService';
+import { roleSectionLabel } from './roleContextHelpers';
 
 console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience Suite...');
 
@@ -188,6 +190,51 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
     wizardSource,
     /if\s*\(isEducationIndustry\)\s*\{\s*setStep\(1\);\s*\}\s*else\s*\{\s*await handleFinish\('later'\);\s*\}/,
     '교육 업종만 Step 1(출결 방식)으로 진행하고, 소매업 등 타 업종은 즉시 개설을 완료해야 합니다.'
+  );
+}
+
+// 7. 업종별 역할 라벨 정상화(getRoleLabel & roleSectionLabel) 검증
+{
+  // 소매업(retail): 직원은 '직원', 섹션은 '직원 활동', 대표는 '대표'
+  assert.equal(getRoleLabel('staff', 'retail'), '직원');
+  assert.equal(getRoleLabel('owner', 'retail'), '대표');
+  assert.equal(roleSectionLabel('staff', 'retail'), '직원 활동');
+
+  // 미용/헤어(hair_salon): 직원은 '관리사', 대표는 '대표'
+  assert.equal(getRoleLabel('staff', 'hair_salon'), '관리사');
+  assert.equal(getRoleLabel('owner', 'hair_salon'), '대표');
+  assert.equal(roleSectionLabel('staff', 'hair_salon'), '관리사 활동');
+
+  // 교육/학원(piano): 직원은 '선생님', 대표는 '원장', 학부모는 '학부모'
+  assert.equal(getRoleLabel('staff', 'piano'), '선생님');
+  assert.equal(getRoleLabel('owner', 'piano'), '원장');
+  assert.equal(getRoleLabel('parent', 'piano'), '학부모');
+  assert.equal(roleSectionLabel('staff', 'piano'), '선생님 활동');
+  assert.equal(roleSectionLabel('parent', 'piano'), '학부모 포털');
+
+  // 업종 미지정 시 레거시 기본값(하위 호환) 유지
+  assert.equal(getRoleLabel('staff', null), '강사');
+  assert.equal(getRoleLabel('owner', null), '대표');
+  assert.equal(roleSectionLabel('staff', null), '강사 활동');
+}
+
+// 8. 비교육 업종 온보딩 시 출결 모듈 비활성화 격리 불변성 검증
+{
+  const wizardSource = readFileSync(
+    join(process.cwd(), 'src/core/organizations/CreateOrganizationWizard.tsx'),
+    'utf8'
+  );
+
+  assert.match(
+    wizardSource,
+    /const pinEnabled = isEducationIndustry \? choice === 'pin' : false;/,
+    '비교육 업종의 pinEnabled는 항상 false로 평가되어야 합니다.'
+  );
+
+  assert.match(
+    wizardSource,
+    /if \(isEducationIndustry\) \{\s*const local = StorageService\.getSettings\(\);\s*StorageService\.saveSettings\(withAttendanceModuleEnabled\(local, pinEnabled\)\);\s*\}/,
+    '로컬 스토리지의 출결 모듈 강제 저장은 오직 교육 업종에서만 수행되어야 합니다.'
   );
 }
 
