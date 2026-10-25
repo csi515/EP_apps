@@ -295,6 +295,10 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:roles-permissions': 'tenant roles and permission matrix validation unit',
   'test:logger': 'Central logger and sensitive data masking unit',
   'test:network-status': 'PWA online and offline state observer unit',
+  'test:auth-signup': 'auth signup input validation and legal agreement invariants unit',
+  'test:login-bootstrap': 'login bootstrap RPC fault isolation and soft-fail resilience unit',
+  'test:org-onboarding': 'organization multi-fallback and new user onboarding state machine unit',
+  'test:auth-onboarding-suite': 'composite suite for auth, bootstrap resilience, and org onboarding',
 };
 
 /**

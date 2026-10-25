@@ -214,7 +214,11 @@
     "test:business-invariants": "node scripts/run-business-invariant-tests.mjs",
     "test:business-invariants:list": "node scripts/run-business-invariant-tests.mjs --list",
     "test:business-invariants:catalog": "node scripts/businessInvariantTests.test.mjs",
-    "supabase:types": "node scripts/generate-database-types.mjs"
+    "supabase:types": "node scripts/generate-database-types.mjs",
+    "test:auth-signup": "tsx src/core/auth/authSignupValidation.test.ts",
+    "test:login-bootstrap": "tsx src/core/accounts/loginBootstrapResilience.test.ts",
+    "test:org-onboarding": "tsx src/core/organizations/organizationOnboardingAndResilience.test.ts",
+    "test:auth-onboarding-suite": "npm run test:auth-signup && npm run test:login-bootstrap && npm run test:org-onboarding"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",
