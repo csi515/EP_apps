@@ -18,7 +18,6 @@ import { useOrganization } from './OrganizationProvider';
 import { getRoleLabel } from './services/organizationService';
 import { getIndustryLabel, type IndustryType } from '../industry/types';
 import { CreateOrganizationWizard } from './CreateOrganizationWizard';
-import { TeacherJoinFlow } from './components/TeacherJoinFlow';
 import { useAuth } from '../auth/AuthProvider';
 import { useWorkUi as useApp } from '@/shared/navigation/useWorkUi';
 import { switchErrorMessage } from './roleContextHelpers';
@@ -44,7 +43,6 @@ export const OrganizationSelector: React.FC = () => {
   const { showToast } = useApp();
   const navigate = useNavigate();
   const [showWizard, setShowWizard] = useState(false);
-  const [showTeacherFlow, setShowTeacherFlow] = useState(false);
   const [showStaffInviteAccept, setShowStaffInviteAccept] = useState(false);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -91,9 +89,7 @@ export const OrganizationSelector: React.FC = () => {
     );
   }
 
-  if (showTeacherFlow) {
-    return <TeacherJoinFlow onBack={() => setShowTeacherFlow(false)} />;
-  }
+  
 
   return (
     <div
@@ -232,28 +228,18 @@ export const OrganizationSelector: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-bold text-slate-900">직원 · 강사로 합류</h3>
                     <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
-                      원장님께 전달받은 초대 코드를 입력하거나 사업장을 검색합니다
+                      사업주에게 전달받은 초대 코드를 입력하여 안전하게 합류합니다
                     </p>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        data-testid="btn-staff-invite-code"
-                        onClick={() => setShowStaffInviteAccept(true)}
-                        className="inline-flex items-center justify-center gap-1 px-3 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors min-h-[44px]"
-                      >
-                        <KeyRound className="w-3.5 h-3.5 text-slate-500" />
-                        <span>초대 코드 입력</span>
-                      </button>
-                      <button
-                        type="button"
-                        data-testid="btn-teacher-join"
-                        onClick={() => setShowTeacherFlow(true)}
-                        className="inline-flex items-center justify-center gap-1 px-3 py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors min-h-[44px]"
-                      >
-                        <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                        <span>사업장 검색</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      data-testid="btn-staff-invite-code"
+                      onClick={() => setShowStaffInviteAccept(true)}
+                      className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 active:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition-all min-h-[44px]"
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-slate-300" />
+                      <span>초대 코드로 합류하기</span>
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    </button>
                   </div>
                 </div>
               </div>

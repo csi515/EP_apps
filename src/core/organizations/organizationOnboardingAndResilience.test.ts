@@ -238,4 +238,30 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
   );
 }
 
+// 9. 직원·강사 합류 시 무분별한 사업장 검색 차단 및 공식 초대 코드 단일화 검증
+{
+  const selectorSource = readFileSync(
+    join(process.cwd(), 'src/core/organizations/OrganizationSelector.tsx'),
+    'utf8'
+  );
+
+  assert.equal(
+    selectorSource.includes('btn-teacher-join'),
+    false,
+    '무분별한 신청을 유발하는 직원 사업장 검색 버튼(btn-teacher-join)은 완전히 제거되어야 합니다.'
+  );
+
+  assert.equal(
+    selectorSource.includes('TeacherJoinFlow'),
+    false,
+    'OrganizationSelector에서 TeacherJoinFlow 임의 검색 플로우는 import되거나 실행되지 않아야 합니다.'
+  );
+
+  assert.match(
+    selectorSource,
+    /data-testid="btn-staff-invite-code"/,
+    '직원·강사 합류는 공식 발급된 초대 코드(btn-staff-invite-code)를 통해서만 진입해야 합니다.'
+  );
+}
+
 console.log('organizationOnboardingAndResilience.test.ts: ok');
