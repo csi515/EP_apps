@@ -48,6 +48,8 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'budget-ceilings': ['budget_ceiling_quota'],
   'audit-trails': ['field_audit_trail'],
   'vendor-scorecards': ['vendor_scorecard'],
+  'baby-food': ['baby_food_coop'],
+  'baby-food/settlement': ['baby_food_coop'],
   students: ['roster', 'enrollment', 'attendance', 'passes', 'consultation_crm'],
   // 기본 5대 기능 및 재무 허브
   bookings: ['booking', 'seat_room'],

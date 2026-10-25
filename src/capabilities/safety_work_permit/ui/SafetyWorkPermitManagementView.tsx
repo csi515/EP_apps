@@ -9,6 +9,8 @@ import {
   Activity,
   Plus,
   Clock,
+  Download,
+  Printer,
   MapPin,
   Users,
   CheckCircle2,
@@ -18,6 +20,7 @@ import {
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { generatePtwAuditCsv, downloadCsvFile } from '../domain/safetyWorkPermitExport';
 import {
   assessGasSafety,
   canApprovePermit,
@@ -306,6 +309,17 @@ export const SafetyWorkPermitManagementView: React.FC = () => {
     setWorkLocation('');
   };
 
+
+  const handleExportPtwCsv = () => {
+    const csv = generatePtwAuditCsv(permits, currentOrganization?.name || '사업장', new Date().getFullYear());
+    downloadCsvFile(`안전작업허가서(PTW)감사대장_${currentOrganization?.name || '사업장'}_${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    showToast('산업안전보건법 3년 법적 보존용 감사 대장 CSV가 다운로드되었습니다.', 'success');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       {/* 상단 브리핑 및 헤더 */}
@@ -322,14 +336,34 @@ export const SafetyWorkPermitManagementView: React.FC = () => {
             화기·밀폐·고소·정전 작업 시 착공 전 안전조치 확인 및 가스농도 측정, 안전관리자 승인을 집행합니다.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-rose-700 transition active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          <span>작업허가서 신청</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportPtwCsv}
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+            title="산업안전보건법 3년 보존용 감사 대장 CSV 내보내기"
+          >
+            <Download className="h-4 w-4 text-rose-600" />
+            <span>산안법 3년 감사대장</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+            title="감사 증빙용 인쇄 / PDF 저장"
+          >
+            <Printer className="h-4 w-4 text-slate-600" />
+            <span>법적 인쇄/PDF</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-600 px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-rose-700 transition active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span>작업허가서 신청</span>
+          </button>
+        </div>
       </div>
 
       {/* 상태 요약 대시보드 카드 */}

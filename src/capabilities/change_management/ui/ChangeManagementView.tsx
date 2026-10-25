@@ -240,7 +240,7 @@ export const ChangeManagementView: React.FC = () => {
       case 'spec':
         return 'bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-slate-100 text-slate-800';
     }
   };
 
@@ -260,7 +260,7 @@ export const ChangeManagementView: React.FC = () => {
   const getStatusBadge = (status: ChangeOrderRecord['status']) => {
     switch (status) {
       case 'draft':
-        return <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-600">임시저장</span>;
+        return <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-600">임시저장</span>;
       case 'reviewing':
         return <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">부서검토중</span>;
       case 'approved':
@@ -270,19 +270,19 @@ export const ChangeManagementView: React.FC = () => {
       case 'rejected':
         return <span className="px-2 py-0.5 text-xs rounded bg-rose-100 text-rose-700">반려됨</span>;
       default:
-        return <span className="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700">{status}</span>;
+        return <span className="px-2 py-0.5 text-xs rounded bg-slate-100 text-slate-700">{status}</span>;
     }
   };
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* 헤더 & 통계 배너 */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-gray-200 dark:border-gray-800 pb-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             공정 및 사양 4M 변경관리 (ECN / ECO)
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             작업자(Man)·설비(Machine)·원자재(Material)·작업방법(Method) 사양 변경 시 부서별 사전 영향도 평가 및 전자결재 전결 체계
           </p>
         </div>
@@ -298,7 +298,7 @@ export const ChangeManagementView: React.FC = () => {
       </div>
 
       {/* 4M 카테고리 탭 필터 */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
         {[
           { id: 'all', label: '전체 보기' },
           { id: 'man', label: '작업자 (Man)' },
@@ -313,7 +313,7 @@ export const ChangeManagementView: React.FC = () => {
             className={`px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               selectedCategory === tab.id
                 ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
             }`}
           >
             {tab.label}
@@ -325,11 +325,11 @@ export const ChangeManagementView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 좌측: ECN 목록 */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             변경 통지서 대장 ({filteredOrders.length}건)
           </div>
           {filteredOrders.length === 0 ? (
-            <div className="p-8 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-lg text-gray-400 text-sm">
+            <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-sm">
               등록된 변경 통지서가 없습니다.
             </div>
           ) : (
@@ -343,19 +343,19 @@ export const ChangeManagementView: React.FC = () => {
                     className={`p-4 rounded-lg border cursor-pointer transition-all ${
                       isSelected
                         ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 shadow-sm'
-                        : 'border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 bg-white dark:bg-gray-900'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900'
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
+                      <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
                         {order.change_number}
                       </span>
                       {getStatusBadge(order.status)}
                     </div>
-                    <div className="mt-1.5 font-semibold text-sm text-gray-900 dark:text-gray-100 truncate">
+                    <div className="mt-1.5 font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
                       {order.title}
                     </div>
-                    <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
                       <div className="flex items-center gap-1.5">
                         <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${getCategoryBadgeClass(order.category)}`}>
                           {order.category.toUpperCase()}
@@ -376,9 +376,9 @@ export const ChangeManagementView: React.FC = () => {
         {/* 우측: 선택된 ECN 상세 & 영향도 평가 & 거버넌스 액션 */}
         <div className="lg:col-span-7 space-y-5">
           {selectedOrder ? (
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 space-y-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 space-y-6 shadow-sm">
               {/* 상세 상단 바 */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">
@@ -391,10 +391,10 @@ export const ChangeManagementView: React.FC = () => {
                       위험도: {selectedOrder.risk_level.toUpperCase()}
                     </span>
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mt-1">
                     {selectedOrder.title}
                   </h2>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     기안자: {selectedOrder.requester_name} | 등록일: {selectedOrder.created_at.slice(0, 10)}
                   </p>
                 </div>
@@ -403,7 +403,7 @@ export const ChangeManagementView: React.FC = () => {
 
               {/* 변경 전/후 비교 카드 */}
               <div className="space-y-2">
-                <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   변경 전/후 사양 대비표
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
@@ -411,7 +411,7 @@ export const ChangeManagementView: React.FC = () => {
                     <div className="font-bold text-red-700 dark:text-red-400 mb-1 flex items-center gap-1">
                       <span>🔻 변경 전 (Before)</span>
                     </div>
-                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    <div className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                       {selectedOrder.before_description || '(내용 없음)'}
                     </div>
                   </div>
@@ -419,21 +419,21 @@ export const ChangeManagementView: React.FC = () => {
                     <div className="font-bold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1">
                       <span>🔺 변경 후 (After)</span>
                     </div>
-                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    <div className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                       {selectedOrder.after_description || '(내용 없음)'}
                     </div>
                   </div>
                 </div>
-                <div className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-xs">
-                  <span className="font-semibold text-gray-600 dark:text-gray-300">변경 사유: </span>
-                  <span className="text-gray-700 dark:text-gray-300">{selectedOrder.reason}</span>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs">
+                  <span className="font-semibold text-slate-600 dark:text-slate-300">변경 사유: </span>
+                  <span className="text-slate-700 dark:text-slate-300">{selectedOrder.reason}</span>
                 </div>
               </div>
 
               {/* 부서별 사전 영향도 평가 목록 */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                  <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     부서별 사전 영향도 평가 ({currentEvaluations.length}건)
                   </div>
                   <button
@@ -446,7 +446,7 @@ export const ChangeManagementView: React.FC = () => {
                 </div>
 
                 {currentEvaluations.length === 0 ? (
-                  <div className="p-4 text-center border border-dashed border-gray-200 dark:border-gray-800 rounded-lg text-gray-400 text-xs">
+                  <div className="p-4 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 text-xs">
                     등록된 부서 검토 의견이 없습니다. (품질 부서 검토 필수)
                   </div>
                 ) : (
@@ -456,13 +456,13 @@ export const ChangeManagementView: React.FC = () => {
                         key={ev.id || `${ev.evaluator_role}-${ev.evaluator_name}`}
                         className={`p-3 border rounded-lg text-xs ${
                           ev.is_approved
-                            ? 'border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30'
+                            ? 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30'
                             : 'border-rose-200 bg-rose-50/50 dark:bg-rose-950/20'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-bold text-gray-800 dark:text-gray-200 uppercase">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">
                               [{ev.evaluator_role}] {ev.evaluator_name}
                             </span>
                           </div>
@@ -472,7 +472,7 @@ export const ChangeManagementView: React.FC = () => {
                             <span className="text-rose-600 font-semibold">✕ 부적합/반려</span>
                           )}
                         </div>
-                        <div className="text-gray-600 dark:text-gray-400">{ev.impact_assessment}</div>
+                        <div className="text-slate-600 dark:text-slate-400">{ev.impact_assessment}</div>
                       </div>
                     ))}
                   </div>
@@ -481,8 +481,8 @@ export const ChangeManagementView: React.FC = () => {
 
               {/* 거버넌스 준비도 요약 & 실행 액션 바 */}
               {readiness && (
-                <div className="p-4 bg-gray-50 dark:bg-gray-800/60 rounded-xl space-y-3 border border-gray-200 dark:border-gray-700">
-                  <div className="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center justify-between">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl space-y-3 border border-slate-200 dark:border-slate-700">
+                  <div className="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center justify-between">
                     <span>거버넌스 검증 상태</span>
                     {readiness.requiresExecutiveApproval && (
                       <span className="text-orange-600 dark:text-orange-400">
@@ -510,7 +510,7 @@ export const ChangeManagementView: React.FC = () => {
                   )}
 
                   {/* 액션 버튼 그룹 */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-200 dark:border-slate-700">
                     {/* Phase 1 전자결재 상신 버튼 */}
                     {selectedOrder.status !== 'applied' && !selectedOrder.approval_request_id && (
                       <button
@@ -563,7 +563,7 @@ export const ChangeManagementView: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="p-12 text-center border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl text-gray-400 text-sm">
+            <div className="p-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-400 text-sm">
               변경 통지서를 선택하세요.
             </div>
           )}
@@ -573,8 +573,8 @@ export const ChangeManagementView: React.FC = () => {
       {/* 신규 ECN 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-gray-200 dark:border-gray-800">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <div className="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full p-6 space-y-4 shadow-xl border border-slate-200 dark:border-slate-800">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
               신규 4M 변경 통지서(ECN) 기안
             </h3>
             <form onSubmit={handleCreateOrder} className="space-y-3 text-xs">
@@ -586,7 +586,7 @@ export const ChangeManagementView: React.FC = () => {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="예: CNC 가공 툴 교체 및 절삭유 스펙 변경"
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
 
@@ -596,7 +596,7 @@ export const ChangeManagementView: React.FC = () => {
                   <select
                     value={newCategory}
                     onChange={(e) => setNewCategory(e.target.value as FourMCategory)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   >
                     <option value="man">작업자 (Man)</option>
                     <option value="machine">설비 (Machine)</option>
@@ -610,7 +610,7 @@ export const ChangeManagementView: React.FC = () => {
                   <select
                     value={newRisk}
                     onChange={(e) => setNewRisk(e.target.value as RiskLevel)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   >
                     <option value="low">낮음 (Low)</option>
                     <option value="medium">중간 (Medium)</option>
@@ -628,7 +628,7 @@ export const ChangeManagementView: React.FC = () => {
                   value={newReason}
                   onChange={(e) => setNewReason(e.target.value)}
                   placeholder="원가 절감, 품질 개선, 부품 단종 등 변경 사유 입력"
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
 
@@ -640,7 +640,7 @@ export const ChangeManagementView: React.FC = () => {
                     value={newBefore}
                     onChange={(e) => setNewBefore(e.target.value)}
                     placeholder="기존 부품 번호, 기존 절삭유 모델 등"
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
                 <div>
@@ -650,7 +650,7 @@ export const ChangeManagementView: React.FC = () => {
                     value={newAfter}
                     onChange={(e) => setNewAfter(e.target.value)}
                     placeholder="신규 부품 사양, 개선된 가공 속도 등"
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
               </div>
@@ -662,7 +662,7 @@ export const ChangeManagementView: React.FC = () => {
                     type="date"
                     value={newEffectiveDate}
                     onChange={(e) => setNewEffectiveDate(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
                 <div>
@@ -671,7 +671,7 @@ export const ChangeManagementView: React.FC = () => {
                     type="text"
                     value={newRequesterName}
                     onChange={(e) => setNewRequesterName(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
               </div>
@@ -680,7 +680,7 @@ export const ChangeManagementView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-50"
                 >
                   취소
                 </button>
@@ -700,11 +700,11 @@ export const ChangeManagementView: React.FC = () => {
       {/* 부서 영향도 평가 모달 */}
       {showEvaluationModal && selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl border border-gray-200 dark:border-gray-800">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <div className="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200 dark:border-slate-800">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
               부서별 영향도 평가 및 승인 의견
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-slate-500">
               대상: {selectedOrder.change_number} - {selectedOrder.title}
             </p>
             <form onSubmit={handleCreateEvaluation} className="space-y-3 text-xs">
@@ -714,7 +714,7 @@ export const ChangeManagementView: React.FC = () => {
                   <select
                     value={evalRole}
                     onChange={(e) => setEvalRole(e.target.value as EvaluatorRole)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   >
                     <option value="quality">품질관리 (Quality)</option>
                     <option value="production">생산운영 (Production)</option>
@@ -730,7 +730,7 @@ export const ChangeManagementView: React.FC = () => {
                     required
                     value={evalName}
                     onChange={(e) => setEvalName(e.target.value)}
-                    className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                    className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                   />
                 </div>
               </div>
@@ -743,7 +743,7 @@ export const ChangeManagementView: React.FC = () => {
                   value={evalImpact}
                   onChange={(e) => setEvalImpact(e.target.value)}
                   placeholder="품질 신뢰성, 공정 공수, 안전 위해성, 재고 폐기 영향 등 상세 기록"
-                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:border-gray-700"
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-slate-800 dark:border-slate-700"
                 />
               </div>
 
@@ -775,7 +775,7 @@ export const ChangeManagementView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowEvaluationModal(false)}
-                  className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-lg text-slate-600 hover:bg-slate-50"
                 >
                   취소
                 </button>

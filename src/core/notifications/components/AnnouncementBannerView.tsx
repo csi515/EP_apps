@@ -99,24 +99,24 @@ export const AnnouncementBannerView: React.FC<AnnouncementBannerViewProps> = ({
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-indigo-600" />
-                <h3 className="font-bold text-gray-900 text-base">사업장 주요 공지</h3>
+                <h3 className="font-bold text-slate-900 text-base">사업장 주요 공지</h3>
               </div>
               <button
                 onClick={() => handleDismissPopup(popupList[0].id)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div>
-              <div className="font-bold text-gray-900 text-lg mb-1">{popupList[0].title}</div>
-              <div className="text-sm text-gray-600 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">
+              <div className="font-bold text-slate-900 text-lg mb-1">{popupList[0].title}</div>
+              <div className="text-sm text-slate-600 whitespace-pre-line leading-relaxed max-h-60 overflow-y-auto">
                 {popupList[0].content}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t text-xs text-gray-500">
+            <div className="flex items-center justify-between pt-2 border-t text-xs text-slate-500">
               <span>게시 기간: {popupList[0].startDate} ~ {popupList[0].endDate}</span>
               <button
                 onClick={() => handleDismissPopup(popupList[0].id)}

@@ -66,15 +66,15 @@ export const SpaceTurnaroundView: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-6 text-gray-500">공간 정비 현황을 불러오는 중...</div>;
+    return <div className="p-6 text-slate-500">공간 정비 현황을 불러오는 중...</div>;
   }
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">공간 턴어라운드 및 정비 버퍼 보드</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">공간 턴어라운드 및 정비 버퍼 보드</h1>
+          <p className="text-sm text-slate-500 mt-1">
             예약 종료 후 15분 청소/정비 버퍼를 확보하여 룸 간 예약 충돌을 방지하고 정비 완료를 확인합니다.
           </p>
         </div>
@@ -82,7 +82,7 @@ export const SpaceTurnaroundView: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {rooms.length === 0 ? (
-          <div className="col-span-full bg-white p-12 text-center rounded-2xl border border-gray-200 text-gray-400">
+          <div className="col-span-full bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-400">
             현재 등록된 공간 턴어라운드 작업이 없습니다.
           </div>
         ) : (
@@ -91,19 +91,19 @@ export const SpaceTurnaroundView: React.FC = () => {
             return (
               <div
                 key={room.id}
-                className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition space-y-3"
+                className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-3"
               >
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-gray-900">{room.room_name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">{room.room_name}</h3>
                   <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${badge.color}`}>
                     {badge.label}
                   </span>
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-xl text-xs space-y-1 text-gray-600">
+                <div className="bg-slate-50 p-3 rounded-xl text-xs space-y-1 text-slate-600">
                   <div className="flex justify-between">
                     <span>이용 종료 예정:</span>
-                    <strong className="text-gray-900">{new Date(room.service_end_at).toLocaleTimeString()}</strong>
+                    <strong className="text-slate-900">{new Date(room.service_end_at).toLocaleTimeString()}</strong>
                   </div>
                   <div className="flex justify-between text-indigo-600 font-medium">
                     <span>정비 버퍼 만료 (+{room.buffer_minutes}분):</span>
@@ -112,7 +112,7 @@ export const SpaceTurnaroundView: React.FC = () => {
                 </div>
 
                 {room.status === 'cleaning_in_progress' && room.checklist?.length > 0 ? (
-                  <ul className="space-y-1 text-xs text-gray-700">
+                  <ul className="space-y-1 text-xs text-slate-700">
                     {room.checklist.map((item) => (
                       <li key={item.id}>
                         <label className="inline-flex min-h-11 items-center gap-2">
@@ -140,7 +140,7 @@ export const SpaceTurnaroundView: React.FC = () => {
                   </ul>
                 ) : null}
 
-                <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+                <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                   {room.status === 'in_service' && (
                     <button
                       onClick={() => handleAction(room, 'checkout')}

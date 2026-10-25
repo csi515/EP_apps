@@ -59,7 +59,7 @@ export const LearningJournalFeedView: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-6 text-gray-500">수업 일지 피드를 불러오는 중...</div>;
+    return <div className="p-6 text-slate-500">수업 일지 피드를 불러오는 중...</div>;
   }
 
   return (
@@ -67,8 +67,8 @@ export const LearningJournalFeedView: React.FC = () => {
       {/* 상단 헤더 */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">수업 일지 및 성장 알림장 피드</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">수업 일지 및 성장 알림장 피드</h1>
+          <p className="text-sm text-slate-500 mt-1">
             원생별 수업 진도, 연습 과제, 칭찬 코멘트를 작성하고 학부모 포털 피드로 실시간 소통합니다.
           </p>
         </div>
@@ -82,15 +82,15 @@ export const LearningJournalFeedView: React.FC = () => {
 
       {/* 요약 통계 3대 카드 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500">누적 작성 일지</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">{stats.totalJournals}건</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div className="text-xs font-semibold text-slate-500">누적 작성 일지</div>
+          <div className="text-2xl font-bold text-slate-900 mt-1">{stats.totalJournals}건</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold text-emerald-600">학부모 확인 완료</div>
           <div className="text-2xl font-bold text-emerald-700 mt-1">{stats.acknowledgedCount}건</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold text-indigo-600">학부모 피드 확인율</div>
           <div className="text-2xl font-bold text-indigo-700 mt-1">{stats.acknowledgementRate}%</div>
         </div>
@@ -99,19 +99,19 @@ export const LearningJournalFeedView: React.FC = () => {
       {/* 피드 목록 */}
       <div className="space-y-4">
         {journals.length === 0 ? (
-          <div className="bg-white p-12 text-center rounded-2xl border border-gray-200 text-gray-400">
+          <div className="bg-white p-12 text-center rounded-2xl border border-slate-200 text-slate-400">
             아직 등록된 수업 일지가 없습니다. 첫 번째 일지를 작성해보세요!
           </div>
         ) : (
           journals.map((journal) => (
             <div
               key={journal.id}
-              className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition space-y-3"
+              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition space-y-3"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-sm font-bold text-gray-900">{journal.title}</span>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-mono">
+                  <span className="text-sm font-bold text-slate-900">{journal.title}</span>
+                  <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">
                     {journal.lesson_date}
                   </span>
                 </div>
@@ -128,7 +128,7 @@ export const LearningJournalFeedView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
                 {journal.content}
               </div>
 
@@ -147,11 +147,11 @@ export const LearningJournalFeedView: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">새 수업 일지 작성</h3>
+            <h3 className="text-lg font-bold text-slate-900">새 수업 일지 작성</h3>
             <form onSubmit={handleCreate} className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">원생 이름</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">원생 이름</label>
                   <input
                     type="text"
                     required
@@ -162,7 +162,7 @@ export const LearningJournalFeedView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">수업 일자</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">수업 일자</label>
                   <input
                     type="date"
                     required
@@ -174,7 +174,7 @@ export const LearningJournalFeedView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">일지 제목</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">일지 제목</label>
                 <input
                   type="text"
                   required
@@ -186,7 +186,7 @@ export const LearningJournalFeedView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">수업 내용 및 칭찬 피드백</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">수업 내용 및 칭찬 피드백</label>
                 <textarea
                   required
                   rows={4}
@@ -198,7 +198,7 @@ export const LearningJournalFeedView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">보충 연습 과제 (선택)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">보충 연습 과제 (선택)</label>
                 <input
                   type="text"
                   value={homework}
@@ -212,7 +212,7 @@ export const LearningJournalFeedView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium"
+                  className="px-4 py-2 border rounded-lg text-slate-700 hover:bg-slate-50 text-sm font-medium"
                 >
                   취소
                 </button>

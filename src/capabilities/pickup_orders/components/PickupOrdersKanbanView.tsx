@@ -111,8 +111,8 @@ const STAGE_CONFIG: Record<
   },
   CANCELLED: {
     label: '주문 취소',
-    color: 'text-gray-500 border-gray-200',
-    badgeBg: 'bg-gray-100 text-gray-700',
+    color: 'text-slate-500 border-slate-200',
+    badgeBg: 'bg-slate-100 text-slate-700',
   },
 };
 
@@ -147,9 +147,9 @@ export const PickupOrdersKanbanView: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <PackageCheck className="w-7 h-7 text-indigo-600" />
-            <h1 className="text-2xl font-bold text-gray-900">사전 예약 픽업 주문 관리</h1>
+            <h1 className="text-2xl font-bold text-slate-900">사전 예약 픽업 주문 관리</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             고객 수령 희망 일시에 맞춘 4단계 주문제작 및 픽업 안내 칸반 파이프라인
           </p>
         </div>
@@ -180,17 +180,17 @@ export const PickupOrdersKanbanView: React.FC = () => {
           const config = STAGE_CONFIG[stage];
 
           return (
-            <div key={stage} className="bg-gray-50 rounded-xl p-4 flex flex-col h-[650px] border">
+            <div key={stage} className="bg-slate-50 rounded-xl p-4 flex flex-col h-[650px] border">
               <div className="flex items-center justify-between pb-3 border-b mb-3">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${config.badgeBg}`}>
                   {config.label}
                 </span>
-                <span className="text-xs font-bold text-gray-500">{stageOrders.length}건</span>
+                <span className="text-xs font-bold text-slate-500">{stageOrders.length}건</span>
               </div>
 
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {stageOrders.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400 text-sm">해당 주문 없음</div>
+                  <div className="text-center py-12 text-slate-400 text-sm">해당 주문 없음</div>
                 ) : (
                   stageOrders.map((order) => {
                     const pickupTimeStr = order.pickupDateTime.replace('T', ' ').slice(5, 16);
@@ -201,28 +201,28 @@ export const PickupOrdersKanbanView: React.FC = () => {
                         className="bg-white p-3.5 rounded-lg border shadow-sm space-y-2 hover:border-indigo-300 transition-colors"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-medium text-gray-500">
+                          <span className="text-xs font-mono font-medium text-slate-500">
                             {order.orderNumber}
                           </span>
-                          <span className="text-xs font-bold text-gray-900">
+                          <span className="text-xs font-bold text-slate-900">
                             {order.totalAmount.toLocaleString()}원
                           </span>
                         </div>
 
                         <div>
-                          <div className="font-semibold text-gray-900 text-sm">{order.customerName}</div>
-                          <div className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                          <div className="font-semibold text-slate-900 text-sm">{order.customerName}</div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                             <Phone className="w-3 h-3" />
                             {order.customerPhone}
                           </div>
                         </div>
 
-                        <div className="p-2 bg-gray-50 rounded text-xs space-y-1">
+                        <div className="p-2 bg-slate-50 rounded text-xs space-y-1">
                           {order.items.map((it, idx) => (
-                            <div key={idx} className="font-medium text-gray-800">
+                            <div key={idx} className="font-medium text-slate-800">
                               {it.name} × {it.quantity}개
                               {it.options && Object.keys(it.options).length > 0 && (
-                                <div className="text-gray-500 font-normal pl-2">
+                                <div className="text-slate-500 font-normal pl-2">
                                   {Object.entries(it.options).map(([k, v]) => `${k}: ${v}`).join(', ')}
                                 </div>
                               )}

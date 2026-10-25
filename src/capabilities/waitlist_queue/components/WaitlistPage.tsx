@@ -11,7 +11,7 @@ const STATUS_BADGES: Record<WaitlistStatus, { label: string; color: string }> = 
   WAITING: { label: '순번 대기 중', color: 'bg-blue-50 text-blue-700 border-blue-200' },
   OFFERED: { label: '자리 제안 발송됨', color: 'bg-amber-50 text-amber-700 border-amber-200' },
   CONVERTED: { label: '예약 확정 완료', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  EXPIRED: { label: '제안 시간 만료', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+  EXPIRED: { label: '제안 시간 만료', color: 'bg-slate-100 text-slate-700 border-slate-200' },
 };
 
 export const WaitlistPage: React.FC = () => {
@@ -124,11 +124,11 @@ export const WaitlistPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <span>⏳</span>
             <span>시간표/수업 마감 취소 대기열 관리</span>
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             사업주 맞춤 매장 도구: 수업 마감 시 취소 공석을 선착순(FIFO) 자동 제안 및 공석 손실 방지
           </p>
         </div>
@@ -141,38 +141,38 @@ export const WaitlistPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-gray-500 text-sm">대기열 목록을 불러오는 중...</div>
+          <div className="p-8 text-center text-slate-500 text-sm">대기열 목록을 불러오는 중...</div>
         ) : entries.length === 0 ? (
           <div className="p-12 text-center">
             <span className="text-4xl block mb-2">🎟️</span>
-            <h3 className="text-base font-semibold text-gray-800">현재 대기 중인 고객이 없습니다.</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-base font-semibold text-slate-800">현재 대기 중인 고객이 없습니다.</h3>
+            <p className="text-sm text-slate-500 mt-1">
               마감된 시간표에 취소 공석이 발생하면 선착순 대기자에게 우선 제안할 수 있습니다.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
                     순번
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
                     상태
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
                     대상 시간표/슬롯 ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
                     고객 식별번호
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase">
                     제안 발송 & 만료 시각
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase">
+                  <th className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase">
                     관리 액션
                   </th>
                 </tr>
@@ -184,9 +184,9 @@ export const WaitlistPage: React.FC = () => {
                     entry.status === 'OFFERED' && isOfferExpired(entry.offered_at, 30);
 
                   return (
-                    <tr key={entry.id} className="hover:bg-gray-50 transition">
+                    <tr key={entry.id} className="hover:bg-slate-50 transition">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-sm font-bold text-slate-900">
                           #{entry.queue_order}
                         </span>
                       </td>
@@ -202,13 +202,13 @@ export const WaitlistPage: React.FC = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                         {entry.booking_slot_id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-mono text-xs">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-mono text-xs">
                         {entry.customer_id}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
                         {entry.offered_at ? (
                           <div>
                             <div>
@@ -219,7 +219,7 @@ export const WaitlistPage: React.FC = () => {
                               })}
                             </div>
                             {entry.expires_at && (
-                              <div className="text-gray-400">
+                              <div className="text-slate-400">
                                 만료:{' '}
                                 {new Date(entry.expires_at).toLocaleTimeString('ko-KR', {
                                   hour: '2-digit',
@@ -229,7 +229,7 @@ export const WaitlistPage: React.FC = () => {
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-400">미발송</span>
+                          <span className="text-slate-400">미발송</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right whitespace-nowrap space-x-2">
@@ -251,7 +251,7 @@ export const WaitlistPage: React.FC = () => {
                             </button>
                             <button
                               onClick={() => handleExpireOffer(entry)}
-                              className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded border border-gray-200 transition"
+                              className="px-2.5 py-1 text-xs font-medium text-slate-600 bg-slate-50 hover:bg-slate-100 rounded border border-slate-200 transition"
                             >
                               만료 처리
                             </button>
@@ -271,10 +271,10 @@ export const WaitlistPage: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">대기자 수동 등록</h3>
+            <h3 className="text-lg font-bold text-slate-900">대기자 수동 등록</h3>
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   시간표 슬롯 식별자 (Slot ID)
                 </label>
                 <input
@@ -283,12 +283,12 @@ export const WaitlistPage: React.FC = () => {
                   placeholder="예: slot-pilates-20261019-10"
                   value={slotId}
                   onChange={(e) => setSlotId(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 mb-1">
                   고객 ID / 회원 번호
                 </label>
                 <input
@@ -297,27 +297,27 @@ export const WaitlistPage: React.FC = () => {
                   placeholder="고객 UUID 또는 회원 ID"
                   value={customerId}
                   onChange={(e) => setCustomerId(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">대기 순번</label>
+                <label className="block text-xs font-medium text-slate-700 mb-1">대기 순번</label>
                 <input
                   type="number"
                   min="1"
                   required
                   value={queueOrder}
                   onChange={(e) => setQueueOrder(Number(e.target.value))}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50"
                 >
                   취소
                 </button>

@@ -150,24 +150,24 @@ export const TreatmentPortfolioView: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-pink-100 text-pink-700 rounded-lg">
               <Sparkles className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-slate-900">
               시술 스타일북 & 객단가 업셀링 갤러리
             </h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             태블릿 화면으로 최신 룩북을 제시하고, 영양·파츠 등 프리미엄 옵션 추가를 유도하여 매장 객단가를 높입니다.
           </p>
         </div>
       </div>
 
       {/* 카테고리 필터 바 */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex flex-wrap gap-1.5">
           {[
             { id: 'ALL', label: '전체 스타일' },
@@ -182,7 +182,7 @@ export const TreatmentPortfolioView: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                 selectedCategory === cat.id
                   ? 'bg-pink-600 text-white shadow-xs'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
               }`}
             >
               {cat.label}
@@ -191,13 +191,13 @@ export const TreatmentPortfolioView: React.FC = () => {
         </div>
 
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="스타일명, 디자이너 검색..."
-            className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
+            className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-pink-500"
           />
         </div>
       </div>
@@ -215,27 +215,27 @@ export const TreatmentPortfolioView: React.FC = () => {
                 className={`bg-white rounded-xl border p-4 cursor-pointer transition shadow-sm flex flex-col justify-between ${
                   isSelected
                     ? 'border-pink-500 ring-2 ring-pink-200 bg-pink-50/20'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
                 <div>
-                  <div className="w-full h-36 bg-gradient-to-br from-pink-100 to-indigo-50 rounded-lg flex items-center justify-center text-gray-400 mb-3">
+                  <div className="w-full h-36 bg-gradient-to-br from-pink-100 to-indigo-50 rounded-lg flex items-center justify-center text-slate-400 mb-3">
                     <ImageIcon className="w-8 h-8 opacity-40" />
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-pink-600 font-semibold">{item.designerName}</span>
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-slate-400 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       약 {item.estimatedMinutes}분
                     </span>
                   </div>
-                  <h3 className="font-bold text-sm text-gray-900 mt-1">{item.title}</h3>
-                  <p className="text-xs text-gray-500 mt-1 line-clamp-2">{item.description}</p>
+                  <h3 className="font-bold text-sm text-slate-900 mt-1">{item.title}</h3>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{item.description}</p>
                 </div>
 
                 <div className="pt-3 border-t mt-3 flex items-center justify-between">
-                  <span className="text-xs text-gray-400">기본 시술가</span>
-                  <span className="text-sm font-bold text-gray-900">
+                  <span className="text-xs text-slate-400">기본 시술가</span>
+                  <span className="text-sm font-bold text-slate-900">
                     {item.basePrice.toLocaleString()}원
                   </span>
                 </div>
@@ -245,13 +245,13 @@ export const TreatmentPortfolioView: React.FC = () => {
         </div>
 
         {/* 우측 1칸: 고객 상담 & 객단가 업셀링 견적 패널 */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 space-y-5">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-5">
           <div className="border-b pb-3">
             <span className="text-xs font-semibold text-pink-600">현장 실시간 상담 견적</span>
-            <h2 className="text-lg font-bold text-gray-900 mt-0.5">{selectedStyle.title}</h2>
-            <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+            <h2 className="text-lg font-bold text-slate-900 mt-0.5">{selectedStyle.title}</h2>
+            <div className="flex items-center justify-between text-xs text-slate-500 mt-2">
               <span>기본 시술가</span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-slate-900">
                 {selectedStyle.basePrice.toLocaleString()}원
               </span>
             </div>
@@ -259,13 +259,13 @@ export const TreatmentPortfolioView: React.FC = () => {
 
           {/* 추천 업셀링 옵션 체크박스 */}
           <div>
-            <h4 className="text-xs font-bold text-gray-800 mb-2.5 flex items-center gap-1">
+            <h4 className="text-xs font-bold text-slate-800 mb-2.5 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-pink-500" />
               <span>추천 프리미엄 케어 (객단가 UP)</span>
             </h4>
 
             {selectedStyle.upsellOptions.length === 0 ? (
-              <p className="text-xs text-gray-400">등록된 추가 옵션이 없습니다.</p>
+              <p className="text-xs text-slate-400">등록된 추가 옵션이 없습니다.</p>
             ) : (
               <div className="space-y-2">
                 {selectedStyle.upsellOptions.map((opt) => {
@@ -276,7 +276,7 @@ export const TreatmentPortfolioView: React.FC = () => {
                       className={`flex items-start gap-2.5 p-3 rounded-lg border text-xs cursor-pointer transition ${
                         isChecked
                           ? 'border-pink-500 bg-pink-50/50'
-                          : 'border-gray-200 hover:bg-gray-50'
+                          : 'border-slate-200 hover:bg-slate-50'
                       }`}
                     >
                       <input
@@ -286,8 +286,8 @@ export const TreatmentPortfolioView: React.FC = () => {
                         className="mt-0.5 text-pink-600 rounded"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">{opt.name}</div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">
+                        <div className="font-medium text-slate-900">{opt.name}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">
                           +{opt.additionalMinutes}분 소요
                         </div>
                       </div>
@@ -303,20 +303,20 @@ export const TreatmentPortfolioView: React.FC = () => {
 
           {/* 최종 견적 총액 & 업셀링 마진 요약 */}
           <div className="pt-3 border-t space-y-2">
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>추가 옵션 합계</span>
               <span className="font-semibold text-pink-600">
                 +{quotation.totalUpsellAmount.toLocaleString()}원
               </span>
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-slate-500">
               <span>총 소요 예상 시간</span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-slate-900">
                 {quotation.totalEstimatedMinutes}분
               </span>
             </div>
             <div className="pt-2 border-t flex items-center justify-between">
-              <span className="text-sm font-bold text-gray-900">최종 상담 견적액</span>
+              <span className="text-sm font-bold text-slate-900">최종 상담 견적액</span>
               <span className="text-xl font-black text-pink-600">
                 {quotation.finalEstimatedPrice.toLocaleString()}원
               </span>

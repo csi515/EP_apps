@@ -157,7 +157,7 @@ export function MobileBottomDock() {
             key={tab.href}
             to={tab.href}
             className={({ isActive }) =>
-              `flex min-h-12 flex-1 flex-col items-center justify-center text-[10px] font-bold transition-colors ${
+              `flex min-h-12 flex-1 flex-col items-center justify-center text-[11px] font-bold tracking-tight transition-colors ${
                 isActive ? `${activeColorClass}` : 'text-slate-400 hover:text-slate-600'
               }`
             }

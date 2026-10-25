@@ -106,7 +106,7 @@ export const LostCardListPage: React.FC = () => {
       case 'RETURNED':
         return <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-800">반납 완료</span>;
       case 'DISCARDED':
-        return <span className="px-2 py-0.5 rounded text-xs bg-gray-200 text-gray-600">폐기</span>;
+        return <span className="px-2 py-0.5 rounded text-xs bg-slate-200 text-slate-600">폐기</span>;
     }
   };
 

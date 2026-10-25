@@ -5,6 +5,9 @@ import {
   hashAccessPin,
   verifyAccessPin,
   validateGrievanceSubmission,
+  generateBlindReceiptToken,
+  sanitizeGrievanceSubmission,
+  getMaskedGrievanceAuthor,
 } from './grievanceEngine';
 
 function run() {
@@ -62,7 +65,24 @@ function run() {
     true
   );
 
-  console.log('grievanceEngine.test.ts: ok');
+  
+  // 익명성 기술 보증 (Blind Tokenization & Zero-Knowledge Sanitization)
+  const token = generateBlindReceiptToken('G-0042', '9876');
+  assert.ok(token.startsWith('TKN-'), '영수증 토큰 형식 확인');
+  assert.equal(token, generateBlindReceiptToken('G-0042', '9876'), '동일 PIN에 대한 일관성 확인');
+  assert.notEqual(token, generateBlindReceiptToken('G-0042', '1234'), '다른 PIN에 대한 고유성 확인');
+
+  const sanitized = sanitizeGrievanceSubmission({
+    ticket_code: 'G-0042',
+    visibility: 'anonymous',
+    author_user_id: 'secret_user_123',
+  });
+  assert.equal(sanitized.author_user_id, null, '익명 제보 시 author_user_id 완벽 격리/제거');
+
+  const masked = getMaskedGrievanceAuthor({ visibility: 'anonymous', author_user_id: null });
+  assert.match(masked, /익명 제보자/, '감사 로그 마스킹 확인');
+
+  console.log('grievanceEngine.test.ts: all tests passed including blind tokenization.');
 }
 
 run();

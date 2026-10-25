@@ -227,15 +227,15 @@ export const RecipeBomManagementView: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-emerald-100 text-emerald-700 rounded-lg">
               <UtensilsCrossed className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-gray-900">식자재 레시피 & 자동 소모 BOM 원가 관리</h1>
+            <h1 className="text-2xl font-bold text-slate-900">식자재 레시피 & 자동 소모 BOM 원가 관리</h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             메뉴별 원재료 배합비(BOM)를 설정하여 주문 시 식자재 재고를 자동 감량하고 원가율·마진율을 실시간 분석합니다.
           </p>
         </div>
@@ -252,22 +252,22 @@ export const RecipeBomManagementView: React.FC = () => {
 
       {/* 상단 메트릭 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 mb-2">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-sm font-medium">BOM 등록 메뉴 수</span>
             <Coffee className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-gray-900">{overallAnalysis.menuCount}개</div>
-          <p className="text-xs text-gray-400 mt-1">원재료 레시피 연결 완료</p>
+          <div className="text-2xl font-bold text-slate-900">{overallAnalysis.menuCount}개</div>
+          <p className="text-xs text-slate-400 mt-1">원재료 레시피 연결 완료</p>
         </div>
 
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div className="flex items-center justify-between text-gray-500 mb-2">
+        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 mb-2">
             <span className="text-sm font-medium">평균 목표 마진율</span>
             <TrendingUp className="w-4 h-4 text-blue-500" />
           </div>
           <div className="text-2xl font-bold text-blue-600">{overallAnalysis.averageMarginRatio}%</div>
-          <p className="text-xs text-gray-400 mt-1">식자재 원가율 {Math.round((100 - overallAnalysis.averageMarginRatio) * 10) / 10}%</p>
+          <p className="text-xs text-slate-400 mt-1">식자재 원가율 {Math.round((100 - overallAnalysis.averageMarginRatio) * 10) / 10}%</p>
         </div>
 
         <div className="bg-white p-5 rounded-xl border border-emerald-200 bg-emerald-50/40 shadow-sm">
@@ -283,15 +283,15 @@ export const RecipeBomManagementView: React.FC = () => {
       {/* 메뉴 선택 및 레시피 상세 그리드 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 좌측: 메뉴 목록 */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="메뉴명 검색..."
-              className="w-full pl-9 pr-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -306,15 +306,15 @@ export const RecipeBomManagementView: React.FC = () => {
                   className={`w-full text-left p-3 rounded-lg border transition ${
                     isSelected
                       ? 'border-emerald-500 bg-emerald-50/60 shadow-xs'
-                      : 'border-gray-100 hover:bg-gray-50'
+                      : 'border-slate-100 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm text-gray-900">{r.menuName}</span>
-                    <span className="text-xs text-gray-400 font-mono">{r.menuCode}</span>
+                    <span className="font-semibold text-sm text-slate-900">{r.menuName}</span>
+                    <span className="text-xs text-slate-400 font-mono">{r.menuCode}</span>
                   </div>
                   <div className="flex items-center justify-between mt-1 text-xs">
-                    <span className="text-gray-500">{r.sellingPrice.toLocaleString()}원</span>
+                    <span className="text-slate-500">{r.sellingPrice.toLocaleString()}원</span>
                     <span className="font-semibold text-emerald-700">
                       마진 {cost.marginRatioPercent}%
                     </span>
@@ -327,23 +327,23 @@ export const RecipeBomManagementView: React.FC = () => {
 
         {/* 우측 2칸: 선택된 메뉴 레시피 BOM 및 원가 분해 */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-4">
               <div>
                 <span className="text-xs font-mono text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
                   {selectedRecipe.menuCode}
                 </span>
-                <h2 className="text-xl font-bold text-gray-900 mt-1">{selectedRecipe.menuName}</h2>
+                <h2 className="text-xl font-bold text-slate-900 mt-1">{selectedRecipe.menuName}</h2>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
-                  <div className="text-xs text-gray-400">판매 가격</div>
-                  <div className="text-lg font-bold text-gray-900">
+                  <div className="text-xs text-slate-400">판매 가격</div>
+                  <div className="text-lg font-bold text-slate-900">
                     {selectedRecipe.sellingPrice.toLocaleString()}원
                   </div>
                 </div>
                 <div className="text-right border-l pl-3">
-                  <div className="text-xs text-gray-400">투입 원가 (원가율)</div>
+                  <div className="text-xs text-slate-400">투입 원가 (원가율)</div>
                   <div className="text-lg font-bold text-emerald-600">
                     {selectedCost.totalCostPrice.toLocaleString()}원 ({selectedCost.costRatioPercent}%)
                   </div>
@@ -353,13 +353,13 @@ export const RecipeBomManagementView: React.FC = () => {
 
             {/* 식자재 투입 목록 (BOM 테이블) */}
             <div>
-              <h3 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-1.5">
+              <h3 className="text-sm font-bold text-slate-800 mb-2 flex items-center gap-1.5">
                 <Layers className="w-4 h-4 text-emerald-600" />
                 <span>구성 원자재 레시피 (BOM)</span>
               </h3>
               <div className="overflow-x-auto border rounded-lg">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-gray-50 text-gray-500 uppercase border-b">
+                  <thead className="bg-slate-50 text-slate-500 uppercase border-b">
                     <tr>
                       <th className="py-2 px-3">원재료명</th>
                       <th className="py-2 px-3 text-right">1회 투입량</th>
@@ -377,14 +377,14 @@ export const RecipeBomManagementView: React.FC = () => {
                       const isPriceChanged = updatedPrices[ing.inventoryItemId] !== undefined;
 
                       return (
-                        <tr key={ing.inventoryItemId} className="hover:bg-gray-50">
-                          <td className="py-2.5 px-3 font-medium text-gray-900">
+                        <tr key={ing.inventoryItemId} className="hover:bg-slate-50">
+                          <td className="py-2.5 px-3 font-medium text-slate-900">
                             {ing.ingredientName}
                           </td>
-                          <td className="py-2.5 px-3 text-right text-gray-700">
+                          <td className="py-2.5 px-3 text-right text-slate-700">
                             {ing.requiredQuantity} {ing.unit}
                           </td>
-                          <td className="py-2.5 px-3 text-right text-gray-500">
+                          <td className="py-2.5 px-3 text-right text-slate-500">
                             <div className="inline-flex items-center gap-1">
                               <input
                                 type="number"
@@ -396,13 +396,13 @@ export const RecipeBomManagementView: React.FC = () => {
                                 className={`w-18 px-1.5 py-0.5 text-right font-mono text-xs border rounded ${
                                   isPriceChanged
                                     ? 'border-amber-400 bg-amber-50 text-amber-900 font-bold'
-                                    : 'border-gray-200'
+                                    : 'border-slate-200'
                                 }`}
                               />
                               <span>원/{ing.unit}</span>
                             </div>
                           </td>
-                          <td className="py-2.5 px-3 text-right font-semibold text-gray-900">
+                          <td className="py-2.5 px-3 text-right font-semibold text-slate-900">
                             {ingCost.toLocaleString()}원
                           </td>
                         </tr>
@@ -445,8 +445,8 @@ export const RecipeBomManagementView: React.FC = () => {
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100">
-                  <div className="text-[10px] text-gray-500">예상 제조원가</div>
-                  <div className="text-sm font-black text-gray-900">
+                  <div className="text-[10px] text-slate-500">예상 제조원가</div>
+                  <div className="text-sm font-black text-slate-900">
                     {priceSimulation.updatedCostPrice.toLocaleString()}원
                   </div>
                   <div className="text-[10px] text-amber-700 font-semibold mt-0.5">
@@ -457,25 +457,25 @@ export const RecipeBomManagementView: React.FC = () => {
                 </div>
 
                 <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100">
-                  <div className="text-[10px] text-gray-500">예상 마진율</div>
+                  <div className="text-[10px] text-slate-500">예상 마진율</div>
                   <div className="text-sm font-black text-emerald-700">
                     {priceSimulation.updatedMarginRatioPercent}%
                   </div>
-                  <div className="text-[10px] text-gray-500 mt-0.5">
+                  <div className="text-[10px] text-slate-500 mt-0.5">
                     기존 대비 {priceSimulation.deltaMarginRatioPercent >= 0 ? '+' : ''}
                     {priceSimulation.deltaMarginRatioPercent}%p
                   </div>
                 </div>
 
                 <div className="bg-white/90 p-2.5 rounded-lg border border-amber-100 col-span-2">
-                  <div className="text-[10px] text-gray-500">
+                  <div className="text-[10px] text-slate-500">
                     목표 마진율({targetMarginRatio}%) 달성 권장 판매가
                   </div>
                   <div className="flex items-baseline gap-2 mt-0.5">
                     <span className="text-base font-black text-amber-900">
                       {priceSimulation.suggestedSellingPrice.toLocaleString()}원
                     </span>
-                    <span className="text-[10px] text-gray-500">
+                    <span className="text-[10px] text-slate-500">
                       (현재가 대비 +{(priceSimulation.suggestedSellingPrice - selectedRecipe.sellingPrice).toLocaleString()}원 조정 필요)
                     </span>
                   </div>
@@ -536,7 +536,7 @@ export const RecipeBomManagementView: React.FC = () => {
                     <div className="font-black text-emerald-700 text-sm mt-0.5">
                       소모: -{item.requiredQuantity.toLocaleString()} {item.unit}
                     </div>
-                    <div className="text-[11px] text-gray-500 mt-0.5 flex justify-between">
+                    <div className="text-[11px] text-slate-500 mt-0.5 flex justify-between">
                       <span>잔여재고: {item.remainingStock.toLocaleString()} {item.unit}</span>
                       {item.isShortage && (
                         <span className="font-bold text-rose-600">

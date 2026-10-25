@@ -138,6 +138,8 @@ const CAPABILITY_ROUTE_PATHS = [
   "lab-notebook-signatures",
   "vehicle-mileage-logs",
   "safety-work-permits",
+  "baby-food",
+  "baby-food/settlement",
 ] as const;
 
 function runRoutingTests() {
@@ -172,6 +174,8 @@ function runRoutingTests() {
     // /workspace/:tab → IndustryAppRouter 탭
     "workspace/dispatch",
     "workspace/waitlist",
+    "workspace/baby-food",
+    "workspace/baby-food/settlement",
   ];
 
   // 1. 모든 Capability 번들의 리소스 list 경로가 CAPABILITY_ROUTE_PATHS 또는 DEDICATED_ROUTES에 의해 처리 가능한지 검증

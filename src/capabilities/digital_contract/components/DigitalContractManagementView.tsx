@@ -243,17 +243,17 @@ export const DigitalContractManagementView: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-blue-100 text-blue-700 rounded-lg">
               <FileCheck2 className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-slate-900">
               현장 전자계약 & 공정위 환불 규정 관리
             </h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             공정거래위원회 표준약관 기반 위약금 자동산출 및 전자서명 원본 5년 법적 증빙 보관
           </p>
         </div>
@@ -322,19 +322,19 @@ export const DigitalContractManagementView: React.FC = () => {
 
       {/* 상단 4대 통계 카드 */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
-          <span className="text-xs text-gray-500 font-medium">총 계약 체결</span>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalContractCount}건</p>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <span className="text-xs text-slate-500 font-medium">총 계약 체결</span>
+          <p className="text-2xl font-bold text-slate-900 mt-1">{summary.totalContractCount}건</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs text-emerald-600 font-medium">진행 중 (ACTIVE/SIGNED)</span>
           <p className="text-2xl font-bold text-emerald-700 mt-1">{summary.activeCount}건</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs text-amber-600 font-medium">기간 만료 (EXPIRED)</span>
           <p className="text-2xl font-bold text-amber-700 mt-1">{summary.expiredCount}건</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs text-blue-600 font-medium">총 체결 계약액</span>
           <p className="text-2xl font-bold text-blue-700 mt-1">
             {summary.totalContractValue.toLocaleString()}원
@@ -346,8 +346,8 @@ export const DigitalContractManagementView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 좌측 목록 */}
         <div className="lg:col-span-5 space-y-3">
-          <div className="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-gray-200">
-            <Search className="w-4 h-4 text-gray-400 ml-1" />
+          <div className="flex items-center gap-2 bg-white p-2.5 rounded-xl border border-slate-200">
+            <Search className="w-4 h-4 text-slate-400 ml-1" />
             <input
               type="text"
               placeholder="고객명, 계약번호 검색"
@@ -382,11 +382,11 @@ export const DigitalContractManagementView: React.FC = () => {
                   className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
                     isSelected
                       ? 'border-blue-600 bg-blue-50/50 shadow-xs'
-                      : 'border-gray-200 bg-white hover:border-gray-300'
+                      : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-mono text-gray-400 font-medium">{c.contractNumber}</span>
+                    <span className="font-mono text-slate-400 font-medium">{c.contractNumber}</span>
                     <span
                       className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
                         c.status === 'SIGNED' || c.status === 'ACTIVE'
@@ -395,16 +395,16 @@ export const DigitalContractManagementView: React.FC = () => {
                           ? 'bg-amber-100 text-amber-800'
                           : c.status === 'TERMINATED'
                           ? 'bg-rose-100 text-rose-800'
-                          : 'bg-gray-100 text-gray-700'
+                          : 'bg-slate-100 text-slate-700'
                       }`}
                     >
                       {c.status}
                     </span>
                   </div>
-                  <h4 className="font-bold text-gray-900 text-sm mt-1">{c.title}</h4>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mt-2 pt-2 border-t border-gray-100">
+                  <h4 className="font-bold text-slate-900 text-sm mt-1">{c.title}</h4>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
                     <span>{c.customerName}</span>
-                    <span className="font-bold text-gray-900">
+                    <span className="font-bold text-slate-900">
                       {c.totalContractAmount.toLocaleString()}원
                     </span>
                   </div>
@@ -415,16 +415,16 @@ export const DigitalContractManagementView: React.FC = () => {
         </div>
 
         {/* 우측 계약 상세 & 공정위 환불 산출기 & 원본 증빙 */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-gray-200 p-6 space-y-6 shadow-xs">
+        <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 space-y-6 shadow-xs">
           {selectedContract ? (
             <>
               {/* 상단 타이틀 & 상태 액션 */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                 <div>
                   <span className="text-xs font-mono font-semibold text-blue-600">
                     {selectedContract.contractNumber}
                   </span>
-                  <h2 className="text-lg font-bold text-gray-900 mt-0.5">{selectedContract.title}</h2>
+                  <h2 className="text-lg font-bold text-slate-900 mt-0.5">{selectedContract.title}</h2>
                 </div>
 
                 {/* 상태 전이 액션 버튼들 */}

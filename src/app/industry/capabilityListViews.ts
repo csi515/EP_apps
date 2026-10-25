@@ -68,4 +68,6 @@ export const CAPABILITY_LIST_VIEWS: Record<string, CapabilityListView> = {
   'lab-notebook-signatures': view('electronic_lab_notebook', 'ElectronicLabNotebookManagementView', () => import('@/capabilities/electronic_lab_notebook')),
   'vehicle-mileage-logs': view('vehicle_mileage_log', 'VehicleMileageLogManagementView', () => import('@/capabilities/vehicle_mileage_log')),
   'safety-work-permits': view('safety_work_permit', 'SafetyWorkPermitManagementView', () => import('@/capabilities/safety_work_permit')),
+  'baby-food': view('baby_food_coop', 'BabyFoodCoopManagementView', () => import('@/capabilities/baby_food_coop')),
+  'baby-food/settlement': view('baby_food_coop', 'BabyFoodCoopManagementView', () => import('@/capabilities/baby_food_coop')),
 };

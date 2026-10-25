@@ -4,7 +4,11 @@ import { HelpCircle, Plus, ShieldCheck, MessageSquare } from 'lucide-react';
 import {
   generateTicketCode,
   hashAccessPin,
+  verifyAccessPin,
   validateGrievanceSubmission,
+  generateBlindReceiptToken,
+  sanitizeGrievanceSubmission,
+  getMaskedGrievanceAuthor,
   type AnonymousGrievanceRecord,
   type GrievanceCategory,
   type GrievanceVisibility,
@@ -68,6 +72,14 @@ export const GrievanceListPage: React.FC = () => {
   const [selectedTicket, setSelectedTicket] = useState<AnonymousGrievanceRecord | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
 
+  const [issuedReceipt, setIssuedReceipt] = useState<{ ticketCode: string; token: string } | null>(null);
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+  const [inquiryTicketCode, setInquiryTicketCode] = useState('');
+  const [inquiryPin, setInquiryPin] = useState('');
+  const [inquiryResult, setInquiryResult] = useState<AnonymousGrievanceRecord | null>(null);
+  const [inquiryError, setInquiryError] = useState('');
+
+
   const { query } = useList<AnonymousGrievanceRecord>({
     resource: 'anonymous_grievances',
     meta: { schema: 'core' },
@@ -118,8 +130,11 @@ export const GrievanceListPage: React.FC = () => {
       values.access_pin_hash = hashAccessPin(pin.trim());
     }
 
+    const sanitizedValues = sanitizeGrievanceSubmission(values);
+    const receiptToken = visibility === 'anonymous' ? generateBlindReceiptToken(ticketCode, pin.trim()) : '';
+
     createRecord(
-      { resource: 'anonymous_grievances', values, meta: { schema: 'core' } },
+      { resource: 'anonymous_grievances', values: sanitizedValues, meta: { schema: 'core' } },
       {
         onSuccess: () => {
           showToast(
@@ -129,6 +144,9 @@ export const GrievanceListPage: React.FC = () => {
             'success'
           );
           setIsModalOpen(false);
+          if (visibility === 'anonymous') {
+            setIssuedReceipt({ ticketCode, token: receiptToken });
+          }
           setTitle('');
           setContent('');
           setPin('');
@@ -140,6 +158,31 @@ export const GrievanceListPage: React.FC = () => {
         },
       }
     );
+  };
+
+  
+  const handleInquirySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setInquiryError('');
+    setInquiryResult(null);
+
+    const found = records.find((r) => r.ticket_code === inquiryTicketCode.trim());
+    if (!found) {
+      setInquiryError('해당 접수코드의 제보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (found.visibility === 'named') {
+      setInquiryResult(found);
+      return;
+    }
+
+    if (!found.access_pin_hash || !verifyAccessPin(inquiryPin.trim(), found.access_pin_hash)) {
+      setInquiryError('비밀 PIN 번호가 일치하지 않습니다.');
+      return;
+    }
+
+    setInquiryResult(found);
   };
 
   const handleReply = (e: React.FormEvent) => {

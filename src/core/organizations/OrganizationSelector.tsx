@@ -171,7 +171,7 @@ export const OrganizationSelector: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-base font-bold text-slate-900">사업장으로 시작</h3>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold">
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-600 text-white font-extrabold">
                           매장 운영·근무
                         </span>
                       </div>
@@ -191,7 +191,7 @@ export const OrganizationSelector: React.FC = () => {
                         <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
                         <span className="text-xs font-bold text-slate-900">사업주 · 원장님</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-normal">
+                      <p className="text-xs text-slate-500 leading-normal">
                         새 매장을 개설하고 출결·회원권·장부를 관리합니다
                       </p>
                     </div>
@@ -213,7 +213,7 @@ export const OrganizationSelector: React.FC = () => {
                         <GraduationCap className="w-3.5 h-3.5 text-slate-700" />
                         <span className="text-xs font-bold text-slate-900">직원 · 강사</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 leading-normal">
+                      <p className="text-xs text-slate-500 leading-normal">
                         사업주에게 받은 초대 코드로 매장에 합류합니다
                       </p>
                     </div>
@@ -240,7 +240,7 @@ export const OrganizationSelector: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <h3 className="text-base font-bold text-slate-900">고객으로 시작</h3>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                         수강생 · 회원
                       </span>
                     </div>

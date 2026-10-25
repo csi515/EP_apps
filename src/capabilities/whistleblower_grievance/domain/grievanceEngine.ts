@@ -49,6 +49,52 @@ export function verifyAccessPin(rawPin: string, storedHash: string): boolean {
   return hashAccessPin(rawPin) === storedHash;
 }
 
+/**
+ * 단방향 암호화 블라인드 토큰 생성
+ * DB 상에서 작성자 User ID를 완전히 격리(Nullify)하고, 작성자 본인만 고유 영수증 토큰으로 조회 가능하도록 보증합니다.
+ */
+export function generateBlindReceiptToken(ticketCode: string, pin: string, salt = 'ep_whistleblower_salt'): string {
+  const combined = `${ticketCode}:${pin.trim()}:${salt}`;
+  let hash1 = 5381;
+  let hash2 = 52711;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash1 = (hash1 * 33) ^ char;
+    hash2 = (hash2 * 33) ^ char;
+  }
+  const hex1 = Math.abs(hash1).toString(16).padStart(8, '0').toUpperCase().slice(0, 4);
+  const hex2 = Math.abs(hash2).toString(16).padStart(8, '0').toUpperCase().slice(0, 4);
+  const hex3 = hashAccessPin(pin + ticketCode).padStart(8, '0').slice(0, 4);
+  return `TKN-${hex1}-${hex2}-${hex3}`;
+}
+
+/**
+ * 익명 건의 제출 데이터 정제 (Strict Zero-Knowledge Sanitization)
+ * 익명 건의일 경우 작성자 식별자(author_user_id)를 DB에 도달하기 전 완벽히 제거합니다.
+ */
+export function sanitizeGrievanceSubmission<T extends { visibility?: GrievanceVisibility; author_user_id?: string | null }>(
+  payload: T
+): T {
+  if (payload.visibility === 'anonymous') {
+    return {
+      ...payload,
+      author_user_id: null,
+    };
+  }
+  return payload;
+}
+
+/**
+ * 감사 로그 및 담당자 열람 시 제보자 표시 이름 마스킹
+ */
+export function getMaskedGrievanceAuthor(record: Pick<AnonymousGrievanceRecord, 'visibility' | 'author_user_id'>): string {
+  if (record.visibility === 'anonymous') {
+    return '익명 제보자 (식별정보 DB 격리)';
+  }
+  return record.author_user_id ? `임직원 (${record.author_user_id.slice(0, 8)}...)` : '기명 제보자';
+}
+
+
 /** 기명 건의: PIN 불필요. 익명: PIN 필수. */
 export function validateGrievanceSubmission(
   title: string,

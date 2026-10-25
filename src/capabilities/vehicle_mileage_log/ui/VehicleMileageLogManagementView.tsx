@@ -3,6 +3,8 @@ import { useList, useCreate } from '@refinedev/core';
 import {
   Car,
   Plus,
+  Download,
+  Printer,
   Calendar,
   Gauge,
   MapPin,
@@ -15,6 +17,7 @@ import {
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { generateNtsMileageCsv, downloadCsvFile } from '../domain/vehicleMileageLogExport';
 import {
   calculateTripDistance,
   validateMileageLogEntry,
@@ -214,6 +217,17 @@ export const VehicleMileageLogManagementView: React.FC = () => {
     setNotes('');
   };
 
+
+  const handleExportNtsCsv = () => {
+    const csv = generateNtsMileageCsv(logs, currentOrganization?.name || '사업장', new Date().getFullYear());
+    downloadCsvFile(`업무용승용차운행기록부_${currentOrganization?.name || '사업장'}_${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    showToast('국세청 표준 서식(5년 법적 보존용) 운행기록부가 다운로드되었습니다.', 'success');
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       {/* 헤더 및 통계 카드 */}
@@ -230,14 +244,34 @@ export const VehicleMileageLogManagementView: React.FC = () => {
             출발·도착 계기판 누적거리(km), 업무용·출퇴근 구분, 유류비 및 통행료 증빙을 관리합니다.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition active:scale-95"
-        >
-          <Plus className="h-4 w-4" />
-          <span>운행일지 작성</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleExportNtsCsv}
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+            title="국세청 별지 제29호의2 서식 5년 보존용 CSV 내보내기"
+          >
+            <Download className="h-4 w-4 text-indigo-600" />
+            <span>국세청 서식 엑셀/CSV</span>
+          </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3.5 py-3 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+            title="감사 증빙용 인쇄 / PDF 저장"
+          >
+            <Printer className="h-4 w-4 text-slate-600" />
+            <span>법적 인쇄/PDF</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md hover:bg-indigo-700 transition active:scale-95"
+          >
+            <Plus className="h-4 w-4" />
+            <span>운행일지 작성</span>
+          </button>
+        </div>
       </div>
 
       {/* 차량별 국세청 업무사용비율 대시보드 */}

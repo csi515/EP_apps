@@ -210,20 +210,20 @@ export const InstructorCommissionSettlementView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b print:hidden">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900">문화센터 강사료 수강매출 정산 대장</h1>
+            <h1 className="text-xl font-bold text-slate-900">문화센터 강사료 수강매출 정산 대장</h1>
             <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
               RS % & 3.3% 원천징수
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             강좌별 수강료 매출 총액, 재료비/카드수수료 차감, 강사 배분율(RS %) 및 사업소득세 자동 산출
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           {/* 정산 월 선택 */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-300 rounded-lg text-xs">
-            <Calendar className="w-3.5 h-3.5 text-gray-500" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs">
+            <Calendar className="w-3.5 h-3.5 text-slate-500" />
             <input
               type="month"
               value={selectedMonth}
@@ -242,9 +242,9 @@ export const InstructorCommissionSettlementView: React.FC = () => {
 
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg shadow-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg shadow-sm transition-colors"
           >
-            <Printer className="w-4 h-4 text-gray-600" />
+            <Printer className="w-4 h-4 text-slate-600" />
             정산서 인쇄
           </button>
         </div>
@@ -252,27 +252,27 @@ export const InstructorCommissionSettlementView: React.FC = () => {
 
       {/* KPI 통계 카드 4종 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-medium">총 수강 인원</span>
+            <span className="text-xs text-slate-500 font-medium">총 수강 인원</span>
             <Users className="w-4 h-4 text-blue-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-1">
-            <span className="text-2xl font-extrabold text-gray-900">{summaryKPI.totalEnrolled}</span>
-            <span className="text-xs text-gray-500">명 ({summaryKPI.courseCount}개 강좌)</span>
+            <span className="text-2xl font-extrabold text-slate-900">{summaryKPI.totalEnrolled}</span>
+            <span className="text-xs text-slate-500">명 ({summaryKPI.courseCount}개 강좌)</span>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500 font-medium">수강료 총 매출액</span>
+            <span className="text-xs text-slate-500 font-medium">수강료 총 매출액</span>
             <DollarSign className="w-4 h-4 text-emerald-500" />
           </div>
           <div className="mt-2">
-            <span className="text-2xl font-extrabold text-gray-900">
+            <span className="text-2xl font-extrabold text-slate-900">
               {summaryKPI.totalGrossSales.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-500 ml-0.5">원</span>
+            <span className="text-xs text-slate-500 ml-0.5">원</span>
           </div>
         </div>
 
@@ -287,7 +287,7 @@ export const InstructorCommissionSettlementView: React.FC = () => {
             </span>
             <span className="text-xs text-blue-600 ml-0.5">원</span>
           </div>
-          <div className="text-[11px] text-gray-400 mt-1">
+          <div className="text-[11px] text-slate-400 mt-1">
             원천징수(3.3%): {summaryKPI.totalWithholdingTax.toLocaleString()}원
           </div>
         </div>
@@ -303,31 +303,31 @@ export const InstructorCommissionSettlementView: React.FC = () => {
             </span>
             <span className="text-xs text-indigo-600 ml-0.5">원</span>
           </div>
-          <div className="text-[11px] text-gray-400 mt-1">
+          <div className="text-[11px] text-slate-400 mt-1">
             재료비 공제: {summaryKPI.totalMaterialCost.toLocaleString()}원
           </div>
         </div>
       </div>
 
       {/* 검색 및 필터 바 */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-xl border border-gray-200 print:hidden">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 print:hidden">
         <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="강좌명, 강사명 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <div className="flex rounded-lg border border-gray-200 p-0.5 bg-gray-50 text-xs">
+          <div className="flex rounded-lg border border-slate-200 p-0.5 bg-slate-50 text-xs">
             <button
               onClick={() => setStatusFilter('ALL')}
               className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                statusFilter === 'ALL' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500'
+                statusFilter === 'ALL' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'
               }`}
             >
               전체 ({calculatedItems.length})
@@ -335,7 +335,7 @@ export const InstructorCommissionSettlementView: React.FC = () => {
             <button
               onClick={() => setStatusFilter('PENDING')}
               className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                statusFilter === 'PENDING' ? 'bg-white shadow-sm text-amber-600' : 'text-gray-500'
+                statusFilter === 'PENDING' ? 'bg-white shadow-sm text-amber-600' : 'text-slate-500'
               }`}
             >
               지급대기
@@ -343,7 +343,7 @@ export const InstructorCommissionSettlementView: React.FC = () => {
             <button
               onClick={() => setStatusFilter('COMPLETED')}
               className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                statusFilter === 'COMPLETED' ? 'bg-white shadow-sm text-emerald-600' : 'text-gray-500'
+                statusFilter === 'COMPLETED' ? 'bg-white shadow-sm text-emerald-600' : 'text-slate-500'
               }`}
             >
               정산완료
@@ -354,17 +354,17 @@ export const InstructorCommissionSettlementView: React.FC = () => {
 
       {/* 인쇄 전용 헤더 */}
       <div className="hidden print:block text-center pb-4 border-b">
-        <h2 className="text-2xl font-bold text-gray-900">{selectedMonth} 문화센터 강사료 정산 명세서</h2>
-        <p className="text-xs text-gray-600 mt-1">
+        <h2 className="text-2xl font-bold text-slate-900">{selectedMonth} 문화센터 강사료 정산 명세서</h2>
+        <p className="text-xs text-slate-600 mt-1">
           작성일시: {new Date().toLocaleDateString('ko-KR')} | 총 강좌: {filteredItems.length}건
         </p>
       </div>
 
       {/* 강좌별 정산 대장 테이블 */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
                 <th className="py-3 px-3.5 font-semibold">강좌명 / 강사</th>
                 <th className="py-3 px-3 font-semibold text-center">수강생</th>
@@ -386,31 +386,31 @@ export const InstructorCommissionSettlementView: React.FC = () => {
                 const isCompleted = item.status === 'COMPLETED';
 
                 return (
-                  <tr key={item.id} className="hover:bg-gray-50/80 transition-colors">
+                  <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-3.5">
-                      <div className="font-semibold text-gray-900">{item.courseName}</div>
-                      <div className="text-gray-500 text-[11px] flex items-center gap-1 mt-0.5">
+                      <div className="font-semibold text-slate-900">{item.courseName}</div>
+                      <div className="text-slate-500 text-[11px] flex items-center gap-1 mt-0.5">
                         <span>강사: {item.instructorName}</span>
-                        <span className="text-gray-300">|</span>
+                        <span className="text-slate-300">|</span>
                         <span>{item.instructorPhone}</span>
                       </div>
                     </td>
                     <td className="py-3 px-3 text-center">
-                      <span className="font-semibold text-gray-800">{r.totalEnrolled}명</span>
-                      <div className="text-[10px] text-gray-400">
+                      <span className="font-semibold text-slate-800">{r.totalEnrolled}명</span>
+                      <div className="text-[10px] text-slate-400">
                         {r.tuitionFeePerPerson.toLocaleString()}원
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-right font-medium text-gray-900">
+                    <td className="py-3 px-3 text-right font-medium text-slate-900">
                       {r.totalGrossSales.toLocaleString()}원
                     </td>
                     <td className="py-3 px-3 text-right text-red-500 text-[11px]">
                       -{(r.totalMaterialCostDeduction + r.totalCardFeeDeduction).toLocaleString()}원
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-[10px] text-slate-400">
                         (재료 {r.totalMaterialCostDeduction.toLocaleString()} + 카드 {r.totalCardFeeDeduction.toLocaleString()})
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-right font-semibold text-gray-800">
+                    <td className="py-3 px-3 text-right font-semibold text-slate-800">
                       {r.netRevenueToShare.toLocaleString()}원
                     </td>
                     <td className="py-3 px-3 text-center">
@@ -418,12 +418,12 @@ export const InstructorCommissionSettlementView: React.FC = () => {
                         {Math.round(r.instructorShareRate * 100)}%
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right text-gray-700">
+                    <td className="py-3 px-3 text-right text-slate-700">
                       {r.instructorGrossPay.toLocaleString()}원
                     </td>
-                    <td className="py-3 px-3 text-right text-gray-500 text-[11px]">
+                    <td className="py-3 px-3 text-right text-slate-500 text-[11px]">
                       -{r.totalWithholdingTax.toLocaleString()}원
-                      <div className="text-[10px] text-gray-400">
+                      <div className="text-[10px] text-slate-400">
                         (소득 {r.incomeTax.toLocaleString()} / 지방 {r.localIncomeTax.toLocaleString()})
                       </div>
                     </td>

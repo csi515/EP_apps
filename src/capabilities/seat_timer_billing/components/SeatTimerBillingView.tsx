@@ -171,21 +171,21 @@ export const SeatTimerBillingView: React.FC = () => {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
             <span className="p-2 bg-amber-100 text-amber-700 rounded-lg">
               <Hourglass className="w-5 h-5" />
             </span>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-slate-900">
               시간제 공간 타이머 & 초과요금 자동 과금
             </h1>
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             좌석·룸·타석의 실시간 이용시간을 초 단위로 추적하고, 시간 초과 시 10분 단위 할증 요금을 자동 과금합니다.
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500 bg-gray-50 px-3 py-1.5 rounded-lg border">
+        <div className="flex items-center gap-2 text-xs text-slate-500 bg-slate-50 px-3 py-1.5 rounded-lg border">
           <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
           <span>현장 실시간 동기화 중 ({new Date(currentTimeStr).toLocaleTimeString()})</span>
         </div>
@@ -193,10 +193,10 @@ export const SeatTimerBillingView: React.FC = () => {
 
       {/* 상단 메트릭 요약 */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-xs text-gray-400 font-medium block">이용 중인 좌석</span>
-          <div className="text-2xl font-bold text-gray-900 mt-1">{summary.occupiedSlots}석</div>
-          <span className="text-xs text-gray-400">가동률 {summary.utilizationRatePercent}%</span>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span className="text-xs text-slate-400 font-medium block">이용 중인 좌석</span>
+          <div className="text-2xl font-bold text-slate-900 mt-1">{summary.occupiedSlots}석</div>
+          <span className="text-xs text-slate-400">가동률 {summary.utilizationRatePercent}%</span>
         </div>
 
         <div className="bg-white p-4 rounded-xl border border-red-200 bg-red-50/40 shadow-sm">
@@ -208,16 +208,16 @@ export const SeatTimerBillingView: React.FC = () => {
           <span className="text-xs text-red-600">초과요금 실시간 가산 중</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-xs text-gray-400 font-medium block">즉시 입실 가능</span>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span className="text-xs text-slate-400 font-medium block">즉시 입실 가능</span>
           <div className="text-2xl font-bold text-emerald-600 mt-1">{summary.availableSlots}석</div>
-          <span className="text-xs text-gray-400">대기 없이 배정 가능</span>
+          <span className="text-xs text-slate-400">대기 없이 배정 가능</span>
         </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <span className="text-xs text-gray-400 font-medium block">퇴실 청소 대기</span>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span className="text-xs text-slate-400 font-medium block">퇴실 청소 대기</span>
           <div className="text-2xl font-bold text-amber-600 mt-1">{summary.cleaningSlots}석</div>
-          <span className="text-xs text-gray-400">소독 및 정리 중</span>
+          <span className="text-xs text-slate-400">소독 및 정리 중</span>
         </div>
       </div>
 
@@ -238,13 +238,13 @@ export const SeatTimerBillingView: React.FC = () => {
                   ? 'border-blue-300'
                   : slot.status === 'CLEANING'
                   ? 'border-amber-300 bg-amber-50/20'
-                  : 'border-gray-200 hover:border-emerald-300'
+                  : 'border-slate-200 hover:border-emerald-300'
               }`}
             >
               <div>
                 {/* 상단 뱃지 & 좌석명 */}
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-base text-gray-900">{slot.slotNumber}</span>
+                  <span className="font-bold text-base text-slate-900">{slot.slotNumber}</span>
                   <span
                     className={`px-2 py-0.5 rounded text-xs font-semibold ${
                       isOverdue
@@ -269,18 +269,18 @@ export const SeatTimerBillingView: React.FC = () => {
                 {/* 이용자 정보 또는 빈자리 안내 */}
                 {isOccupied && slot.assignedUser ? (
                   <div className="mt-3 space-y-2 text-xs">
-                    <div className="flex items-center justify-between text-gray-600">
+                    <div className="flex items-center justify-between text-slate-600">
                       <span>이용자:</span>
-                      <span className="font-semibold text-gray-900">{slot.assignedUser.name}</span>
+                      <span className="font-semibold text-slate-900">{slot.assignedUser.name}</span>
                     </div>
 
                     {/* 카운트다운 타이머 바 */}
                     <div className="space-y-1">
-                      <div className="flex justify-between text-[11px] text-gray-400">
+                      <div className="flex justify-between text-[11px] text-slate-400">
                         <span>경과: {billing.elapsedMinutes}분</span>
                         <span>기본: {slot.allocatedMinutes}분</span>
                       </div>
-                      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                         <div
                           className={`h-full transition-all duration-1000 ${
                             isOverdue ? 'bg-red-500' : 'bg-blue-500'
@@ -297,9 +297,9 @@ export const SeatTimerBillingView: React.FC = () => {
 
                     {/* 요금 안내 */}
                     <div className="pt-2 border-t mt-2 flex items-center justify-between">
-                      <span className="text-gray-500">현재 누적 요금</span>
+                      <span className="text-slate-500">현재 누적 요금</span>
                       <div className="text-right">
-                        <span className="text-base font-bold text-gray-900">
+                        <span className="text-base font-bold text-slate-900">
                           {billing.totalFee.toLocaleString()}원
                         </span>
                         {billing.overdueFee > 0 && (
@@ -316,7 +316,7 @@ export const SeatTimerBillingView: React.FC = () => {
                     <p>퇴실 완료 후 소독/정리 중입니다.</p>
                   </div>
                 ) : (
-                  <div className="py-6 text-center text-xs text-gray-400 space-y-2">
+                  <div className="py-6 text-center text-xs text-slate-400 space-y-2">
                     <Users className="w-6 h-6 mx-auto opacity-40" />
                     <p>기본요금 {slot.baseRatePerHour.toLocaleString()}원/시간</p>
                   </div>

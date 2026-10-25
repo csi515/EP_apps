@@ -227,7 +227,7 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-md shadow-indigo-100 transition hover:bg-indigo-700 active:scale-95"
+          className="inline-flex min-h-[44px] h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white shadow-md shadow-indigo-100 transition hover:bg-indigo-700 active:scale-95"
         >
           <Plus className="h-4 w-4" />
           + 사물함 추가
@@ -262,7 +262,7 @@ export const LockerManagementView: React.FC<LockerManagementViewProps> = ({
           <select
             value={selectedSection}
             onChange={(e) => setSelectedSection(e.target.value)}
-            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm focus:border-indigo-500 focus:outline-none"
+            className="min-h-[44px] h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-2xs focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
           >
             {sections.map((sec) => (
               <option key={sec} value={sec}>

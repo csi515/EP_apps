@@ -102,14 +102,14 @@ export function OwnershipTransferCard(): React.JSX.Element {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-bold text-gray-900">
+                <h3 className="text-base font-bold text-slate-900">
                   {isOwner ? '법인 대표자 소유권 이전 (Ownership Transfer)' : '법인 대표이사 소유권 이전 [인사팀 대행]'}
                 </h3>
                 <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
                   {isOwner ? '대표(CEO) 전용' : '인사팀 위임 대행'}
                 </span>
               </div>
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="mt-0.5 text-xs text-slate-500">
                 {isOwner
                   ? '주기적인 대표이사 변경 또는 법인 지분 양도 시, 기존 데이터를 유지하며 사업장 최고 권한을 원자적으로 이관합니다.'
                   : '주주총회/이사회 결의 및 임원 변경 등기 절차에 따라 사내 차기 대표이사로의 소유권 이전을 대행합니다.'}
@@ -153,14 +153,14 @@ export function OwnershipTransferCard(): React.JSX.Element {
 
             {/* 신임 대표자 선택 */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700">
+              <label className="block text-xs font-semibold text-slate-700">
                 신임 대표자(후임 CEO) 선택 <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedMemberId}
                 onChange={(e) => setSelectedMemberId(e.target.value)}
                 disabled={loadingMembers || submitting}
-                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-slate-100"
               >
                 <option value="">-- 신임 대표자를 선택하세요 --</option>
                 {candidateMembers.map((m) => (
@@ -170,13 +170,13 @@ export function OwnershipTransferCard(): React.JSX.Element {
                 ))}
               </select>
               {candidateMembers.length === 0 && !loadingMembers && (
-                <p className="mt-1 text-xs text-gray-400">이전 가능한 활성 직원이 없습니다. 먼저 사원을 초대하세요.</p>
+                <p className="mt-1 text-xs text-slate-400">이전 가능한 활성 직원이 없습니다. 먼저 사원을 초대하세요.</p>
               )}
             </div>
 
             {/* 이전 사유 */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700">
+              <label className="block text-xs font-semibold text-slate-700">
                 소유권 이전 사유 (불변 감사 로그 기록용) <span className="text-rose-500">*</span>
               </label>
               <input
@@ -189,13 +189,13 @@ export function OwnershipTransferCard(): React.JSX.Element {
                     : '예: 제24기 정기주주총회/이사회 대표이사 변경 결의 (등기접수 제2026-12345호)'
                 }
                 disabled={submitting}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-slate-100"
               />
             </div>
 
             {/* 확인 문구 타이핑 가드 */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700">
+              <label className="block text-xs font-semibold text-slate-700">
                 안전 확인: 아래 입력창에 <span className="font-bold text-rose-600">"{CONFIRM_TEXT}"</span>을 정확히 입력하세요 <span className="text-rose-500">*</span>
               </label>
               <input
@@ -204,7 +204,7 @@ export function OwnershipTransferCard(): React.JSX.Element {
                 onChange={(e) => setTypedConfirm(e.target.value)}
                 placeholder={CONFIRM_TEXT}
                 disabled={submitting}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono text-gray-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-1 focus:ring-rose-500 disabled:bg-slate-100"
               />
             </div>
 
@@ -214,7 +214,7 @@ export function OwnershipTransferCard(): React.JSX.Element {
                 type="button"
                 onClick={() => setShowConfirmModal(true)}
                 disabled={!canProceed}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300"
               >
                 <Lock className="h-4 w-4" />
                 {isOwner ? '소유권 이전 실행' : '[인사팀 대행] 대표이사 소유권 이전 실행'}
@@ -229,25 +229,25 @@ export function OwnershipTransferCard(): React.JSX.Element {
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
               <div className="flex items-center gap-3 text-rose-600">
                 <ShieldAlert className="h-7 w-7" />
-                <h4 className="text-base font-bold text-gray-900">
+                <h4 className="text-base font-bold text-slate-900">
                   {isOwner ? '최종 확인: 소유권을 이전하시겠습니까?' : '[인사팀 대행] 대표이사 소유권을 이전하시겠습니까?'}
                 </h4>
               </div>
 
-              <div className="mt-4 space-y-3 rounded-xl bg-gray-50 p-4 text-xs text-gray-700">
+              <div className="mt-4 space-y-3 rounded-xl bg-slate-50 p-4 text-xs text-slate-700">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">실행자:</span>
-                  <span className="font-semibold text-gray-900">{isOwner ? '본인 (대표이사)' : '본인 (인사팀 대행)'}</span>
+                  <span className="text-slate-500">실행자:</span>
+                  <span className="font-semibold text-slate-900">{isOwner ? '본인 (대표이사)' : '본인 (인사팀 대행)'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">신임 대표이사:</span>
+                  <span className="text-slate-500">신임 대표이사:</span>
                   <span className="font-bold text-rose-600">
                     {selectedMember.name || selectedMember.user_id.slice(0, 8)} ({selectedMember.email})
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">이전 사유:</span>
-                  <span className="font-medium text-gray-900">{reason}</span>
+                  <span className="text-slate-500">이전 사유:</span>
+                  <span className="font-medium text-slate-900">{reason}</span>
                 </div>
               </div>
 
@@ -262,7 +262,7 @@ export function OwnershipTransferCard(): React.JSX.Element {
                   type="button"
                   onClick={() => setShowConfirmModal(false)}
                   disabled={submitting}
-                  className="rounded-lg border border-gray-300 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   취소
                 </button>
@@ -270,7 +270,7 @@ export function OwnershipTransferCard(): React.JSX.Element {
                   type="button"
                   onClick={() => void handleTransfer()}
                   disabled={submitting}
-                  className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:bg-gray-300"
+                  className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:bg-slate-300"
                 >
                   {submitting ? '이전 처리 중...' : '확인 및 소유권 즉시 이전'}
                 </button>

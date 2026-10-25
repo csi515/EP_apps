@@ -267,7 +267,7 @@ export const DashboardPage: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate("/customers/create")}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 transition-colors"
+            className="inline-flex items-center gap-1.5 min-h-[44px] rounded-xl bg-indigo-600 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-indigo-500 transition-colors"
           >
             <Users className="h-4 w-4" />
             + {customerTerm} 등록
@@ -301,7 +301,7 @@ export const DashboardPage: React.FC = () => {
                   <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", action.iconColor)}>
                     <Icon className="h-4 w-4" />
                   </div>
-                  <span className="rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-bold text-slate-600 shadow-2xs">
+                  <span className="rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold text-slate-600 shadow-2xs">
                     {action.badge}
                   </span>
                 </div>
@@ -343,7 +343,7 @@ export const DashboardPage: React.FC = () => {
             return (
               <div
                 key={idx}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs hover:border-slate-300 transition-colors"
+                className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs hover:border-slate-300 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-slate-500">{kpi.title}</span>

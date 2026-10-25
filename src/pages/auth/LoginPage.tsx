@@ -188,7 +188,7 @@ export const LoginPage: React.FC = () => {
               <QrCode className="w-4 h-4" />
             </div>
             <h4 className="text-xs font-bold text-slate-200 mb-1">0원 비용 원칙</h4>
-            <p className="text-[11px] text-slate-400 leading-normal">
+            <p className="text-xs text-slate-400 leading-relaxed">
               SMS·카카오 알림톡 비용 0원. 2-Way 1회용 W3C QR 프로토콜.
             </p>
           </div>
@@ -198,7 +198,7 @@ export const LoginPage: React.FC = () => {
               <Zap className="w-4 h-4" />
             </div>
             <h4 className="text-xs font-bold text-slate-200 mb-1">초고속 Realtime 동기화</h4>
-            <p className="text-[11px] text-slate-400 leading-normal">
+            <p className="text-xs text-slate-400 leading-relaxed">
               카운터-고객 스마트폰 간 실시간 변경 감지 및 자동 캐시 무효화.
             </p>
           </div>

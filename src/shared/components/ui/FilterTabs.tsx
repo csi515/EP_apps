@@ -18,8 +18,8 @@ export function FilterTabs<T extends string>({
   tabs,
   active,
   onChange,
-  activeClassName = 'bg-indigo-600 text-white',
-  inactiveClassName = 'bg-slate-100 text-slate-600',
+  activeClassName = 'bg-indigo-600 text-white shadow-xs',
+  inactiveClassName = 'bg-slate-100 text-slate-600 hover:bg-slate-200/80',
 }: FilterTabsProps<T>) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -28,12 +28,12 @@ export function FilterTabs<T extends string>({
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+          className={`min-h-[36px] px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${
             active === tab.id ? activeClassName : inactiveClassName
           }`}
         >
-          {tab.label}
-          {tab.count !== undefined && ` (${tab.count})`}
+          <span>{tab.label}</span>
+          {tab.count !== undefined && <span className="ml-1 opacity-80">({tab.count})</span>}
         </button>
       ))}
     </div>

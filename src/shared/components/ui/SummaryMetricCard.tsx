@@ -23,39 +23,39 @@ const VARIANT_STYLES: Record<
   { container: string; label: string; value: string }
 > = {
   default: {
-    container: 'bg-white border-slate-200',
-    label: 'text-slate-500',
+    container: 'bg-white border-slate-200/80',
+    label: 'text-slate-500 font-semibold',
     value: 'text-slate-900',
   },
   rose: {
-    container: 'bg-rose-50 border-rose-200',
-    label: 'text-rose-700 font-semibold',
-    value: 'text-rose-900',
+    container: 'bg-rose-50/80 border-rose-200/80',
+    label: 'text-rose-700 font-bold',
+    value: 'text-rose-950',
   },
   amber: {
-    container: 'bg-amber-50 border-amber-200',
-    label: 'text-amber-700 font-semibold',
-    value: 'text-amber-900',
+    container: 'bg-amber-50/80 border-amber-200/80',
+    label: 'text-amber-700 font-bold',
+    value: 'text-amber-950',
   },
   emerald: {
-    container: 'bg-emerald-50 border-emerald-200',
-    label: 'text-emerald-700 font-semibold',
-    value: 'text-emerald-900',
+    container: 'bg-emerald-50/80 border-emerald-200/80',
+    label: 'text-emerald-700 font-bold',
+    value: 'text-emerald-950',
   },
   purple: {
-    container: 'bg-purple-50 border-purple-200',
-    label: 'text-purple-700 font-semibold',
-    value: 'text-purple-900',
+    container: 'bg-purple-50/80 border-purple-200/80',
+    label: 'text-purple-700 font-bold',
+    value: 'text-purple-950',
   },
   indigo: {
-    container: 'bg-indigo-50 border-indigo-200',
-    label: 'text-indigo-700 font-semibold',
-    value: 'text-indigo-900',
+    container: 'bg-indigo-50/80 border-indigo-200/80',
+    label: 'text-indigo-700 font-bold',
+    value: 'text-indigo-950',
   },
   teal: {
-    container: 'bg-teal-50 border-teal-200',
-    label: 'text-teal-700 font-semibold',
-    value: 'text-teal-900',
+    container: 'bg-teal-50/80 border-teal-200/80',
+    label: 'text-teal-700 font-bold',
+    value: 'text-teal-950',
   },
 };
 
@@ -84,13 +84,13 @@ export const SummaryMetricCard: React.FC<SummaryMetricCardProps> = ({
             }
           : undefined
       }
-      className={`p-3 sm:p-3.5 rounded-2xl border shadow-xs ${styles.container} ${
-        onClick ? 'cursor-pointer hover:shadow-sm transition-shadow' : ''
+      className={`p-3.5 sm:p-4 rounded-2xl border shadow-2xs ${styles.container} ${
+        onClick ? 'cursor-pointer hover:shadow-xs transition-shadow' : ''
       } ${className}`}
     >
-      <p className={`text-[11px] sm:text-xs ${styles.label}`}>{label}</p>
-      <p className={`text-lg sm:text-xl font-black mt-0.5 ${styles.value}`}>{value}</p>
-      {subtitle && <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 font-medium">{subtitle}</p>}
+      <p className={`text-xs ${styles.label} truncate`}>{label}</p>
+      <p className={`text-lg sm:text-xl font-extrabold mt-1 tracking-tight ${styles.value}`}>{value}</p>
+      {subtitle && <p className="text-xs text-slate-400 mt-0.5 truncate">{subtitle}</p>}
     </div>
   );
 };

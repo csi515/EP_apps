@@ -140,7 +140,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               <ArrowRight className="w-4 h-4 ml-1" />
             </button>
 
-            <p className="text-center text-[11px] text-slate-400 leading-normal">
+            <p className="text-center text-xs text-slate-400 leading-normal">
               토스 계정 인증만 제공됩니다.
             </p>
           </div>
@@ -193,7 +193,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
             <span className="font-semibold text-slate-600">
               {isEn ? "Select Role" : "로그인 역할 선택"}
             </span>
-            <span className="text-[11px] text-indigo-600 font-medium">
+            <span className="text-xs text-indigo-600 font-medium">
               {currentRole === 'owner' ? '매장 개설·운영·정산' : '출결·스케줄·담당 업무'}
             </span>
           </div>
@@ -299,7 +299,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               <div className="w-4 h-4 rounded-full bg-[#FEE500] text-[#191919] flex items-center justify-center text-[8px] font-bold">K</div>
               <div className="w-4 h-4 rounded-full bg-[#03C75A] text-white flex items-center justify-center text-[8px] font-extrabold">N</div>
             </div>
-            <p className="text-[10px] text-slate-400" data-testid="sns-login-disabled-hint">
+            <p className="text-xs text-slate-400" data-testid="sns-login-disabled-hint">
               {isEn ? "Social login is coming soon" : "간편 로그인은 준비 중입니다"}
             </p>
           </div>

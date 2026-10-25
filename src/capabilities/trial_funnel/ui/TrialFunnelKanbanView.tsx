@@ -14,7 +14,7 @@ const STATUS_COLUMNS: Array<{ key: TrialLeadStatus; label: string; color: string
   { key: 'consult_scheduled', label: '상담/체험 예약', color: 'bg-amber-50 text-amber-700 border-amber-200' },
   { key: 'trial_attended', label: '체험 완료', color: 'bg-purple-50 text-purple-700 border-purple-200' },
   { key: 'converted', label: '정규 등록 완료', color: 'bg-green-50 text-green-700 border-green-200' },
-  { key: 'dropped', label: '등록 포기/보류', color: 'bg-gray-100 text-gray-700 border-gray-200' },
+  { key: 'dropped', label: '등록 포기/보류', color: 'bg-slate-100 text-slate-700 border-slate-200' },
 ];
 
 export const TrialFunnelKanbanView: React.FC = () => {
@@ -112,7 +112,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="p-6 text-gray-500">리드 파이프라인 정보를 불러오는 중...</div>;
+    return <div className="p-6 text-slate-500">리드 파이프라인 정보를 불러오는 중...</div>;
   }
 
   return (
@@ -120,8 +120,8 @@ export const TrialFunnelKanbanView: React.FC = () => {
       {/* 상단 헤더 & 전환율 요약 카드 */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">우리 매장 체험 및 상담 파이프라인</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-slate-900">우리 매장 체험 및 상담 파이프라인</h1>
+          <p className="text-sm text-slate-500 mt-1">
             신규 문의 유입부터 1회 무료 체험 및 정규 수강권 등록까지 고객 전환 여정을 한눈에 관리합니다.
           </p>
         </div>
@@ -135,19 +135,19 @@ export const TrialFunnelKanbanView: React.FC = () => {
 
       {/* 핵심 지표 4대 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <div className="text-xs font-semibold text-gray-500">총 누적 리드</div>
-          <div className="text-2xl font-bold text-gray-900 mt-1">{metrics.totalLeads}건</div>
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div className="text-xs font-semibold text-slate-500">총 누적 리드</div>
+          <div className="text-2xl font-bold text-slate-900 mt-1">{metrics.totalLeads}건</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold text-purple-600">체험 참석 완료</div>
           <div className="text-2xl font-bold text-purple-700 mt-1">{metrics.trialAttended}명</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold text-green-600">정규 회원 전환</div>
           <div className="text-2xl font-bold text-green-700 mt-1">{metrics.converted}명</div>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
           <div className="text-xs font-semibold text-indigo-600">체험 ➔ 전환율</div>
           <div className="text-2xl font-bold text-indigo-700 mt-1">{metrics.trialToConvertRate}%</div>
         </div>
@@ -158,28 +158,28 @@ export const TrialFunnelKanbanView: React.FC = () => {
         {STATUS_COLUMNS.map((col) => {
           const items = grouped[col.key] || [];
           return (
-            <div key={col.key} className="bg-gray-50 rounded-xl p-3 border border-gray-200 min-w-[220px]">
+            <div key={col.key} className="bg-slate-50 rounded-xl p-3 border border-slate-200 min-w-[220px]">
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${col.color}`}>
                   {col.label}
                 </span>
-                <span className="text-xs font-medium text-gray-500">{items.length}</span>
+                <span className="text-xs font-medium text-slate-500">{items.length}</span>
               </div>
 
               <div className="space-y-2.5">
                 {items.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-gray-400">등록된 고객 없음</div>
+                  <div className="text-center py-8 text-xs text-slate-400">등록된 고객 없음</div>
                 ) : (
                   items.map((lead) => (
                     <div
                       key={lead.id}
-                      className="bg-white p-3 rounded-lg border border-gray-200 shadow-xs hover:shadow-md transition text-xs space-y-1.5"
+                      className="bg-white p-3 rounded-lg border border-slate-200 shadow-xs hover:shadow-md transition text-xs space-y-1.5"
                     >
-                      <div className="flex justify-between items-center font-bold text-gray-900">
+                      <div className="flex justify-between items-center font-bold text-slate-900">
                         <span>{lead.customer_name}</span>
-                        <span className="text-[10px] text-gray-400 uppercase font-normal">{lead.source}</span>
+                        <span className="text-[10px] text-slate-400 uppercase font-normal">{lead.source}</span>
                       </div>
-                      <div className="text-gray-600">{lead.phone}</div>
+                      <div className="text-slate-600">{lead.phone}</div>
                       {lead.target_program && (
                         <div className="text-[11px] text-indigo-600 font-medium">{lead.target_program}</div>
                       )}
@@ -188,7 +188,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                       )}
 
                       {/* 단계 이동 드롭다운 및 CRM 연계 바로가기 */}
-                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-1">
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-1">
                         <button
                           type="button"
                           onClick={() => {
@@ -206,7 +206,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                         <select
                           value={lead.status}
                           onChange={(e) => handleStatusChange(lead.id, e.target.value as TrialLeadStatus)}
-                          className="text-[11px] bg-gray-50 border border-gray-200 rounded px-1.5 py-0.5 text-gray-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="text-[11px] bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5 text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         >
                           <option value="new_inquiry">단계: 신규 문의</option>
                           <option value="consult_scheduled">단계: 상담/체험 예약</option>
@@ -228,10 +228,10 @@ export const TrialFunnelKanbanView: React.FC = () => {
       {isNewModalOpen && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900">신규 체험·상담 고객 등록</h3>
+            <h3 className="text-lg font-bold text-slate-900">신규 체험·상담 고객 등록</h3>
             <form onSubmit={handleCreateLead} className="space-y-3 text-sm">
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">고객명</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">고객명</label>
                 <input
                   type="text"
                   required
@@ -242,7 +242,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">연락처</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">연락처</label>
                 <input
                   type="text"
                   required
@@ -253,7 +253,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">유입 경로</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">유입 경로</label>
                 <select
                   value={newSource}
                   onChange={(e) => setNewSource(e.target.value as any)}
@@ -267,7 +267,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">희망 과목 / 프로그램</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">희망 과목 / 프로그램</label>
                 <input
                   type="text"
                   value={newTargetProgram}
@@ -281,7 +281,7 @@ export const TrialFunnelKanbanView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium"
+                  className="px-4 py-2 border rounded-lg text-slate-700 hover:bg-slate-50 text-sm font-medium"
                 >
                   취소
                 </button>

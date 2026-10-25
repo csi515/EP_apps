@@ -125,7 +125,7 @@ export const Header: React.FC = () => {
               </span>
               <span
                 className={cn(
-                  "hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold border px-2.5 py-0.5 rounded-md shadow-2xs",
+                  "hidden sm:inline-flex items-center gap-1.5 text-xs font-bold border px-2.5 py-0.5 rounded-lg shadow-2xs",
                   THEME_BADGE_STYLES[badgeColor] || THEME_BADGE_STYLES.indigo
                 )}
               >

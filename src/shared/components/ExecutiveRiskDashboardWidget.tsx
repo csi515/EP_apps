@@ -59,68 +59,68 @@ export const ExecutiveRiskDashboardWidget: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xs space-y-4">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-4">
       {/* 상단 헤더 & 점수 */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <span>🛡️ 전사 통합 경영 리스크 지수</span>
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             안전사고·고객VOC·NPS·미수금 4대 지표 실시간 결합 분석
           </p>
         </div>
         <div className="flex items-center gap-2">
           {getGradeBadge(assessment.grade)}
-          <span className="text-2xl font-black text-gray-900 dark:text-gray-100">
+          <span className="text-2xl font-black text-slate-900 dark:text-slate-100">
             {assessment.riskScore}
-            <span className="text-xs font-normal text-gray-400">/100점</span>
+            <span className="text-xs font-normal text-slate-400">/100점</span>
           </span>
         </div>
       </div>
 
       {/* 3대 리스크 세부 게이지 바 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl space-y-1">
-          <div className="flex justify-between font-semibold text-gray-700 dark:text-gray-300">
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl space-y-1">
+          <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
             <span>안전/설비 리스크</span>
             <span>{assessment.breakdown.safetyScore}/30점</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
             <div
               className="bg-rose-500 h-1.5 rounded-full"
               style={{ width: `${(assessment.breakdown.safetyScore / 30) * 100}%` }}
             />
           </div>
-          <p className="text-[11px] text-gray-400">미결 사고: {factors.incidentCount}건</p>
+          <p className="text-[11px] text-slate-400">미결 사고: {factors.incidentCount}건</p>
         </div>
 
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl space-y-1">
-          <div className="flex justify-between font-semibold text-gray-700 dark:text-gray-300">
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl space-y-1">
+          <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
             <span>고객 VOC 리스크</span>
             <span>{assessment.breakdown.customerScore}/30점</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
             <div
               className="bg-amber-500 h-1.5 rounded-full"
               style={{ width: `${(assessment.breakdown.customerScore / 30) * 100}%` }}
             />
           </div>
-          <p className="text-[11px] text-gray-400">미처리 불만: {factors.vocComplaintCount}건</p>
+          <p className="text-[11px] text-slate-400">미처리 불만: {factors.vocComplaintCount}건</p>
         </div>
 
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/40 rounded-xl space-y-1">
-          <div className="flex justify-between font-semibold text-gray-700 dark:text-gray-300">
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl space-y-1">
+          <div className="flex justify-between font-semibold text-slate-700 dark:text-slate-300">
             <span>재무/수납 리스크</span>
             <span>{assessment.breakdown.financialScore}/40점</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
             <div
               className="bg-blue-500 h-1.5 rounded-full"
               style={{ width: `${(assessment.breakdown.financialScore / 40) * 100}%` }}
             />
           </div>
-          <p className="text-[11px] text-gray-400">미수금 청구: {factors.unpaidInvoiceCount}건</p>
+          <p className="text-[11px] text-slate-400">미수금 청구: {factors.unpaidInvoiceCount}건</p>
         </div>
       </div>
 
