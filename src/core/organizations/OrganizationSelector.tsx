@@ -186,23 +186,15 @@ export const OrganizationSelector: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="mt-3.5 flex flex-col sm:flex-row gap-2">
-                  <button
-                    type="button"
-                    data-testid="btn-quick-onboarding"
-                    onClick={() => navigate('/onboarding/quick')}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all min-h-[44px]"
-                  >
-                    <span>10초 맞춤 빠른 셋업으로 개설</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                <div className="mt-3.5">
                   <button
                     type="button"
                     data-testid="btn-open-create-org-wizard"
                     onClick={() => setShowWizard(true)}
-                    className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition-colors min-h-[44px]"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-sm transition-all min-h-[44px]"
                   >
-                    직접 입력
+                    <span>내 매장 · 사업장 개설하기 (업종 선택)</span>
+                    <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -395,18 +387,18 @@ export const OrganizationSelector: React.FC = () => {
 
                 {showMoreActions && (
                   <div className="mt-3 space-y-2.5 pt-2 border-t border-dashed border-slate-200 animate-in fade-in duration-150">
-                    {/* 10초 빠른 셋업 */}
+                    {/* 업종 선택형 새 매장 개설 */}
                     <button
                       type="button"
-                      data-testid="btn-quick-onboarding"
-                      onClick={() => navigate('/onboarding/quick')}
+                      data-testid="btn-open-create-org-wizard"
+                      onClick={() => setShowWizard(true)}
                       className="w-full flex items-center justify-between p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200 text-indigo-900 font-bold hover:bg-indigo-100 transition-all text-left min-h-[44px]"
                     >
                       <div className="flex items-center gap-2.5">
                         <Sparkles className="w-4 h-4 text-indigo-600" />
                         <div>
-                          <p className="text-xs font-bold">10초 맞춤 빠른 셋업으로 새 매장 개설</p>
-                          <p className="text-[11px] text-indigo-700/80 font-normal">44개 업종 프리셋 자동 구성</p>
+                          <p className="text-xs font-bold">새 매장 · 사업장 추가 개설</p>
+                          <p className="text-[11px] text-indigo-700/80 font-normal">원하는 업종을 골라 새 사업장을 즉시 등록합니다</p>
                         </div>
                       </div>
                       <ChevronRight className="w-4 h-4 text-indigo-500" />

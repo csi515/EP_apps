@@ -69,8 +69,13 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
 
   const handleStepInfo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formatOrganizationAddress(addressParts)) {
-      setError('필수 항목을 모두 입력해 주세요');
+    if (!formData.name.trim()) {
+      setError(`${placeLabel} 이름을 입력해 주세요.`);
+      return;
+    }
+    const fullAddress = formatOrganizationAddress(addressParts);
+    if (!fullAddress) {
+      setError(`${placeLabel} 주소를 검색하거나 직접 입력해 주세요.`);
       return;
     }
     setError(null);
@@ -190,28 +195,13 @@ export const CreateOrganizationWizard: React.FC<CreateOrganizationWizardProps> =
 
         {step === 0 && (
           <form onSubmit={handleStepInfo} className="p-6 space-y-4">
-            {/* 10초 빠른 맞춤 셋업 추천 배너 */}
-            <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
-                <span className="text-xs text-indigo-900 font-medium">
-                  44개 업종 프리셋(직급·룸·도구 자동 완성)으로 시작하기
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  onCancel();
-                  navigate('/onboarding/quick');
-                }}
-                className="shrink-0 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-0.5"
-              >
-                <span>빠른 셋업</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+            {/* 업종 선택 및 맞춤 기능 안내 배너 */}
+            <div className="p-3.5 rounded-2xl bg-indigo-50/80 border border-indigo-100/90 flex items-center gap-2.5 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+              <p className="text-xs text-indigo-900 font-medium">
+                운영하시는 업종을 선택하시면 업종 맞춤형 기능(출결·회원권·스케줄 등)이 자동으로 세팅됩니다.
+              </p>
             </div>
-
-            <p className="text-sm text-slate-500">사업장 기본 정보를 직접 입력해 등록합니다.</p>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">

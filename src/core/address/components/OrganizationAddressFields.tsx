@@ -53,7 +53,7 @@ export const OrganizationAddressFields: FC<OrganizationAddressFieldsProps> = ({
             type="text"
             value={value.roadAddress}
             onChange={(e) => handleRoadChange(e.target.value)}
-            placeholder="주소 입력 또는 검색"
+            placeholder="도로명 주소 검색 또는 직접 입력 (예: 테헤란로 123)"
             data-testid="input-address-road"
             className={`${FORM_CONTROL_CLASS} flex-1`}
             aria-label="소재지 주소"
@@ -65,7 +65,7 @@ export const OrganizationAddressFields: FC<OrganizationAddressFieldsProps> = ({
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 rounded-xl min-h-[44px] min-w-[44px] shrink-0"
           >
             <Search className="w-4 h-4" aria-hidden />
-            <span className="hidden sm:inline">검색</span>
+            <span className="hidden sm:inline">주소 검색</span>
           </button>
         </div>
         {value.postal ? (
