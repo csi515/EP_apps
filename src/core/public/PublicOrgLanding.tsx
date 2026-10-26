@@ -231,7 +231,7 @@ export function PublicOrgLanding({ code, mode = 'default' }: PublicOrgLandingPro
                       성인 수강생 · 회원 가입
                     </button>
                     <p className="text-xs text-slate-500 text-center">
-                      본인 MOA 계정으로 {placeLabel} 회원 가입을 신청합니다 (자녀 연결 아님)
+                      본인 {appBrand.shortName} 계정으로 {placeLabel} 회원 가입을 신청합니다 (자녀 연결 아님)
                     </p>
                   </div>
                 );

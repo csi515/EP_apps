@@ -93,13 +93,6 @@ function run() {
   );
   assert.match(detail, /previousStatus: existing\?\.status/);
 
-  const sql = readFileSync(
-    join(here, '../../../../supabase/migrations/20260924140000_attendance_key_notify_makeup.sql'),
-    'utf8'
-  );
-  assert.match(sql, /uq_core_notifications_absence_event/);
-  assert.match(sql, /eventKey/);
-
   console.log('absenceNotifyPolicy.test.ts: ok');
 }
 

@@ -225,7 +225,7 @@ function run() {
     currentStock: 50,
     safetyStock: 10,
     unitPrice: 18000,
-    vendorName: '모아 로스터리',
+    vendorName: 'EP_apps',
   };
 
   const labels = generatePrintLabelItems({

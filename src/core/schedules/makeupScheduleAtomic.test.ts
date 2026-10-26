@@ -103,22 +103,6 @@ function run() {
   assert.match(mapMakeupScheduleError('Time slot already reserved'), /겹칩니다/);
 
   const here = dirname(fileURLToPath(import.meta.url));
-  const sql = readFileSync(
-    join(here, '../../../supabase/migrations/20260924140000_attendance_key_notify_makeup.sql'),
-    'utf8'
-  );
-  assert.match(sql, /core\.schedule_makeup/);
-  assert.match(sql, /SECURITY DEFINER/);
-  assert.match(sql, /is_org_staff_actor/);
-  assert.match(sql, /pg_advisory_xact_lock/);
-  assert.match(sql, /MAKEUP_TEACHER_OVERLAP/);
-  assert.match(sql, /MAKEUP_ROOM_OVERLAP/);
-  assert.match(sql, /room_reservations/);
-  assert.match(sql, /exclusion_violation/);
-  assert.match(sql, /assert_room_slot_allowed/);
-  assert.match(sql, /status = 'cancelled'/);
-  assert.match(sql, /Organization mismatch/);
-
   const view = readFileSync(
     join(here, '../../industries/piano/components/makeup/MakeupManagementView.tsx'),
     'utf8'

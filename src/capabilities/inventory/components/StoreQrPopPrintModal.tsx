@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Printer, Smartphone, CheckCircle, Sparkles, Building2, QrCode } from 'lucide-react';
+import { appBrand } from '@/core/brand';
 import { Modal } from '@/shared/components';
 import { QrCodeSvg } from './BarcodeQrSvg';
 
@@ -14,8 +15,8 @@ export interface StoreQrPopPrintModalProps {
 export const StoreQrPopPrintModal: React.FC<StoreQrPopPrintModalProps> = ({
   isOpen,
   onClose,
-  organizationName = '모아 비즈니스 스토어',
-  organizationCode = 'MOA-STORE-01',
+  organizationName = '사업장',
+  organizationCode = 'EP-STORE-01',
   industryLabel = '스마트 매장',
 }) => {
   const [popPaperSize, setPopPaperSize] = useState<'A4' | 'A5'>('A4');
@@ -182,7 +183,7 @@ export const StoreQrPopPrintModal: React.FC<StoreQrPopPrintModalProps> = ({
 
             {/* 풋터 */}
             <div className="pt-6 text-center text-[11px] text-slate-400 font-medium">
-              Powered by Moa Platform · 사업장 스마트 운영 솔루션
+              Powered by {appBrand.shortName}
             </div>
           </div>
         </div>

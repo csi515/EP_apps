@@ -129,7 +129,7 @@ console.log('✓ Roles and rooms override passed');
 
 // 8. Zod Schema validation test
 const validParsed = QuickSetupFormZodSchema.safeParse({
-  name: '모아 피아노 학원',
+  name: 'EP_apps',
   industry: 'piano',
   locker_count: 50,
 });

@@ -60,7 +60,7 @@ const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation }
     currentStock: 45,
     safetyStock: 15,
     unitPrice: 25000,
-    vendorName: '(주)모아커피로스터스',
+    vendorName: 'EP_apps',
     location: { zoneId: 'ZONE-A (상온)', rackNo: 'RACK-01', binNo: 'BIN-03' },
   },
   {

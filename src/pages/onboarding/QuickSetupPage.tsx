@@ -842,7 +842,7 @@ export const QuickSetupPage: React.FC = () => {
                     validate: (v) =>
                       v.trim().length >= 2 || '상호명은 공백을 제외하고 2자 이상 입력해 주세요.',
                   })}
-                  placeholder="예: 모아 피아노 스튜디오, 청담 사우나, 바른 필라테스"
+                  placeholder="예: EP_apps, 청담 사우나, 바른 필라테스"
                   className="w-full h-12 px-4 rounded-xl border border-slate-200 text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition"
                 />
               </div>

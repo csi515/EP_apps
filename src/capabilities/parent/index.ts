@@ -1,1 +1,0 @@
-export { parentCapability } from './manifest';

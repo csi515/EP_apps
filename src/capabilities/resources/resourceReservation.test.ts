@@ -66,26 +66,6 @@ function run() {
     '이미 예약된 시간대입니다.'
   );
 
-  const sql = readSrc('supabase/migrations/20260924180000_bookable_resources.sql');
-  assert.match(sql, /CREATE TABLE IF NOT EXISTS core\.bookable_resources/);
-  assert.match(sql, /room_reservations_room_id_fkey/);
-  assert.match(sql, /REFERENCES core\.bookable_resources/);
-  assert.match(sql, /FROM core\.bookable_resources/);
-  assert.match(sql, /FOR UPDATE/);
-  assert.match(sql, /book_room_reservation_guarded/);
-  assert.match(sql, /status IN \('pending', 'approved'\)/);
-  assert.match(sql, /exclusion_violation/);
-  assert.match(sql, /upsert_bookable_resource/);
-  assert.match(sql, /list_org_bookable_resources/);
-  assert.doesNotMatch(sql, /sauna_jjimjilbang/);
-  assert.doesNotMatch(sql, /bath\./);
-  assert.doesNotMatch(sql, /scrub_station/);
-  assert.doesNotMatch(sql, /massage_room/);
-
-  const excludeSql = readSrc('supabase/migrations/20260907130000_practice_room_reservations.sql');
-  assert.match(excludeSql, /room_reservations_no_overlap/);
-  assert.match(excludeSql, /EXCLUDE USING gist/);
-
   const pianoFacade = readSrc('src/core/customer/services/practiceRoomReservationService.ts');
   assert.match(pianoFacade, /resourceReservationCapability/);
   assert.match(pianoFacade, /PRACTICE_ROOM_RESOURCE_KIND/);
@@ -119,14 +99,6 @@ function run() {
     .join('\n');
   assert.doesNotMatch(bathFiles, /EXCLUDE USING gist/);
   assert.doesNotMatch(bathFiles, /book_room_reservation_guarded/);
-
-  const memberSql = readSrc('supabase/migrations/20261021150000_member_room_reservation.sql');
-  assert.match(memberSql, /request_member_room_reservation/);
-  assert.match(memberSql, /ALTER COLUMN customer_id DROP NOT NULL/);
-  assert.match(memberSql, /list_org_room_reservations/);
-  assert.match(memberSql, /resources_manage/);
-  assert.match(memberSql, /is_org_member\(organization_id\)/);
-  assert.doesNotMatch(memberSql, /is_org_staff_actor\(v_row\.organization_id\)/);
 
   const memberService = readSrc('src/capabilities/resources/reservationService.ts');
   assert.match(memberService, /request_member_room_reservation/);

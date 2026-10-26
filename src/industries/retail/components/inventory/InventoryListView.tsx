@@ -710,7 +710,7 @@ export const InventoryListView: FC = () => {
         isOpen={storePopOpen}
         onClose={() => setStorePopOpen(false)}
         organizationName={currentOrganization?.name || '사업장'}
-        organizationCode={currentOrganization?.id?.replace(/-/g, '').slice(0, 8).toUpperCase() || 'MOA-001'}
+        organizationCode={currentOrganization?.id?.replace(/-/g, '').slice(0, 8).toUpperCase() || 'EP-001'}
         industryLabel="스마트 사업장"
       />
 

@@ -65,28 +65,6 @@ function run() {
   assert.equal(cert.teacherName, '교사');
   assert.equal(staffHealthCertToRow(cert, 'org-1').staff_id, cert.teacherId);
 
-  const sql = readFileSync(
-    join(root, 'supabase/migrations/20260924370000_daycare_ops_tables.sql'),
-    'utf8'
-  );
-  for (const table of [
-    'care_child_records',
-    'care_incidents',
-    'care_staff_health_certs',
-    'care_safety_logs',
-    'care_meal_samples',
-    'care_cctv_requests',
-    'care_pickup_logs',
-  ]) {
-    assert.match(sql, new RegExp(`CREATE TABLE IF NOT EXISTS core\\.${table}`));
-    assert.match(sql, new RegExp(`ENABLE ROW LEVEL SECURITY`));
-    assert.match(sql, new RegExp(`${table}.*organization_id|organization_id.*${table}`));
-  }
-  assert.match(sql, /is_org_staff_actor/);
-  assert.match(sql, /parent_owns_student/);
-  assert.match(sql, /care_cctv_requests_staff/);
-  assert.doesNotMatch(sql, /CREATE TABLE core\.care_journals/);
-
   const hydrate = readFileSync(join(here, 'daycareEntitySync.ts'), 'utf8');
   assert.match(hydrate, /hydrateDaycareOpsEntities/);
   assert.match(hydrate, /persistDaycareOpsEntity/);

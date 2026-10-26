@@ -11,6 +11,7 @@ import {
   Clock,
   Trash2,
 } from 'lucide-react';
+import { appBrand } from '@/core/brand';
 import { useOptionalOrganization } from '../../organizations/OrganizationProvider';
 import { getCoreClient } from '../../../lib/supabase';
 import {
@@ -289,7 +290,7 @@ export const OmniSearchModal: React.FC<OmniSearchModalProps> = ({
             <span><kbd className="font-semibold text-slate-600">↑↓</kbd> 이동</span>
             <span><kbd className="font-semibold text-slate-600">Enter</kbd> 선택</span>
           </div>
-          <span>Moa-v2 OmniSearch Engine</span>
+          <span>{appBrand.shortName}</span>
         </div>
       </div>
     </div>

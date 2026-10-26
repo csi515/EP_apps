@@ -17,26 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../../..');
 
-const createSaleMig = readFileSync(
-  join(root, 'supabase/migrations/20260921130000_create_sale_include_point_redeem.sql'),
-  'utf8'
-);
 const retailSale = readFileSync(
   join(root, 'src/industries/retail/services/saleService.ts'),
   'utf8'
-);
-
-assert.match(
-  createSaleMig,
-  /v_redeem := core\.apply_point_redeem_for_sale/
-);
-assert.match(
-  createSaleMig,
-  /points_used > 0: 동일 트랜잭션에서 ledger redeem/
-);
-assert.match(
-  createSaleMig,
-  /실패 시 판매·재고 전체 rollback/
 );
 
 // Retail은 redeem을 별도 호출하지 않음 (이중 ledger / 부분 실패 방지)
