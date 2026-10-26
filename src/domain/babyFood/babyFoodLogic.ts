@@ -30,10 +30,38 @@ export interface SettlementResult {
   formattedRemainder: string;
 }
 
+export interface BabyAgeParts {
+  months: number;
+  days: number;
+}
+
 export interface BabyAgeInfo {
   months: number;
+  days: number;
   formattedAge: string;
   stage: WeaningStageGuide;
+}
+
+function startOfLocalDay(date: Date): Date {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return d;
+}
+
+/**
+ * 생년월일에 months를 더한 앵커일. 대상 월에 해당 일이 없으면 말일로 클램프.
+ */
+function addCalendarMonthsClamped(birth: Date, months: number): Date {
+  const year = birth.getFullYear();
+  const month = birth.getMonth() + months;
+  const day = birth.getDate();
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDay));
+}
+
+function diffCalendarDays(from: Date, to: Date): number {
+  const a = startOfLocalDay(from).getTime();
+  const b = startOfLocalDay(to).getTime();
+  return Math.max(0, Math.round((b - a) / 86_400_000));
 }
 
 /**
@@ -74,6 +102,27 @@ export function calculateBabyAge(
   }
 
   return Math.max(0, months);
+}
+
+/**
+ * 만 개월 수와 해당 개월 달성일 이후 경과 일수를 함께 산출한다.
+ * 개월 규칙은 calculateBabyAge와 동일하며, 월말·윤달은 앵커일 클램프로 처리한다.
+ */
+export function calculateBabyAgeParts(
+  birthDate: string | Date,
+  baseDate?: string | Date
+): BabyAgeParts {
+  const birth = new Date(birthDate);
+  const base = baseDate ? new Date(baseDate) : new Date();
+
+  if (isNaN(birth.getTime()) || isNaN(base.getTime()) || base < birth) {
+    return { months: 0, days: 0 };
+  }
+
+  const months = calculateBabyAge(birthDate, baseDate);
+  const anchor = addCalendarMonthsClamped(birth, months);
+  const days = diffCalendarDays(anchor, base);
+  return { months, days };
 }
 
 /**
@@ -242,11 +291,12 @@ export function getBabyAgeInfo(
   birthDate: string | Date,
   baseDate?: string | Date
 ): BabyAgeInfo {
-  const months = calculateBabyAge(birthDate, baseDate);
+  const { months, days } = calculateBabyAgeParts(birthDate, baseDate);
   const stage = getWeaningStageGuide(months);
   return {
     months,
-    formattedAge: `만 ${months}개월`,
+    days,
+    formattedAge: days > 0 ? `만 ${months}개월 ${days}일` : `만 ${months}개월`,
     stage,
   };
 }

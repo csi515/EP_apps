@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   calculateSettlement,
   type SettlementResult,
@@ -28,18 +28,20 @@ export interface BabySettlementWidgetProps {
   participatingBabies?: BabyProfile[];
   initialExpense?: number;
   onRecordLedger?: (entry: SettlementLedgerEntry) => void;
+  onExpenseChange?: (amount: number) => void;
 }
 
 export const BabySettlementWidget: React.FC<BabySettlementWidgetProps> = ({
   participatingBabies = [],
-  initialExpense = 30000,
+  initialExpense = 0,
   onRecordLedger,
+  onExpenseChange,
 }) => {
   const [totalExpenseInput, setTotalExpenseInput] = useState<string>(
-    initialExpense.toString()
+    initialExpense > 0 ? initialExpense.toString() : ''
   );
   const [customBabyCount, setCustomBabyCount] = useState<number>(
-    participatingBabies.length > 0 ? participatingBabies.length : 3
+    participatingBabies.length > 0 ? participatingBabies.length : 1
   );
   const [settlementCycle, setSettlementCycle] = useState<string>('주 1회 (화요일)');
   const [sessionTitle, setSessionTitle] = useState<string>('초기/중기 이유식 1차 품앗이');
@@ -61,6 +63,10 @@ export const BabySettlementWidget: React.FC<BabySettlementWidgetProps> = ({
   const settlement = useMemo(() => {
     return calculateSettlement(numericExpense, effectiveBabyCount);
   }, [numericExpense, effectiveBabyCount]);
+
+  useEffect(() => {
+    onExpenseChange?.(numericExpense);
+  }, [numericExpense, onExpenseChange]);
 
   // 참여 아기들의 알레르기 수합
   const participatingAllergies = useMemo(() => {

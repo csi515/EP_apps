@@ -216,10 +216,12 @@ function run() {
   // 10-1. baby_food_coop (이유식 품앗이) COMMUNITY 프리셋 계약 검증
   const babyFoodPreset = PRESET_DEFINITIONS.find((p) => p.id === 'baby_food_coop');
   assert.ok(babyFoodPreset, 'baby_food_coop 프리셋이 definitions.ts에 등록되어야 합니다.');
-  assert.equal(babyFoodPreset.name, '이유식품앗이');
+  assert.equal(babyFoodPreset.name, '이유식 품앗이 / 공동육아');
   assert.equal(babyFoodPreset.category, 'COMMUNITY');
-  assert.equal(babyFoodPreset.defaultTerms.customer, '아기/아이');
+  assert.equal(babyFoodPreset.defaultTerms.customer, '참여 가족 (아기)');
   assert.ok(babyFoodPreset.recommendedCapabilities.includes('baby_food_coop'));
+  assert.ok(babyFoodPreset.recommendedCapabilities.includes('booking'));
+  assert.ok(babyFoodPreset.recommendedCapabilities.includes('rental_equipment'));
   console.log('✓ baby_food_coop (COMMUNITY) 프리셋 정의 및 조립 계약 검증 완료');
 
   // 11. Zero-Condition 온보딩 추천값 검증 (getStandardPresetsForIndustry)
@@ -251,7 +253,9 @@ function run() {
   assert.equal(getResolvedTerm('space', undefined, 'hair_salon'), '시술체어');
   assert.equal(getResolvedTerm('pass', undefined, 'study_cafe'), '시간권/기간권');
   assert.equal(getResolvedTerm('customer', undefined, 'orchid_nursery'), '애란인/고객');
-  assert.equal(getResolvedTerm('customer', undefined, 'baby_food_coop'), '아기/아이');
+  assert.equal(getResolvedTerm('customer', undefined, 'baby_food_coop'), '참여 가족 (아기)');
+  assert.equal(getResolvedTerm('tenant', undefined, 'baby_food_coop'), '우리 품앗이 모임');
+  assert.equal(getResolvedTerm('billing', undefined, 'baby_food_coop'), '재료비 1/N 정산');
   console.log('✓ 런타임 도메인 용어 엔진 전수 치환 검증 완료');
 
   console.log(`presetAssembler.test.ts: ok (${presets.length} industry presets verified successfully)`);

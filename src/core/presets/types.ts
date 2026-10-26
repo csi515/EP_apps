@@ -309,6 +309,10 @@ export interface PresetTermsDefinition {
   fee?: string;
   lesson?: string;
   level?: string;
+  tenant?: string;
+  owner?: string;
+  staff?: string;
+  billing?: string;
 }
 
 export interface PresetFacilityDefinition {

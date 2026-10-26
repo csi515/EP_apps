@@ -286,7 +286,7 @@ export const PRESET_DEFINITIONS: readonly IndustryPresetDefinitionItem[] = [
   // ==========================================
   {
     id: 'baby_food_coop',
-    name: '이유식품앗이',
+    name: '이유식 품앗이 / 공동육아',
     category: 'COMMUNITY',
     recommendedCapabilities: [
       'baby_food_coop',
@@ -294,12 +294,14 @@ export const PRESET_DEFINITIONS: readonly IndustryPresetDefinitionItem[] = [
       'feedbacks',
       'daily_care_report',
       'billing_invoicing',
+      'booking',
+      'rental_equipment',
     ],
     defaultTerms: {
-      customer: '아기/아이',
-      instructor: '모임장/운영맘',
-      space: '품앗이존/주방',
-      pass: '품앗이분담금',
+      customer: '참여 가족 (아기)',
+      instructor: '모임장 (이번 달 방장)',
+      space: '모임 거점 (주방/공간)',
+      pass: '큐브 교환권 (품앗이 티켓)',
     },
   },
 ] as const;

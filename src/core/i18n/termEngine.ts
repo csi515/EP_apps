@@ -12,11 +12,24 @@ export const STANDARD_TERM_KEYS = [
   'term.pass',
   'term.instructor',
   'term.lesson',
+  'term.tenant',
+  'term.owner',
+  'term.staff',
+  'term.billing',
 ] as const;
 
 export type StandardTermKey = (typeof STANDARD_TERM_KEYS)[number];
 
-export type ShortTermKey = 'customer' | 'space' | 'pass' | 'instructor' | 'lesson';
+export type ShortTermKey =
+  | 'customer'
+  | 'space'
+  | 'pass'
+  | 'instructor'
+  | 'lesson'
+  | 'tenant'
+  | 'owner'
+  | 'staff'
+  | 'billing';
 
 export const DEFAULT_TERMS: Record<StandardTermKey, string> = {
   'term.customer': '고객',
@@ -24,6 +37,10 @@ export const DEFAULT_TERMS: Record<StandardTermKey, string> = {
   'term.pass': '이용권',
   'term.instructor': '강사',
   'term.lesson': '수업',
+  'term.tenant': '사업장',
+  'term.owner': '대표',
+  'term.staff': '직원',
+  'term.billing': '청구',
 };
 
 export const PRESET_DEFAULT_TERMS: Record<string, Partial<Record<StandardTermKey, string>>> = {
@@ -441,11 +458,15 @@ export const PRESET_DEFAULT_TERMS: Record<string, Partial<Record<StandardTermKey
       "term.lesson": "분양상담"
     },
     "baby_food_coop": {
-      "term.customer": "아기/아이",
-      "term.space": "품앗이존/주방",
-      "term.pass": "품앗이분담금",
-      "term.instructor": "모임장/운영맘",
-      "term.lesson": "공동조리/품앗이"
+      "term.customer": "참여 가족 (아기)",
+      "term.space": "모임 거점 (주방/공간)",
+      "term.pass": "큐브 교환권 (품앗이 티켓)",
+      "term.instructor": "모임장 (이번 달 방장)",
+      "term.lesson": "공동 당번 (요리 조)",
+      "term.tenant": "우리 품앗이 모임",
+      "term.owner": "모임장 (이번 달 방장)",
+      "term.staff": "공동 당번 (요리 조)",
+      "term.billing": "재료비 1/N 정산"
     }
   };
 

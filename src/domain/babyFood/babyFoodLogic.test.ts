@@ -5,6 +5,7 @@
 import assert from 'node:assert/strict';
 import {
   calculateBabyAge,
+  calculateBabyAgeParts,
   getWeaningStageGuide,
   getBabyAgeInfo,
   calculateSettlement,
@@ -74,6 +75,18 @@ function testCalculateBabyAge(): void {
   // 10. 유효하지 않은 문자열 방어
   assert.equal(calculateBabyAge('invalid-date'), 0, '잘못된 날짜는 0 반환');
 
+  // 11. 윤달 개월 계약 (숫자 API)
+  assert.equal(
+    calculateBabyAge('2024-01-31', '2024-02-29'),
+    1,
+    '윤달 말일 도달 시 만 1개월'
+  );
+  assert.equal(
+    calculateBabyAge('2024-01-31', '2024-02-28'),
+    0,
+    '윤달 말일 전은 0개월'
+  );
+
   console.log('✔ calculateBabyAge tests passed.');
 }
 
@@ -130,8 +143,12 @@ function testGetWeaningStageGuide(): void {
   // 6. getBabyAgeInfo 헬퍼 검증
   const info = getBabyAgeInfo('2026-03-15', '2026-10-15');
   assert.equal(info.months, 7);
+  assert.equal(info.days, 0);
   assert.equal(info.formattedAge, '만 7개월');
   assert.equal(info.stage.stageKey, 'middle');
+
+  const parts = calculateBabyAgeParts('2024-01-31', '2024-02-29');
+  assert.deepEqual(parts, { months: 1, days: 0 });
 
   console.log('✔ getWeaningStageGuide tests passed.');
 }

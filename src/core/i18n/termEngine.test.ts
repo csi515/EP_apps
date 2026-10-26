@@ -14,6 +14,10 @@ function run() {
   assert.equal(normalizeTermKey('pass'), 'term.pass');
   assert.equal(normalizeTermKey('instructor'), 'term.instructor');
   assert.equal(normalizeTermKey('lesson'), 'term.lesson');
+  assert.equal(normalizeTermKey('tenant'), 'term.tenant');
+  assert.equal(normalizeTermKey('owner'), 'term.owner');
+  assert.equal(normalizeTermKey('staff'), 'term.staff');
+  assert.equal(normalizeTermKey('billing'), 'term.billing');
 
   // 1. 미설정 시 기본값 반환 검증 (전체 키 & 축약 키 지원)
   assert.equal(getResolvedTerm('term.customer'), '고객');
@@ -26,6 +30,10 @@ function run() {
   assert.equal(getResolvedTerm('instructor'), '강사');
   assert.equal(getResolvedTerm('term.lesson'), '수업');
   assert.equal(getResolvedTerm('lesson'), '수업');
+  assert.equal(getResolvedTerm('tenant'), '사업장');
+  assert.equal(getResolvedTerm('owner'), '대표');
+  assert.equal(getResolvedTerm('staff'), '직원');
+  assert.equal(getResolvedTerm('billing'), '청구');
 
   // 2. 프리셋별 기본값 반환 검증
   // 2-1. 피아노 학원 프리셋
@@ -47,6 +55,12 @@ function run() {
   // 2-3. 미용실 프리셋
   assert.equal(getResolvedTerm('space', undefined, 'hair_salon'), '시술체어');
   assert.equal(getResolvedTerm('instructor', undefined, 'hair_salon'), '디자이너');
+
+  // 2-4. 이유식 품앗이 COMMUNITY 프리셋
+  assert.equal(getResolvedTerm('customer', undefined, 'baby_food_coop'), '참여 가족 (아기)');
+  assert.equal(getResolvedTerm('tenant', undefined, 'baby_food_coop'), '우리 품앗이 모임');
+  assert.equal(getResolvedTerm('billing', undefined, 'baby_food_coop'), '재료비 1/N 정산');
+  assert.equal(getResolvedTerm('staff', undefined, 'baby_food_coop'), '공동 당번 (요리 조)');
 
   // 3. 사업주 커스텀 설정이 프리셋보다 최우선 적용되는지 검증
   const customTerms = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  calculateBabyAge,
+  calculateBabyAgeParts,
   getWeaningStageGuide,
   type WeaningStageGuide,
 } from '@/domain/babyFood/babyFoodLogic';
@@ -90,9 +90,11 @@ export const BabyProfileCard: React.FC<BabyProfileCardProps> = ({
   onToggleSelect,
   showWeaningGuideModal,
 }) => {
-  const months = calculateBabyAge(baby.birthDate, baseDate);
+  const { months, days } = calculateBabyAgeParts(baby.birthDate, baseDate);
   const guide = getWeaningStageGuide(months);
   const { allergyTags, generalTags } = extractAllergyTags(baby);
+  const ageBadgeLabel =
+    days > 0 ? `만 ${months}개월 ${days}일 / ${guide.stageName}` : `만 ${months}개월 / ${guide.stageName}`;
 
   const getStageBadgeColor = (stageKey: string) => {
     switch (stageKey) {
@@ -184,7 +186,7 @@ export const BabyProfileCard: React.FC<BabyProfileCardProps> = ({
           )}`}
         >
           <Sparkles className="h-3 w-3" />
-          만 {months}개월 / {guide.stageName}
+          {ageBadgeLabel}
         </span>
         <span className="text-xs text-slate-600">
           권장: {guide.monthsRange} ({guide.feedingFrequency})

@@ -36,6 +36,26 @@ const TERM_META: Record<StandardTermKey, { label: string; placeholder: string; h
     placeholder: '예: 레슨, 수련, PT, 시술, 클래스',
     helper: '제공되는 핵심 교육/서비스의 명칭입니다.',
   },
+  'term.tenant': {
+    label: '사업장·모임 호칭',
+    placeholder: '예: 우리 품앗이 모임, 학원, 매장',
+    helper: '테넌트(사업장/모임)를 부르는 명칭입니다.',
+  },
+  'term.owner': {
+    label: '대표·모임장 호칭',
+    placeholder: '예: 모임장 (이번 달 방장), 원장, 대표',
+    helper: '사업장 또는 모임을 운영하는 책임자 호칭입니다.',
+  },
+  'term.staff': {
+    label: '직원·당번 호칭',
+    placeholder: '예: 공동 당번 (요리 조), 직원, 스태프',
+    helper: '운영을 돕는 실무 인력 호칭입니다.',
+  },
+  'term.billing': {
+    label: '청구·정산 호칭',
+    placeholder: '예: 재료비 1/N 정산, 수강료, 청구',
+    helper: '비용 청구와 정산을 부르는 명칭입니다.',
+  },
 };
 
 export const CustomTermsSettingCard: React.FC = () => {
