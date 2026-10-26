@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   buildGateApprovalRequestValues,
-  buildDefaultGateApprovalSteps,
+  buildChosenGateApprovalSteps,
   canSubmitGateToApprovalWorkflow,
   gateDecisionFromApprovalStatus,
   shouldSyncGateFromApproval,
@@ -31,15 +31,24 @@ function run() {
   assert.equal(values.entity_type, RESEARCH_GATE_APPROVAL_ENTITY_TYPE);
   assert.equal(values.entity_id, gate.id);
 
-  const steps = buildDefaultGateApprovalSteps('org-1', 'req-1');
+  const steps = buildChosenGateApprovalSteps(
+    'org-1',
+    'req-1',
+    { userId: 'rev-1', name: '검토자' },
+    { userId: 'app-1', name: '승인자' }
+  );
   assert.equal(steps.length, 2);
   assert.equal(steps[0].status, 'pending');
+  assert.equal(steps[0].approver_id, 'rev-1');
+  assert.equal(steps[1].approver_id, 'app-1');
+  assert.equal(steps[1].status, 'waiting');
 
   assert.equal(canSubmitGateToApprovalWorkflow(gate, true).allowed, true);
   assert.equal(canSubmitGateToApprovalWorkflow(gate, false).allowed, false);
 
   const inApproval: ResearchGate = { ...gate, status: 'in_approval', approvalRequestId: 'req-1' };
   assert.equal(shouldSyncGateFromApproval(inApproval, 'approved'), true);
+  assert.equal(shouldSyncGateFromApproval(inApproval, 'draft'), true);
   assert.equal(gateDecisionFromApprovalStatus('approved'), 'approved');
 
   console.log('[test:research-project-approval] ok');

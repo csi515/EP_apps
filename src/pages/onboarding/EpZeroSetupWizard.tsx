@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import { useUpdate } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
-import { StorageService } from '@/services/storage';
+import { seedEpOrganizationRoles } from '@/core/organizations/services/epRoleSeed';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { showToast } from '@/shared/feedback/uiFeedback';
 
 interface ParsedDepartment {
@@ -140,30 +141,53 @@ export const EpZeroSetupWizard: React.FC = () => {
     setNewRoomName('');
   };
 
-  const handleFinishWizard = () => {
-    // 테넌트 세팅 저장
-    if (currentOrganization?.id) {
-      updateOrgMutation({
-        resource: 'organizations',
-        id: currentOrganization.id,
-        values: {
-          name: companyName,
-          settings: {
-            ...(currentOrganization.settings as Record<string, unknown>),
-            business_number: businessNumber,
-            plant_location: plantLocation,
-            manager_name: managerName,
-            zero_setup_completed: true,
-            setup_vehicles: vehicles,
-            setup_rooms: rooms,
-            setup_departments: parsedDepartments,
-            setup_roles: parsedRoles,
-          },
-        },
-      });
+  const handleFinishWizard = async () => {
+    if (!currentOrganization?.id) {
+      showToast('조직 정보가 없습니다. 다시 로그인해 주세요.', 'error');
+      return;
     }
 
-    showToast('🎉 초기 세팅이 완료되었습니다! 사내 포털로 이동합니다.', 'success');
+    updateOrgMutation({
+      resource: 'organizations',
+      id: currentOrganization.id,
+      values: {
+        name: companyName,
+        settings: {
+          ...(currentOrganization.settings as Record<string, unknown>),
+          business_number: businessNumber,
+          plant_location: plantLocation,
+          manager_name: managerName,
+          zero_setup_completed: true,
+          setup_vehicles: vehicles,
+          setup_rooms: rooms,
+          setup_departments: parsedDepartments,
+          setup_roles: parsedRoles,
+        },
+      },
+    });
+
+    try {
+      const preset = getIndustryPreset(
+        currentOrganization.industry_type ?? 'personal_plant_ops'
+      );
+      const result = await seedEpOrganizationRoles({
+        organizationId: currentOrganization.id,
+        wizardRoles: parsedRoles,
+        presetRoles: (preset?.roles ?? []).map((r) => ({
+          name: r.name,
+          rank_order: r.rank_order,
+          permissions: r.permissions ?? [],
+        })),
+      });
+      if (result.seeded > 0) {
+        showToast(`직급 ${result.seeded}개가 조직 권한에 등록되었습니다.`, 'success');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '직급 시드 실패';
+      showToast(`조직 설정은 저장됐지만 직급 시드에 실패했습니다: ${msg}`, 'error');
+    }
+
+    showToast('초기 세팅이 완료되었습니다. 사내 포털로 이동합니다.', 'success');
     navigate('/workspace/intranet');
   };
 

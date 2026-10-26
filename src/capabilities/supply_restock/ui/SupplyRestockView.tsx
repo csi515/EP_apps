@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useList, useCreate, useUpdate } from '@refinedev/core';
+import React, { useEffect, useState } from 'react';
+import { useList, useCreate, useUpdate, useGetIdentity } from '@refinedev/core';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
   detectRestockNeeded,
   groupRestockItemsByVendor,
@@ -23,10 +24,25 @@ import {
   Building2,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import { ProcurementPipelineView } from './ProcurementPipelineView';
+import {
+  createApprovalWithChosenLine,
+  listApprovalOrgMembers,
+  type ApprovalMemberOption,
+} from '@/capabilities/approval_workflow/services/approvalWorkflowService';
+
+type Identity = { id?: string; name?: string };
 
 export const SupplyRestockView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'restock_po' | 'pr_quotes' | 'procurement_pipeline'>('procurement_pipeline');
+  const { currentOrganization } = useOrganization();
+  const { data: identity } = useGetIdentity<Identity>();
+  const orgId = currentOrganization?.id ?? '';
+  const userId = identity?.id ?? '';
+  const [activeTab, setActiveTab] = useState<'restock_po' | 'pr_quotes'>('restock_po');
+  const [approvalPr, setApprovalPr] = useState<any | null>(null);
+  const [approvalMembers, setApprovalMembers] = useState<ApprovalMemberOption[]>([]);
+  const [approvalReviewerId, setApprovalReviewerId] = useState('');
+  const [approvalApproverId, setApprovalApproverId] = useState('');
+  const [approvalBusy, setApprovalBusy] = useState(false);
 
   // 1. 소모품 목록 쿼리
   const { query: restockQuery } = useList<RestockItem>({
@@ -52,7 +68,13 @@ export const SupplyRestockView: React.FC = () => {
   const { mutate: createItem } = useCreate();
   const { mutate: createPr } = useCreate();
   const { mutate: updateQuote } = useUpdate();
-  const { mutate: createApprovalRequest } = useCreate();
+
+  useEffect(() => {
+    if (!orgId || !approvalPr) return;
+    void listApprovalOrgMembers(orgId)
+      .then(setApprovalMembers)
+      .catch(() => setApprovalMembers([]));
+  }, [orgId, approvalPr]);
 
   // 소모품 등록 모달 상태
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -141,33 +163,52 @@ export const SupplyRestockView: React.FC = () => {
     );
   };
 
-  // Phase 1 전자결재(approval_workflow) 연계 기안
   const handleLinkToApproval = (pr: any) => {
-    createApprovalRequest(
-      {
-        resource: 'approval_requests',
-        values: {
-          title: `[구매 승인 요청] ${pr.title} (${Number(pr.total_estimated_amount).toLocaleString()}원)`,
-          requester_name: pr.requester_name || '구매 담당자',
-          status: 'pending',
-          entity_type: 'purchase_requisition',
-          entity_id: pr.id,
-          total_steps: 2,
-          current_step_order: 1,
-          content: {
-            pr_number: pr.pr_number,
-            amount: pr.total_estimated_amount,
-            justification: pr.justification,
-          },
+    setApprovalPr(pr);
+    setApprovalReviewerId('');
+    setApprovalApproverId('');
+  };
+
+  const confirmPurchaseApproval = async () => {
+    if (!approvalPr || !orgId || !userId) {
+      showToast('로그인·조직 정보가 필요합니다.', 'error');
+      return;
+    }
+    const reviewer = approvalMembers.find((m) => m.userId === approvalReviewerId);
+    const approver = approvalMembers.find((m) => m.userId === approvalApproverId);
+    if (!reviewer || !approver) {
+      showToast('검토자와 최종 승인자를 선택해 주세요.', 'error');
+      return;
+    }
+    if (reviewer.userId === approver.userId) {
+      showToast('검토자와 최종 승인자는 서로 다른 사람이어야 합니다.', 'error');
+      return;
+    }
+    setApprovalBusy(true);
+    try {
+      await createApprovalWithChosenLine({
+        organizationId: orgId,
+        title: `[구매 승인 요청] ${approvalPr.title} (${Number(approvalPr.total_estimated_amount).toLocaleString()}원)`,
+        content: {
+          pr_number: approvalPr.pr_number,
+          amount: approvalPr.total_estimated_amount,
+          justification: approvalPr.justification,
         },
-      },
-      {
-        onSuccess: () => {
-          showToast(`'${pr.pr_number}' 결재 기안이 상신되었습니다.`, 'success');
-          prQuery?.refetch();
-        },
-      }
-    );
+        requesterId: userId,
+        requesterName: identity?.name?.trim() || approvalPr.requester_name || '구매 담당자',
+        reviewer: { userId: reviewer.userId, name: reviewer.name },
+        approver: { userId: approver.userId, name: approver.name },
+        entityType: 'purchase_requisition',
+        entityId: String(approvalPr.id),
+      });
+      showToast(`'${approvalPr.pr_number}' 결재 기안이 상신되었습니다.`, 'success');
+      setApprovalPr(null);
+      prQuery?.refetch();
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '결재 상신 실패', 'error');
+    } finally {
+      setApprovalBusy(false);
+    }
   };
 
   const handleSelectQuote = (prId: string, quoteId: string) => {
@@ -226,17 +267,6 @@ export const SupplyRestockView: React.FC = () => {
           <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
             <button
               type="button"
-              onClick={() => setActiveTab('procurement_pipeline')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                activeTab === 'procurement_pipeline'
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              조달·구매 파이프라인 (4단계)
-            </button>
-            <button
-              type="button"
               onClick={() => setActiveTab('restock_po')}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                 activeTab === 'restock_po'
@@ -255,7 +285,7 @@ export const SupplyRestockView: React.FC = () => {
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              간이 PR & 견적 비교
+              간이 PR & 결재 상신
             </button>
           </div>
 
@@ -282,10 +312,7 @@ export const SupplyRestockView: React.FC = () => {
         </div>
       </div>
 
-      {/* 탭 0: 전문 조달·구매 파이프라인 (4단계 전주기) */}
-      {activeTab === 'procurement_pipeline' && <ProcurementPipelineView />}
-
-      {/* 탭 1: 안전재고 및 간이 발주서 (PO) */}
+      {/* 안전재고 및 간이 발주서 (PO) */}
       {activeTab === 'restock_po' && (
         <div className="space-y-6">
           {/* 긴급 발주 알림 배너 */}
@@ -639,6 +666,67 @@ export const SupplyRestockView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {approvalPr ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
+          <div className="w-full rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+            <h3 className="text-base font-bold text-slate-900">구매 결재 상신</h3>
+            <p className="mt-1 text-xs text-slate-500">{approvalPr.pr_number} · {approvalPr.title}</p>
+            <div className="mt-4 space-y-3">
+              <label className="block text-xs font-bold text-slate-700">
+                검토자
+                <select
+                  aria-label="검토자"
+                  value={approvalReviewerId}
+                  onChange={(e) => setApprovalReviewerId(e.target.value)}
+                  className="mt-1 h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                >
+                  <option value="">검토자 선택</option>
+                  {approvalMembers.map((member) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs font-bold text-slate-700">
+                최종 승인자
+                <select
+                  aria-label="최종 승인자"
+                  value={approvalApproverId}
+                  onChange={(e) => setApprovalApproverId(e.target.value)}
+                  className="mt-1 h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                >
+                  <option value="">최종 승인자 선택</option>
+                  {approvalMembers.map((member) => (
+                    <option key={`approver-${member.userId}`} value={member.userId}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                className="h-12 flex-1 rounded-xl border border-slate-200 text-sm font-semibold"
+                onClick={() => setApprovalPr(null)}
+                disabled={approvalBusy}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="h-12 flex-1 rounded-xl bg-indigo-600 text-sm font-bold text-white disabled:opacity-50"
+                onClick={() => void confirmPurchaseApproval()}
+                disabled={approvalBusy}
+              >
+                상신
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

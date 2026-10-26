@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Wrench, CheckSquare, ShieldAlert, LogOut } from 'lucide-react';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { TaskPipelineKanbanView } from '@/capabilities/task_pipeline/ui/TaskPipelineKanbanView';
-import { SopRiskAssessmentView } from '@/capabilities/sop_risk_assessment';
+import { DesktopSopRiskMatrixView } from '@/capabilities/sop_risk_assessment';
 
 /**
  * Worker Kiosk Shell
@@ -75,7 +75,7 @@ export function WorkerKioskShell() {
       {/* 키오스크 본문 컨텐츠 */}
       <main className="flex-1 p-5 overflow-y-auto bg-slate-900">
         {activeTab === 'kanban' && <TaskPipelineKanbanView />}
-        {activeTab === 'safety' && <SopRiskAssessmentView />}
+        {activeTab === 'safety' && <DesktopSopRiskMatrixView />}
       </main>
     </div>
   );

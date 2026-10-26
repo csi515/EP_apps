@@ -5,18 +5,18 @@ import { DocumentApprovalStepper } from './DocumentApprovalStepper';
 import { RevisionHistoryModal } from './RevisionHistoryModal';
 import {
   listApprovalLines,
+  listOrgMembers,
   listRevisions,
   listRiskAssessments,
   reviseAssessment,
+  saveDraftRiskAssessment,
   submitForReview,
   type ApprovalLineRow,
   type RevisionRow,
   type RiskAssessmentRow,
 } from '../services/riskAssessmentApprovalService';
-import {
-  shouldShowOccasionalReviewBadge,
-  type ApprovalStepState,
-} from '../domain/approvalEngine';
+import { shouldShowOccasionalReviewBadge, type ApprovalStepState } from '../domain/approvalEngine';
+import { readDocumentBody, validateDraftForSubmit, type OrgMemberOption } from '../domain/sopStepDocument';
 
 type Identity = { id?: string };
 
@@ -27,6 +27,7 @@ function toStep(row: ApprovalLineRow): ApprovalStepState {
     assigneeId: row.assignee_id,
     assigneeName: row.assignee_name ?? undefined,
     actionStatus: row.action_status as ApprovalStepState['actionStatus'],
+    comment: row.comment,
   };
 }
 
@@ -42,6 +43,8 @@ export const SopRiskApprovalPanel: React.FC = () => {
   const [revisions, setRevisions] = useState<RevisionRow[]>([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [reviewerId, setReviewerId] = useState('');
+  const [approverId, setApproverId] = useState('');
+  const [members, setMembers] = useState<OrgMemberOption[]>([]);
   const [revisionReason, setRevisionReason] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +65,13 @@ export const SopRiskApprovalPanel: React.FC = () => {
   }, [reload]);
 
   useEffect(() => {
+    if (!orgId) return;
+    void listOrgMembers(orgId)
+      .then(setMembers)
+      .catch(() => setMembers([]));
+  }, [orgId]);
+
+  useEffect(() => {
     if (!selectedId) return;
     void (async () => {
       const [lineRows, revRows] = await Promise.all([
@@ -74,6 +84,13 @@ export const SopRiskApprovalPanel: React.FC = () => {
       setError(cause instanceof Error ? cause.message : '결재선 조회 실패');
     });
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const body = readDocumentBody(selected.snapshot_payload);
+    setReviewerId(body.intendedReviewerId ?? '');
+    setApproverId(body.intendedApproverId ?? '');
+  }, [selected]);
 
   const occasional = selected
     ? shouldShowOccasionalReviewBadge({
@@ -139,20 +156,66 @@ export const SopRiskApprovalPanel: React.FC = () => {
                 </p>
               </div>
               <DocumentApprovalStepper steps={steps} />
+              {selected ? (
+                <ol className="mt-3 space-y-2">
+                  {readDocumentBody(selected.snapshot_payload).rejectionHistory.map((note) => (
+                    <li key={note.id} className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-950">
+                      <p className="font-bold">{note.stepLabel} 반려</p>
+                      <p className="mt-1 whitespace-pre-wrap">{note.reason}</p>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
 
               {selected.status === 'DRAFT' && selected.created_by === userId ? (
                 <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <input
+                  <select
                     className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
-                    placeholder="검토자 사용자 UUID"
+                    aria-label="검토자"
                     value={reviewerId}
-                    onChange={(e) => setReviewerId(e.target.value)}
-                  />
+                    onChange={(event) => setReviewerId(event.target.value)}
+                  >
+                    <option value="">검토자 선택</option>
+                    {members.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
+                    aria-label="최종 승인자"
+                    value={approverId}
+                    onChange={(event) => setApproverId(event.target.value)}
+                  >
+                    <option value="">최종 승인자 선택</option>
+                    {members.map((member) => (
+                      <option key={`approver-${member.userId}`} value={member.userId}>
+                        {member.name}
+                      </option>
+                    ))}
+                  </select>
                   <button
                     type="button"
                     className="h-12 rounded-xl bg-rose-700 px-4 font-bold text-white"
                     onClick={() => {
-                      void submitForReview(selected.id, reviewerId.trim())
+                      const current = selected;
+                      const body = {
+                        ...readDocumentBody(current.snapshot_payload),
+                        intendedReviewerId: reviewerId.trim() || null,
+                        intendedApproverId: approverId.trim() || null,
+                      };
+                      const check = validateDraftForSubmit(body);
+                      if (!check.isValid) {
+                        setError(check.error ?? '검토 요청 전에 내용을 확인해 주세요.');
+                        return;
+                      }
+                      void saveDraftRiskAssessment({
+                        assessmentId: current.id,
+                        processName: current.process_name,
+                        body,
+                      })
+                        .then(() => submitForReview(current.id, reviewerId.trim()))
                         .then(() => {
                           setMessage('검토 요청이 접수되었습니다.');
                           return reload();
@@ -162,7 +225,7 @@ export const SopRiskApprovalPanel: React.FC = () => {
                         });
                     }}
                   >
-                    검토 요청
+                    {readDocumentBody(selected.snapshot_payload).rejectionHistory.length > 0 ? '다시 검토 요청' : '검토 요청'}
                   </button>
                 </div>
               ) : null}

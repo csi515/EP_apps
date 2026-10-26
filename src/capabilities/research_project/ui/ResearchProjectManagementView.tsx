@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useGetIdentity } from '@refinedev/core';
 import { FolderKanban, Plus } from 'lucide-react';
 import {
   RESEARCH_KANBAN_COLUMNS,
@@ -13,6 +14,8 @@ import {
 import { useResearchProjectWorkspace } from '../hooks/useResearchProjectWorkspace';
 import { ResearchProjectDetailPanel } from './ResearchProjectDetailPanel';
 import { showToast } from '@/shared/feedback/uiFeedback';
+
+type Identity = { id?: string; name?: string };
 
 const STATUS_FILTERS: Array<ResearchProjectStatus | 'all'> = [
   'all',
@@ -34,6 +37,7 @@ function formatKrw(value: number): string {
 
 export const ResearchProjectManagementView: React.FC = () => {
   const ws = useResearchProjectWorkspace();
+  const { data: identity } = useGetIdentity<Identity>();
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [createOpen, setCreateOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -262,8 +266,16 @@ export const ResearchProjectManagementView: React.FC = () => {
             onDirectGateDecision={(gateOrder, status, note) =>
               ws.directGateDecision(ws.selected!, gateOrder, status, note, '연구소장')
             }
-            onSubmitGateApproval={(gateId, note) =>
-              ws.submitGateToApproval(ws.selected!, gateId, note, getLeadName(ws.selected!))
+            onSubmitGateApproval={(gateId, note, reviewer, approver) =>
+              ws.submitGateToApproval(
+                ws.selected!,
+                gateId,
+                note,
+                identity?.name?.trim() || getLeadName(ws.selected!),
+                identity?.id ?? '',
+                reviewer,
+                approver
+              )
             }
             onDeliverableStatus={ws.updateDeliverableStatusPersisted}
             onAddDeliverable={(title, dueDate, evidenceUrl) =>

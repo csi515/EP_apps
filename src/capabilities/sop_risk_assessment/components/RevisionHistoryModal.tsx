@@ -8,10 +8,10 @@ type Props = {
   onClose: () => void;
 };
 
+import { countHazardsInSnapshot } from '../domain/sopStepDocument';
+
 function hazardCount(snapshot: Record<string, unknown>): number {
-  const payload = (snapshot.payload ?? {}) as Record<string, unknown>;
-  const hazards = payload.hazards;
-  return Array.isArray(hazards) ? hazards.length : 0;
+  return countHazardsInSnapshot(snapshot);
 }
 
 export const RevisionHistoryModal: React.FC<Props> = ({

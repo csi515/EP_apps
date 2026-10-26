@@ -16,6 +16,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
+import { isCorporateChromePreset } from "@/app/industry/resolveModuleIndustry";
 import { StaffInviteQrModal } from "@/components/staff/StaffInviteQrModal";
 import { getZeroConfigRoleTemplates } from "@/core/authorization/roleMatrix";
 
@@ -111,7 +112,9 @@ export const RolesPage: React.FC = () => {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [isAutoProvisioning, setIsAutoProvisioning] = useState(false);
 
-  // 업종별 표준 4대 직급 템플릿
+  const isCorporateEp = isCorporateChromePreset(currentOrganization?.industry_type);
+
+  // 업종별 표준 4대 직급 템플릿 (학원·매장용 — EP/기업 크로뮴에서는 사용 금지)
   const roleTemplates = useMemo(
     () => getZeroConfigRoleTemplates(currentOrganization?.industry_type),
     [currentOrganization?.industry_type]
@@ -146,6 +149,12 @@ export const RolesPage: React.FC = () => {
 
   const handleAutoProvisionRoles = async () => {
     if (!currentOrganization?.id) return;
+    if (isCorporateEp) {
+      alert(
+        "기업형(EP) 사업장은 학원용 4대 직급 자동생성을 사용할 수 없습니다. 워크스페이스 직급·권한 설정에서 동적 직급을 관리하세요."
+      );
+      return;
+    }
     if (
       !window.confirm(
         "현재 업종에 맞춘 표준 4대 직급(대표, 실장, 전담강사/담당자, 데스크/알바)을 일괄 자동 생성하시겠습니까?"
@@ -326,15 +335,17 @@ export const RolesPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={handleAutoProvisionRoles}
-            disabled={isAutoProvisioning}
-            className="h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors disabled:opacity-50"
-          >
-            <Sparkles className="h-4 w-4 text-indigo-600" />
-            <span>{isAutoProvisioning ? "직급 세팅 중..." : "표준 직급 자동 완성"}</span>
-          </button>
+          {!isCorporateEp && (
+            <button
+              type="button"
+              onClick={handleAutoProvisionRoles}
+              disabled={isAutoProvisioning}
+              className="h-12 inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors disabled:opacity-50"
+            >
+              <Sparkles className="h-4 w-4 text-indigo-600" />
+              <span>{isAutoProvisioning ? "직급 세팅 중..." : "표준 직급 자동 완성"}</span>
+            </button>
+          )}
 
           <CanAccess resource="tenant_roles" action="invite" fallback={null}>
             <button
@@ -378,18 +389,30 @@ export const RolesPage: React.FC = () => {
             <div className="space-y-1">
               <p className="text-base font-bold text-slate-800">등록된 매장 직급이 없습니다.</p>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                일일이 권한 체크박스를 켜지 않아도, 버튼 1번으로 우리 업종에 꼭 맞는 4대 직급이 안전한 권한과 함께 자동 완성됩니다.
+                {isCorporateEp
+                  ? "기업형(EP) 사업장은 학원용 4대 직급 대신 워크스페이스 동적 직급을 사용합니다."
+                  : "일일이 권한 체크박스를 켜지 않아도, 버튼 1번으로 우리 업종에 꼭 맞는 4대 직급이 안전한 권한과 함께 자동 완성됩니다."}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handleAutoProvisionRoles}
-              disabled={isAutoProvisioning}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 shadow-sm transition-colors"
-            >
-              <Zap className="w-4 h-4" />
-              <span>우리 업종 표준 4대 직급 1초 자동 세팅</span>
-            </button>
+            {isCorporateEp ? (
+              <Link
+                to="/workspace/settings/roles"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 shadow-sm transition-colors"
+              >
+                <Shield className="w-4 h-4" />
+                <span>워크스페이스 직급·권한 설정으로 이동</span>
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={handleAutoProvisionRoles}
+                disabled={isAutoProvisioning}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 shadow-sm transition-colors"
+              >
+                <Zap className="w-4 h-4" />
+                <span>우리 업종 표준 4대 직급 1초 자동 세팅</span>
+              </button>
+            )}
           </div>
         ) : (
           <div className="divide-y divide-slate-100">

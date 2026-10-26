@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FlaskConical,
@@ -17,12 +17,19 @@ import {
   FileCheck,
   Warehouse,
   MessageSquareWarning,
+  AlertTriangle,
+  ClipboardCheck,
+  Kanban,
+  Wrench,
+  FlaskRound,
 } from 'lucide-react';
 import { useList, useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { canAccessRndPortal, normalizeRolePermissions } from '@/domain/permissions';
+import { listMyPendingApprovalLines } from '@/capabilities/sop_risk_assessment/services/riskAssessmentApprovalService';
+import { useAuth } from '@/core/auth/AuthProvider';
 
 export interface CompanyAppTile {
   id: string;
@@ -86,19 +93,15 @@ function tileAllowed(
 }
 
 
+/** 멤버 feature_permissions / 카탈로그에 실제 존재하는 키만 사용 */
 const APP_FEATURE_PERM_MAP: Record<string, string> = {
   resources: 'resources:manage',
   grievances: 'grievances_manage',
   volunteer: 'volunteer:manage',
   shuttle: 'shuttle:manage',
-  inventory: 'inventory:manage',
-  supply_restock: 'inventory:manage',
   office_supply: 'office_supply_request:manage',
   meal_survey: 'meal_survey:manage',
-  sop_risk: 'sop:manage',
-  hazardous_substance: 'hazardous_materials:manage',
-  vehicle_mileage: 'vehicle_mileage:manage',
-  safety_permit: 'safety_permit:manage',
+  sop_risk: 'safety:manage',
 };
 
 const FEATURE_LABEL_MAP: Record<string, string> = {
@@ -106,13 +109,9 @@ const FEATURE_LABEL_MAP: Record<string, string> = {
   'volunteer:manage': '봉사활동 담당',
   'grievances_manage': '노경·고충 담당',
   'shuttle:manage': '통근셔틀 담당',
-  'inventory:manage': '자재·재고 담당',
   'office_supply_request:manage': '사무용품 담당',
   'meal_survey:manage': '식수조사 담당',
-  'sop:manage': '안전보건·SOP 담당',
-  'hazardous_materials:manage': '유해화학물질 MSDS 담당',
-  'vehicle_mileage:manage': '법인차량 운행일지 담당',
-  'safety_permit:manage': '안전작업허가(PTW) 담당',
+  'safety:manage': '현장 안전/SOP 담당',
 };
 
 export const CompanyAppLauncherDashboard: React.FC<{
@@ -125,8 +124,10 @@ export const CompanyAppLauncherDashboard: React.FC<{
   const navigate = useNavigate();
   const { currentOrganization, activeCapabilities = [], hiddenCapabilities = [] } =
     useOrganization();
-  const { data: user } = useGetIdentity<{ name?: string; email?: string }>();
+  const { data: user } = useGetIdentity<{ id?: string; name?: string; email?: string }>();
+  const { user: authUser } = useAuth();
   const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [sopPendingCount, setSopPendingCount] = useState(0);
 
   const activeUser = StorageService.getActiveUser();
   const userName = user?.name || activeUser?.name || '임직원';
@@ -180,9 +181,28 @@ export const CompanyAppLauncherDashboard: React.FC<{
     },
   });
 
+  useEffect(() => {
+    const uid = authUser?.id || user?.id;
+    if (!uid || !enabledCaps.includes('sop_risk_assessment')) {
+      setSopPendingCount(0);
+      return;
+    }
+    let cancelled = false;
+    void listMyPendingApprovalLines(uid)
+      .then((lines) => {
+        if (!cancelled) setSopPendingCount(lines.length);
+      })
+      .catch(() => {
+        if (!cancelled) setSopPendingCount(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser?.id, user?.id, enabledCaps]);
+
   const pendingApprovals: PendingApprovalItem[] = useMemo(() => {
     const rows = approvalsQuery?.data?.data ?? [];
-    return rows.map((r) => ({
+    const workflowItems = rows.map((r) => ({
       id: r.id,
       title: r.title,
       requester: r.requester_name || '기안자',
@@ -190,7 +210,21 @@ export const CompanyAppLauncherDashboard: React.FC<{
       to: '/workspace/approvals',
       domainLabel: r.entity_type || '결재',
     }));
-  }, [approvalsQuery?.data?.data]);
+    if (sopPendingCount <= 0) return workflowItems;
+    return [
+      {
+        id: 'sop-pending-aggregate',
+        title: `안전·SOP 결재 대기 ${sopPendingCount}건`,
+        requester: '위험성평가',
+        timeAgo: '',
+        to: '/workspace/sop-risk',
+        domainLabel: 'sop_risk',
+      },
+      ...workflowItems,
+    ];
+  }, [approvalsQuery?.data?.data, sopPendingCount]);
+
+  const pendingBadgeCount = (approvalsQuery?.data?.data?.length ?? 0) + sopPendingCount;
 
   const appTiles: CompanyAppTile[] = useMemo(() => {
     const all: CompanyAppTile[] = [
@@ -202,7 +236,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <FileCheck className="h-8 w-8 text-white drop-shadow-sm" />,
         gradient: 'from-indigo-500 to-blue-600',
         requiredAnyCapability: ['approval_workflow'],
-        badge: pendingApprovals.length || null,
+        badge: pendingBadgeCount || null,
         badgeColor: 'bg-rose-500 text-white',
       },
       {
@@ -270,6 +304,51 @@ export const CompanyAppLauncherDashboard: React.FC<{
         requiredAnyCapability: ['sop_risk_assessment'],
       },
       {
+        id: 'facility_incident',
+        to: '/workspace/facility-incident-report',
+        label: '사고·위험 보고',
+        description: '현장 사고·아차사고',
+        icon: <AlertTriangle className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-orange-500 to-amber-600',
+        requiredAnyCapability: ['facility_incident_report'],
+      },
+      {
+        id: 'maintenance',
+        to: '/workspace/maintenance',
+        label: '설비 점검',
+        description: '점검 체크리스트',
+        icon: <ClipboardCheck className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-slate-500 to-zinc-700',
+        requiredAnyCapability: ['maintenance_checklist'],
+      },
+      {
+        id: 'pipelines',
+        to: '/workspace/pipelines',
+        label: '업무 파이프라인',
+        description: '칸반·작업 지시',
+        icon: <Kanban className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-fuchsia-500 to-purple-700',
+        requiredAnyCapability: ['task_pipeline'],
+      },
+      {
+        id: 'equipment_lifecycle',
+        to: '/workspace/equipment-lifecycle',
+        label: '장비 수명관리',
+        description: '교정·수리·폐기',
+        icon: <Wrench className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-stone-500 to-neutral-700',
+        requiredAnyCapability: ['equipment_lifecycle'],
+      },
+      {
+        id: 'hazardous_substance',
+        to: '/workspace/hazardous-substances',
+        label: '유해물질 MSDS',
+        description: '취급·보관·MSDS',
+        icon: <FlaskRound className="h-8 w-8 text-white drop-shadow-sm" />,
+        gradient: 'from-yellow-500 to-orange-700',
+        requiredAnyCapability: ['hazardous_substance_msds'],
+      },
+      {
         id: 'grievances',
         to: '/workspace/grievances',
         label: '노경 건의함',
@@ -335,7 +414,13 @@ export const CompanyAppLauncherDashboard: React.FC<{
         badgeColor: finalBadgeColor,
       };
       });
-  }, [enabledCaps, pendingApprovals.length, activeUser?.role, activeUser?.customRole]);
+  }, [
+    enabledCaps,
+    pendingBadgeCount,
+    activeUser?.role,
+    activeUser?.customRole,
+    userFeaturePermissions,
+  ]);
 
   const handleTileClick = (tile: CompanyAppTile, e: React.MouseEvent) => {
     if (onSelectApp) {

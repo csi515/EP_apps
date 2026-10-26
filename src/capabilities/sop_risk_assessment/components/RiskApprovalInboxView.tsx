@@ -6,11 +6,13 @@ import {
   approveStep,
   listApprovalLines,
   listMyPendingApprovalLines,
+  listOrgMembers,
   listRiskAssessments,
   rejectStep,
   type ApprovalLineRow,
   type RiskAssessmentRow,
 } from '../services/riskAssessmentApprovalService';
+import { readDocumentBody, type OrgMemberOption } from '../domain/sopStepDocument';
 import type { ApprovalStepState } from '../domain/approvalEngine';
 
 type Identity = { id?: string };
@@ -34,6 +36,7 @@ export const RiskApprovalInboxView: React.FC = () => {
   const userId = identity?.id ?? '';
   const [pending, setPending] = useState<ApprovalLineRow[]>([]);
   const [docs, setDocs] = useState<Record<string, RiskAssessmentRow>>({});
+  const [membersByOrg, setMembersByOrg] = useState<Record<string, OrgMemberOption[]>>({});
   const [stepsByDoc, setStepsByDoc] = useState<Record<string, ApprovalStepState[]>>({});
   const [selected, setSelected] = useState<ApprovalLineRow | null>(null);
   const [modalMode, setModalMode] = useState<'approve' | 'reject' | null>(null);
@@ -49,11 +52,14 @@ export const RiskApprovalInboxView: React.FC = () => {
       setPending(lines);
       const orgIds = [...new Set(lines.map((l) => l.organization_id))];
       const map: Record<string, RiskAssessmentRow> = {};
+      const memberMap: Record<string, OrgMemberOption[]> = {};
       for (const orgId of orgIds) {
-        const list = await listRiskAssessments(orgId);
+        const [list, members] = await Promise.all([listRiskAssessments(orgId), listOrgMembers(orgId)]);
         for (const row of list) map[row.id] = row;
+        memberMap[orgId] = members;
       }
       setDocs(map);
+      setMembersByOrg(memberMap);
 
       const stepMap: Record<string, ApprovalStepState[]> = {};
       for (const line of lines) {
@@ -145,6 +151,15 @@ export const RiskApprovalInboxView: React.FC = () => {
         title={docs[selected?.assessment_id ?? '']?.title ?? '결재 처리'}
         stepOrder={(selected?.step_order === 3 ? 3 : 2) as 2 | 3}
         requireNextAssignee={selected?.step_order === 2}
+        defaultNextAssigneeId={
+          selected
+            ? readDocumentBody(docs[selected.assessment_id]?.snapshot_payload).intendedApproverId ?? ''
+            : ''
+        }
+        nextAssigneeOptions={(selected ? membersByOrg[selected.organization_id] ?? [] : []).map((member) => ({
+          value: member.userId,
+          label: `${member.name} · ${member.role}`,
+        }))}
         onClose={() => {
           setSelected(null);
           setModalMode(null);

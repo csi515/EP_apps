@@ -14,6 +14,11 @@ export type GateLinkedApprovalStatus =
 
 export const RESEARCH_GATE_APPROVAL_ENTITY_TYPE = 'research_project_gate';
 
+export type GateApprovalAssignee = {
+  userId: string;
+  name: string;
+};
+
 export function buildGateApprovalRequestValues(params: {
   project: ResearchProject;
   gate: ResearchGate;
@@ -52,15 +57,20 @@ export interface GateApprovalStepSeed {
   request_id: string;
   step_order: number;
   step_type: 'review' | 'approval' | 'consensus';
+  approver_id: string;
   approver_name: string;
   approver_role?: string;
   status: 'waiting' | 'pending';
 }
 
-export function buildDefaultGateApprovalSteps(
+/**
+ * 기안자가 고른 검토자·승인자로 게이트 결재선을 만든다.
+ */
+export function buildChosenGateApprovalSteps(
   organizationId: string,
   requestId: string,
-  finalApproverName = '연구소장'
+  reviewer: GateApprovalAssignee,
+  approver: GateApprovalAssignee
 ): GateApprovalStepSeed[] {
   return [
     {
@@ -68,7 +78,8 @@ export function buildDefaultGateApprovalSteps(
       request_id: requestId,
       step_order: 1,
       step_type: 'review',
-      approver_name: '연구팀장(검토)',
+      approver_id: reviewer.userId,
+      approver_name: reviewer.name,
       approver_role: 'reviewer',
       status: 'pending',
     },
@@ -77,7 +88,8 @@ export function buildDefaultGateApprovalSteps(
       request_id: requestId,
       step_order: 2,
       step_type: 'approval',
-      approver_name: finalApproverName,
+      approver_id: approver.userId,
+      approver_name: approver.name,
       approver_role: 'approver',
       status: 'waiting',
     },
@@ -98,7 +110,7 @@ export function shouldSyncGateFromApproval(
 ): boolean {
   if (!gate.approvalRequestId) return false;
   if (gate.status !== 'in_approval') return false;
-  return approvalStatus === 'approved' || approvalStatus === 'rejected';
+  return approvalStatus === 'approved' || approvalStatus === 'rejected' || approvalStatus === 'draft';
 }
 
 export function canSubmitGateToApprovalWorkflow(

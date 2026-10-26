@@ -27,6 +27,7 @@ export interface ApprovalStepState {
   assigneeId: string;
   assigneeName?: string;
   actionStatus: 'WAIT' | 'APPROVED' | 'REJECTED';
+  comment?: string | null;
 }
 
 export interface RevisionPayload {
@@ -51,7 +52,7 @@ export interface WormSnapshotInput {
 }
 
 /**
- * 직급·권한·현재 단계 정합 판정
+ * 결재 가능 여부. 기안자가 지정한 담당자이면 직급과 무관하게 그 단계만 처리한다.
  */
 export function canPerformApprovalAction(
   member: ApprovalMember,
@@ -62,27 +63,8 @@ export function canPerformApprovalAction(
   if (currentStep.actionStatus !== 'WAIT') return false;
   if (currentStep.assigneeId !== member.userId) return false;
 
-  const perms = member.permissions ?? [];
-  const role = member.role;
-
-  if (currentStep.stepOrder === 2 && docStatus === 'REVIEW_PENDING') {
-    return (
-      role === 'owner' ||
-      role === 'admin' ||
-      role === 'manager' ||
-      perms.includes('safety:assessment:review') ||
-      perms.includes('safety.assessment.review')
-    );
-  }
-
-  if (currentStep.stepOrder === 3 && docStatus === 'APPROVAL_PENDING') {
-    return (
-      role === 'owner' ||
-      perms.includes('safety:assessment:approve') ||
-      perms.includes('safety.assessment.approve')
-    );
-  }
-
+  if (currentStep.stepOrder === 2 && docStatus === 'REVIEW_PENDING') return true;
+  if (currentStep.stepOrder === 3 && docStatus === 'APPROVAL_PENDING') return true;
   return false;
 }
 

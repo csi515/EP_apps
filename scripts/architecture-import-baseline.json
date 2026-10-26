@@ -750,6 +750,21 @@
     "kind": "capability-cross"
   },
   {
+    "file": "src/capabilities/mbo/ui/MboPlanApprovalModal.tsx",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
+    "kind": "capability-cross"
+  },
+  {
+    "file": "src/capabilities/research_project/hooks/useResearchProjectWorkspace.ts",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
+    "kind": "capability-cross"
+  },
+  {
+    "file": "src/capabilities/research_project/ui/ResearchProjectDetailPanel.tsx",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
+    "kind": "capability-cross"
+  },
+  {
     "file": "src/capabilities/resources/index.ts",
     "spec": "@/capabilities/scheduling/capacity",
     "kind": "capability-cross"
@@ -767,6 +782,16 @@
   {
     "file": "src/capabilities/resources/resourcePolicy.ts",
     "spec": "@/capabilities/scheduling/availability/windows",
+    "kind": "capability-cross"
+  },
+  {
+    "file": "src/capabilities/resources/ui/ResourceReservationRequestModal.tsx",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
+    "kind": "capability-cross"
+  },
+  {
+    "file": "src/capabilities/resources/ui/UniversalResourceCalendarView.tsx",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
     "kind": "capability-cross"
   },
   {
@@ -867,6 +892,11 @@
   {
     "file": "src/capabilities/scheduling/notifications/makeupNotification.ts",
     "spec": "@/capabilities/attendance/domain/types",
+    "kind": "capability-cross"
+  },
+  {
+    "file": "src/capabilities/supply_restock/ui/SupplyRestockView.tsx",
+    "spec": "@/capabilities/approval_workflow/services/approvalWorkflowService",
     "kind": "capability-cross"
   },
   {

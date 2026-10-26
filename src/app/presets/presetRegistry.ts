@@ -3928,23 +3928,23 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     id: 'personal_plant_ops',
     theme: {
         "accentColor": "emerald",
-        "badgeEmoji": "🌱"
+        "badgeEmoji": "🏭"
     },
     starterPassTemplates: [
         {
-            "name": "희귀식물 위탁 케어 1개월 패스",
-            "passType": "PERIOD_BASED",
-            "totalCount": 30,
-            "validityDays": 30,
-            "recommendedPrice": 50000,
-            "badge": "인기"
+            "name": "현장 안전교육 이수 패스",
+            "passType": "COUNT_BASED",
+            "totalCount": 4,
+            "validityDays": 365,
+            "recommendedPrice": 0,
+            "badge": "사내"
         },
         {
-            "name": "분갈이 및 영양 케어 3회 정기권",
+            "name": "공용 장비 사용 허가권",
             "passType": "COUNT_BASED",
-            "totalCount": 3,
+            "totalCount": 10,
             "validityDays": 90,
-            "recommendedPrice": 90000,
+            "recommendedPrice": 0,
             "badge": "추천"
         }
     ],
@@ -3960,6 +3960,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       "start_time": "09:00",
       "end_time": "18:00",
       "slot_minutes": 60
+    },
+    facilities: {
+      hasDepartments: true,
     },
 
     name: 'EP_apps',
@@ -3998,14 +4001,14 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'whistleblower_grievance',
       'mbo',
       'research_project',
-    ] as const,
-    optionalCapabilities: [
       'sop_risk_assessment',
       'facility_incident_report',
+      'supply_restock',
+    ] as const,
+    optionalCapabilities: [
       'safety_consent',
       'maintenance_checklist',
       'recipe_bom',
-      'supply_restock',
       'rental_equipment',
       'seat_room',
       'task_pipeline',
@@ -4015,6 +4018,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'meal_survey',
       'office_supply_request',
       'shuttle_dispatch',
+      'hazardous_substance_msds',
     ] as const,
     roles: [
       {
@@ -4506,7 +4510,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
   // ==========================================
   baby_food_coop: {
     id: 'baby_food_coop',
-    name: '이유식 품앗이 모임',
+    name: '이유식 품앗이 / 공동육아',
     description: '월령별 맞춤 추천 및 알레르기 관리, 1/N 재료비 자동 정산 커뮤니티',
     category: 'COMMUNITY',
     theme: {
@@ -4524,11 +4528,16 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       },
     ],
     terms: {
-      customer: '아기/아이',
-      instructor: '모임장/운영맘',
-      space: '품앗이존/주방',
-      pass: '품앗이분담금',
-      fee: '재료비',
+      customer: '참여 가족 (아기)',
+      instructor: '모임장 (이번 달 방장)',
+      space: '모임 거점 (주방/공간)',
+      pass: '큐브 교환권 (품앗이 티켓)',
+      fee: '재료비 1/N 정산',
+      lesson: '공동 당번 (요리 조)',
+      tenant: '우리 품앗이 모임',
+      owner: '모임장 (이번 달 방장)',
+      staff: '공동 당번 (요리 조)',
+      billing: '재료비 1/N 정산',
     },
     operatingHours: {
       day_type: 'WEEKDAYS',
@@ -4545,6 +4554,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'feedbacks',
       'daily_care_report',
       'billing_invoicing',
+      'booking',
+      'rental_equipment',
     ] as const,
     requiredCapabilities: [
       'baby_food_coop',
@@ -4554,6 +4565,8 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     optionalCapabilities: [
       'feedbacks',
       'daily_care_report',
+      'booking',
+      'rental_equipment',
     ] as const,
     roles: [
       { name: '모임장 (총무)', rank_order: 1, permissions: ['*'] },

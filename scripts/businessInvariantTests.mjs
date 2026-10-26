@@ -150,6 +150,11 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:plugin-flag-defaults', group: 'industry', kind: 'unit', ci: 'always', order: 79 },
   { script: 'test:industry-id-comparisons', group: 'architecture', kind: 'static', ci: 'always', order: 80 },
   { script: 'test:industry-id-migration', group: 'industry', kind: 'unit', ci: 'always', order: 81 },
+  { script: 'test:sop-step-document', group: 'capability', kind: 'unit', ci: 'always', order: 82 },
+  { script: 'test:desktop-sop-risk-matrix', group: 'capability', kind: 'static', ci: 'always', order: 83 },
+  { script: 'test:approval-line', group: 'capability', kind: 'unit', ci: 'always', order: 84 },
+  { script: 'test:mbo-plan-approval', group: 'capability', kind: 'unit', ci: 'always', order: 85 },
+  { script: 'test:ep-role-seed', group: 'organization', kind: 'unit', ci: 'always', order: 86 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -281,7 +286,10 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:digital-guestbook': 'digital guestbook visitor registration and marketing consent domain engine unit',
   'test:human-capital-kpi': 'ISO 30414 human capital reporting KPI and metrics calculation domain engine unit',
   'test:mbo-engine': 'mbo objectives hierarchy approval workflow and evaluation domain engine unit',
+  'test:mbo-plan-approval': 'mbo plan require_plan_approval gate and approval_workflow content unit',
+  'test:ep-role-seed': 'EP zero-setup preset permission tokens to RolePermissionMap unit',
   'test:approval-engine': 'approval workflow sequential multi-step approval state machine unit',
+  'test:approval-line': 'approval workflow chosen reviewer/approver line unit',
   'test:quality-inspection': 'quality inspection tolerance judgment and statistical process capability unit',
   'test:change-management': '4M engineering change order readiness evaluation and risk assessment unit',
   'test:webhook-gateway': 'external lead and MES webhook HMAC-SHA256 signature verification and ingestion unit',

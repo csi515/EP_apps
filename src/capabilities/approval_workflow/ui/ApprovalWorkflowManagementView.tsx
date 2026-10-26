@@ -1,41 +1,53 @@
-import React, { useMemo, useState } from 'react';
-import { useList, useCreate, useInvalidate } from '@refinedev/core';
-import {
-  FileCheck,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Plus,
-  Filter,
-  Search,
-  ChevronRight,
-  UserCheck,
-  FileText,
-} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useList, useGetIdentity } from '@refinedev/core';
+import { FileCheck, Clock, CheckCircle2, XCircle, Plus, Search, FileText } from 'lucide-react';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { summarizeApprovalMetrics } from '../domain/approvalEngine';
+import { ApprovalDraftModal } from './ApprovalDraftModal';
+import { ApprovalRequestTable } from './ApprovalRequestTable';
+import { useApprovalInboxActions } from './useApprovalInboxActions';
 import {
-  findPendingStepForRequest,
-  processApprovalStepAtomic,
-  isResearchGateApprovalEntity,
+  deactivateApprovalLine,
+  listApprovalOrgMembers,
+  listSavedApprovalLines,
+  saveApprovalLine,
+  type ApprovalMemberOption,
   type ApprovalRequestRow,
   type ApprovalStepRow,
+  type SavedApprovalLine,
 } from '../services/approvalWorkflowService';
 
-export const ApprovalWorkflowManagementView: React.FC = () => {
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+type Identity = { id?: string; name?: string };
+
+type Props = {
+  onLinkedEntityOutcome?: (
+    req: ApprovalRequestRow,
+    outcome: 'approved' | 'rejected'
+  ) => void | Promise<void>;
+};
+
+export const ApprovalWorkflowManagementView: React.FC<Props> = ({
+  onLinkedEntityOutcome,
+}) => {
+  const { currentOrganization } = useOrganization();
+  const { data: identity } = useGetIdentity<Identity>();
+  const orgId = currentOrganization?.id ?? '';
+  const userId = identity?.id ?? '';
+  const requesterName = identity?.name?.trim() || '기안자';
+
+  const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const invalidate = useInvalidate();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [resubmitTarget, setResubmitTarget] = useState<ApprovalRequestRow | null>(null);
+  const [members, setMembers] = useState<ApprovalMemberOption[]>([]);
+  const [savedLines, setSavedLines] = useState<SavedApprovalLine[]>([]);
 
   const { query } = useList<ApprovalRequestRow>({
     resource: 'approval_requests',
     sorters: [{ field: 'created_at', order: 'desc' }],
     pagination: { pageSize: 50 },
   });
-
   const stepsQuery = useList<ApprovalStepRow>({
     resource: 'approval_steps',
     pagination: { mode: 'off' },
@@ -46,7 +58,74 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
   const isLoading = query?.isLoading || stepsQuery.query?.isLoading;
   const refetch = query?.refetch ?? (() => {});
 
-  const { mutate: createRequest } = useCreate();
+  const reloadSavedLines = () => {
+    if (!orgId) return;
+    void listSavedApprovalLines(orgId)
+      .then(setSavedLines)
+      .catch(() => setSavedLines([]));
+  };
+
+  useEffect(() => {
+    if (!orgId) return;
+    void listApprovalOrgMembers(orgId)
+      .then(setMembers)
+      .catch(() => setMembers([]));
+    reloadSavedLines();
+  }, [orgId]);
+
+  const resolveMemberName = (userIdValue: string, fallback: string) =>
+    members.find((member) => member.userId === userIdValue)?.name ?? fallback;
+
+  const handleSaveLine = async (input: { title: string; reviewerId: string; approverId: string }) => {
+    if (!orgId || !userId) {
+      showToast('로그인·조직 정보가 필요합니다.', 'error');
+      return;
+    }
+    try {
+      await saveApprovalLine({
+        organizationId: orgId,
+        title: input.title,
+        requesterId: userId,
+        line: {
+          reviewer: {
+            userId: input.reviewerId,
+            name: resolveMemberName(input.reviewerId, '검토자'),
+          },
+          approver: {
+            userId: input.approverId,
+            name: resolveMemberName(input.approverId, '승인자'),
+          },
+        },
+      });
+      showToast('결재선이 저장되었습니다.', 'success');
+      reloadSavedLines();
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '결재선 저장 실패', 'error');
+      throw cause;
+    }
+  };
+
+  const handleDeleteLine = async (lineId: string) => {
+    try {
+      await deactivateApprovalLine(lineId);
+      showToast('결재선을 삭제했습니다.', 'success');
+      reloadSavedLines();
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '결재선 삭제 실패', 'error');
+      throw cause;
+    }
+  };
+
+  const actions = useApprovalInboxActions({
+    orgId,
+    userId,
+    requesterName,
+    members,
+    steps,
+    refetch,
+    refetchSteps: () => void stepsQuery.query?.refetch?.(),
+    onLinkedEntityOutcome,
+  });
 
   const metrics = useMemo(
     () =>
@@ -55,13 +134,14 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
           id: r.id,
           organizationId: '',
           title: r.title,
-          content: {},
-          requesterId: '',
+          content: r.content ?? {},
+          requesterId: r.requester_id ?? '',
           requesterName: r.requester_name,
           status: r.status as 'pending' | 'approved' | 'rejected' | 'draft' | 'canceled',
           currentStepOrder: r.current_step_order,
           totalSteps: r.total_steps,
           steps: [],
+          rejectionReason: r.rejection_reason ?? undefined,
           createdAt: r.created_at ?? '',
           updatedAt: '',
         }))
@@ -69,327 +149,167 @@ export const ApprovalWorkflowManagementView: React.FC = () => {
     [requests]
   );
 
-  const invalidateLinkedResources = (req: ApprovalRequestRow) => {
-    void invalidate({ resource: 'approval_requests', invalidates: ['list'] });
-    void invalidate({ resource: 'approval_steps', invalidates: ['list'] });
-    if (isResearchGateApprovalEntity(req.entity_type)) {
-      void invalidate({ resource: 'research_projects', invalidates: ['list'] });
-      void invalidate({ resource: 'research_project_gates', invalidates: ['list'] });
-    }
-  };
-
-  // 신규 기안 폼 상태
-  const [newTitle, setNewTitle] = useState('');
-  const [newAmount, setNewAmount] = useState<number>(0);
-  const [newDescription, setNewDescription] = useState('');
-
   const filteredRequests = requests.filter((r) => {
-    if (selectedStatus !== 'ALL' && r.status !== selectedStatus) return false;
+    if (selectedStatus === 'rejected') {
+      if (r.status !== 'rejected' && !(r.status === 'draft' && r.rejection_reason)) return false;
+    } else if (selectedStatus !== 'ALL' && r.status !== selectedStatus) {
+      return false;
+    }
     if (searchQuery && !r.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
-
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle) return;
-
-    createRequest(
-      {
-        resource: 'approval_requests',
-        values: {
-          title: newTitle,
-          content: { amount: newAmount, description: newDescription },
-          status: 'pending',
-          current_step_order: 1,
-          total_steps: 2,
-          requester_name: '현재 기안자',
-        },
-      },
-      {
-        onSuccess: () => {
-          showToast('전자결재 문서가 기안되었습니다.', 'success');
-          setIsNewModalOpen(false);
-          setNewTitle('');
-          setNewAmount(0);
-          setNewDescription('');
-          refetch();
-        },
-      }
-    );
-  };
-
-  const runApprovalAction = async (
-    req: ApprovalRequestRow,
-    action: 'approve' | 'reject'
-  ) => {
-    const step = findPendingStepForRequest(req, steps);
-    if (!step) {
-      showToast('현재 대기 중인 결재 단계를 찾을 수 없습니다.', 'error');
-      return;
-    }
-    setProcessingId(req.id);
-    const result = await processApprovalStepAtomic({
-      requestId: req.id,
-      stepId: step.id,
-      action,
-      comment: action === 'approve' ? '승인' : '반려',
-    });
-    setProcessingId(null);
-    if (!result.success) {
-      showToast(result.error || '결재 처리 실패', 'error');
-      return;
-    }
-    invalidateLinkedResources(req);
-    void stepsQuery.query?.refetch?.();
-    refetch();
-    showToast(
-      action === 'approve'
-        ? result.isFinal
-          ? '최종 승인되었습니다. 연구 게이트가 동기화됩니다.'
-          : '1차 검토가 승인되었습니다. 다음 결재 단계로 진행됩니다.'
-        : '반려 처리되었습니다.',
-      action === 'approve' ? 'success' : 'warning'
-    );
-  };
 
   if (isLoading) {
     return <div className="p-6 text-slate-500">전자결재 문서를 불러오는 중...</div>;
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
-      {/* 헤더 */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-              <FileCheck className="w-5 h-5" />
+            <div className="rounded-lg bg-indigo-50 p-2 text-indigo-600">
+              <FileCheck className="h-5 w-5" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900">전사 전자결재함</h1>
           </div>
-          <p className="text-sm text-slate-500 mt-1">
-            부서별 지출 품의, 구매 요청, 근태 및 작업 승인 문서를 다단계 결재선으로 심사·승인합니다.
-          </p>
+          <p className="mt-1 text-sm text-slate-500">기안자가 검토자·승인자를 지정하고, 지정된 사람만 처리합니다.</p>
         </div>
         <button
-          onClick={() => setIsNewModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium text-sm shadow-sm transition"
+          type="button"
+          onClick={() => setCreateOpen(true)}
+          className="flex h-12 items-center gap-2 rounded-lg bg-indigo-600 px-4 text-sm font-medium text-white"
         >
-          <Plus className="w-4 h-4" />
-          <span>신규 결재 기안</span>
+          <Plus className="h-4 w-4" />
+          신규 결재 기안
         </button>
       </div>
 
-      {/* KPI 메트릭스 카드 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase">
-            <span>총 기안 문서</span>
-            <FileText className="w-4 h-4 text-slate-400" />
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {[
+          { label: '총 기안', value: metrics.totalCount, icon: FileText, tone: 'text-slate-900' },
+          { label: '결재 대기', value: metrics.pendingCount, icon: Clock, tone: 'text-amber-700' },
+          { label: '승인 완료', value: metrics.approvedCount, icon: CheckCircle2, tone: 'text-emerald-700' },
+          { label: '반려·초안', value: metrics.rejectedCount, icon: XCircle, tone: 'text-rose-700' },
+        ].map((card) => (
+          <div key={card.label} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between text-xs font-semibold uppercase text-slate-500">
+              <span>{card.label}</span>
+              <card.icon className="h-4 w-4 text-slate-400" />
+            </div>
+            <div className={`mt-2 text-2xl font-bold ${card.tone}`}>{card.value}건</div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2">{metrics.totalCount}건</div>
-        </div>
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-amber-600 text-xs font-semibold uppercase">
-            <span>결재 대기</span>
-            <Clock className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-2xl font-bold text-amber-700 mt-2">{metrics.pendingCount}건</div>
-        </div>
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-emerald-600 text-xs font-semibold uppercase">
-            <span>승인 완료</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-2xl font-bold text-emerald-700 mt-2">{metrics.approvedCount}건</div>
-        </div>
-        <div className="p-4 bg-white border border-slate-200 rounded-xl shadow-sm">
-          <div className="flex items-center justify-between text-rose-600 text-xs font-semibold uppercase">
-            <span>반려 문서</span>
-            <XCircle className="w-4 h-4 text-rose-500" />
-          </div>
-          <div className="text-2xl font-bold text-rose-700 mt-2">{metrics.rejectedCount}건</div>
-        </div>
+        ))}
       </div>
 
-      {/* 필터 및 검색 바 */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 border border-slate-200 rounded-xl shadow-sm">
-        <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto">
-          {['ALL', 'pending', 'approved', 'rejected'].map((status) => (
+      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-1.5 overflow-x-auto">
+          {[
+            ['ALL', '전체'],
+            ['pending', '결재 대기'],
+            ['approved', '승인 완료'],
+            ['rejected', '반려·초안'],
+          ].map(([value, label]) => (
             <button
-              key={status}
-              onClick={() => setSelectedStatus(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-                selectedStatus === status
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-600 hover:bg-slate-100'
+              key={value}
+              type="button"
+              onClick={() => setSelectedStatus(value)}
+              className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                selectedStatus === value ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              {status === 'ALL' && '전체'}
-              {status === 'pending' && '결재 대기'}
-              {status === 'approved' && '승인 완료'}
-              {status === 'rejected' && '반려'}
+              {label}
             </button>
           ))}
         </div>
         <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
-            type="text"
-            placeholder="기안 제목 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+            placeholder="기안 제목 검색..."
+            className="h-10 w-full rounded-lg border border-slate-200 pl-9 pr-3 text-xs"
           />
         </div>
       </div>
 
-      {/* 문서 목록 테이블 */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
-              <tr>
-                <th className="py-3 px-4">기안 문서 제목</th>
-                <th className="py-3 px-4">기안자</th>
-                <th className="py-3 px-4">진행 단계</th>
-                <th className="py-3 px-4">상태</th>
-                <th className="py-3 px-4">기안일</th>
-                <th className="py-3 px-4 text-right">작업</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredRequests.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    등록된 전자결재 문서가 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                filteredRequests.map((req) => (
-                  <tr key={req.id} className="hover:bg-slate-50/50 transition">
-                    <td className="py-3.5 px-4 font-medium text-slate-900">
-                      <div>{req.title}</div>
-                      {isResearchGateApprovalEntity(req.entity_type) && (
-                        <span className="mt-1 inline-block rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-medium text-indigo-700">
-                          연구 게이트
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">{req.requester_name || '직원'}</td>
-                    <td className="py-3.5 px-4">
-                      {req.current_step_order} / {req.total_steps}단계
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          req.status === 'approved'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : req.status === 'rejected'
-                            ? 'bg-rose-50 text-rose-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
-                      >
-                        {req.status === 'approved' && '승인'}
-                        {req.status === 'rejected' && '반려'}
-                        {req.status === 'pending' && '심사 중'}
-                        {req.status === 'draft' && '임시 저장'}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4 text-slate-400">
-                      {req.created_at ? req.created_at.slice(0, 10) : '-'}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      {req.status === 'pending' && (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            disabled={processingId === req.id}
-                            onClick={() => void runApprovalAction(req, 'approve')}
-                            className="px-2 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-xs font-semibold disabled:opacity-50"
-                          >
-                            승인
-                          </button>
-                          <button
-                            type="button"
-                            disabled={processingId === req.id}
-                            onClick={() => void runApprovalAction(req, 'reject')}
-                            className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded text-xs font-semibold disabled:opacity-50"
-                          >
-                            반려
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <ApprovalRequestTable
+          requests={filteredRequests}
+          steps={steps}
+          userId={userId}
+          processingId={actions.processingId}
+          onApprove={(req) => void actions.runApprove(req)}
+          onReject={actions.openReject}
+          onResubmit={setResubmitTarget}
+        />
       </div>
 
-      {/* 신규 기안 모달 */}
-      {isNewModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 space-y-4">
-            <h2 className="text-lg font-bold text-slate-900">신규 전자결재 기안</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  기안 제목 *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="예: 3분기 사무용품 및 비품 구매 품의서"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  품의 금액 (원)
-                </label>
-                <input
-                  type="number"
-                  value={newAmount}
-                  onChange={(e) => setNewAmount(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  기안 상세 내용 및 품의 사유
-                </label>
-                <textarea
-                  rows={4}
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="기안의 구체적인 목적 및 예상 집행 내역을 기록하십시오."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
-                >
-                  취소
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition"
-                >
-                  상신 (결재 요청)
-                </button>
-              </div>
-            </form>
+      <ApprovalDraftModal
+        open={createOpen}
+        mode="create"
+        members={members}
+        savedLines={savedLines}
+        busy={actions.busy}
+        onClose={() => setCreateOpen(false)}
+        onSaveLine={handleSaveLine}
+        onDeleteLine={handleDeleteLine}
+        onSubmit={(draft) => {
+          void actions.handleCreate(draft).then((ok) => {
+            if (ok) setCreateOpen(false);
+          });
+        }}
+      />
+      <ApprovalDraftModal
+        open={Boolean(resubmitTarget)}
+        mode="resubmit"
+        members={members}
+        savedLines={savedLines}
+        busy={actions.busy}
+        content={resubmitTarget?.content}
+        initialTitle={resubmitTarget?.title ?? ''}
+        initialAmount={Number(resubmitTarget?.content?.amount ?? 0)}
+        initialDescription={String(resubmitTarget?.content?.description ?? '')}
+        onClose={() => setResubmitTarget(null)}
+        onSaveLine={handleSaveLine}
+        onDeleteLine={handleDeleteLine}
+        onSubmit={(draft) => {
+          if (!resubmitTarget) return;
+          void actions.handleResubmit(resubmitTarget.id, draft).then((ok) => {
+            if (ok) setResubmitTarget(null);
+          });
+        }}
+      />
+
+      {actions.rejectTarget ? (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
+          <div className="w-full rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
+            <h3 className="text-base font-bold text-slate-900">반려 사유</h3>
+            <textarea
+              className="mt-3 min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"
+              value={actions.rejectReason}
+              onChange={(e) => actions.setRejectReason(e.target.value)}
+              placeholder="보완이 필요한 항목을 구체적으로 적어 주세요"
+            />
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                className="h-12 flex-1 rounded-xl border border-slate-300"
+                onClick={() => actions.setRejectTarget(null)}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="h-12 flex-1 rounded-xl bg-rose-700 font-bold text-white"
+                onClick={() => void actions.confirmReject()}
+              >
+                반려
+              </button>
+            </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

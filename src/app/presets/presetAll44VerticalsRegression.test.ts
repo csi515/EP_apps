@@ -25,7 +25,7 @@ const allPresets = listIndustryPresets();
 const allPresetIds = Object.keys(INDUSTRY_PRESETS);
 
 // 51개 프리셋 전수 정의 확인
-assert.equal(allPresetIds.length, 52, '전체 프리셋 수는 정확히 52개여야 합니다.');
+assert.equal(allPresetIds.length, 53, '전체 프리셋 수는 정확히 53개여야 합니다.');
 
 const EXPECTED_VERTICAL_GROUPS = {
   education: [
@@ -233,6 +233,16 @@ console.log('✓ [PASS] 44개 업종별 Capability-탭 권한 허용성(isTabAll
   assert.ok(!plant.capabilities.includes('vehicle_shuttle'), 'personal_plant_ops는 학원형 vehicle_shuttle 미포함');
   assert.ok(plant.capabilities.includes('shuttle_dispatch'), 'personal_plant_ops는 통근 shuttle_dispatch 포함');
   assert.ok(!plant.capabilities.includes('feedbacks'), 'personal_plant_ops는 feedbacks 미포함');
+  assert.ok(plant.requiredCapabilities?.includes('sop_risk_assessment'), 'SOP required');
+  assert.ok(plant.requiredCapabilities?.includes('facility_incident_report'), 'incident required');
+  assert.ok(plant.requiredCapabilities?.includes('supply_restock'), 'supply_restock required');
+  assert.ok(plant.optionalCapabilities?.includes('hazardous_substance_msds'), 'MSDS optional 계약');
+  assert.equal((plant.facilities as { hasDepartments?: boolean } | undefined)?.hasDepartments, true);
+  assert.equal(plant.theme?.badgeEmoji, '🏭');
+  assert.ok(
+    !plant.starterPassTemplates?.some((t) => t.name.includes('식물') || t.name.includes('분갈이')),
+    '식물 케어 스타터 패스 잔재 없음'
+  );
   assert.equal(plant.readinessLevel, 'isolated', 'plant ops readiness isolated');
 
   // corporate_general_affairs 별칭 해석 검증

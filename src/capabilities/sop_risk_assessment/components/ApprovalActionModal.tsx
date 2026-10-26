@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { CanAccess } from '@refinedev/core';
 import { validateRejectReason } from '../domain/approvalEngine';
 
 type Mode = 'approve' | 'reject' | null;
@@ -10,6 +9,8 @@ type Props = {
   title: string;
   stepOrder: 2 | 3;
   requireNextAssignee?: boolean;
+  defaultNextAssigneeId?: string;
+  nextAssigneeOptions?: { value: string; label: string }[];
   onClose: () => void;
   onApprove: (input: { signature: string; comment: string; nextAssigneeId?: string }) => Promise<void>;
   onReject: (reason: string) => Promise<void>;
@@ -21,6 +22,8 @@ export const ApprovalActionModal: React.FC<Props> = ({
   title,
   stepOrder,
   requireNextAssignee = false,
+  defaultNextAssigneeId = '',
+  nextAssigneeOptions = [],
   onClose,
   onApprove,
   onReject,
@@ -32,6 +35,14 @@ export const ApprovalActionModal: React.FC<Props> = ({
   const [nextAssigneeId, setNextAssigneeId] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    setComment('');
+    setRejectReason('');
+    setNextAssigneeId(defaultNextAssigneeId);
+    setError(null);
+  }, [open, defaultNextAssigneeId, mode]);
 
   useEffect(() => {
     if (!open || mode !== 'approve') return;
@@ -144,13 +155,32 @@ export const ApprovalActionModal: React.FC<Props> = ({
           <div className="mt-3 space-y-3">
             {requireNextAssignee ? (
               <label className="block text-sm">
-                <span className="font-semibold text-slate-700">최종 승인자(사업주) ID</span>
-                <input
-                  className="mt-1 h-12 w-full rounded-lg border border-slate-300 px-3"
-                  value={nextAssigneeId}
-                  onChange={(e) => setNextAssigneeId(e.target.value)}
-                  placeholder="승인자 사용자 UUID"
-                />
+                <span className="font-semibold text-slate-700">최종 승인자</span>
+                {defaultNextAssigneeId ? (
+                  <p className="mt-1 flex h-12 items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-800">
+                    {nextAssigneeOptions.find((option) => option.value === defaultNextAssigneeId)?.label ?? '기안자가 지정한 승인자'}
+                  </p>
+                ) : nextAssigneeOptions.length > 0 ? (
+                  <select
+                    className="mt-1 h-12 w-full rounded-lg border border-slate-300 px-3"
+                    value={nextAssigneeId}
+                    onChange={(event) => setNextAssigneeId(event.target.value)}
+                  >
+                    <option value="">승인자 선택</option>
+                    {nextAssigneeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="mt-1 h-12 w-full rounded-lg border border-slate-300 px-3"
+                    value={nextAssigneeId}
+                    onChange={(event) => setNextAssigneeId(event.target.value)}
+                    placeholder="승인자 사용자 UUID"
+                  />
+                )}
               </label>
             ) : null}
             <label className="block text-sm">
@@ -192,19 +222,17 @@ export const ApprovalActionModal: React.FC<Props> = ({
           <button type="button" className="h-12 flex-1 rounded-xl border border-slate-300 font-bold" onClick={onClose} disabled={busy}>
             취소
           </button>
-          <CanAccess resource="sop_risk_assessment" action={mode === 'approve' ? 'approve' : 'reject'} fallback={null}>
-            <button
-              type="button"
-              className={[
-                'h-12 flex-1 rounded-xl font-bold text-white',
-                mode === 'approve' ? 'bg-emerald-700' : 'bg-rose-700',
-              ].join(' ')}
-              onClick={() => void (mode === 'approve' ? handleApprove() : handleReject())}
-              disabled={busy}
-            >
-              {busy ? '처리 중…' : mode === 'approve' ? (stepOrder === 2 ? '검토 승인 / 상신' : '최종 승인') : '반려'}
-            </button>
-          </CanAccess>
+          <button
+            type="button"
+            className={[
+              'h-12 flex-1 rounded-xl font-bold text-white',
+              mode === 'approve' ? 'bg-emerald-700' : 'bg-rose-700',
+            ].join(' ')}
+            onClick={() => void (mode === 'approve' ? handleApprove() : handleReject())}
+            disabled={busy}
+          >
+            {busy ? '처리 중…' : mode === 'approve' ? (stepOrder === 2 ? '검토 승인 / 상신' : '최종 승인') : '반려'}
+          </button>
         </div>
       </div>
     </div>

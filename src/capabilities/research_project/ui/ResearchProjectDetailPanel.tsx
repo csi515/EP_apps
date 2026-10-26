@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Wallet,
@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Plus,
 } from 'lucide-react';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
   RESEARCH_STATUS_LABELS,
   MEMBER_ROLE_LABELS,
@@ -23,6 +24,11 @@ import {
   type DeliverableType,
   type ResearchProject,
 } from '../domain/researchProjectEngine';
+import type { GateApprovalAssignee } from '../domain/researchProjectApproval';
+import {
+  listApprovalOrgMembers,
+  type ApprovalMemberOption,
+} from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import { showToast } from '@/shared/feedback/uiFeedback';
 
 function formatKrw(value: number): string {
@@ -52,7 +58,12 @@ export interface ResearchProjectDetailPanelProps {
     status: 'approved' | 'rejected',
     note: string
   ) => string | null;
-  onSubmitGateApproval: (gateId: string, note: string) => Promise<string | null>;
+  onSubmitGateApproval: (
+    gateId: string,
+    note: string,
+    reviewer: GateApprovalAssignee,
+    approver: GateApprovalAssignee
+  ) => Promise<string | null>;
   onDeliverableStatus: (id: string, status: ResearchProject['deliverables'][number]['status']) => void;
   onAddDeliverable?: (title: string, dueDate?: string | null, evidenceUrl?: string | null) => void;
 }
@@ -66,9 +77,21 @@ export const ResearchProjectDetailPanel: React.FC<ResearchProjectDetailPanelProp
   onDeliverableStatus,
   onAddDeliverable,
 }) => {
+  const { currentOrganization } = useOrganization();
+  const orgId = currentOrganization?.id ?? '';
   const [gateNote, setGateNote] = useState('');
   const [spendAmount, setSpendAmount] = useState(1_000_000);
   const [submittingApproval, setSubmittingApproval] = useState(false);
+  const [members, setMembers] = useState<ApprovalMemberOption[]>([]);
+  const [reviewerId, setReviewerId] = useState('');
+  const [approverId, setApproverId] = useState('');
+
+  useEffect(() => {
+    if (!orgId || !hasApprovalWorkflow) return;
+    void listApprovalOrgMembers(orgId)
+      .then(setMembers)
+      .catch(() => setMembers([]));
+  }, [orgId, hasApprovalWorkflow]);
 
   // 신규 산출물 등록 상태
   const [newType, setNewType] = useState<DeliverableType>('paper');
@@ -96,8 +119,19 @@ export const ResearchProjectDetailPanel: React.FC<ResearchProjectDetailPanelProp
 
   const handleSubmitApproval = async () => {
     if (!currentGate) return;
+    const reviewer = members.find((m) => m.userId === reviewerId);
+    const approver = members.find((m) => m.userId === approverId);
+    if (!reviewer || !approver) {
+      showToast('검토자와 최종 승인자를 선택해 주세요.', 'error');
+      return;
+    }
     setSubmittingApproval(true);
-    const err = await onSubmitGateApproval(currentGate.id, gateNote);
+    const err = await onSubmitGateApproval(
+      currentGate.id,
+      gateNote,
+      { userId: reviewer.userId, name: reviewer.name },
+      { userId: approver.userId, name: approver.name }
+    );
     setSubmittingApproval(false);
     if (err) showToast(err, 'error');
     else {
@@ -355,6 +389,36 @@ export const ResearchProjectDetailPanel: React.FC<ResearchProjectDetailPanelProp
               rows={2}
               className="w-full rounded-lg border border-slate-200 bg-white p-2 text-xs"
             />
+            {hasApprovalWorkflow && currentGate.status === 'pending' ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <select
+                  aria-label="검토자"
+                  value={reviewerId}
+                  onChange={(e) => setReviewerId(e.target.value)}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-2 text-xs"
+                >
+                  <option value="">검토자 선택</option>
+                  {members.map((member) => (
+                    <option key={member.userId} value={member.userId}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="최종 승인자"
+                  value={approverId}
+                  onChange={(e) => setApproverId(e.target.value)}
+                  className="h-11 rounded-lg border border-slate-200 bg-white px-2 text-xs"
+                >
+                  <option value="">최종 승인자 선택</option>
+                  {members.map((member) => (
+                    <option key={`approver-${member.userId}`} value={member.userId}>
+                      {member.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-2">
               {canDirectDecideGate(currentGate) && (
                 <>
@@ -378,7 +442,7 @@ export const ResearchProjectDetailPanel: React.FC<ResearchProjectDetailPanelProp
                 <button
                   type="button"
                   disabled={submittingApproval}
-                  onClick={handleSubmitApproval}
+                  onClick={() => void handleSubmitApproval()}
                   className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
                 >
                   {submittingApproval ? '상신 중...' : '전자결재 상신'}

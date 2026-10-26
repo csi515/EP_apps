@@ -44,11 +44,10 @@ console.log('=== [2] Approval Permission Check ===');
 
   // 본인
   assert.equal(canUserProcessStep(step, 'approver-1'), true);
-  // 타인
+  // 타인 (권한 키와 무관하게 지정자만 처리)
   assert.equal(canUserProcessStep(step, 'other-user'), false);
-  // 관리자 권한 보유 타인
-  assert.equal(canUserProcessStep(step, 'other-user', ['approval:admin']), true);
-  console.log('  -> 결재 처리 권한 및 관리자 전결 권한 검증 통과');
+  assert.equal(canUserProcessStep(step, 'other-user', ['approval:admin', '*']), false);
+  console.log('  -> 지정된 결재자만 처리 가능 검증 통과');
 }
 
 console.log('=== [3] Approval Step Transition (Sequential & Final) ===');
@@ -151,7 +150,7 @@ console.log('=== [4] Approval Rejection Transition ===');
     updatedAt: new Date().toISOString(),
   };
 
-  // 1단계 팀장 반려
+  // 1단계 팀장 반려 → 초안으로 돌아가 수정·재상신
   const rejectRes = transitionApprovalStep(
     mockRequest,
     'step-1',
@@ -159,11 +158,17 @@ console.log('=== [4] Approval Rejection Transition ===');
     '예산 초과로 견적 재조정 요망'
   );
   assert.equal(rejectRes.success, true);
-  assert.equal(rejectRes.updatedRequest?.status, 'rejected');
+  assert.equal(rejectRes.updatedRequest?.status, 'draft');
   assert.equal(rejectRes.updatedRequest?.steps[0].status, 'rejected');
-  assert.equal(rejectRes.updatedRequest?.steps[1].status, 'skipped'); // 후속 단계 스킵
+  assert.equal(rejectRes.updatedRequest?.steps[1].status, 'waiting');
   assert.equal(rejectRes.updatedRequest?.rejectionReason, '예산 초과로 견적 재조정 요망');
-  console.log('  -> 반려 처리 및 후속 결재 단계 스킵 검증 통과');
+  assert.equal(
+    Array.isArray(rejectRes.updatedRequest?.content.rejectionHistory) &&
+      (rejectRes.updatedRequest?.content.rejectionHistory as unknown[]).length,
+    1
+  );
+  assert.equal(transitionApprovalStep(mockRequest, 'step-1', 'reject', '  ').success, false);
+  console.log('  -> 반려 후 초안 복귀 및 반려 이력 보존 검증 통과');
 }
 
 console.log('=== [5] Summary Metrics ===');

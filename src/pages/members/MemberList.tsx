@@ -75,6 +75,7 @@ export function MemberList(): React.JSX.Element {
     { key: 'grievances_manage', label: '노경 건의함 담당', desc: '고충 건의함 열람 및 답변 등록' },
     { key: 'shuttle:manage', label: '통근 셔틀 담당', desc: '셔틀 노선 및 배차 스케줄 관리' },
     { key: 'office_supply_request:manage', label: '사무 소모품 담당', desc: '소모품 신청 검토 및 재고 불출' },
+    { key: 'meal_survey:manage', label: '식수인원 조사 담당', desc: '식사 슬롯·식수 현황 관리' },
     { key: 'safety:manage', label: '현장 안전/SOP 담당', desc: '위험성평가 및 작업표준 관리' },
   ] as const;
 

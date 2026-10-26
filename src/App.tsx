@@ -69,6 +69,8 @@ const RndPortalPage = lazy(() => import("./pages/workspace/RndPortalPage").then(
 const WorkspaceIntranetHubPage = lazy(() => import("./pages/workspace/WorkspaceIntranetHubPage").then((m) => ({ default: m.WorkspaceIntranetHubPage })));
 const WorkspaceMboPage = lazy(() => import("./pages/workspace/WorkspaceMboPage").then((m) => ({ default: m.WorkspaceMboPage })));
 const WorkspaceApprovalsPage = lazy(() => import("./pages/workspace/WorkspaceApprovalsPage").then((m) => ({ default: m.WorkspaceApprovalsPage })));
+const WorkspaceInventoryPage = lazy(() => import("./pages/workspace/WorkspaceInventoryPage").then((m) => ({ default: m.WorkspaceInventoryPage })));
+const WorkspaceSupplyRestockPage = lazy(() => import("./pages/workspace/WorkspaceSupplyRestockPage").then((m) => ({ default: m.WorkspaceSupplyRestockPage })));
 const WorkspaceSopRiskPage = lazy(() => import("./pages/workspace/WorkspaceSopRiskPage").then((m) => ({ default: m.WorkspaceSopRiskPage })));
 const WorkspaceShuttleMyPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleMyPage })));
 const WorkspaceShuttleRosterPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleRosterPage })));
@@ -359,6 +361,8 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/feedbacks" element={<WorkspaceFeedbacksPage />} />
             <Route path="/workspace/mbo" element={<WorkspaceMboPage />} />
             <Route path="/workspace/approvals" element={<WorkspaceApprovalsPage />} />
+            <Route path="/workspace/inventory" element={<WorkspaceInventoryPage />} />
+            <Route path="/workspace/supply-restock" element={<WorkspaceSupplyRestockPage />} />
             <Route path="/workspace/shuttle/routes" element={<WorkspaceShuttleRoutesPage />} />
             <Route path="/workspace/shuttle/roster" element={<WorkspaceShuttleRosterPage />} />
             <Route path="/workspace/shuttle/my" element={<WorkspaceShuttleMyPage />} />

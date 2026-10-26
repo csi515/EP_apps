@@ -13,8 +13,10 @@ import { resourceRangesOverlap, isBlockingReservationStatus } from '../overlap';
 import {
   requestResourceReservation,
   requestMemberResourceReservation,
+  determineInitialReservationStatus,
 } from '../reservationService';
 import { useActiveUser } from '@/shared/session/useActiveUser';
+import { createApprovalWithChosenLine } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 
 interface ResourceReservationRequestModalProps {
   organizationId: string;
@@ -31,10 +33,13 @@ interface ResourceReservationRequestModalProps {
   requesterDisplayName?: string;
   requesterDepartmentName?: string;
   /**
-   * member: 사내 직원 즉시 확정(request_member_room_reservation).
+   * member: 사내 직원(request_member_room_reservation, require_approval 시 pending).
    * customer: 학원 고객 신청(request_room_reservation, pending 가능).
    */
   bookingMode?: 'member' | 'customer';
+  /** require_approval 시 전자결재 연계에 사용 */
+  approvalMembers?: Array<{ userId: string; name: string }>;
+  enableApprovalWorkflow?: boolean;
 }
 
 export const ResourceReservationRequestModal: React.FC<ResourceReservationRequestModalProps> = ({
@@ -51,6 +56,8 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   requesterDisplayName,
   requesterDepartmentName,
   bookingMode = 'member',
+  approvalMembers = [],
+  enableApprovalWorkflow = false,
 }) => {
   const [date, setDate] = useState<string>(
     defaultDate || new Date().toISOString().split('T')[0]
@@ -62,6 +69,8 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   const [memo, setMemo] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reviewerId, setReviewerId] = useState('');
+  const [approverId, setApproverId] = useState('');
 
   const sessionUser = useActiveUser();
   const displayName =
@@ -74,10 +83,10 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
   if (!isOpen || !resource) return null;
 
   const metadata = (resource.metadata || {}) as Record<string, any>;
-  // v1 사내 예약은 즉시 확정만. 승인제는 후속 티켓.
-  const isRequireApproval =
-    bookingMode === 'customer' && metadata.require_approval === true;
+  const isRequireApproval = determineInitialReservationStatus(resource) === 'pending';
   const approverLabel = metadata.approver_name || '지정 관리자';
+  const needsApprovalLine =
+    bookingMode === 'member' && isRequireApproval && enableApprovalWorkflow;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +127,17 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
       .filter(Boolean)
       .join(' | ');
 
+    if (needsApprovalLine) {
+      if (!reviewerId || !approverId) {
+        setErrorMessage('검토자와 최종 승인자를 선택해 주세요.');
+        return;
+      }
+      if (reviewerId === approverId) {
+        setErrorMessage('검토자와 최종 승인자는 서로 다른 사람이어야 합니다.');
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       setErrorMessage(null);
@@ -129,10 +149,35 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
         endsAt,
         memo: fullMemo,
       };
+      let reservationId: string;
       if (bookingMode === 'member') {
-        await requestMemberResourceReservation(payload);
+        reservationId = await requestMemberResourceReservation(payload);
       } else {
-        await requestResourceReservation(payload);
+        reservationId = await requestResourceReservation(payload);
+      }
+
+      if (needsApprovalLine && currentUserId) {
+        const reviewer = approvalMembers.find((m) => m.userId === reviewerId);
+        const approver = approvalMembers.find((m) => m.userId === approverId);
+        if (!reviewer || !approver) {
+          throw new Error('결재선 구성원을 확인할 수 없습니다.');
+        }
+        await createApprovalWithChosenLine({
+          organizationId,
+          title: `[공용자원 예약] ${resource.name} (${date} ${startTime}~${endTime})`,
+          content: {
+            purpose: purpose.trim(),
+            memo: fullMemo,
+            starts_at: startsAt,
+            ends_at: endsAt,
+          },
+          requesterId: currentUserId,
+          requesterName: displayName,
+          reviewer: { userId: reviewer.userId, name: reviewer.name },
+          approver: { userId: approver.userId, name: approver.name },
+          entityType: 'resource_reservation',
+          entityId: reservationId,
+        });
       }
 
       onSuccess();
@@ -225,6 +270,46 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
               {isRequireApproval ? '승인필요' : '즉시확정'}
             </span>
           </div>
+
+          {needsApprovalLine ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="block text-xs font-bold text-slate-700">
+                검토자
+                <select
+                  value={reviewerId}
+                  onChange={(e) => setReviewerId(e.target.value)}
+                  className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                  required
+                >
+                  <option value="">선택</option>
+                  {approvalMembers.map((m) => (
+                    <option key={m.userId} value={m.userId}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block text-xs font-bold text-slate-700">
+                최종 승인자
+                <select
+                  value={approverId}
+                  onChange={(e) => setApproverId(e.target.value)}
+                  className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                  required
+                >
+                  <option value="">선택</option>
+                  {approvalMembers.map((m) => (
+                    <option key={`ap-${m.userId}`} value={m.userId}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="sm:col-span-2 text-[11px] text-slate-500">
+                결재함에서 승인되면 예약이 확정됩니다. 기본 승인권자 안내: {approverLabel}
+              </p>
+            </div>
+          ) : null}
 
           {/* 일자 및 시간 선택 */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

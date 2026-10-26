@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCreate, useInvalidate, useList, useUpdate } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
-  buildDefaultGateApprovalSteps,
   buildGateApprovalRequestValues,
   canSubmitGateToApprovalWorkflow,
   gateDecisionFromApprovalStatus,
   shouldSyncGateFromApproval,
+  type GateApprovalAssignee,
   type GateLinkedApprovalStatus,
 } from '../domain/researchProjectApproval';
+import { createApprovalWithChosenLine } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import {
   canDirectDecideGate,
   createResearchProject,
@@ -78,8 +79,6 @@ export function useResearchProjectWorkspace() {
   const { mutate: createMember } = useCreate();
   const { mutate: createGate } = useCreate();
   const { mutate: createDeliverable } = useCreate();
-  const { mutate: createApproval } = useCreate();
-  const { mutate: createApprovalStep } = useCreate();
   const { mutate: updateProject } = useUpdate();
   const { mutate: updateGate } = useUpdate();
   const { mutate: updateDeliverable } = useUpdate();
@@ -334,68 +333,59 @@ export function useResearchProjectWorkspace() {
   );
 
   const submitGateToApproval = useCallback(
-    (
+    async (
       project: ResearchProject,
       gateId: string,
       gateNote: string,
-      requesterName: string
+      requesterName: string,
+      requesterId: string,
+      reviewer: GateApprovalAssignee,
+      approver: GateApprovalAssignee
     ): Promise<string | null> => {
-      if (!orgId) return Promise.resolve('사업장이 선택되지 않았습니다.');
+      if (!orgId) return '사업장이 선택되지 않았습니다.';
+      if (!requesterId) return '로그인 정보가 필요합니다.';
       const gate = project.gates.find((g) => g.id === gateId);
-      if (!gate) return Promise.resolve('게이트를 찾을 수 없습니다.');
+      if (!gate) return '게이트를 찾을 수 없습니다.';
       const guard = canSubmitGateToApprovalWorkflow(gate, hasApprovalWorkflow);
-      if (!guard.allowed) return Promise.resolve(guard.reason || '상신 불가');
+      if (!guard.allowed) return guard.reason || '상신 불가';
+      if (!reviewer.userId || !approver.userId) return '검토자와 최종 승인자를 선택해 주세요.';
+      if (reviewer.userId === approver.userId) {
+        return '검토자와 최종 승인자는 서로 다른 사람이어야 합니다.';
+      }
 
-      return new Promise((resolve) => {
-        createApproval(
-          {
-            resource: 'approval_requests',
-            values: buildGateApprovalRequestValues({
-              project,
-              gate,
-              requesterName,
-              gateNote,
-            }),
-          },
-          {
-            onSuccess: (res) => {
-              const approvalId = String(res.data?.id ?? '');
-              if (!approvalId) {
-                resolve('결재 문서 생성에 실패했습니다.');
-                return;
-              }
-              const steps = buildDefaultGateApprovalSteps(orgId, approvalId);
-              for (const step of steps) {
-                createApprovalStep({
-                  resource: 'approval_steps',
-                  values: step,
-                });
-              }
-              const marked = markGateSubmittedForApproval(project, gateId, approvalId);
-              if (marked.error || !marked.project) {
-                resolve(marked.error || '게이트 상태 갱신 실패');
-                return;
-              }
-              const updatedGate = marked.project.gates.find((g) => g.id === gateId)!;
-              persistGate(updatedGate);
-              persistProjectPatch(marked.project);
-              refetchAll();
-              resolve(null);
-            },
-            onError: () => resolve('전자결재 기안에 실패했습니다.'),
-          }
-        );
-      });
+      try {
+        const values = buildGateApprovalRequestValues({
+          project,
+          gate,
+          requesterName,
+          requesterId,
+          gateNote,
+        });
+        const { requestId } = await createApprovalWithChosenLine({
+          organizationId: orgId,
+          title: String(values.title),
+          content: (values.content as Record<string, unknown>) ?? {},
+          requesterId,
+          requesterName,
+          reviewer,
+          approver,
+          entityType: String(values.entity_type),
+          entityId: String(values.entity_id),
+        });
+        const marked = markGateSubmittedForApproval(project, gateId, requestId);
+        if (marked.error || !marked.project) {
+          return marked.error || '게이트 상태 갱신 실패';
+        }
+        const updatedGate = marked.project.gates.find((g) => g.id === gateId)!;
+        persistGate(updatedGate);
+        persistProjectPatch(marked.project);
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return cause instanceof Error ? cause.message : '전자결재 기안에 실패했습니다.';
+      }
     },
-    [
-      orgId,
-      hasApprovalWorkflow,
-      createApproval,
-      createApprovalStep,
-      persistGate,
-      persistProjectPatch,
-      refetchAll,
-    ]
+    [orgId, hasApprovalWorkflow, persistGate, persistProjectPatch, refetchAll]
   );
 
   const updateDeliverableStatusPersisted = useCallback(

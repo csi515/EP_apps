@@ -40,6 +40,8 @@ import { ResourceMasterSettingsModal } from './ResourceMasterSettingsModal';
 import { ResourceReservationRequestModal } from './ResourceReservationRequestModal';
 import { ResourceApprovalInboxView } from './ResourceApprovalInboxView';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { listApprovalOrgMembers } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
 
 export type UniversalResourceCalendarViewProps = {
   /** 임베드 시 헤더·승인함 축소 */
@@ -96,7 +98,12 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   defaultCategory = 'all',
   bookingMode = 'member',
 }) => {
-  const { currentOrganization, currentStaffId, currentRole } = useOrganization();
+  const {
+    currentOrganization,
+    currentStaffId,
+    currentRole,
+    activeCapabilities = [],
+  } = useOrganization();
   const { user } = useAuth();
   const orgId = currentOrganization?.id || '';
   const allowResourceWrite = useCanManageResources();
@@ -109,6 +116,18 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   const [resources, setResources] = useState<Resource[]>([]);
   const [reservations, setReservations] = useState<ResourceReservation[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [approvalMembers, setApprovalMembers] = useState<Array<{ userId: string; name: string }>>(
+    []
+  );
+
+  const enableApprovalWorkflow = useMemo(() => {
+    const preset = getIndustryPreset(currentOrganization?.industry_type ?? '');
+    const caps = new Set([
+      ...(preset?.capabilities ?? []),
+      ...activeCapabilities,
+    ]);
+    return caps.has('approval_workflow');
+  }, [currentOrganization?.industry_type, activeCapabilities]);
 
   // 모달 제어
   const [isMasterModalOpen, setIsMasterModalOpen] = useState<boolean>(false);
@@ -138,6 +157,16 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   useEffect(() => {
     void loadData();
   }, [orgId]);
+
+  useEffect(() => {
+    if (!orgId || !enableApprovalWorkflow) {
+      setApprovalMembers([]);
+      return;
+    }
+    void listApprovalOrgMembers(orgId)
+      .then((rows) => setApprovalMembers(rows.map((r) => ({ userId: r.userId, name: r.name }))))
+      .catch(() => setApprovalMembers([]));
+  }, [orgId, enableApprovalWorkflow]);
 
   // 날짜 내비게이션
   const handlePrev = () => {
@@ -599,6 +628,8 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
         defaultStartTime={prefilledTimeSlot}
         currentUserId={user?.id}
         bookingMode={bookingMode}
+        approvalMembers={approvalMembers}
+        enableApprovalWorkflow={enableApprovalWorkflow}
       />
 
       {/* 7. 예약 상세·취소 시트 */}

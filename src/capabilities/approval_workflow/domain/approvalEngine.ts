@@ -10,8 +10,8 @@ export const approvalFSM = createStateMachine<ApprovalStatus, 'SUBMIT' | 'APPROV
   finalStates: ['approved', 'rejected', 'canceled'],
   transitions: [
     { from: 'draft', to: 'pending', event: 'SUBMIT' },
-    { from: 'pending', to: 'approved', event: 'APPROVE', allowedRoles: ['owner', 'admin', 'manager'] },
-    { from: 'pending', to: 'rejected', event: 'REJECT', allowedRoles: ['owner', 'admin', 'manager'] },
+    { from: 'pending', to: 'approved', event: 'APPROVE' },
+    { from: 'pending', to: 'draft', event: 'REJECT' },
     { from: 'pending', to: 'canceled', event: 'CANCEL' },
   ],
 });
@@ -97,15 +97,15 @@ export function validateApprovalSteps(
 }
 
 /**
- * 결재 처리 권한 검증
+ * 결재 처리 권한 검증 — 기안자가 지정한 담당자만 처리한다.
  */
 export function canUserProcessStep(
   step: ApprovalStep,
   currentUserId: string,
-  permissions: string[] = []
+  _permissions: string[] = []
 ): boolean {
+  if (!currentUserId) return false;
   if (step.status !== 'pending') return false;
-  if (permissions.includes('approval:admin')) return true;
   return step.approverId === currentUserId;
 }
 
@@ -185,30 +185,53 @@ export function transitionApprovalStep(
       };
     }
   } else if (action === 'reject') {
-    // 2. 반려 처리
+    const reason = (comment ?? '').trim();
+    if (!reason) {
+      return { success: false, error: '반려 사유를 입력해 주세요.' };
+    }
+
     nextSteps[stepIndex] = {
       ...targetStep,
       status: 'rejected',
-      comment: comment || undefined,
+      comment: reason,
       processedAt: now,
     };
 
-    // 잔여 단계 스킵 처리
+    // 이후 단계는 재상신을 위해 waiting으로 되돌린다.
     for (let i = 0; i < nextSteps.length; i++) {
       if (nextSteps[i].stepOrder > targetStep.stepOrder) {
         nextSteps[i] = {
           ...nextSteps[i],
-          status: 'skipped',
+          status: 'waiting',
+          comment: undefined,
+          signatureUrl: undefined,
+          processedAt: undefined,
         };
       }
     }
 
+    const previousHistory = Array.isArray(request.content.rejectionHistory)
+      ? [...(request.content.rejectionHistory as unknown[])]
+      : [];
+    previousHistory.push({
+      id: `reject-${now}`,
+      stepOrder: targetStep.stepOrder,
+      stepLabel: targetStep.stepType === 'review' ? '검토' : '최종 승인',
+      reason,
+      rejectedAt: now,
+    });
+
     const updatedRequest: ApprovalRequest = {
       ...request,
+      content: {
+        ...request.content,
+        rejectionHistory: previousHistory,
+      },
       steps: nextSteps,
-      status: 'rejected',
+      status: 'draft',
       rejectedAt: now,
-      rejectionReason: comment || '반려되었습니다.',
+      rejectionReason: reason,
+      currentStepOrder: 1,
       updatedAt: now,
     };
 
@@ -237,6 +260,8 @@ export function summarizeApprovalMetrics(requests: ApprovalRequest[]): ApprovalM
     totalCount: requests.length,
     pendingCount: requests.filter((r) => r.status === 'pending').length,
     approvedCount: requests.filter((r) => r.status === 'approved').length,
-    rejectedCount: requests.filter((r) => r.status === 'rejected').length,
+    rejectedCount: requests.filter(
+      (r) => r.status === 'rejected' || (r.status === 'draft' && Boolean(r.rejectionReason))
+    ).length,
   };
 }

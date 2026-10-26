@@ -41,10 +41,12 @@ import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
 import { MboReviseGoalModal } from './MboReviseGoalModal';
 import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { MboProjectPortfolioView } from './MboProjectPortfolioView';
+import { MboPlanApprovalModal } from './MboPlanApprovalModal';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import { MboService } from '../services/mboService';
+import { readMboRequirePlanApproval } from '../domain/mboPlanApproval';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
   ensureDefaultProjectCategories,
@@ -52,6 +54,8 @@ import {
 } from '../services/projectCategoryService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
+import { getIndustryPreset } from '@/app/presets/presetRegistry';
+import { useAuth } from '@/core/auth/AuthProvider';
 
 const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
   {
@@ -282,9 +286,20 @@ export const MboManagementView: React.FC = () => {
   const [mboFilterScope, setMboFilterScope] = useState<'all' | 'my' | 'dept'>('all');
   const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
+  const [planApprovalObjectiveId, setPlanApprovalObjectiveId] = useState<string | null>(null);
 
-  const { currentOrganization } = useOrganization();
+  const { currentOrganization, activeCapabilities = [] } = useOrganization();
+  const { user: authUser } = useAuth();
+  const activeUser = useActiveUser();
   const orgId = currentOrganization?.id ?? null;
+  const requirePlanApproval = readMboRequirePlanApproval(
+    (currentOrganization?.settings ?? null) as Record<string, unknown> | null
+  );
+  const hasApprovalWorkflow = useMemo(() => {
+    const preset = getIndustryPreset(currentOrganization?.industry_type ?? '');
+    const caps = new Set([...(preset?.capabilities ?? []), ...activeCapabilities]);
+    return caps.has('approval_workflow');
+  }, [currentOrganization?.industry_type, activeCapabilities]);
   const { nodes: deptNodes, members: orgMembers, departmentMembers } = useOrganizationTree(
     currentOrganization?.id,
   );
@@ -365,7 +380,6 @@ export const MboManagementView: React.FC = () => {
     }));
   }, [refineObjectives, localObjectives]);
 
-  const activeUser = useActiveUser();
   const filteredObjectives = useMemo(() => {
     if (mboFilterScope === 'all') return objectives;
     const currentUserName = activeUser?.name;
@@ -717,13 +731,50 @@ export const MboManagementView: React.FC = () => {
             }
             setShowCreateModal(true);
           }}
-          onRequestApproval={(id) => handleTransitionStatus(id, 'submitted')}
+          onRequestApproval={(id) => {
+            if (requirePlanApproval && hasApprovalWorkflow) {
+              setPlanApprovalObjectiveId(id);
+              return;
+            }
+            handleTransitionStatus(id, 'submitted');
+          }}
           onApprove={(id) => handleTransitionStatus(id, 'approved')}
           onOpenRejectModal={(id) => setShowRejectModal(id)}
           onOpenRevisionHistory={(id) => setHistoryGoalId(id)}
           onOpenRevise={(id) => setReviseGoalId(id)}
         />
       )}
+
+      {planApprovalObjectiveId ? (
+        <MboPlanApprovalModal
+          open
+          organizationId={orgId ?? ''}
+          objectiveId={planApprovalObjectiveId}
+          objectiveTitle={
+            objectives.find((o) => o.id === planApprovalObjectiveId)?.title ?? 'MBO 목표'
+          }
+          objectiveDescription={
+            objectives.find((o) => o.id === planApprovalObjectiveId)?.description
+          }
+          successCriteria={
+            objectives.find((o) => o.id === planApprovalObjectiveId)?.successCriteria
+          }
+          ownerName={objectives.find((o) => o.id === planApprovalObjectiveId)?.ownerName}
+          objectiveStatus={
+            objectives.find((o) => o.id === planApprovalObjectiveId)?.status ?? 'draft'
+          }
+          requirePlanApproval={requirePlanApproval}
+          hasApprovalWorkflow={hasApprovalWorkflow}
+          requesterId={authUser?.id || activeUser?.id || ''}
+          requesterName={activeUser?.name || authUser?.email || '기안자'}
+          onClose={() => setPlanApprovalObjectiveId(null)}
+          onSubmitted={() => {
+            handleTransitionStatus(planApprovalObjectiveId, 'submitted');
+            showToast('MBO 계획 결재가 상신되었습니다.', 'success');
+          }}
+          onSkipToLocalSubmit={() => handleTransitionStatus(planApprovalObjectiveId, 'submitted')}
+        />
+      ) : null}
 
       {/* 탭 2: 진행 프로젝트 (연도/월/개인) + 분기 진척 리뷰 */}
       {activeTab === 'projects' && (

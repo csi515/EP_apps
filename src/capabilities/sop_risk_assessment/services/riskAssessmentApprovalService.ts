@@ -1,4 +1,16 @@
 import { getCoreClient } from '@/lib/supabase/client';
+import type { Json } from '@/lib/supabase/database.types';
+import { generateSopDocNo, getNextSequenceNumber } from '../domain/sopNumberingAndAuditEngine';
+import {
+  addStep,
+  buildSnapshotPayload,
+  emptyDocumentBody,
+  readDocumentBody,
+  type RejectionNote,
+  type SopDocumentBody,
+} from '../domain/sopStepDocument';
+
+export { listOrgMembers } from './listOrgMembers';
 
 export type RiskAssessmentRow = {
   id: string;
@@ -150,6 +162,96 @@ export async function listPendingRepledges(userId: string) {
     .is('pledged_at', null);
   if (error) throw new Error(error.message);
   return data ?? [];
+}
+
+function asJson(value: Record<string, unknown>): Json {
+  return value as Json;
+}
+
+export async function createDraftRiskAssessment(input: {
+  organizationId: string;
+  deptCode: string;
+  deptName: string;
+  processName: string;
+  existingDocNos: readonly string[];
+}): Promise<RiskAssessmentRow> {
+  const client = getCoreClient();
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if (userError || !userData.user) throw new Error(userError?.message || '로그인이 필요합니다.');
+
+  const docNo = generateSopDocNo(
+    input.deptCode,
+    getNextSequenceNumber(input.existingDocNos, input.deptCode)
+  );
+  const body = addStep(
+    emptyDocumentBody().steps
+  );
+  const snapshot = buildSnapshotPayload({
+    ...emptyDocumentBody(),
+    steps: body,
+    deptCode: input.deptCode,
+    deptName: input.deptName,
+    prohibitedActions: ['보호구 미착용 상태 작업 금지'],
+  });
+
+  const { data, error } = await client
+    .from('risk_assessments')
+    .insert({
+      organization_id: input.organizationId,
+      document_no: docNo,
+      title: input.processName.trim(),
+      process_name: input.processName.trim(),
+      current_version: 1,
+      status: 'DRAFT',
+      created_by: userData.user.id,
+      snapshot_payload: asJson(snapshot),
+    })
+    .select('*')
+    .single();
+  if (error) throw new Error(error.message);
+  return data as RiskAssessmentRow;
+}
+
+function mergeRejectionHistory(local: RejectionNote[], remote: RejectionNote[]): RejectionNote[] {
+  const byId = new Map<string, RejectionNote>();
+  for (const note of remote) byId.set(note.id, note);
+  for (const note of local) if (!byId.has(note.id)) byId.set(note.id, note);
+  return [...byId.values()];
+}
+
+export async function saveDraftRiskAssessment(input: {
+  assessmentId: string;
+  processName: string;
+  body: SopDocumentBody;
+}): Promise<RiskAssessmentRow> {
+  const client = getCoreClient();
+  const current = await client
+    .from('risk_assessments')
+    .select('snapshot_payload')
+    .eq('id', input.assessmentId)
+    .maybeSingle();
+  if (current.error) throw new Error(current.error.message);
+  const previous = readDocumentBody(current.data?.snapshot_payload);
+  const title = input.processName.trim();
+  const { data, error } = await client
+    .from('risk_assessments')
+    .update({
+      title,
+      process_name: title,
+      snapshot_payload: asJson(
+        buildSnapshotPayload({
+          ...input.body,
+          rejectionHistory: mergeRejectionHistory(input.body.rejectionHistory, previous.rejectionHistory),
+        })
+      ),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', input.assessmentId)
+    .eq('status', 'DRAFT')
+    .select('*')
+    .single();
+  if (error) throw new Error(error.message);
+  return data as RiskAssessmentRow;
 }
 
 export async function completeRepledge(repledgeId: string, signature: string): Promise<void> {

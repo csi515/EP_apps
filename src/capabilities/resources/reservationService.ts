@@ -190,8 +190,8 @@ export async function requestResourceReservation(
 }
 
 /**
- * 사내 직원 공용자원 예약 (즉시 approved, customer_id NULL).
- * v1은 require_approval 메타를 무시한다.
+ * 사내 직원 공용자원 예약 (customer_id NULL).
+ * 자원 metadata.require_approval=true이면 pending, 아니면 approved.
  */
 export async function requestMemberResourceReservation(
   params: RequestResourceReservationInput
@@ -261,7 +261,7 @@ export async function listReservationsByRange(
 
 /**
  * 자원의 require_approval 설정에 따라 예약의 초기 상태를 결정합니다.
- * 사내 member RPC(v1)는 항상 approved이므로 UI 안내용으로만 사용.
+ * request_member_room_reservation RPC와 동일한 규칙을 사용합니다.
  */
 export function determineInitialReservationStatus(
   resource: { metadata?: Record<string, unknown> | null }

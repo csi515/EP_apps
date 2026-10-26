@@ -2,9 +2,9 @@ import React, { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 
-const ApprovalWorkflowManagementView = lazy(() =>
-  import('@/capabilities/approval_workflow').then((m) => ({
-    default: m.ApprovalWorkflowManagementView,
+const ApprovalWorkflowWithLinkedSync = lazy(() =>
+  import('./ApprovalWorkflowWithLinkedSync').then((m) => ({
+    default: m.ApprovalWorkflowWithLinkedSync,
   })),
 );
 
@@ -24,7 +24,7 @@ export const WorkspaceApprovalsPage: React.FC = () => {
         </div>
       </div>
       <Suspense fallback={<LoadingScreen message="결재 화면 로딩…" />}>
-        <ApprovalWorkflowManagementView />
+        <ApprovalWorkflowWithLinkedSync />
       </Suspense>
     </main>
   );

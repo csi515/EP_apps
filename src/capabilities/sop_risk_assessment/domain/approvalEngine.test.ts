@@ -32,12 +32,12 @@ console.log('--- Testing sop_risk_assessment approvalEngine ---');
   console.log('✅ Case 2: REJECT requires reason and returns DRAFT');
 }
 
-// [케이스 3] 승인 권한 없는 직원의 최종 승인 시도 거절
+// [케이스 3] 지정된 사람이면 직급과 관계없이 그 단계만 처리
 {
   const staff: ApprovalMember = {
     userId: 'u-staff',
     role: 'staff',
-    permissions: ['safety:assessment:review'],
+    permissions: [],
   };
   const finalStep: ApprovalStepState = {
     stepOrder: 3,
@@ -45,21 +45,15 @@ console.log('--- Testing sop_risk_assessment approvalEngine ---');
     assigneeId: 'u-staff',
     actionStatus: 'WAIT',
   };
-  assert.equal(canPerformApprovalAction(staff, finalStep, 'APPROVAL_PENDING'), false);
+  assert.equal(canPerformApprovalAction(staff, finalStep, 'APPROVAL_PENDING'), true);
 
-  const owner: ApprovalMember = {
-    userId: 'u-owner',
+  const other: ApprovalMember = {
+    userId: 'u-other',
     role: 'owner',
     permissions: [],
   };
-  const ownerStep: ApprovalStepState = {
-    stepOrder: 3,
-    stepType: 'APPROVE',
-    assigneeId: 'u-owner',
-    actionStatus: 'WAIT',
-  };
-  assert.equal(canPerformApprovalAction(owner, ownerStep, 'APPROVAL_PENDING'), true);
-  console.log('✅ Case 3: staff cannot final-approve; owner can');
+  assert.equal(canPerformApprovalAction(other, finalStep, 'APPROVAL_PENDING'), false);
+  console.log('✅ Case 3: only the designated assignee can act');
 }
 
 // [케이스 4] 최종 승인 시 WORM 스냅샷 페이로드 정확 생성

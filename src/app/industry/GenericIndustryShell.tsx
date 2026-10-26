@@ -1,5 +1,5 @@
 import { type FC, type ReactNode, useMemo, useState, useEffect, lazy, Suspense } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { CAPABILITY_LIST_VIEWS } from './capabilityListViews';
 import {
   Home,
@@ -145,8 +145,8 @@ const MembershipReferralTreeView = lazy(() =>
 const HygieneHaccpLogView = lazy(() =>
   import('@/capabilities/hygiene_haccp_log').then((m) => ({ default: m.HygieneHaccpLogView }))
 );
-const SopRiskAssessmentView = lazy(() =>
-  import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.SopRiskAssessmentView }))
+const DesktopSopRiskMatrixView = lazy(() =>
+  import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.DesktopSopRiskMatrixView }))
 );
 const RiskApprovalInboxView = lazy(() =>
   import('@/capabilities/sop_risk_assessment').then((m) => ({ default: m.RiskApprovalInboxView }))
@@ -245,9 +245,9 @@ const PatentAssetManagementView = lazy(() =>
 const LeaveManagementDashboardView = lazy(() =>
   import('@/capabilities/leave_management').then((m) => ({ default: m.LeaveManagementDashboardView }))
 );
-const ApprovalWorkflowManagementView = lazy(() =>
-  import('@/capabilities/approval_workflow').then((m) => ({
-    default: m.ApprovalWorkflowManagementView,
+const ApprovalWorkflowWithLinkedSync = lazy(() =>
+  import('@/pages/workspace/ApprovalWorkflowWithLinkedSync').then((m) => ({
+    default: m.ApprovalWorkflowWithLinkedSync,
   }))
 );
 const UniversalResourceCalendarView = lazy(() =>
@@ -748,6 +748,30 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
   const { tab: urlTab } = useParams<{ tab?: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  /** EP_apps 등 기업 크롬: 런처 전용 경로와 셸 탭 이중 진입을 합친다 */
+  const CORPORATE_DEDICATED_TAB_ROUTES: Record<string, string> = {
+    'approval-workflow': '/workspace/approvals',
+    'sop-risk': '/workspace/sop-risk',
+    'risk-approvals': '/workspace/sop-risk',
+    fleet: '/workspace/resources',
+    bookings: '/workspace/resources',
+    inventory: '/workspace/inventory',
+    'supply-restock': '/workspace/supply-restock',
+  };
+
+  const navigateCorporateTab = (tab: string) => {
+    const industryType = currentOrganization?.industry_type || industry;
+    if (isCorporateChromePreset(industryType)) {
+      const dedicated = CORPORATE_DEDICATED_TAB_ROUTES[tab];
+      if (dedicated) {
+        navigate(dedicated);
+        return;
+      }
+    }
+    setActiveTab(tab);
+  };
 
   const defaultViewMap: Record<string, () => ReactNode> = {
     dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
@@ -758,12 +782,12 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     ),
     'approval-workflow': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
-        <ApprovalWorkflowManagementView />
+        <ApprovalWorkflowWithLinkedSync />
       </Suspense>
     ),
     approvals: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
-        <ApprovalWorkflowManagementView />
+        <ApprovalWorkflowWithLinkedSync />
       </Suspense>
     ),
     students: () => (
@@ -969,7 +993,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     ),
     'sop-risk': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">작업표준 화면을 불러오는 중...</div>}>
-        <SopRiskAssessmentView />
+        <DesktopSopRiskMatrixView />
       </Suspense>
     ),
     'risk-approvals': () => (
@@ -1343,7 +1367,8 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const useCorporateChrome = !externalViewMap && isCorporateChromePreset(industryKey);
 
   const corporateMainTabs = useMemo(() => {
-    const preferred = ['dashboard', 'intranet-hub', 'approval-workflow', 'fleet', 'inventory'] as const;
+    // 런처가 홈; 하단은 홈·사내 업무만 두고 결재/자재 등은 런처 딥링크로
+    const preferred = ['dashboard', 'intranet-hub'] as const;
     const byTab = new Map(
       filteredSections.flatMap((s) => s.items).map((item) => [item.tab, item])
     );
@@ -1401,7 +1426,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
             theme="indigo"
             sections={filteredSections}
             activeTab={activeTab}
-            onNavigate={setActiveTab}
+            onNavigate={navigateCorporateTab}
             user={{ name: currentUser.name, roleLabel, roleBadge }}
           />
         }
@@ -1411,7 +1436,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
             mainTabs={corporateMainTabs}
             moreTabs={corporateMoreTabs}
             activeTab={activeTab}
-            onNavigate={setActiveTab}
+            onNavigate={navigateCorporateTab}
             moreMenuTitle="더보기"
             moreMenuDescription="맞춤 운영 도구 · 설정"
           />
