@@ -12,7 +12,20 @@ export type RouteDraft = {
   direction: ShuttleDirection;
   departureTime: string;
   capacity: number;
+  /** 담당 기사 표시명 (선택) */
+  driverName?: string | null;
+  /** 담당 기사 연락처 (선택) */
+  driverPhone?: string | null;
 };
+
+/** 표시·tel 링크용: 숫자·하이픈·공백·괄호·+ 만 허용 */
+const PHONE_RE = /^[0-9+\-\s()]+$/;
+
+export function normalizeDriverPhoneForTel(phone: string | null | undefined): string | null {
+  if (!phone?.trim()) return null;
+  const digits = phone.replace(/[^\d+]/g, '');
+  return digits.length >= 8 ? digits : null;
+}
 
 export type ShuttleStopDraft = {
   stop_order: number;
@@ -82,6 +95,10 @@ export function validateRouteForm(routeDraft: RouteDraft): { isValid: boolean; e
   }
   if (routeDraft.direction !== 'TO_WORK' && routeDraft.direction !== 'FROM_WORK') {
     return { isValid: false, error: '방향(출근/퇴근)이 올바르지 않습니다.' };
+  }
+  const phone = (routeDraft.driverPhone ?? '').trim();
+  if (phone && !PHONE_RE.test(phone)) {
+    return { isValid: false, error: '기사 연락처 형식이 올바르지 않습니다.' };
   }
   return { isValid: true };
 }

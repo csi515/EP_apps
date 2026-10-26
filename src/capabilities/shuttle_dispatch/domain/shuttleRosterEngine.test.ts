@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   aggregateStopHeadcounts,
   canManageShuttle,
+  normalizeDriverPhoneForTel,
   validateRouteForm,
   validateStopsSequence,
   type ShuttleRegistration,
@@ -19,8 +20,31 @@ function run() {
     direction: 'FROM_WORK',
     departureTime: '18:30',
     capacity: 45,
+    driverName: '김기사',
+    driverPhone: '010-1234-5678',
   });
   assert.equal(okRoute.isValid, true);
+
+  const okEmptyPhone = validateRouteForm({
+    name: '출근 버스',
+    direction: 'TO_WORK',
+    departureTime: '07:30',
+    capacity: 40,
+    driverPhone: '',
+  });
+  assert.equal(okEmptyPhone.isValid, true);
+
+  const badPhone = validateRouteForm({
+    name: '노선',
+    direction: 'TO_WORK',
+    departureTime: '07:30',
+    capacity: 40,
+    driverPhone: 'call-me@now',
+  });
+  assert.equal(badPhone.isValid, false);
+
+  assert.equal(normalizeDriverPhoneForTel('010-1234-5678'), '01012345678');
+  assert.equal(normalizeDriverPhoneForTel('  '), null);
 
   const badRoute = validateRouteForm({
     name: '  ',

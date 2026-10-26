@@ -18,6 +18,8 @@ type RouteRow = {
   departure_time: string;
   capacity: number;
   is_active: boolean;
+  driver_name: string | null;
+  driver_phone: string | null;
 };
 
 type StopRow = {
@@ -40,6 +42,8 @@ const EMPTY_ROUTE = {
   departureTime: '18:30',
   capacity: 45,
   is_active: true,
+  driverName: '',
+  driverPhone: '',
 };
 
 export const ShuttleRoutesPage: React.FC = () => {
@@ -120,6 +124,8 @@ export const ShuttleRoutesPage: React.FC = () => {
       departureTime: route.departure_time.slice(0, 5),
       capacity: route.capacity,
       is_active: route.is_active,
+      driverName: route.driver_name ?? '',
+      driverPhone: route.driver_phone ?? '',
     });
     setRouteModalOpen(true);
   }
@@ -131,6 +137,8 @@ export const ShuttleRoutesPage: React.FC = () => {
       direction: routeDraft.direction,
       departureTime: routeDraft.departureTime,
       capacity: routeDraft.capacity,
+      driverName: routeDraft.driverName,
+      driverPhone: routeDraft.driverPhone,
     });
     if (!validation.isValid) {
       showToast(validation.error ?? '입력값을 확인하세요.', 'error');
@@ -144,6 +152,8 @@ export const ShuttleRoutesPage: React.FC = () => {
       departure_time: `${routeDraft.departureTime}:00`,
       capacity: routeDraft.capacity,
       is_active: routeDraft.is_active,
+      driver_name: routeDraft.driverName.trim() || null,
+      driver_phone: routeDraft.driverPhone.trim() || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -317,6 +327,12 @@ export const ShuttleRoutesPage: React.FC = () => {
                     <span className="block text-xs opacity-80">
                       {route.direction === 'TO_WORK' ? '출근' : '퇴근'} · {route.departure_time.slice(0, 5)}
                     </span>
+                    {route.driver_name || route.driver_phone ? (
+                      <span className="block text-[11px] opacity-75">
+                        기사 {route.driver_name || '미등록'}
+                        {route.driver_phone ? ` · ${route.driver_phone}` : ''}
+                      </span>
+                    ) : null}
                   </button>
                 </li>
               ))}
@@ -340,6 +356,16 @@ export const ShuttleRoutesPage: React.FC = () => {
                   >
                     노선 삭제
                   </button>
+                </div>
+
+                <div className="mb-4 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+                  <p className="text-[11px] font-bold text-slate-500">담당 기사</p>
+                  <p className="mt-0.5 font-semibold">
+                    {selectedRoute.driver_name?.trim() || '담당자 미등록'}
+                    {selectedRoute.driver_phone?.trim()
+                      ? ` · ${selectedRoute.driver_phone.trim()}`
+                      : ''}
+                  </p>
                 </div>
 
                 <div className="mb-3 flex items-center justify-between">
@@ -515,6 +541,27 @@ export const ShuttleRoutesPage: React.FC = () => {
                     className="mt-1 min-h-11 w-full rounded-lg border px-3"
                     value={routeDraft.capacity}
                     onChange={(e) => setRouteDraft({ ...routeDraft, capacity: Number(e.target.value) })}
+                  />
+                </label>
+                <label className="block">
+                  담당 기사
+                  <input
+                    className="mt-1 min-h-11 w-full rounded-lg border px-3"
+                    value={routeDraft.driverName}
+                    onChange={(e) => setRouteDraft({ ...routeDraft, driverName: e.target.value })}
+                    placeholder="예: 김기사"
+                    maxLength={64}
+                  />
+                </label>
+                <label className="block">
+                  기사 연락처
+                  <input
+                    type="tel"
+                    className="mt-1 min-h-11 w-full rounded-lg border px-3"
+                    value={routeDraft.driverPhone}
+                    onChange={(e) => setRouteDraft({ ...routeDraft, driverPhone: e.target.value })}
+                    placeholder="예: 010-1234-5678"
+                    maxLength={32}
                   />
                 </label>
                 <label className="flex min-h-11 items-center gap-2">

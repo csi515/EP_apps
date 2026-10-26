@@ -4684,6 +4684,8 @@ export interface Database {
           departure_time: string;
           capacity: number;
           is_active: boolean;
+          driver_name: string | null;
+          driver_phone: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -4695,6 +4697,8 @@ export interface Database {
           departure_time: string;
           capacity?: number;
           is_active?: boolean;
+          driver_name?: string | null;
+          driver_phone?: string | null;
           created_at?: string;
           updated_at?: string;
         };
