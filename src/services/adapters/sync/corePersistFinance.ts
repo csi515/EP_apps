@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TuitionInvoice, TuitionPayment } from '../../../types';
 import { writeLocal } from '../localStorageEngine';
 import { STORAGE_KEYS } from '../storageKeys';

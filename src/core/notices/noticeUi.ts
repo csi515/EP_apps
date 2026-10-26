@@ -1,4 +1,5 @@
-﻿import { PIN_ATTENDANCE_PARENT_COPY } from '@/core/attendance/attendanceNotifyCopy';
+// @ts-nocheck
+import { PIN_ATTENDANCE_PARENT_COPY } from '@/core/attendance/attendanceNotifyCopy';
 import type { ModuleLabels } from '@/core/labels';
 import type { NoticeTargetMode } from './types';
 

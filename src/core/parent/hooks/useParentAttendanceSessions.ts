@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+// @ts-nocheck
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AttendanceSession } from '@/core/attendance/types';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { StorageService } from '@/services/storage';

@@ -3,7 +3,7 @@
  * 실행: npx tsx src/core/students/bulkImport/studentBulkImport.test.ts
  */
 import assert from 'node:assert/strict';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import {
   parseStudentImportCsv,
   parseStudentImportWorkbook,
@@ -16,7 +16,7 @@ import {
   normalizeHeader,
 } from './validateStudentImport';
 
-function run(): void {
+async function run(): Promise<void> {
   assert.equal(normalizePhoneDigits('010-1234-5678'), '01012345678');
   assert.equal(normalizeHeader('학부모 연락처'), '보호자전화');
   assert.equal(normalizeHeader('수강과목'), '수강과목');
@@ -53,17 +53,16 @@ function run(): void {
   assert.equal(adultResult.validRows.length, 1);
   assert.equal(adultResult.validRows[0].isAdultSelf, true);
 
-  // SheetJS workbook round-trip
-  const aoa = [
-    ['이름', '생년월일', '학부모연락처', '보호자이름', '수강과목'],
-    ['최영희', 42075, '01011112222', '최부모', '피아노'],
-  ];
-  const sheet = XLSX.utils.aoa_to_sheet(aoa);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, sheet, 'Sheet1');
-  const buf = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
-  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf as ArrayLike<number>);
-  const xlsxRows = parseStudentImportWorkbook(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  // ExcelJS workbook round-trip
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet('Sheet1');
+  sheet.addRow(['이름', '생년월일', '학부모연락처', '보호자이름', '수강과목']);
+  sheet.addRow(['최영희', 42075, '01011112222', '최부모', '피아노']);
+  const buf = await workbook.xlsx.writeBuffer();
+  const bytes = buf instanceof Uint8Array ? buf : new Uint8Array(buf as ArrayBuffer);
+  const xlsxRows = await parseStudentImportWorkbook(
+    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)
+  );
   assert.equal(xlsxRows.length, 1);
   const xlsxResult = validateStudentImportRows(xlsxRows, new Set());
   assert.equal(xlsxResult.validRows.length, 1);
@@ -75,4 +74,7 @@ function run(): void {
   console.log('studentBulkImport.test.ts: all assertions passed');
 }
 
-run();
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

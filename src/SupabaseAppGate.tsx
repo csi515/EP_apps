@@ -8,22 +8,25 @@ import { OrganizationSelector } from '@/core/organizations/OrganizationSelector'
 import { PendingStaffInviteGate } from '@/core/staff/components/PendingStaffInviteGate';
 import { IndustryAppRouter } from '@/app/industry/IndustryAppRouter';
 
-// 포털 셸은 해당 역할 진입 시에만 로드한다 (초기 번들 분리).
-const LazyParentShell = lazy(() =>
-  import('@/modules/parent/ParentShell').then((m) => ({ default: m.ParentShell }))
-);
+// 고객 포털 셸은 해당 역할 진입 시에만 로드한다 (초기 번들 분리).
 const LazyCustomerShell = lazy(() =>
   import('@/core/customer/CustomerShell').then((m) => ({ default: m.CustomerShell }))
-);
-const ParentShell: FC = () => (
-  <Suspense fallback={<LoadingScreen />}>
-    <LazyParentShell />
-  </Suspense>
 );
 const CustomerShell: FC = () => (
   <Suspense fallback={<LoadingScreen />}>
     <LazyCustomerShell />
   </Suspense>
+);
+
+/** 학부모 포털 모듈이 없는 빌드에서 빈 상태만 보여 준다. */
+const ParentPortalUnavailable: FC = () => (
+  <div
+    className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-2 p-6 text-center"
+    data-testid="parent-portal-unavailable"
+  >
+    <p className="text-sm font-medium text-slate-700">학부모 포털을 사용할 수 없습니다.</p>
+    <p className="text-xs text-slate-500">사업장 관리 화면으로 돌아가 주세요.</p>
+  </div>
 );
 
 interface SupabaseAppGateProps {
@@ -111,11 +114,11 @@ export const SupabaseAppGate: FC<SupabaseAppGateProps> = ({ children }) => {
           organizationId={currentOrganization.id}
           industryType={currentOrganization.industry_type}
         >
-          <ParentShell />
+          <ParentPortalUnavailable />
         </StorageHydrator>
       );
     }
-    return <ParentShell />;
+    return <ParentPortalUnavailable />;
   }
 
   // 6. 성인 수강생/고객 포털 활성 상태

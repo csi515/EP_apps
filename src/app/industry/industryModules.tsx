@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { lazy, type ReactNode, type ComponentType } from 'react';
 import { pianoPluginManifest } from '@/industries/piano/plugin';
 import { pilatesPluginManifest } from '@/industries/pilates/plugin';

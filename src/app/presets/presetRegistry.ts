@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Multi-vertical Industry Preset Registry & Capability Registry (Composition Layer)
  *

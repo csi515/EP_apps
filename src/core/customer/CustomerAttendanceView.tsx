@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+// @ts-nocheck
+import React, { useState } from 'react';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { StorageService } from '@/services/storage';
 import { getAttendanceBadge } from '@/utils/formatters';

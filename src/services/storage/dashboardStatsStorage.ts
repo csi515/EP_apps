@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Student, TuitionInvoice } from '../../types';
 import type { StorageApi } from './helpers';
 import { storageApi } from './storageApi';

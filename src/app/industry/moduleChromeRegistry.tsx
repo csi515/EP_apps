@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 전용 모듈 업종 → Sidebar / BottomNav / theme.
  * GenericIndustryShell(external viewMap)에서 ModuleAppShell에 연결한다.

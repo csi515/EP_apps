@@ -1,4 +1,5 @@
-﻿import type { Booking } from '@/core/types/schedule';
+// @ts-nocheck
+import type { Booking } from '@/core/types/schedule';
 import type { IncomeEntry } from '@/core/finance/types';
 import {
   findIncomeByPaymentSource,

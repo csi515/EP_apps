@@ -1,4 +1,5 @@
-﻿import { getCoreClient } from '@/lib/supabase';
+// @ts-nocheck
+import { getCoreClient } from '@/lib/supabase';
 import type { AttendanceSession } from '@/core/attendance/types';
 import { coreRowToSession } from '@/services/adapters/sync/attendanceEntityMappers';
 

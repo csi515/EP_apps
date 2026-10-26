@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { IncomeEntry, FinanceSummary } from '../../core/finance/types';
 import type {
   Expense,

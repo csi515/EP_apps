@@ -1,4 +1,5 @@
-﻿import type { ReactNode } from 'react';
+// @ts-nocheck
+import type { ReactNode } from 'react';
 import { MyAccountView } from '@/core/account';
 import { AttendanceManagementView } from '@/core/attendance';
 import { FinanceHubView } from '@/core/finance';

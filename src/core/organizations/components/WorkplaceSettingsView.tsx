@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState, type FC, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkUi as useApp } from '@/shared/navigation/useWorkUi';

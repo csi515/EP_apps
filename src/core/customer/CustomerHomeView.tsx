@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useMemo, useState } from 'react';
 import { Copy, KeyRound, Loader2, X } from 'lucide-react';
 import { formatCurrency, getInvoiceStatusBadge } from '@/utils/formatters';

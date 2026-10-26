@@ -22,10 +22,6 @@ const DriverDedicatedShell = lazy(() =>
 const WorkerKioskShell = lazy(() =>
   import('./WorkerKioskShell').then((m) => ({ default: m.WorkerKioskShell }))
 );
-const ParentShell = lazy(() =>
-  import('@/modules/parent/ParentShell').then((m) => ({ default: m.ParentShell }))
-);
-
 function resolveIndustryApp(industryType?: string | null): ComponentType {
   const boundModule = resolveModuleIndustryId(industryType);
   if (boundModule && APP_BY_INDUSTRY[boundModule]) {
@@ -65,12 +61,16 @@ export const IndustryAppRouter: React.FC = () => {
     );
   }
 
-  // 4. 학부모(parent) 전용 포털
+  // 4. 학부모(parent) — 포털 모듈이 없는 빌드에서는 빈 상태
   if (currentRole === 'parent') {
     return (
-      <Suspense fallback={<LoadingScreen />}>
-        <ParentShell />
-      </Suspense>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-2 p-6 text-center"
+        data-testid="parent-portal-unavailable"
+      >
+        <p className="text-sm font-medium text-slate-700">학부모 포털을 사용할 수 없습니다.</p>
+        <p className="text-xs text-slate-500">사업장 관리 화면으로 돌아가 주세요.</p>
+      </div>
     );
   }
 

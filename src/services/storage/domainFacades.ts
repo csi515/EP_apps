@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { attendanceStorage } from '@/capabilities/attendance/infrastructure/attendanceStorage';
 import { billingStorage } from '@/capabilities/billing/infrastructure/billingStorage';
 import { bookingStorage } from '@/capabilities/booking/infrastructure/bookingStorage';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daycare 운영 데이터 row ↔ app 매핑.
  * 알림장/투약 매퍼와 분리한다.

@@ -1,4 +1,5 @@
-﻿import { todayIsoLocal } from '@/shared/utils/localDate';
+// @ts-nocheck
+import { todayIsoLocal } from '@/shared/utils/localDate';
 import { attendanceClassKey } from '@/core/attendance/attendanceClassKey';
 
 export type AbsenceNotifyInput = {

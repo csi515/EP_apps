@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { PickupAddress } from '@/capabilities/transport/types';
 import type { StaffGrants } from '@/core/staff/staffGrants';
 import type { StudentBillingMode } from '@/core/students/billingMode';

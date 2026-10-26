@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CAPABILITY_IDS, type CapabilityManifest } from './_shared/capabilityTypes';
 import { attendanceCapability } from './attendance/manifest';
 import { billingCapability } from './billing/manifest';

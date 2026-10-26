@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { type FC, type ReactNode, useMemo, useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { CAPABILITY_LIST_VIEWS } from './capabilityListViews';

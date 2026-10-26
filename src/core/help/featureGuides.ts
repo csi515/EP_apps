@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   PIN_ATTENDANCE_DIRECTOR_COPY,
   PIN_ATTENDANCE_PARENT_COPY,

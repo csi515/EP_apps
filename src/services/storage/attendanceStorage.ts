@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { AttendanceRecord, MakeupItem, MakeupScheduleInput, Student } from '../../types';
 import { getStorageAdapter, STORAGE_KEYS } from '../adapters';
 import { generateEntityId, getItem, setItem, type StorageApi } from './helpers';

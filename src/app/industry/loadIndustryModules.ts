@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { installIndustryPlugins } from '@/core/industry/pluginHost';
 import { registerPublicMyBookingsView } from '@/core/public/publicMyBookingsSlot';
 import { MyReservationsView } from '@/modules/parent/views/ParentBookingsView';

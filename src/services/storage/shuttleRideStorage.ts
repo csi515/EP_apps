@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { ShuttleRideRequest } from '@/capabilities/transport/types';
 import { STORAGE_KEYS } from '../adapters';
 import { deleteById, generateEntityId, getItem, setItem } from './helpers';

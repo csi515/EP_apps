@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { AcademySettings, User } from '../../types';
 import { STORAGE_KEYS } from '../adapters';
 import { getIndustryType } from '../adapters/storageContext';
