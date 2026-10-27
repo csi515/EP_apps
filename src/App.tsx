@@ -49,7 +49,6 @@ const IndustryAppRouter = lazy(() =>
 const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
 const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
 const MemberBookingView = lazy(() => import("@/capabilities/booking/pages/MemberBookingView").then((m) => ({ default: m.MemberBookingView })));
-const CustomerSignUpFlow = lazy(() => import("@/core/customer/CustomerSignUpFlow").then((m) => ({ default: m.CustomerSignUpFlow })));
 const RolesPage = lazy(() => import("./pages/settings/RolesPage").then((m) => ({ default: m.RolesPage })));
 const AcceptStaffInvitePage = lazy(() => import("./pages/invite/AcceptStaffInvitePage").then((m) => ({ default: m.AcceptStaffInvitePage })));
 const OrganizationTreePage = lazy(() => import("./pages/organization/OrganizationTreePage").then((m) => ({ default: m.OrganizationTreePage })));
@@ -342,7 +341,7 @@ const RefineApp: React.FC = () => {
         </Route>
 
         <Route path="/invite/staff/:token" element={<AcceptStaffInvitePage />} />
-        <Route path="/signup/customer" element={<CustomerSignUpFlow />} />
+        <Route path="/signup/customer" element={<Navigate to="/workspace" replace />} />
         <Route path="/terms" element={<LegalPageView page="terms" />} />
         <Route path="/privacy" element={<LegalPageView page="privacy" />} />
         <Route path="/support" element={<LegalPageView page="support" />} />

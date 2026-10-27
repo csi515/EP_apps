@@ -236,40 +236,10 @@ export const LoginPage: React.FC = () => {
         </div>
       </div>
 
-      {/* =========================================================================
-          우측 영역 (w-full lg:w-1/2): 중앙 정렬 로그인 폼 (모바일 단일 카드 뷰 전환)
-          ========================================================================= */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-8 lg:p-12">
-        <div className="w-full max-w-[420px] lg:max-w-md bg-white rounded-3xl shadow-xl lg:shadow-none border border-slate-100 lg:border-none p-6 sm:p-10">
-          {/* 모바일 전용 로고 헤더 (< lg) */}
-          <div className="lg:hidden text-center mb-6">
-            <div className="inline-flex items-center justify-center w-13 h-13 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100 mb-3">
-              <Layers className="w-7 h-7" />
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900">{appBrand.shortName}</h1>
-            <p className="text-xs text-slate-500 mt-1">
-              {loginLandingCopy.mobileSubtitle}
-            </p>
-          </div>
-
-          {/* 추가 로그인 안내 (모바일 — 데스크톱 패널이 숨겨질 때) */}
-          <div
-            data-testid="extra-login-notice-mobile"
-            className="lg:hidden mb-6 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-left"
-          >
-            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden />
-            <div>
-              <p className="text-sm font-semibold text-amber-900">
-                {loginLandingCopy.extraLoginTitle}
-              </p>
-              <p className="mt-1 text-xs text-amber-800/90 leading-relaxed">
-                {loginLandingCopy.extraLoginBody}
-              </p>
-            </div>
-          </div>
-
-          {/* 데스크톱 우측 타이틀 */}
-          <div className="hidden lg:block mb-6">
+      {/* 우측: 로그인 폼 */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
+        <div className="w-full max-w-md bg-white rounded-3xl lg:shadow-none border border-slate-100 lg:border-none p-8 sm:p-10">
+          <div className="mb-6">
             <h2 className="text-2xl font-bold text-slate-900">
               {inToss
                 ? loginLandingCopy.formTitleToss
@@ -282,7 +252,6 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          {/* 모바일 최적화 로그인 폼 컴포넌트 */}
           <MobileLoginForm
             email={email}
             setEmail={setEmail}

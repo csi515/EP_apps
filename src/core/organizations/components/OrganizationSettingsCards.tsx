@@ -229,7 +229,7 @@ export const OrganizationBackupCard: FC<OrganizationBackupCardProps> = ({
       icon={<ShieldCheck className="w-4 h-4 text-emerald-600" />}
     >
       <p className="text-xs text-slate-500 leading-relaxed">
-        {customerLabel}, 출결, {feeLabel} 등 {placeLabel} 데이터를 JSON 파일로 백업하거나, 다른 기기에서 복원할 수 있습니다.
+        {customerLabel}, {feeLabel} 등 {placeLabel} 데이터를 JSON 파일로 백업하거나, 다른 기기에서 복원할 수 있습니다.
         정기적인 백업으로 데이터 손실을 예방하세요.
       </p>
 
@@ -346,7 +346,7 @@ export const OrganizationDangerZoneCard: FC<OrganizationDangerZoneCardProps> = (
             <p className="text-xs text-rose-800 leading-relaxed">
               <strong>조직을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.</strong>
               <br />
-              {customerLabel}, 출결, {feeLabel}, {staffLabel} 등 모든 정보가 복구 불가능하게 삭제됩니다.
+              {customerLabel}, {feeLabel}, {staffLabel} 및 업무 데이터가 복구 불가능하게 삭제됩니다.
             </p>
           </div>
           <button

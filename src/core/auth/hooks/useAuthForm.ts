@@ -107,7 +107,7 @@ export function useAuthForm() {
         throw new Error('이용약관 및 개인정보처리방침에 동의해 주세요.');
       }
 
-      // 역할·사업장은 가입 후 OrganizationSelector / 초대·연결에서 결정
+      // 역할·사업장은 가입 후 멤버십 자동 선택 / 초대·연결에서 결정
       await signUp(email.trim(), password, fullName.trim());
     } catch (err) {
       const raw =

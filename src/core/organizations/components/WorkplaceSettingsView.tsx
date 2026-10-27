@@ -12,12 +12,6 @@ import {
   SettingsCard,
 } from '@/shared/components/ui';
 import type { AcademySettings, AcademyRoomKind } from '../settingsTypes';
-import {
-  AttendanceFeatureToggle,
-  isAttendanceModuleEnabled,
-  PIN_ATTENDANCE_DIRECTOR_COPY,
-  withAttendanceModuleEnabled,
-} from '@/core/organizations/attendanceSettingsStub';
 import { IndustryFeatureGuidePanel } from '@/core/help';
 import { LegalLinks } from '@/core/legal';
 import {
@@ -32,7 +26,6 @@ import {
   SlidersHorizontal,
   Shield,
 } from 'lucide-react';
-import { CurrencyInput } from '@/shared/components/CurrencyInput';
 import { getIndustryAccent, getCustomerLabel, getOwnerLabel, getPlaceLabel, getFeeLabel, getBankAccountPlaceholder, supportsDeposit as industrySupportsDeposit, showsTextbooksLink as industryShowsTextbooksLink, getRoomConfig } from '@/core/industry/industryUi';
 import { renderStaffHoursFields } from '@/core/staff/staffUi';
 import { useModuleLabels } from '@/core/labels';
@@ -58,7 +51,7 @@ import { buildWorkplaceSettingsSavePayload } from '../workplaceSettingsSave';
 export const WorkplaceSettingsView: FC = () => {
   const navigate = useNavigate();
   const { showToast, triggerRefresh, setActiveTab } = useApp();
-  const { industry, isAdmin } = usePermissions();
+  const { industry } = usePermissions();
   const labels = useModuleLabels();
   const placeLabel = getPlaceLabel(industry);
   const customerLabel = labels.customer.singular || getCustomerLabel(industry);
@@ -86,18 +79,7 @@ export const WorkplaceSettingsView: FC = () => {
       : EMPTY_ORGANIZATION_ADDRESS;
   });
   const [isSaving, setIsSaving] = useState(false);
-  const attendanceEnabled = isAttendanceModuleEnabled(settings, industry);
   const rooms = getConfiguredRooms(settings);
-  const canEditAttendanceMode = isAdmin;
-
-  useEffect(() => {
-    const result = StorageService.backfillAttendanceFeatureFlag();
-    if (result.changed) {
-      setSettings(StorageService.getSettings());
-      triggerRefresh();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   useEffect(() => {
     const orgId = org.currentOrganization?.id;
@@ -166,36 +148,6 @@ export const WorkplaceSettingsView: FC = () => {
       ...settings,
       rooms: rooms.filter((r) => r.id !== id),
     });
-  };
-
-  /** PIN 출결 토글은 즉시 저장 — 저장 전 키오스크 진입 시 꺼진 것으로 보이는 문제 방지 */
-  const handleAttendanceToggle = async (enabled: boolean) => {
-    if (!canEditAttendanceMode) return;
-    const previous = settings;
-    const next = withAttendanceModuleEnabled(settings, enabled);
-    setSettings(next);
-    try {
-      StorageService.saveSettings(next);
-      if (org.currentOrganization) {
-        await orgService.updateOrganization(org.currentOrganization.id, {
-          settings: { features: next.features },
-        });
-      }
-      triggerRefresh();
-      showToast(
-        enabled
-          ? PIN_ATTENDANCE_DIRECTOR_COPY.settingsEnabledToast
-          : PIN_ATTENDANCE_DIRECTOR_COPY.settingsDisabledToast,
-        'success'
-      );
-    } catch (err) {
-      StorageService.saveSettings(previous);
-      setSettings(previous);
-      showToast(
-        err instanceof Error ? err.message : '출결 설정 저장 중 오류가 발생했습니다.',
-        'error'
-      );
-    }
   };
 
   const handleSaveSettings = async (e: FormEvent) => {
@@ -273,118 +225,6 @@ export const WorkplaceSettingsView: FC = () => {
                 }));
               }}
             />
-
-            <div className="pt-4 border-t border-slate-100 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField label="기본 수강 형태">
-                  <div className="grid grid-cols-2 gap-2">
-                    {(
-                      [
-                        { value: 'monthly' as const, label: '월회비', hint: '매월 청구' },
-                        { value: 'session_pass' as const, label: '회차권', hint: '출석 시 차감' },
-                      ] as const
-                    ).map((opt) => {
-                      const active =
-                        (settings.defaultBillingMode || 'monthly') === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() =>
-                            setSettings({ ...settings, defaultBillingMode: opt.value })
-                          }
-                          className={`min-h-[52px] rounded-xl border px-3 py-2 text-left transition-colors ${
-                            active
-                              ? `${accent.btn} text-white border-transparent`
-                              : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'
-                          }`}
-                        >
-                          <span className="block text-sm font-bold">{opt.label}</span>
-                          <span
-                            className={`block text-[10px] mt-0.5 ${
-                              active ? 'text-white/80' : 'text-slate-400'
-                            }`}
-                          >
-                            {opt.hint}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </FormField>
-
-                {(settings.defaultBillingMode || 'monthly') === 'monthly' ? (
-                  <FormField label="기본 월 수강료 기준 (₩)">
-                    <CurrencyInput
-                      value={settings.defaultTuitionFee}
-                      onChange={(val) =>
-                        setSettings({ ...settings, defaultTuitionFee: val })
-                      }
-                      showQuickButtons
-                    />
-                  </FormField>
-                ) : (
-                  <div className="rounded-xl border border-amber-100 bg-amber-50/80 px-3.5 py-3 text-xs text-slate-600 leading-relaxed">
-                    신규 {customerLabel}은(는) 회차권 형태로 등록됩니다. 월 수강료·결제일은
-                    사용하지 않으며, 설정 &gt; 회차권 관리에서 이용권을 발급하세요.
-                  </div>
-                )}
-              </div>
-
-              {(settings.defaultBillingMode || 'monthly') === 'monthly' ? (
-                <>
-                  <FormField label="기본 결제일" className="sm:max-w-xs">
-                    <select
-                      value={settings.defaultPaymentDay}
-                      onChange={(e) =>
-                        setSettings({
-                          ...settings,
-                          defaultPaymentDay: Number(e.target.value),
-                        })
-                      }
-                      className={`${FORM_CONTROL_CLASS} font-bold`}
-                    >
-                      <option value={1}>매월 1일</option>
-                      <option value={5}>매월 5일</option>
-                      <option value={10}>매월 10일</option>
-                      <option value={15}>매월 15일</option>
-                      <option value={20}>매월 20일</option>
-                      <option value={25}>매월 25일</option>
-                    </select>
-                  </FormField>
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2">
-                    <label className="flex items-start gap-3 cursor-pointer min-h-[44px]">
-                      <input
-                        type="checkbox"
-                        className="mt-1 w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                        checked={settings.includeExtrasInMonthlyInvoice === true}
-                        onChange={(e) =>
-                          setSettings({
-                            ...settings,
-                            includeExtrasInMonthlyInvoice: e.target.checked,
-                          })
-                        }
-                      />
-                      <span>
-                        <span className="block text-sm font-bold text-slate-800">
-                          월 청구에 교재·연주회비 합산
-                        </span>
-                        <span className="block text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                          켜면 월회비 청구서 생성 시 미납 교재비와 해당 월 연주회·콩쿠르
-                          참가비를 함께 청구합니다. 끄면 교재는 기존처럼 별도 판매·수납합니다.
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-                </>
-              ) : (
-                <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 text-[11px] text-slate-500 leading-relaxed">
-                  회차권 모드에서는 월 청구·결제일·교재 합산 옵션을 쓰지 않습니다. 출석
-                  시 회차권에서 1회가 차감됩니다.
-                </div>
-              )}
-            </div>
 
             {depositSupported && (
               <div className="space-y-3 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
@@ -512,29 +352,6 @@ export const WorkplaceSettingsView: FC = () => {
               )}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 space-y-3">
-              <AttendanceFeatureToggle
-                enabled={attendanceEnabled}
-                onChange={(enabled) => {
-                  void handleAttendanceToggle(enabled);
-                }}
-                activeClassName={accent.btn}
-                iconClassName={accentIcon}
-                canEdit={canEditAttendanceMode}
-              />
-              {attendanceEnabled && (
-                <a
-                  href="/attendance-kiosk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`inline-flex items-center gap-1.5 text-xs font-bold min-h-[44px] ${accentIcon}`}
-                >
-                  <DoorOpen className="w-4 h-4" />
-                  출석 키오스크 열기
-                </a>
-              )}
-            </div>
-
             <div className="flex justify-end pt-4">
               <button
                 type="submit"
@@ -580,7 +397,7 @@ export const WorkplaceSettingsView: FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">직급 및 권한 설정</h3>
-                  <p className="text-[11px] text-slate-500">원장, 강사, 매니저 등 직급 신설 및 세부 권한을 제어합니다</p>
+                  <p className="text-[11px] text-slate-500">대표, 팀장, 실무자 등 직급 신설 및 세부 권한을 제어합니다</p>
                 </div>
               </div>
               <button

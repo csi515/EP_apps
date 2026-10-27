@@ -1,15 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Building2,
   ChevronDown,
   LogOut,
   CheckCircle2,
   Users,
   Briefcase,
-  GraduationCap,
   UserRound,
-  UserPlus,
   Loader2,
   MapPin,
 } from 'lucide-react';
@@ -44,7 +40,6 @@ interface MembershipGroup {
 export const RoleContextSwitcher: React.FC = () => {
   const auth = useOptionalAuth();
   const org = useOptionalOrganization();
-  const navigate = useNavigate();
   const { currentUser, setActiveTab, showToast } = useApp();
   const [open, setOpen] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
@@ -97,18 +92,12 @@ export const RoleContextSwitcher: React.FC = () => {
 
   const {
     switchMembership,
-    clearOrganization,
-    enterParentPortal,
-    canAccessParentPortal,
-    enterCustomerPortal,
-    canAccessCustomerPortal,
     selectLocation,
     locations,
     currentLocation,
     locationLabel,
     canChangeLocation,
     canClearLocation,
-    portalMode,
   } = org;
 
   const currentOrgName = settingsName || selectedMembership?.organization.name || '';
@@ -145,7 +134,7 @@ export const RoleContextSwitcher: React.FC = () => {
 
   const getRoleIcon = (role: MemberRole) => {
     if (isManagerLikeRole(role)) return <Briefcase className="w-3.5 h-3.5" />;
-    if (isStaffLikeRole(role)) return <GraduationCap className="w-3.5 h-3.5" />;
+    if (isStaffLikeRole(role)) return <Users className="w-3.5 h-3.5" />;
     return <Users className="w-3.5 h-3.5" />;
   };
 
@@ -206,14 +195,6 @@ export const RoleContextSwitcher: React.FC = () => {
                 <p className="text-[10px] font-bold uppercase tracking-wider text-teal-700">역할</p>
                 <p className="text-[11px] font-semibold text-slate-700">{currentRoleLabel || '-'}</p>
               </div>
-              {portalMode !== 'none' && (
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-violet-700">모드</p>
-                  <p className="text-[11px] font-semibold text-violet-800">
-                    {portalMode === 'parent' ? '학부모 포털' : '수강생 포털'}
-                  </p>
-                </div>
-              )}
             </div>
 
             {canChangeLocation && (
@@ -303,58 +284,6 @@ export const RoleContextSwitcher: React.FC = () => {
               </div>
             ))}
 
-            <button
-              type="button"
-              role="menuitem"
-              disabled={Boolean(switchingId)}
-              onClick={() => {
-                clearOrganization();
-                closeMenu();
-              }}
-              className="w-full flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-50 min-h-[44px]"
-            >
-              <Building2 className="w-4 h-4 shrink-0" />
-              사업장 추가/선택
-            </button>
-
-            {(canAccessParentPortal || canAccessCustomerPortal) && (
-              <div className="border-t border-slate-100 mt-2 pt-2">
-                <p className="text-[11px] font-bold text-slate-400 px-3 py-1 uppercase tracking-wider">
-                  보기 전환
-                </p>
-                {canAccessParentPortal && (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={Boolean(switchingId)}
-                    onClick={() => {
-                      enterParentPortal();
-                      closeMenu();
-                    }}
-                    className="w-full flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-50 min-h-[44px]"
-                  >
-                    <Users className="w-4 h-4" />
-                    학부모 포털
-                  </button>
-                )}
-                {canAccessCustomerPortal && (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    disabled={Boolean(switchingId)}
-                    onClick={() => {
-                      enterCustomerPortal();
-                      closeMenu();
-                    }}
-                    className="w-full flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-50 min-h-[44px]"
-                  >
-                    <UserRound className="w-4 h-4" />
-                    이용자 포털
-                  </button>
-                )}
-              </div>
-            )}
-
             <div className="border-t border-slate-100 mt-2 pt-2 space-y-1">
               <p className="text-[11px] font-bold text-slate-400 px-3 py-1 uppercase tracking-wider">
                 계정
@@ -365,19 +294,6 @@ export const RoleContextSwitcher: React.FC = () => {
                   <p className="text-[11px] text-slate-500 truncate mt-0.5">{auth.user.email}</p>
                 )}
               </div>
-              <button
-                type="button"
-                role="menuitem"
-                disabled={Boolean(switchingId)}
-                onClick={() => {
-                  closeMenu();
-                  navigate('/signup/customer');
-                }}
-                className="w-full flex items-center gap-2 p-2.5 rounded-xl text-xs font-bold text-indigo-600 hover:bg-indigo-50 min-h-[44px]"
-              >
-                <UserPlus className="w-4 h-4 shrink-0" />
-                다른 사업장에 이용 신청
-              </button>
               <button
                 type="button"
                 role="menuitem"

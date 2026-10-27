@@ -62,7 +62,7 @@ export function GlobalCommandPalette() {
             <input
               autoFocus
               value={query}
-              placeholder="회원, 시간표, 출결 패드"
+              placeholder="결재, 조직도, 공용자원"
               className="min-h-12 w-full rounded-xl border px-3"
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {

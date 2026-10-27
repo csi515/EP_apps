@@ -195,9 +195,9 @@ function run() {
       memberships: [plantA, plantB],
       storedOrganizationId: 'org-gone',
     });
-    assert.equal(staleMulti.selectedMembership, null);
+    // EP_apps: 선택 화면 없이 첫 가용 멤버십으로 자동 진입
+    assertOrg(staleMulti.selectedMembership, 'org-a', 'personal_plant_ops');
     assertSelectionInvariant(staleMulti.selectedMembership);
-    assert.equal(deriveSelectionFields(staleMulti.selectedMembership).currentOrganization, null);
   }
 
   // 5. current context membership

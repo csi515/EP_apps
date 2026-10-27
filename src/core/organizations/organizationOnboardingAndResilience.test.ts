@@ -211,44 +211,35 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
   assert.equal(getRoleLabel('owner', 'hair_salon'), '대표');
   assert.equal(roleSectionLabel('staff', 'hair_salon'), '관리사 활동');
 
-  // 교육/학원(piano): 직원은 '선생님', 대표는 '원장', 학부모는 '학부모'
-  assert.equal(getRoleLabel('staff', 'piano'), '선생님');
-  assert.equal(getRoleLabel('owner', 'piano'), '원장');
-  assert.equal(getRoleLabel('parent', 'piano'), '학부모');
-  assert.equal(roleSectionLabel('staff', 'piano'), '선생님 활동');
-  assert.equal(roleSectionLabel('parent', 'piano'), '학부모 포털');
-
-  // 업종 미지정 시 레거시 기본값(하위 호환) 유지
-  assert.equal(getRoleLabel('staff', null), '강사');
+  // personal_plant_ops / 미지정: 직원·대표 (학원 호칭 없음)
+  assert.equal(getRoleLabel('staff', 'personal_plant_ops'), '직원');
+  assert.equal(getRoleLabel('owner', 'personal_plant_ops'), '대표');
+  assert.equal(roleSectionLabel('staff', 'personal_plant_ops'), '직원 활동');
+  assert.equal(roleSectionLabel('parent', 'personal_plant_ops'), '보호자');
+  assert.equal(getRoleLabel('staff', null), '직원');
   assert.equal(getRoleLabel('owner', null), '대표');
-  assert.equal(roleSectionLabel('staff', null), '강사 활동');
+  assert.equal(roleSectionLabel('staff', null), '직원 활동');
 }
 
 
 
-// 9. 직원·강사 합류 시 무분별한 사업장 검색 차단 및 공식 초대 코드 단일화 검증
+// 9. 사업장 선택 화면 제거 — 게이트는 소속 없음 안내만 표시
 {
-  const selectorSource = readFileSync(
-    join(process.cwd(), 'src/core/organizations/OrganizationSelector.tsx'),
+  const gateSource = readFileSync(
+    join(process.cwd(), 'src/SupabaseAppGate.tsx'),
     'utf8'
   );
 
   assert.equal(
-    selectorSource.includes('btn-teacher-join'),
+    gateSource.includes('OrganizationSelector'),
     false,
-    '무분별한 신청을 유발하는 직원 사업장 검색 버튼(btn-teacher-join)은 완전히 제거되어야 합니다.'
-  );
-
-  assert.equal(
-    selectorSource.includes('TeacherJoinFlow'),
-    false,
-    'OrganizationSelector에서 TeacherJoinFlow 임의 검색 플로우는 import되거나 실행되지 않아야 합니다.'
+    'SupabaseAppGate는 OrganizationSelector를 렌더하지 않아야 합니다.'
   );
 
   assert.match(
-    selectorSource,
-    /data-testid="btn-staff-invite-code"/,
-    '직원·강사 합류는 공식 발급된 초대 코드(btn-staff-invite-code)를 통해서만 진입해야 합니다.'
+    gateSource,
+    /data-testid="no-organization-membership"/,
+    '소속 사업장이 없을 때 짧은 안내 화면만 표시해야 합니다.'
   );
 }
 

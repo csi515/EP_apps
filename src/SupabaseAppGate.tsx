@@ -1,13 +1,13 @@
 import React, { Suspense, lazy, useCallback, type FC, type ReactNode } from 'react';
+import { Building2 } from 'lucide-react';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageHydrator } from '@/StorageHydrator';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { OwnerOperationStoppedView } from '@/core/organizations/OwnerOperationStoppedView';
-import { OrganizationSelector } from '@/core/organizations/OrganizationSelector';
 import { PendingStaffInviteGate } from '@/core/staff/components/PendingStaffInviteGate';
 
-// 워크스페이스·고객 셸은 인증 후 역할에 맞을 때만 로드 (로그인 입구와 번들 분리).
+// 워크스페이스는 인증 후 역할에 맞을 때만 로드 (로그인 입구와 번들 분리).
 const LazyIndustryAppRouter = lazy(() =>
   import('@/app/industry/IndustryAppRouter').then((m) => ({ default: m.IndustryAppRouter }))
 );
@@ -16,25 +16,41 @@ const IndustryAppRouter: FC = () => (
     <LazyIndustryAppRouter />
   </Suspense>
 );
-const LazyCustomerShell = lazy(() =>
-  import('@/core/customer/CustomerShell').then((m) => ({ default: m.CustomerShell }))
-);
-const CustomerShell: FC = () => (
-  <Suspense fallback={<LoadingScreen />}>
-    <LazyCustomerShell />
-  </Suspense>
-);
 
-/** 학부모 포털 모듈이 없는 빌드에서 빈 상태만 보여 준다. */
-const ParentPortalUnavailable: FC = () => (
-  <div
-    className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-2 p-6 text-center"
-    data-testid="parent-portal-unavailable"
-  >
-    <p className="text-sm font-medium text-slate-700">학부모 포털을 사용할 수 없습니다.</p>
-    <p className="text-xs text-slate-500">사업장 관리 화면으로 돌아가 주세요.</p>
-  </div>
-);
+/** 소속 사업장이 없을 때 — 개설·고객 가입 갈림길 없이 안내만 표시 */
+const NoOrganizationMembershipView: FC = () => {
+  const { organizationsError, refreshOrganizations } = useOrganization();
+  const handleRetry = useCallback(() => {
+    void refreshOrganizations();
+  }, [refreshOrganizations]);
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-4 p-6 text-center"
+      data-testid="no-organization-membership"
+    >
+      <div className="w-12 h-12 rounded-2xl bg-slate-200 text-slate-600 flex items-center justify-center">
+        <Building2 className="w-6 h-6" />
+      </div>
+      <div className="space-y-1 max-w-sm">
+        <p className="text-sm font-semibold text-slate-800">소속 사업장이 없습니다</p>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          관리자에게 임직원 초대를 요청한 뒤 다시 로그인해 주세요.
+        </p>
+        {organizationsError ? (
+          <p className="text-xs text-rose-600 mt-2">{organizationsError}</p>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        onClick={handleRetry}
+        className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl min-h-[44px] hover:bg-indigo-700 transition-colors"
+      >
+        다시 확인
+      </button>
+    </div>
+  );
+};
 
 interface SupabaseAppGateProps {
   children?: ReactNode;
@@ -42,17 +58,13 @@ interface SupabaseAppGateProps {
 
 /**
  * EP_apps Core App Gate.
- * 
+ *
  * 유지 흐름:
  * 로그인 -> Supabase session -> AuthProvider -> OrganizationProvider
- * -> membership 조회 -> organization 선택/복원 -> active organization
- * -> StorageHydrator -> IndustryAppRouter / Refine Shell
- * 
+ * -> membership 조회 -> 단일 사업장 자동 선택 -> StorageHydrator -> IndustryAppRouter
+ *
  * 보장 사항:
- * - single / multiple organization 진입
- * - 저장된 organization 복원 및 stale organization 처리
- * - 신규 가입 사용자 onboarding (OrganizationSelector / CreateOrganizationWizard)
- * - parent / customer portal 전용 진입 분기
+ * - 멤버십이 있으면 사업장 선택 화면 없이 바로 워크스페이스 진입
  * - blocked owner 진입 차단 (OwnerOperationStoppedView)
  * - StorageHydrator를 통한 도메인 스토리지 하이드레이션
  * - ?staff_link 토큰 감지 (PendingStaffInviteGate)
@@ -67,9 +79,6 @@ export const SupabaseAppGate: FC<SupabaseAppGateProps> = ({ children }) => {
     currentOrganization,
     selectedMembership,
     organizations,
-    parentPortalActive,
-    customerPortalActive,
-    portalMode,
     blockedOwnerOrgIds,
   } = useOrganization();
 
@@ -77,22 +86,18 @@ export const SupabaseAppGate: FC<SupabaseAppGateProps> = ({ children }) => {
     void refreshOrganizations();
   }, [refreshOrganizations]);
 
-  // 1. 인증 확인 중
   if (authLoading) {
     return <LoadingScreen message="로그인 세션을 확인하는 중..." />;
   }
 
-  // 2. 비인증 상태 (Refine Authenticated fallback 처리 대상)
   if (!user) {
     return null;
   }
 
-  // 3. 사업장 / 멤버십 로딩 중
   if (orgLoading || organizationsStatus === 'loading') {
     return <LoadingScreen message="사업장 정보를 불러오는 중..." />;
   }
 
-  // 4. 사업장 목록 조회 에러 (기존 memberships가 없는 경우)
   if (organizationsStatus === 'error' && (!organizations || organizations.length === 0)) {
     return (
       <div
@@ -113,47 +118,14 @@ export const SupabaseAppGate: FC<SupabaseAppGateProps> = ({ children }) => {
     );
   }
 
-  // 5. 학부모 포털 활성 상태
-  if (parentPortalActive || portalMode === 'parent') {
-    if (currentOrganization?.id) {
-      return (
-        <StorageHydrator
-          organizationId={currentOrganization.id}
-          industryType={currentOrganization.industry_type}
-        >
-          <ParentPortalUnavailable />
-        </StorageHydrator>
-      );
-    }
-    return <ParentPortalUnavailable />;
-  }
-
-  // 6. 성인 수강생/고객 포털 활성 상태
-  if (customerPortalActive || portalMode === 'customer') {
-    if (currentOrganization?.id) {
-      return (
-        <StorageHydrator
-          organizationId={currentOrganization.id}
-          industryType={currentOrganization.industry_type}
-        >
-          <CustomerShell />
-        </StorageHydrator>
-      );
-    }
-    return <CustomerShell />;
-  }
-
-  // 7. 차단된 사업주 (휴·폐업 등)
   if (currentOrganization && blockedOwnerOrgIds.includes(currentOrganization.id)) {
     return <OwnerOperationStoppedView />;
   }
 
-  // 8. 사업장이 없거나 아직 선택되지 않은 상태 (다중 사업장 대기, stale 해제, 온보딩 대상)
   if (!currentOrganization || !selectedMembership) {
-    return <OrganizationSelector />;
+    return <NoOrganizationMembershipView />;
   }
 
-  // 9. 사업장 정상 활성화 -> 스토리지 하이드레이션 -> 초대 게이트 -> 업종/Refine 셸
   return (
     <StorageHydrator
       organizationId={currentOrganization.id}

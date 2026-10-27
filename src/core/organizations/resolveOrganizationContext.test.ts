@@ -84,7 +84,7 @@ function mem(
   assert.equal(deriveSelectionFields(null).currentOrganization, null);
 }
 
-// ── bootstrap: parent portal mode ─────────────────────────────────
+// ── bootstrap: parent portal mode ignored — staff membership 자동 선택 ─
 {
   const { decision } = resolveOrganizationBootstrap({
     memberships: [mem({ id: 'm1', organizationId: 'o1', role: 'admin' })],
@@ -94,10 +94,13 @@ function mem(
     parentPortalModeActive: true,
     storedOrganizationId: null,
   });
-  assert.equal(decision.kind, 'enter_parent');
+  assert.equal(decision.kind, 'select_organization_or_clear');
+  if (decision.kind === 'select_organization_or_clear') {
+    assert.equal(decision.organizationId, 'o1');
+  }
 }
 
-// ── bootstrap: customer-only (no staff) ───────────────────────────
+// ── bootstrap: customer-only (no staff) — 워크스페이스로 자동 선택 ───
 {
   const { decision, flags } = resolveOrganizationBootstrap({
     memberships: [mem({ id: 'c1', organizationId: 'o1', role: 'customer' })],
@@ -108,8 +111,10 @@ function mem(
     storedOrganizationId: null,
   });
   assert.equal(flags.isCustomerOnly, true);
-  assert.equal(decision.kind, 'enter_customer');
-  if (decision.kind === 'enter_customer') assert.equal(decision.membershipId, 'c1');
+  assert.equal(decision.kind, 'select_organization_or_clear');
+  if (decision.kind === 'select_organization_or_clear') {
+    assert.equal(decision.organizationId, 'o1');
+  }
 }
 
 // ── bootstrap: single staff auto-select ───────────────────────────
@@ -128,7 +133,7 @@ function mem(
   }
 }
 
-// ── bootstrap: multi staff → clear (need picker) ──────────────────
+// ── bootstrap: multi staff → 첫 멤버십 자동 선택 (선택 화면 없음) ─
 {
   const { decision } = resolveOrganizationBootstrap({
     memberships: [
@@ -143,7 +148,7 @@ function mem(
   });
   assert.equal(decision.kind, 'select_organization_or_clear');
   if (decision.kind === 'select_organization_or_clear') {
-    assert.equal(decision.organizationId, null);
+    assert.equal(decision.organizationId, 'o1');
   }
 }
 

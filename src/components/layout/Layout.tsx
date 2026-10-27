@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useMenu } from "@refinedev/core";
 import { LayoutDashboard } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
-import { MobileBottomDock } from "./MobileBottomDock";
 import { OmniSearchModal } from "@/core/search/components/OmniSearchModal";
 import { GlobalNetworkStatusBar } from "@/core/platform/GlobalNetworkStatusBar";
 import { ConfirmDialog } from "@/shared/components/ConfirmDialog";
@@ -125,11 +124,10 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <GlobalNetworkStatusBar />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 pb-[max(5rem,env(safe-area-inset-bottom))] sm:p-6 md:p-8 lg:pb-8">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
           {children}
         </main>
       </div>
-      <MobileBottomDock />
       <OmniSearchModal />
       <ConfirmDialog />
       <KeyboardShortcutsModal />

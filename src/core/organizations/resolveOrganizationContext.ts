@@ -211,7 +211,6 @@ export function resolveOrganizationBootstrap(input: {
   });
   const {
     staffMemberships,
-    customerMemberships,
     isParentOnly,
     isCustomerOnly,
     canAccessParentPortal,
@@ -229,29 +228,9 @@ export function resolveOrganizationBootstrap(input: {
   const isBlockedOwner = (m: OrganizationMembership) =>
     m.role === 'owner' && blocked.has(m.organizationId);
 
-  // 1. OAuth/딥링크 후 학부모 포털 모드 (이미 portal mode 활성 + parent 프로필)
-  if (input.parentPortalModeActive && input.parentId !== null) {
-    return { flags, decision: { kind: 'enter_parent' } };
-  }
+  // EP_apps: 학부모·수강생 포털 진입 없음. 멤버십이 있으면 워크스페이스로 바로 진입한다.
 
-  // 2. staff 없고 customer만 (부모 접근과 무관 — 기존 순서)
-  if (staffMemberships.length === 0 && customerMemberships.length > 0) {
-    const preferred =
-      customerMemberships.find((m) => m.isCurrentContext) || customerMemberships[0];
-    return { flags, decision: { kind: 'enter_customer', membershipId: preferred.id } };
-  }
-
-  // 3–4. parent-only / customer-only
-  if (isParentOnly) {
-    return { flags, decision: { kind: 'enter_parent' } };
-  }
-  if (isCustomerOnly) {
-    const preferred =
-      customerMemberships.find((m) => m.isCurrentContext) || customerMemberships[0];
-    return { flags, decision: { kind: 'enter_customer', membershipId: preferred.id } };
-  }
-
-  // 5. 활성 컨텍스트 멤버십
+  // 1. 활성 컨텍스트 멤버십
   const currentContextMembership = input.memberships.find((m) => m.isCurrentContext);
   if (currentContextMembership && !isBlockedOwner(currentContextMembership)) {
     return {
@@ -260,7 +239,7 @@ export function resolveOrganizationBootstrap(input: {
     };
   }
 
-  // 6. staff 없고 blocked owner만
+  // 2. staff 없고 blocked owner만
   if (staffMemberships.length === 0) {
     const blockedOwner = input.memberships.find((m) => isBlockedOwner(m));
     if (blockedOwner) {
@@ -274,17 +253,19 @@ export function resolveOrganizationBootstrap(input: {
     }
   }
 
-  // 7. stored / 단일 staff / clear
-  // membership 0건 → organizationId null (선택기). parent로 단정하지 않음.
+  // 3. stored → 첫 staff → 첫 멤버십. 목록 화면 없이 자동 선택.
+  // membership 0건 → organizationId null (소속 없음 안내).
   const storedMembership = input.storedOrganizationId
     ? input.memberships.find((m) => m.organizationId === input.storedOrganizationId)
     : undefined;
   const storedUsable = Boolean(storedMembership && !isBlockedOwner(storedMembership));
+  const firstUsable =
+    staffMemberships[0] ??
+    input.memberships.find((m) => !isBlockedOwner(m)) ??
+    input.memberships[0];
   const autoId = storedUsable
     ? input.storedOrganizationId
-    : staffMemberships.length === 1
-      ? staffMemberships[0].organizationId
-      : null;
+    : firstUsable?.organizationId ?? null;
 
   return {
     flags,
