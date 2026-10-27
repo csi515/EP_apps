@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Printer, Smartphone, CheckCircle, Sparkles, Building2, QrCode } from 'lucide-react';
 import { appBrand } from '@/core/brand';
+import { getPublicAppBaseUrl } from '@/core/platform/appBaseUrl';
 import { Modal } from '@/shared/components';
 import { QrCodeSvg } from './BarcodeQrSvg';
 
@@ -24,7 +25,8 @@ export const StoreQrPopPrintModal: React.FC<StoreQrPopPrintModalProps> = ({
     '스마트폰 카메라로 QR 코드를 비추시면 간편 출결 체크인 및 상품 스마트 주문을 바로 이용하실 수 있습니다.'
   );
 
-  const qrTargetUrl = `https://moa.app/store/${encodeURIComponent(organizationCode)}`;
+  const appBase = getPublicAppBaseUrl().replace(/\/+$/, '');
+  const qrTargetUrl = `${appBase}/store/${encodeURIComponent(organizationCode)}`;
 
   const handlePrint = () => {
     window.print();

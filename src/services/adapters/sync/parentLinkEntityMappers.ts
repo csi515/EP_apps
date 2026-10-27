@@ -1,4 +1,14 @@
-import type { GuardianRelationship, ParentStudentLink } from '@/core/parent/types';
+export type GuardianRelationship = 'father' | 'mother' | 'other';
+
+export interface ParentStudentLink {
+  id: string;
+  parentId: string;
+  studentId: string;
+  relationship: GuardianRelationship;
+  isPrimary: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 type DbRelationship = GuardianRelationship;
 

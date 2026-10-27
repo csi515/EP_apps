@@ -333,10 +333,10 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               onChange={(e) => setEmail(e.target.value)}
               placeholder={
                 targetGroup === 'customer'
-                  ? "member@moa.app"
+                  ? "member@ep.local"
                   : currentRole === 'owner'
-                  ? "owner@moa.app"
-                  : "staff@moa.app"
+                  ? "owner@ep.local"
+                  : "staff@ep.local"
               }
               className="w-full min-h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all bg-slate-50/50 focus:bg-white"
             />

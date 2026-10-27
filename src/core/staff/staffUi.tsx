@@ -1,6 +1,11 @@
 import type { ReactNode } from 'react';
 import type { StaffWorkWindow, Teacher } from '@/types';
-import type { ParentInviteLinkCode } from '@/core/parent/services/parentInviteService';
+export type ParentInviteLinkCode = {
+  token: string;
+  studentName: string;
+  customerId: string;
+  expiresAt: string;
+};
 
 export type GuardianInviteProps = {
   studentId: string;

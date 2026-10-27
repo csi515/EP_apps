@@ -1,5 +1,5 @@
 import { ScheduleService } from '@/core/services/scheduleService';
-import { StudentService } from '@/core/students/services/studentService';
+import { StorageService } from '@/services/storage';
 import type { Booking } from '@/core/types/schedule';
 import type { StaffWorkWindow } from '@/core/staff/workWindow';
 import {
@@ -163,11 +163,11 @@ export function rescheduleBooking(
 
   // 7. 고객 알림 발송 (기본 true)
   if (params.notify !== false) {
-    const student = StudentService.getStudentById(saved.customerId);
+    const student = StorageService.getStudents().find((s) => s.id === saved.customerId);
     notifyBookingChange({
       studentId: saved.customerId,
       studentName: saved.customerName,
-      parentPhone: student?.phone,
+      parentPhone: student?.phone ?? student?.parentPhone,
       title: '예약 일정 변경',
       message: `${saved.serviceName || '예약'} 일정이 ${params.startsAt.slice(0, 16).replace('T', ' ')}로 변경되었습니다.`,
       date: params.startsAt.slice(0, 10),

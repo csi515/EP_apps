@@ -52,7 +52,7 @@ export const INDUSTRY_OPTIONS: IndustryOption[] = listIndustryDefinitions({
 }));
 
 /** 신규 생성 시 사용자가 업종을 고르지 않았을 때만. DB 값을 덮어쓰지 않는다. */
-export const DEFAULT_CREATE_INDUSTRY_TYPE: IndustryType = 'piano';
+export const DEFAULT_CREATE_INDUSTRY_TYPE: IndustryType = 'personal_plant_ops';
 
 export function isBlankIndustryInput(value?: string | null): boolean {
   return value == null || String(value).trim() === '';
@@ -72,13 +72,12 @@ export function parseIndustryType(value?: string | null): IndustryType | null {
 /**
  * 런타임 해석. 저장·영속화에 쓰지 않는다.
  * - 카탈로그 id / alias → 해당 Type
- * - null·빈 문자열 → piano (레거시 미설정)
- * - 카탈로그에 없는 비어 있지 않은 값 → null (piano로 위장하지 않음)
+ * - null·빈 문자열 → null (personal_plant_ops로 위장하지 않음)
+ * - 카탈로그에 없는 비어 있지 않은 값 → null
  */
 export function normalizeIndustryType(value?: string | null): IndustryType | null {
   const parsed = parseIndustryType(value);
   if (parsed) return parsed;
-  // 빈 값은 piano로 위장하지 않는다 (resolveIndustry.ts 참고).
   return parsed;
 }
 
@@ -87,11 +86,11 @@ export function getIndustryLabel(value?: string | null): string {
   if (def) return def.label;
   const parsed = parseIndustryType(value);
   if (parsed) return INDUSTRY_DEFINITIONS[parsed].label;
-  return '학원';
+  return 'EP_apps';
 }
 
 export function getIndustryCategoryForType(value?: string | null): IndustryCategory {
-  return getIndustryDefinition(value)?.category ?? 'education';
+  return getIndustryDefinition(value)?.category ?? 'other';
 }
 
 export function isIndustryCategory(value?: string | null): value is IndustryCategory {

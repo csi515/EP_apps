@@ -17,7 +17,7 @@ import {
   isAttendanceModuleEnabled,
   PIN_ATTENDANCE_DIRECTOR_COPY,
   withAttendanceModuleEnabled,
-} from '@/core/attendance';
+} from '@/core/organizations/attendanceSettingsStub';
 import { IndustryFeatureGuidePanel } from '@/core/help';
 import { LegalLinks } from '@/core/legal';
 import {

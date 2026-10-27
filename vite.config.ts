@@ -2,14 +2,10 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import { fileURLToPath } from "node:url";
-import { epMissingModuleStubPlugin } from "./scripts/viteEpMissingStubPlugin.mjs";
-
-const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [epMissingModuleStubPlugin(rootDir), react(), tailwindcss()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       "@/core/finance": path.resolve(__dirname, "./src/capabilities/billing/finance"),

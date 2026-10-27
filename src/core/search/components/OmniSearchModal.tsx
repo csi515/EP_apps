@@ -50,7 +50,7 @@ export const OmniSearchModal: React.FC<OmniSearchModalProps> = ({
   const organizationId = orgContext?.currentOrganization?.id || 'default_org';
   const supabaseClient = getCoreClient();
 
-  // 글로벌 단축키 (Ctrl+K or Cmd+K) 및 moa:command-palette 커스텀 이벤트 감지
+  // 글로벌 단축키 (Ctrl+K or Cmd+K) 및 ep:command-palette 커스텀 이벤트 감지
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 텍스트 입력창이 아닐 때 '/' 키로 열기 지원 또는 Ctrl/Cmd+K
@@ -73,10 +73,10 @@ export const OmniSearchModal: React.FC<OmniSearchModalProps> = ({
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('moa:command-palette', handleCustomEvent);
+    window.addEventListener('ep:command-palette', handleCustomEvent);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('moa:command-palette', handleCustomEvent);
+      window.removeEventListener('ep:command-palette', handleCustomEvent);
     };
   }, [isOpen]);
 

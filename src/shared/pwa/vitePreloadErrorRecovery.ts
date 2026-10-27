@@ -11,8 +11,25 @@ import { createLogger } from '@/core/logging';
 
 const logger = createLogger('VitePreloadRecovery');
 
-export const VITE_PRELOAD_FLAG = 'moa.vitePreloadRecovery';
+export const VITE_PRELOAD_FLAG = 'ep.vitePreloadRecovery';
+const LEGACY_VITE_PRELOAD_FLAG = 'moa.vitePreloadRecovery';
 const RELOAD_COOLDOWN_MS = 15_000;
+
+function readPreloadFlag(storage: Storage): string | null {
+  const current = storage.getItem(VITE_PRELOAD_FLAG);
+  if (current != null) return current;
+  const legacy = storage.getItem(LEGACY_VITE_PRELOAD_FLAG);
+  if (legacy != null) {
+    try {
+      storage.setItem(VITE_PRELOAD_FLAG, legacy);
+      storage.removeItem(LEGACY_VITE_PRELOAD_FLAG);
+    } catch {
+      /* ignore */
+    }
+    return legacy;
+  }
+  return null;
+}
 
 export interface PreloadRecoveryOptions {
   storage?: Storage;
@@ -32,7 +49,7 @@ export function handlePreloadError(
   }
 
   try {
-    const lastAttempt = storage.getItem(VITE_PRELOAD_FLAG);
+    const lastAttempt = readPreloadFlag(storage);
     const now = Date.now();
 
     if (lastAttempt) {

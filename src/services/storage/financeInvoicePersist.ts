@@ -1,6 +1,6 @@
 // @ts-nocheck
 import type { TuitionInvoice, TuitionPayment } from '../../types';
-import type { IncomeEntry } from '../../core/finance/types';
+import type { IncomeEntry } from '@/capabilities/billing/finance/types';
 import { STORAGE_KEYS } from '../adapters';
 import { setItem, type StorageApi } from './helpers';
 import {
@@ -9,7 +9,7 @@ import {
   getTuitionPayments as readTuitionPayments,
   saveTuitionPaymentDirect,
   upsertLinkedIncome,
-} from '../../core/finance/billingIncomeLink';
+} from '@/capabilities/billing/finance/billingIncomeLink';
 
 /**
  * 수강료 invoice·payment·income 저장.

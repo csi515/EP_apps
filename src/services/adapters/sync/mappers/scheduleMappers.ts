@@ -12,7 +12,7 @@ import type { Json, PaymentMethod as DbPaymentMethod, PaymentStatus } from '../.
 import type { StaffMetadata } from '../../types';
 import type { AcademySettings, Teacher } from '../../../../types';
 import type { Booking, ServiceOffering } from '../../../../core/types/schedule';
-import type { PickupAddress } from '../../../../core/transport/types';
+import type { PickupAddress } from '@/types';
 import {
   schedulePromotedWrite,
   scheduleRoom,
@@ -22,7 +22,7 @@ import {
 } from '@/core/metadata';
 
 
-// â”€â”€â”€ Schedules (Attendance) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ?€?€?€ Schedules (Attendance) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 
 interface ScheduleMetadata {
   studentName: string;
@@ -122,7 +122,7 @@ export function buildScheduleTimes(record: AttendanceRecord, cls?: ClassItem): {
   };
 }
 
-// â”€â”€â”€ Pilates: Service Offerings & Bookings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ?€?€?€ Pilates: Service Offerings & Bookings ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 
 interface PilatesServiceMetadata {
   moduleType: 'pilates';
@@ -135,7 +135,7 @@ interface BookingMetadata {
   customerName: string;
   staffName?: string;
   serviceName?: string;
-  /** ì—°ìŠµì‹¤ ì˜ˆì•½ êµ¬ë¶„ â€” ì¼ë°˜ ì˜ˆì•½ê³¼ ë¶„ë¦¬ */
+  /** ?°ìŠµ???ˆì•½ êµ¬ë¶„ ???¼ë°˜ ?ˆì•½ê³?ë¶„ë¦¬ */
   kind?: 'practice_room';
   room?: string;
   roomId?: string;
@@ -148,7 +148,7 @@ interface BookingMetadata {
   startTime?: string;
   endTime?: string;
   createdBy?: string;
-  /** ì´ìš©ê¶Œ ì°¨ê° ì—°ê²° â€” hydrate í›„ refund/ì¬ì°¨ê°ìš© */
+  /** ?´ìš©ê¶?ì°¨ê° ?°ê²° ??hydrate ??refund/?¬ì°¨ê°ìš© */
   sessionPassId?: string;
 }
 
@@ -304,7 +304,7 @@ const DB_STATUS_TO_PRACTICE: Record<string, PracticeRoomBooking['status']> = {
   no_show: 'cancelled',
 };
 
-/** ì—°ìŠµì‹¤ ì˜ˆì•½ â†’ core.schedules */
+/** ?°ìŠµ???ˆì•½ ??core.schedules */
 export function practiceRoomBookingToScheduleRow(
   booking: PracticeRoomBooking,
   organizationId: string

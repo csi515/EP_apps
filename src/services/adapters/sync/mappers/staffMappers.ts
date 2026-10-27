@@ -11,10 +11,10 @@ import type { Json, PaymentMethod as DbPaymentMethod, PaymentStatus } from '../.
 import type { StaffMetadata } from '../../types';
 import type { AcademySettings, Teacher } from '../../../../types';
 import type { Booking, ServiceOffering } from '../../../../core/types/schedule';
-import type { PickupAddress } from '../../../../core/transport/types';
+import type { PickupAddress } from '@/types';
 
 
-// â”€â”€â”€ Staff (Teachers) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ?€?€?€ Staff (Teachers) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 
 export function teacherToStaffRow(teacher: Teacher, organizationId: string) {
   const metadata: StaffMetadata = {

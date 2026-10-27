@@ -39,11 +39,11 @@ export const KeyboardShortcutsModal: React.FC = () => {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('moa:keyboard-shortcuts', handleCustomEvent);
+    window.addEventListener('ep:keyboard-shortcuts', handleCustomEvent);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('moa:keyboard-shortcuts', handleCustomEvent);
+      window.removeEventListener('ep:keyboard-shortcuts', handleCustomEvent);
     };
   }, [isOpen]);
 

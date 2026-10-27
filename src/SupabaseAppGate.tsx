@@ -34,7 +34,7 @@ interface SupabaseAppGateProps {
 }
 
 /**
- * MOA v2 Core App Gate.
+ * EP_apps Core App Gate.
  * 
  * 유지 흐름:
  * 로그인 -> Supabase session -> AuthProvider -> OrganizationProvider

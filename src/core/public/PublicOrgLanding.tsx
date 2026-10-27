@@ -14,8 +14,6 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { appBrand } from '@/core/brand';
 import { getIndustryLabel } from '@/core/industry/types';
-import { storePendingOrgPublicCode } from '@/core/parent/services/pendingOrgConnect';
-import { setParentPortalModeActive } from '@/core/parent/services/appModeService';
 import { usePublicOrganization } from './usePublicOrganization';
 import { ConsultationForm } from './ConsultationForm';
 import { PublicBookingSection } from './PublicBookingSection';
@@ -48,16 +46,13 @@ export function PublicOrgLanding({ code, mode = 'default' }: PublicOrgLandingPro
   };
 
   const handleParentConnect = () => {
+    // EP_apps: 학부모 포털 연결 비활성 — 공개 상담/가입만 안내
     if (!org) return;
-    storePendingOrgPublicCode(org.public_code);
-    setParentPortalModeActive(true);
-    if (isAuthenticated) {
-      navigate('/', { state: { openParentPortal: true } });
-      return;
-    }
-    navigate('/', {
+    navigate('/signup/customer', {
       state: {
-        openParentPortal: true,
+        selectedOrgId: org.id,
+        publicCode: org.public_code,
+        orgName: org.name,
       },
     });
   };

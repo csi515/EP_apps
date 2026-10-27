@@ -1,6 +1,10 @@
 /** org 스코프 pending mutation. local write ≠ server commit. offline-command 큐. */
 import { OFFLINE_COMMAND_STORE_POLICIES } from '@/core/storage/persistencePolicy';
-import type { StorageKey } from './storageKeys';
+import {
+  LEGACY_PENDING_MUTATIONS_PREFIX,
+  PENDING_MUTATIONS_PREFIX,
+  type StorageKey,
+} from './storageKeys';
 
 export const PENDING_MUTATIONS_POLICY = OFFLINE_COMMAND_STORE_POLICIES.pendingMutations;
 import { getOrganizationId } from './storageContext';
@@ -30,10 +34,12 @@ type PendingStore = {
   mutations: PendingMutationRecord[];
 };
 
-const PREFIX = 'moa:pending-mutations:';
-
 function storeKey(orgId: string): string {
-  return `${PREFIX}${orgId}`;
+  return `${PENDING_MUTATIONS_PREFIX}${orgId}`;
+}
+
+function legacyStoreKey(orgId: string): string {
+  return `${LEGACY_PENDING_MUTATIONS_PREFIX}${orgId}`;
 }
 
 function emptyStore(): PendingStore {
@@ -75,7 +81,13 @@ function migrateStore(raw: unknown): PendingStore {
 
 function readStore(orgId: string): PendingStore {
   try {
-    const raw = readLocalRaw(storeKey(orgId));
+    let raw = readLocalRaw(storeKey(orgId));
+    if (!raw) {
+      raw = readLocalRaw(legacyStoreKey(orgId));
+      if (raw) {
+        writeLocalRaw(storeKey(orgId), raw);
+      }
+    }
     if (!raw) return emptyStore();
     return migrateStore(JSON.parse(raw));
   } catch {
@@ -207,7 +219,11 @@ function listPendingStoreOrgIds(): string[] {
   try {
     for (let i = 0; i < localStorage.length; i += 1) {
       const key = localStorage.key(i);
-      if (key?.startsWith(PREFIX)) ids.add(key.slice(PREFIX.length));
+      if (key?.startsWith(PENDING_MUTATIONS_PREFIX)) {
+        ids.add(key.slice(PENDING_MUTATIONS_PREFIX.length));
+      } else if (key?.startsWith(LEGACY_PENDING_MUTATIONS_PREFIX)) {
+        ids.add(key.slice(LEGACY_PENDING_MUTATIONS_PREFIX.length));
+      }
     }
   } catch {
     /* ignore */

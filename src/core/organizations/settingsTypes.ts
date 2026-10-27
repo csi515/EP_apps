@@ -1,4 +1,4 @@
-import type { StudentBillingMode } from '@/core/students/billingMode';
+import type { StudentBillingMode } from '@/types';
 import type { SlotRecruitment } from '@/core/types/schedule';
 import type { StaffWorkWindow } from '@/core/staff/workWindow';
 

@@ -10,7 +10,7 @@ import {
 import { AppDrawer } from './AppDrawer';
 
 export function requestCommandPalette(): void {
-  window.dispatchEvent(new Event('moa:command-palette'));
+  window.dispatchEvent(new Event('ep:command-palette'));
 }
 
 export function GlobalCommandPalette() {
@@ -33,10 +33,10 @@ export function GlobalCommandPalette() {
     };
     const onOpen = () => setOpen(true);
     window.addEventListener('keydown', onKey);
-    window.addEventListener('moa:command-palette', onOpen);
+    window.addEventListener('ep:command-palette', onOpen);
     return () => {
       window.removeEventListener('keydown', onKey);
-      window.removeEventListener('moa:command-palette', onOpen);
+      window.removeEventListener('ep:command-palette', onOpen);
     };
   }, []);
 

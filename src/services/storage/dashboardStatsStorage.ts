@@ -2,9 +2,32 @@
 import type { Student, TuitionInvoice } from '../../types';
 import type { StorageApi } from './helpers';
 import { storageApi } from './storageApi';
-import { pickUniqueDayAttendanceStatuses } from '../../core/attendance/dayAttendance';
 import { todayIsoLocal, yearMonthLocal } from '../../shared/utils/localDate';
-import { filterMonthlyBillingStudents } from '@/capabilities/billing/utils/billingMode';
+import { isMonthlyBillingStudent, type Student as BillingStudent } from '@/types';
+
+function pickUniqueDayAttendanceStatuses(
+  rows: { studentId?: string; status: string }[]
+): { present: number; absent: number; late: number } {
+  const byStudent = new Map<string, string>();
+  for (const row of rows) {
+    const id = row.studentId || '';
+    if (!id) continue;
+    byStudent.set(id, row.status);
+  }
+  let present = 0;
+  let absent = 0;
+  let late = 0;
+  for (const status of byStudent.values()) {
+    if (status === 'present') present += 1;
+    else if (status === 'absent') absent += 1;
+    else if (status === 'late') late += 1;
+  }
+  return { present, absent, late };
+}
+
+function filterMonthlyBillingStudents<T extends BillingStudent>(students: T[]): T[] {
+  return students.filter((s) => isMonthlyBillingStudent(s));
+}
 
 type AttRow = { date: string; status: string; studentId?: string; classId?: string };
 

@@ -231,12 +231,13 @@ function run() {
   const labels = generatePrintLabelItems({
     item: printItem,
     quantity: 50,
+    baseUrl: 'https://example.com/i',
   });
   assert.equal(labels.length, 50);
   assert.equal(labels[0].barcode, generated1);
   assert.equal(labels[0].printSequence, 1);
   assert.equal(labels[49].printSequence, 50);
-  assert.equal(labels[0].qrCodeValue, `https://moa.app/i/${generated1}`);
+  assert.equal(labels[0].qrCodeValue, `https://example.com/i/${generated1}`);
 
   // A4 24칸 분할 (50장 = 24 + 24 + 2 = 3페이지)
   const a4Pages = formatLabelSheetPages(labels, 'A4_24_FORMTEC');

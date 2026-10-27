@@ -4,8 +4,6 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
   hasIndustryModule,
   parseIndustryType,
-  isBlankIndustryInput,
-  type IndustryType,
 } from '@/core/industry/types';
 import { resolveIndustryAppKind } from '@/core/industry/industryAppResolve';
 import { Navigate } from 'react-router-dom';
@@ -22,6 +20,7 @@ const DriverDedicatedShell = lazy(() =>
 const WorkerKioskShell = lazy(() =>
   import('./WorkerKioskShell').then((m) => ({ default: m.WorkerKioskShell }))
 );
+
 function resolveIndustryApp(industryType?: string | null): ComponentType {
   const boundModule = resolveModuleIndustryId(industryType);
   if (boundModule && APP_BY_INDUSTRY[boundModule]) {
@@ -29,21 +28,18 @@ function resolveIndustryApp(industryType?: string | null): ComponentType {
   }
   if (resolveIndustryAppKind(industryType) === 'generic') return GenericIndustryShell;
   const parsed = parseIndustryType(industryType);
-  const moduleIndustry = parsed;
-  if (!moduleIndustry || !hasIndustryModule(moduleIndustry)) return GenericIndustryShell;
-  return APP_BY_INDUSTRY[moduleIndustry] ?? GenericIndustryShell;
+  if (!parsed || !hasIndustryModule(parsed)) return GenericIndustryShell;
+  return APP_BY_INDUSTRY[parsed] ?? GenericIndustryShell;
 }
 
 /** organization.industry_type 및 사용자 역할(Role)에 따라 적절한 셸 렌더링 */
 export const IndustryAppRouter: React.FC = () => {
   const { currentOrganization, currentRole } = useOrganization();
 
-  // 1. SaaS 최고 운영자(super_admin)는 테넌트 관제 콘솔로 리다이렉트
   if (isSuperAdmin(currentRole as string)) {
     return <Navigate to="/admin/tenants" replace />;
   }
 
-  // 2. 셔틀/배차 기사(driver)는 전용 거치대 모바일 운행표 셸
   if (isDriver(currentRole as string)) {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -52,7 +48,6 @@ export const IndustryAppRouter: React.FC = () => {
     );
   }
 
-  // 3. 현장 작업자(worker)는 공정 파이프라인/SOP 전용 키오스크 셸
   if (isWorker(currentRole as string)) {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -61,21 +56,8 @@ export const IndustryAppRouter: React.FC = () => {
     );
   }
 
-  // 4. 학부모(parent) — 포털 모듈이 없는 빌드에서는 빈 상태
-  if (currentRole === 'parent') {
-    return (
-      <div
-        className="min-h-screen flex flex-col items-center justify-center bg-slate-50 gap-2 p-6 text-center"
-        data-testid="parent-portal-unavailable"
-      >
-        <p className="text-sm font-medium text-slate-700">학부모 포털을 사용할 수 없습니다.</p>
-        <p className="text-xs text-slate-500">사업장 관리 화면으로 돌아가 주세요.</p>
-      </div>
-    );
-  }
-
   const IndustryApp = resolveIndustryApp(currentOrganization?.industry_type);
-  const industryKey = currentOrganization?.industry_type || 'industry';
+  const industryKey = currentOrganization?.industry_type || 'personal_plant_ops';
 
   return (
     <PluginErrorBoundary pluginName={industryKey}>
