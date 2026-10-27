@@ -4,17 +4,19 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Layers,
   Sparkles,
-  QrCode,
   ShieldCheck,
   CheckCircle2,
-  Zap,
+  FileCheck,
+  Warehouse,
+  Info,
 } from "lucide-react";
-import { MobileLoginForm, type LoginTargetGroup, type WorkplaceRole } from "@/components/auth/MobileLoginForm";
+import { MobileLoginForm } from "@/components/auth/MobileLoginForm";
 import { useAuth } from "@/core/auth/AuthProvider";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 import { loginWithToss } from "@/core/auth/services/tossAuthService";
 import { mapLoginErrorMessage } from "@/core/auth/utils/mapLoginErrorMessage";
 import { appBrand } from "@/core/brand";
+import { loginLandingCopy } from "./loginLandingCopy";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -23,8 +25,6 @@ export const LoginPage: React.FC = () => {
   const [isTossLoading, setIsTossLoading] = useState(false);
   const [language, setLanguage] = useState<'ko' | 'en'>('ko');
   const [rememberMe, setRememberMe] = useState(true);
-  const [loginTargetGroup, setLoginTargetGroup] = useState<LoginTargetGroup>('workplace');
-  const [workplaceRole, setWorkplaceRole] = useState<WorkplaceRole>('owner');
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -35,6 +35,7 @@ export const LoginPage: React.FC = () => {
       : null;
   const { mutate: login, isPending: isLoading } = useLogin();
   const { signInWithGoogle, signInWithApple, signInWithKakao, signInWithNaver } = useAuth();
+  const inToss = isAppsInToss();
 
   const handleGoogleLogin = async () => {
     try {
@@ -82,13 +83,11 @@ export const LoginPage: React.FC = () => {
     try {
       const result = await loginWithToss();
       if (result.success) {
-        // 고객/수강생 역할은 이용권 지갑으로, 사업주/직원 및 통합 권한은 워크스페이스 대시보드로 이동
         if (returnUrl) {
           navigate(returnUrl);
           return;
         }
-        const targetPath = result.role === "customer" ? "/customer/pass" : "/workspace";
-        navigate(targetPath);
+        navigate("/workspace");
       } else {
         setErrorMessage(
           result.error || "토스 로그인 연동에 실패했습니다. 다시 시도해 주세요."
@@ -127,8 +126,7 @@ export const LoginPage: React.FC = () => {
             navigate(returnUrl);
             return;
           }
-          const defaultTarget = loginTargetGroup === 'customer' ? '/customer/pass' : '/workspace';
-          navigate(data?.redirectTo || defaultTarget);
+          navigate(data?.redirectTo || "/workspace");
         },
         onError: (error: any) => {
           setErrorMessage(mapLoginErrorMessage(error?.message));
@@ -171,35 +169,56 @@ export const LoginPage: React.FC = () => {
 
           {/* 서비스 가치 메인 카피 */}
           <h1 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight mb-4">
-            출결, 회원권, 매장 운영을<br />
+            {loginLandingCopy.heroTitleLine1}
+            <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-indigo-200 to-blue-200">
-              종이 장부 없이 한 손으로
+              {loginLandingCopy.heroTitleHighlight}
             </span>
           </h1>
           <p className="text-sm xl:text-base text-slate-400 leading-relaxed max-w-lg">
-            {appBrand.description}. 출결·회원권·수납을 사업주 화면에서 바로 이어갑니다.
+            {appBrand.description}. {loginLandingCopy.heroDescription}
           </p>
+
+          {/* 추가 로그인 안내 (데스크톱) */}
+          <div
+            data-testid="extra-login-notice-desktop"
+            className="mt-6 flex gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4"
+          >
+            <Info className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold text-amber-100">
+                {loginLandingCopy.extraLoginTitle}
+              </p>
+              <p className="mt-1 text-xs text-amber-100/80 leading-relaxed">
+                {loginLandingCopy.extraLoginBody}
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* 신뢰도 및 핵심 기능 그래픽 카드 */}
+        {/* 핵심 기능 카드 */}
         <div className="relative z-10 grid grid-cols-2 gap-4 my-8">
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 mb-2.5">
-              <QrCode className="w-4 h-4" />
+              <FileCheck className="w-4 h-4" />
             </div>
-            <h4 className="text-xs font-bold text-slate-200 mb-1">0원 비용 원칙</h4>
+            <h4 className="text-xs font-bold text-slate-200 mb-1">
+              {loginLandingCopy.featureApprovalTitle}
+            </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              SMS·카카오 알림톡 비용 0원. 2-Way 1회용 W3C QR 프로토콜.
+              {loginLandingCopy.featureApprovalBody}
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300 mb-2.5">
-              <Zap className="w-4 h-4" />
+              <Warehouse className="w-4 h-4" />
             </div>
-            <h4 className="text-xs font-bold text-slate-200 mb-1">초고속 Realtime 동기화</h4>
+            <h4 className="text-xs font-bold text-slate-200 mb-1">
+              {loginLandingCopy.featureOpsTitle}
+            </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              카운터-고객 스마트폰 간 실시간 변경 감지 및 자동 캐시 무효화.
+              {loginLandingCopy.featureOpsBody}
             </p>
           </div>
         </div>
@@ -208,11 +227,11 @@ export const LoginPage: React.FC = () => {
         <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Row Level Security (RLS) 테넌트 격리</span>
+            <span>{loginLandingCopy.securityRls}</span>
           </div>
           <div className="flex items-center space-x-1">
             <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-            <span>계정 탈취 방어 내장</span>
+            <span>{loginLandingCopy.securityAccount}</span>
           </div>
         </div>
       </div>
@@ -223,25 +242,43 @@ export const LoginPage: React.FC = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-8 lg:p-12">
         <div className="w-full max-w-[420px] lg:max-w-md bg-white rounded-3xl shadow-xl lg:shadow-none border border-slate-100 lg:border-none p-6 sm:p-10">
           {/* 모바일 전용 로고 헤더 (< lg) */}
-          <div className="lg:hidden text-center mb-8">
+          <div className="lg:hidden text-center mb-6">
             <div className="inline-flex items-center justify-center w-13 h-13 bg-indigo-600 rounded-2xl text-white shadow-lg shadow-indigo-100 mb-3">
               <Layers className="w-7 h-7" />
             </div>
             <h1 className="text-2xl font-bold text-slate-900">{appBrand.shortName}</h1>
             <p className="text-xs text-slate-500 mt-1">
-              {appBrand.description}
+              {loginLandingCopy.mobileSubtitle}
             </p>
           </div>
 
+          {/* 추가 로그인 안내 (모바일 — 데스크톱 패널이 숨겨질 때) */}
+          <div
+            data-testid="extra-login-notice-mobile"
+            className="lg:hidden mb-6 flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-3.5 text-left"
+          >
+            <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" aria-hidden />
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                {loginLandingCopy.extraLoginTitle}
+              </p>
+              <p className="mt-1 text-xs text-amber-800/90 leading-relaxed">
+                {loginLandingCopy.extraLoginBody}
+              </p>
+            </div>
+          </div>
+
           {/* 데스크톱 우측 타이틀 */}
-          <div className="hidden lg:block mb-8">
+          <div className="hidden lg:block mb-6">
             <h2 className="text-2xl font-bold text-slate-900">
-              {isAppsInToss() ? "앱스인토스 로그인" : "시스템 로그인"}
+              {inToss
+                ? loginLandingCopy.formTitleToss
+                : loginLandingCopy.formTitle}
             </h2>
             <p className="text-xs text-slate-500 mt-1.5">
-              {isAppsInToss()
-                ? "토스 앱 계정으로 자동 인증하여 접속합니다."
-                : "등록된 사업주/직원 계정 또는 고객 계정으로 접속하세요."}
+              {inToss
+                ? loginLandingCopy.formSubtitleToss
+                : loginLandingCopy.formSubtitle}
             </p>
           </div>
 

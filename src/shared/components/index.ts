@@ -13,8 +13,7 @@ export { ToastContainer } from './ToastContainer';
 export { ConfirmDialog } from './ConfirmDialog';
 export { CurrencyInput } from './CurrencyInput';
 export { StatCard } from './StatCard';
-export { OnboardingWizard } from './OnboardingWizard';
-export { OnboardingResumeCard } from './onboarding/OnboardingResumeCard';
+/** 학원형 OnboardingWizard는 EP 입구에서 제외 — 필요 시 직접 경로 import */
 export { PrintReceipt, type ReceiptProps, type ReceiptItem } from './receipt/PrintReceipt';
 export { VirtualList, type VirtualListProps } from './virtual/VirtualList';
 export * from './ui';

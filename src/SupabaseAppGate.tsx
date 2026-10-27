@@ -6,9 +6,16 @@ import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { OwnerOperationStoppedView } from '@/core/organizations/OwnerOperationStoppedView';
 import { OrganizationSelector } from '@/core/organizations/OrganizationSelector';
 import { PendingStaffInviteGate } from '@/core/staff/components/PendingStaffInviteGate';
-import { IndustryAppRouter } from '@/app/industry/IndustryAppRouter';
 
-// 고객 포털 셸은 해당 역할 진입 시에만 로드한다 (초기 번들 분리).
+// 워크스페이스·고객 셸은 인증 후 역할에 맞을 때만 로드 (로그인 입구와 번들 분리).
+const LazyIndustryAppRouter = lazy(() =>
+  import('@/app/industry/IndustryAppRouter').then((m) => ({ default: m.IndustryAppRouter }))
+);
+const IndustryAppRouter: FC = () => (
+  <Suspense fallback={<LoadingScreen />}>
+    <LazyIndustryAppRouter />
+  </Suspense>
+);
 const LazyCustomerShell = lazy(() =>
   import('@/core/customer/CustomerShell').then((m) => ({ default: m.CustomerShell }))
 );

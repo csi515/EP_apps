@@ -60,12 +60,20 @@ const BookingView = lazy(() =>
 const SeatRoomView = lazy(() =>
   import('@/capabilities/seat_room').then((m) => ({ default: m.SeatRoomManagementView }))
 );
-const PassesView = lazy(() =>
-  import('@/pages/passes/list').then((m) => ({ default: m.PassesListPage }))
-);
-const LockersView = lazy(() =>
-  import('@/pages/lockers/grid').then((m) => ({ default: m.LockersGridPage }))
-);
+const PassesView = lazy(async () => ({
+  default: () => (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+      이용권 모듈은 이 앱에서 제공하지 않습니다.
+    </div>
+  ),
+}));
+const LockersView = lazy(async () => ({
+  default: () => (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+      락커 모듈은 이 앱에서 제공하지 않습니다.
+    </div>
+  ),
+}));
 const ConsultationView = lazy(async () => ({
   default: () => (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">

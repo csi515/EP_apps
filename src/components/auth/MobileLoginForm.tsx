@@ -9,20 +9,12 @@ import {
   ShieldCheck,
   Globe,
   Loader2,
-  Building2,
-  UserRound,
-  Crown,
-  Briefcase,
-  KeyRound,
-  UserPlus,
 } from "lucide-react";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
+import { loginLandingCopy } from "@/pages/auth/loginLandingCopy";
 
 /** SNS(OAuth) 로그인 — 연동 완료 전까지 클릭 비활성화 */
 const SNS_LOGIN_ENABLED = false;
-
-export type LoginTargetGroup = 'workplace' | 'customer';
-export type WorkplaceRole = 'owner' | 'staff';
 
 export interface MobileLoginFormProps {
   email: string;
@@ -43,10 +35,6 @@ export interface MobileLoginFormProps {
   rememberMe?: boolean;
   onRememberMeChange?: (remember: boolean) => void;
   returnUrl?: string;
-  loginTargetGroup?: LoginTargetGroup;
-  onLoginTargetGroupChange?: (group: LoginTargetGroup) => void;
-  workplaceRole?: WorkplaceRole;
-  onWorkplaceRoleChange?: (role: WorkplaceRole) => void;
 }
 
 export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
@@ -68,21 +56,9 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   rememberMe: externalRememberMe,
   onRememberMeChange,
   returnUrl,
-  loginTargetGroup: externalGroup,
-  onLoginTargetGroupChange,
-  workplaceRole: externalRole,
-  onWorkplaceRoleChange,
 }) => {
   const navigate = useNavigate();
-  const [internalGroup, setInternalGroup] = useState<LoginTargetGroup>('workplace');
-  const [internalRole, setInternalRole] = useState<WorkplaceRole>('owner');
   const [internalRememberMe, setInternalRememberMe] = useState(true);
-
-  const targetGroup = externalGroup ?? internalGroup;
-  const setTargetGroup = onLoginTargetGroupChange ?? setInternalGroup;
-
-  const currentRole = externalRole ?? internalRole;
-  const setCurrentRole = onWorkplaceRoleChange ?? setInternalRole;
 
   const isRemember = externalRememberMe ?? internalRememberMe;
   const setRemember = onRememberMeChange ?? setInternalRememberMe;
@@ -118,7 +94,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
                 토스 원클릭 자동 로그인 중
               </h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                토스 계정과 매장 장부를 연결 중입니다.
+                {loginLandingCopy.tossConnecting}
               </p>
             </div>
           </div>
@@ -150,92 +126,11 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   }
 
   // =========================================================================
-  // 표준 정돈된 단일 화면:
-  // [1. 최상위 2대 선택: 사업장 로그인 vs 고객 로그인]
-  // [2. 사업장 선택 시 세부 역할: 사업주 vs 직원]
-  // [3. 이메일/비밀번호 폼] -> [4. 회원가입/소셜 로그인]
+  // 임직원 단일 로그인: 소셜(비활성) → 이메일/비밀번호 → 초대·회원가입
   // =========================================================================
   return (
     <div data-testid="login-container" className="w-full space-y-4">
-      {/* 1. 최상위 2대 분류: 사업장 로그인 vs 고객 로그인 */}
-      <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-2xl">
-        <button
-          type="button"
-          onClick={() => setTargetGroup('workplace')}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-            targetGroup === 'workplace'
-              ? 'bg-white text-indigo-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <Building2 className="w-4 h-4 text-indigo-600" />
-          <span>{isEn ? "Workplace" : "사업장 로그인"}</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTargetGroup('customer')}
-          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-            targetGroup === 'customer'
-              ? 'bg-white text-emerald-700 shadow-sm'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          <UserRound className="w-4 h-4 text-emerald-600" />
-          <span>{isEn ? "Customer" : "고객 로그인"}</span>
-        </button>
-      </div>
-
-      {/* 2. 사업장 로그인 내부: 사업주 vs 직원 선택 */}
-      {targetGroup === 'workplace' ? (
-        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-2.5 space-y-2">
-          <div className="flex items-center justify-between text-xs px-1">
-            <span className="font-semibold text-slate-600">
-              {isEn ? "Select Role" : "로그인 역할 선택"}
-            </span>
-            <span className="text-xs text-indigo-600 font-medium">
-              {currentRole === 'owner' ? '매장 개설·운영·정산' : '출결·스케줄·담당 업무'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-1.5 p-1 bg-white/90 rounded-xl border border-indigo-100/80">
-            <button
-              type="button"
-              onClick={() => setCurrentRole('owner')}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
-                currentRole === 'owner'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Crown className="w-3.5 h-3.5" />
-              <span>{isEn ? "Owner" : "사업주 · 대표"}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCurrentRole('staff')}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg text-xs font-bold transition-all ${
-                currentRole === 'staff'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5" />
-              <span>{isEn ? "Staff" : "직원 · 강사"}</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-2.5 px-3">
-          <div className="flex items-center gap-2 text-xs text-emerald-800 font-medium">
-            <UserRound className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{isEn ? "Member Pass & Booking Portal" : "회원권·출결·예약 전용 로그인"}</span>
-          </div>
-        </div>
-      )}
-
-      {/* 3. 소셜 / 간편 로그인 버튼 순서 (테스트 불변식 준수) */}
+      {/* 소셜 / 간편 로그인 버튼 순서 (테스트 불변식 준수) */}
       <div className="pt-1">
         {SNS_LOGIN_ENABLED ? (
           <div className="space-y-2">
@@ -306,18 +201,14 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
         )}
       </div>
 
-      {/* 4. 메인 이메일 / 비밀번호 폼 */}
+      {/* 메인 이메일 / 비밀번호 폼 */}
       <form onSubmit={onSubmit} className="space-y-3">
         <div>
           <label
             htmlFor="login-email"
             className="block text-xs font-semibold text-slate-700 mb-1"
           >
-            {targetGroup === 'customer'
-              ? (isEn ? "Member Email" : "고객 · 수강생 이메일")
-              : currentRole === 'owner'
-              ? (isEn ? "Owner Email" : "사업주 · 대표 이메일")
-              : (isEn ? "Staff Email" : "직원 · 강사 이메일")}
+            {isEn ? loginLandingCopy.emailLabelEn : loginLandingCopy.emailLabel}
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -331,13 +222,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={
-                targetGroup === 'customer'
-                  ? "member@ep.local"
-                  : currentRole === 'owner'
-                  ? "owner@ep.local"
-                  : "staff@ep.local"
-              }
+              placeholder={loginLandingCopy.emailPlaceholder}
               className="w-full min-h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all bg-slate-50/50 focus:bg-white"
             />
           </div>
@@ -411,11 +296,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           type="submit"
           data-testid="btn-email-submit"
           disabled={isLoading}
-          className={`w-full mt-2 h-11 min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-md disabled:opacity-50 transition-all active:scale-[0.99] cursor-pointer ${
-            targetGroup === 'customer'
-              ? 'bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-500'
-              : 'bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-500'
-          }`}
+          className="w-full mt-2 h-11 min-h-[44px] flex items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-md disabled:opacity-50 transition-all active:scale-[0.99] cursor-pointer bg-indigo-600 shadow-indigo-600/20 hover:bg-indigo-500"
         >
           {isLoading ? (
             <>
@@ -424,37 +305,23 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
             </>
           ) : (
             <span>
-              {targetGroup === 'customer'
-                ? '고객 로그인'
-                : currentRole === 'owner'
-                ? '사업주 로그인'
-                : '직원 로그인'}
+              {isEn ? loginLandingCopy.submitLabelEn : loginLandingCopy.submitLabel}
             </span>
           )}
         </button>
       </form>
 
-      {/* 5. 보조 링크 (직원 초대 코드 입력 / 고객 등록 신청) */}
+      {/* 보조 링크: 직원 초대 코드 */}
       <div className="pt-1 text-center">
-        {targetGroup === 'workplace' && currentRole === 'staff' && (
-          <p className="text-xs text-slate-500">
-            초대 코드를 전달받으셨나요?{' '}
-            <Link to="/invite/accept" className="font-bold text-indigo-600 hover:underline">
-              초대 코드 수락
-            </Link>
-          </p>
-        )}
-        {targetGroup === 'customer' && (
-          <p className="text-xs text-slate-500">
-            아직 매장 회원이 아니신가요?{' '}
-            <Link to="/signup/customer" className="font-bold text-emerald-600 hover:underline">
-              다니는 매장 등록 신청
-            </Link>
-          </p>
-        )}
+        <p className="text-xs text-slate-500">
+          {loginLandingCopy.invitePrompt}{' '}
+          <Link to="/invite/accept" className="font-bold text-indigo-600 hover:underline">
+            {loginLandingCopy.inviteLink}
+          </Link>
+        </p>
       </div>
 
-      {/* 6. 하단 회원가입 및 언어 전환 바 */}
+      {/* 하단 회원가입 및 언어 전환 바 */}
       <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
         <Link
           to="/signup"

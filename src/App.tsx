@@ -17,7 +17,6 @@ import { AppProvider } from "@/context/AppContext";
 import { SupabaseRoleSync } from "@/SupabaseRoleSync";
 import { SupabaseAppGate } from "@/SupabaseAppGate";
 import { AppBootstrapGate } from "@/core/application/AppBootstrapGate";
-import { IndustryAppRouter } from "@/app/industry/IndustryAppRouter";
 import { provisionIndustryResources } from "@/app/industry/resourceProvisioner";
 import "@/app/presets/presetManualEngine";
 import { registerQueryClientClear } from "@/core/auth/services/signOutCoordinator";
@@ -43,6 +42,10 @@ import { AuthPage } from "./core/auth/AuthPage";
 import { SuperAdminGuard } from "./pages/admin/SuperAdminGuard";
 import { ImpersonationFloatingBanner } from "./components/layout/ImpersonationFloatingBanner";
 
+/** 워크스페이스 셸은 로그인 입구와 분리해 지연 로드 (미이관 학원 모듈 import 차단) */
+const IndustryAppRouter = lazy(() =>
+  import("@/app/industry/IndustryAppRouter").then((m) => ({ default: m.IndustryAppRouter }))
+);
 const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
 const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
 const MemberBookingView = lazy(() => import("@/capabilities/booking/pages/MemberBookingView").then((m) => ({ default: m.MemberBookingView })));
