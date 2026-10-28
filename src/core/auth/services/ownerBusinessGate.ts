@@ -1,4 +1,5 @@
 import { getCoreClient } from '@/lib/supabase';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
 
 export const OWNER_BUSINESS_BLOCK_KEY = 'moa_owner_business_block';
 
@@ -144,6 +145,10 @@ async function refreshOrganizationStatus(organizationId: string, businessNumber:
  * 휴·폐업이어도 예외를 던지지 않는다. 운영을 막을 조직 id만 돌려준다.
  */
 export async function listBlockedOwnerOrganizations(organizationIds: string[]): Promise<string[]> {
+  if (isLocalAuthEnabled()) {
+    return [];
+  }
+
   const unique = [...new Set(organizationIds.filter(Boolean))];
   if (unique.length === 0) return [];
 

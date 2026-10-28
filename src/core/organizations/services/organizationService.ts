@@ -17,6 +17,12 @@ import { locationService } from '@/core/locations/locationService';
 import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 import { getCoreClient } from '../../../lib/supabase';
 import type { MemberRole, Organization } from '../../../lib/supabase';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import {
+  localClearActiveMembership,
+  localFetchMemberships,
+  localSetActiveMembership,
+} from '@/core/auth/localAuth/localAuthApi';
 import {
   prepareCreateOrganizationInput,
   resolveCreateBusinessPhone,
@@ -116,6 +122,13 @@ export interface OrganizationMembership {
   parentCustomerId: string | null;
   organization: Organization;
   isCurrentContext?: boolean;
+  /** 로컬/동적 직급명 */
+  organizationRoleId?: string | null;
+  organizationRoleName?: string | null;
+  /** RolePermissionMap (직급 권한) */
+  permissions?: Record<string, boolean>;
+  /** 직무 기능 권한 토글 */
+  featurePermissions?: Record<string, boolean>;
 }
 
 export function getStoredOrganizationId(): string | null {
@@ -246,6 +259,15 @@ export async function fetchUserOrganizations(userId: string): Promise<Organizati
  * RPC 실패 시 organization_members 직접 조회로 폴백하며, 모든 예외 상황 시 안전하게 빈 목록 반환
  */
 export async function fetchUserMembershipsWithContext(): Promise<OrganizationMembership[]> {
+  if (isLocalAuthEnabled()) {
+    try {
+      return await localFetchMemberships();
+    } catch (err) {
+      console.warn('[org] local memberships fetch failed:', err);
+      return [];
+    }
+  }
+
   try {
     const { data, error } = await getCoreClient().rpc('get_user_memberships' as never);
 
@@ -295,6 +317,10 @@ export async function fetchUserMembershipsWithContext(): Promise<OrganizationMem
  * Phase 1: 활성 멤버십 컨텍스트 설정
  */
 export async function setActiveMembership(membershipId: string): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localSetActiveMembership(membershipId);
+    return;
+  }
   const { error } = await getCoreClient().rpc('set_active_membership' as any, {
     p_membership_id: membershipId,
   });
@@ -306,6 +332,10 @@ export async function setActiveMembership(membershipId: string): Promise<void> {
  * Phase 1: 활성 멤버십 컨텍스트 클리어
  */
 export async function clearActiveMembership(): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localClearActiveMembership();
+    return;
+  }
   const { error } = await getCoreClient().rpc('clear_active_membership' as any);
 
   if (error) throw error;

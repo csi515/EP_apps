@@ -27,6 +27,13 @@ dist-ssr
 .env
 .env.production
 
+# Local auth DB files (Docker volume / PGlite data dir)
+data/
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
 # Test and coverage
 coverage
 test-results

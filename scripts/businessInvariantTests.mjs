@@ -100,6 +100,17 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:approval-line', group: 'capability', kind: 'unit', ci: 'always', order: 43 },
   { script: 'test:mbo-plan-approval', group: 'capability', kind: 'unit', ci: 'always', order: 44 },
   { script: 'test:ep-role-seed', group: 'organization', kind: 'unit', ci: 'always', order: 45 },
+  { script: 'test:org-bootstrap-edge', group: 'organization', kind: 'unit', ci: 'always', order: 46 },
+  { script: 'test:org-blocked-edge', group: 'organization', kind: 'unit', ci: 'always', order: 47 },
+  { script: 'test:app-portal-mode-edge', group: 'organization', kind: 'unit', ci: 'always', order: 48 },
+  { script: 'test:role-labels-edge', group: 'organization', kind: 'unit', ci: 'always', order: 49 },
+  { script: 'test:ep-shell-surface', group: 'organization', kind: 'contract', ci: 'always', order: 50 },
+  { script: 'test:command-palette-edge', group: 'platform', kind: 'unit', ci: 'always', order: 51 },
+  { script: 'test:login-desktop-surface', group: 'platform', kind: 'contract', ci: 'always', order: 52 },
+  { script: 'test:plant-ops-surface-edge', group: 'organization', kind: 'unit', ci: 'always', order: 53 },
+  { script: 'test:login-bootstrap', group: 'authorization', kind: 'contract', ci: 'always', order: 54 },
+  { script: 'test:login-to-delegation', group: 'authorization', kind: 'unit', ci: 'always', order: 55 },
+  { script: 'test:company-app-features-edge', group: 'capability', kind: 'unit', ci: 'always', order: 56 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -109,6 +120,8 @@ export const INVENTORY_META_SCRIPTS = new Set([
   'test:business-invariants:catalog',
   'test:finance:list',
   'test:commerce-unit',
+  'test:ep-surface-suite',
+  'test:login-delegation-suite',
   'check:all',
 ]);
 

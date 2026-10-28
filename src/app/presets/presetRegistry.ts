@@ -269,42 +269,43 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'shuttle_dispatch',
       'hazardous_substance_msds',
     ] as const,
+    // 직급 추천안(편집 가능). 팀장·공장장 등 직책은 직급과 별도 — 고정값이 아님.
     roles: [
       {
-        name: '대표이사 / 공장장',
+        name: '임원',
         rank_order: 100,
         permissions: ['*'],
-        description: '전사 총괄 및 최종 결재 권한',
+        description: '추천 직급. 일반 직원 직급과 구분. 직책(공장장·본부장 등)은 별도 부여 가능',
       },
       {
-        name: '본부장 / 실장',
+        name: '부장',
         rank_order: 200,
         permissions: ['approval_workflow:*', 'mbo:*', 'task_pipeline:*', 'research_project:*', 'resources:*'],
-        description: '본부/실 단위 총괄 관리자 (하위 그룹/팀 전체 통할)',
+        description: '추천 직급. 예: 부장(직급)+공장장/실장(직책) 병행 가능',
       },
       {
-        name: '그룹장 / 센터장',
+        name: '차장',
         rank_order: 300,
         permissions: ['approval_workflow:*', 'mbo:*', 'task_pipeline:*', 'research_project:update'],
-        description: '중간 조직 관리자 (관할 팀 및 파트 통할)',
+        description: '추천 직급. 직책(그룹장·센터장 등)과 별도',
       },
       {
-        name: '팀장 / 리더',
+        name: '과장',
         rank_order: 400,
         permissions: ['approval_workflow:submit', 'approval_workflow:view', 'mbo:update', 'task_pipeline:*'],
-        description: '부서/팀 관리자 (팀원 MBO 열람 및 부서 업무 관리)',
+        description: '추천 직급. 예: 과장(직급)+팀장/리더(직책) 병행 가능',
       },
       {
-        name: '파트장 / 셀리더',
+        name: '대리',
         rank_order: 500,
         permissions: ['task_pipeline:update', 'mbo:view', 'approval_workflow:submit'],
-        description: '소규모 세부 파트 리더',
+        description: '추천 직급. 직책(파트장 등)과 별도',
       },
       {
-        name: '팀원 / 사원',
+        name: '사원',
         rank_order: 900,
         permissions: ['booking:book', 'whistleblower_grievance:create', 'mbo:view', 'research_project:view'],
-        description: '일반 실무자 (직무 기능 권한은 개인별로 부여)',
+        description: '추천 직급. 직무 기능 권한은 개인별로 부여',
       },
     ],
     resourceTypes: [
@@ -323,7 +324,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       exclude_payroll: true,
       incident_capa_linkage: true,
     },
-    readinessLevel: 'isolated',
+    readinessLevel: 'basic_ui',
   },
 };
 

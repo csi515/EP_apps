@@ -1,19 +1,20 @@
 import type { AuthProvider } from "@refinedev/core";
-import { supabase } from "@/lib/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase/client";
 import { StorageService } from "@/services/storage";
 import * as authService from "@/core/auth/services/authService";
 import * as tossAuthService from "@/core/auth/services/tossAuthService";
 import * as orgService from "@/core/organizations/services/organizationService";
 import { requestSignOut } from "@/core/auth/services/signOutCoordinator";
+import { isLocalAuthEnabled } from "@/core/auth/localAuth/isLocalAuth";
 
 export const authProvider: AuthProvider = {
   login: async ({ email, password, provider, rememberMe }: any) => {
-    if (!supabase) {
+    if (!isLocalAuthEnabled() && !isSupabaseConfigured() && !supabase) {
       return {
         success: false,
         error: {
-          name: "Supabase Error",
-          message: "Supabase client is not configured",
+          name: "Auth Error",
+          message: "인증 백엔드가 설정되지 않았습니다.",
         },
       };
     }
@@ -31,10 +32,10 @@ export const authProvider: AuthProvider = {
               },
             };
           }
-          const targetPath = result.role === "customer" ? "/customer/pass" : "/workspace";
+          // EP_apps: 고객/수강생 포털 없음 — 로그인 후 워크스페이스로 진입
           return {
             success: true,
-            redirectTo: targetPath,
+            redirectTo: "/workspace",
           };
         }
         if (provider === "google") {
@@ -139,14 +140,6 @@ export const authProvider: AuthProvider = {
   },
 
   check: async () => {
-    if (!supabase) {
-      return {
-        authenticated: false,
-        redirectTo: "/login",
-        logout: true,
-      };
-    }
-
     try {
       const session = await authService.getSession();
       if (!session) {
@@ -170,19 +163,16 @@ export const authProvider: AuthProvider = {
   },
 
   getPermissions: async () => {
-    if (!supabase) return null;
-
     // MOA의 진실 원천: activeUser context (조직 선택 및 멤버십 기반)
     const activeUser = StorageService.getActiveUser();
     if (activeUser?.role) {
       return activeUser.role;
     }
 
-    // fallback: Supabase auth user
     try {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        return (data.user.app_metadata?.role as string) || "authenticated";
+      const session = await authService.getSession();
+      if (session?.user) {
+        return (session.user.app_metadata?.role as string) || "authenticated";
       }
     } catch {
       return null;
@@ -192,11 +182,9 @@ export const authProvider: AuthProvider = {
   },
 
   getIdentity: async () => {
-    if (!supabase) return null;
-
     try {
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
+      const session = await authService.getSession();
+      const user = session?.user;
       if (!user) return null;
 
       const activeUser = StorageService.getActiveUser();

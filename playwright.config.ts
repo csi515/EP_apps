@@ -2,45 +2,37 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: ['tests/e2e/**/*.spec.ts', 'e2e/**/*.spec.ts'],
+  testMatch: ['tests/e2e/**/*.spec.ts'],
   timeout: 60000,
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   workers: 1,
-  // EP_apps 포크에서 스펙이 비어 있어도 build-e2e 게이트가 막히지 않게 한다.
-  passWithNoTests: true,
+  // 스펙 0개면 실패 — passWithNoTests 사용 금지
+  passWithNoTests: false,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
   },
   projects: [
     {
       name: 'chromium',
-      testIgnore: /shuttle-ops-flow/,
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'mobile-chrome',
-      testMatch: /shuttle-ops-flow/,
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'mobile-safari',
-      testMatch: /shuttle-ops-flow/,
-      use: { ...devices['iPhone 12'] },
     },
   ],
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 60000,
-      env: {
+    timeout: 120000,
+    env: {
       VITE_E2E: '1',
-      VITE_SUPABASE_URL: 'https://mock-supabase.moa.local',
-      VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.e30.mock-anon-key',
+      VITE_LOCAL_AUTH: 'true',
+      VITE_CORP_DOMAIN: 'true',
+      VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || 'http://127.0.0.1:3001',
+      VITE_SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY || 'ep-anon',
+      VITE_AUTH_API_BASE: process.env.VITE_AUTH_API_BASE || '/api/local-auth',
     },
   },
 });

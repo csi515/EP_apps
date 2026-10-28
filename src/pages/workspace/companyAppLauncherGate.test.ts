@@ -45,6 +45,6 @@ assert.equal(
   'R&D tile blocked without portal access'
 );
 
-assert.equal(plant.readinessLevel, 'isolated');
+assert.equal(plant.readinessLevel, 'basic_ui');
 
 console.log('companyAppLauncherGate.test.ts: ok');

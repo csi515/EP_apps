@@ -16,7 +16,22 @@ import { useUpdate } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { seedEpOrganizationRoles } from '@/core/organizations/services/epRoleSeed';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import { localUpdateOrganization } from '@/core/auth/localAuth/localAuthApi';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import {
+  RANK_VS_POSITION_GUIDE_KO,
+  RECOMMENDED_POSITION_EXAMPLES,
+  buildRecommendedRankDraftText,
+} from '@/core/organizations/poscoOrgTitleRecommendations';
+
+/** 프리셋 직급 추천안을 편집 가능 초안으로 (고정값 아님) */
+function buildDefaultRoleDraftText(industryType?: string | null): string {
+  const preset = getIndustryPreset(industryType ?? 'personal_plant_ops');
+  const roles = preset?.roles ?? [];
+  if (roles.length === 0) return buildRecommendedRankDraftText();
+  return roles.map((r) => r.name).join('\n');
+}
 
 interface ParsedDepartment {
   id: string;
@@ -46,14 +61,6 @@ const DEFAULT_DEPT_TEXT = `제조본부 > 생산1팀 > 조립파트
 기술연구소 > 배터리개발팀
 경영지원본부 > 인사총무팀`;
 
-const DEFAULT_ROLE_TEXT = `대표이사
-본부장
-그룹장
-팀장
-수석연구원
-선임연구원
-사원`;
-
 export const EpZeroSetupWizard: React.FC = () => {
   const navigate = useNavigate();
   const { currentOrganization } = useOrganization();
@@ -67,9 +74,11 @@ export const EpZeroSetupWizard: React.FC = () => {
   const [plantLocation, setPlantLocation] = useState('경기도 화성시 동탄산단 1로 45');
   const [managerName, setManagerName] = useState('김공장장');
 
-  // Step 2: 엑셀 텍스트 일괄 파서 (부서 / 직급)
+  // Step 2: 엑셀 텍스트 일괄 파서 (부서 / 직급) — 프리셋 직급을 편집 초안으로 채움
   const [deptRawText, setDeptRawText] = useState(DEFAULT_DEPT_TEXT);
-  const [roleRawText, setRoleRawText] = useState(DEFAULT_ROLE_TEXT);
+  const [roleRawText, setRoleRawText] = useState(() =>
+    buildDefaultRoleDraftText(currentOrganization?.industry_type)
+  );
 
   // Step 3: 공용 차량 및 회의실
   const [vehicles, setVehicles] = useState<QuickVehicle[]>([
@@ -147,24 +156,39 @@ export const EpZeroSetupWizard: React.FC = () => {
       return;
     }
 
-    updateOrgMutation({
-      resource: 'organizations',
-      id: currentOrganization.id,
-      values: {
-        name: companyName,
-        settings: {
-          ...(currentOrganization.settings as Record<string, unknown>),
-          business_number: businessNumber,
-          plant_location: plantLocation,
-          manager_name: managerName,
-          zero_setup_completed: true,
-          setup_vehicles: vehicles,
-          setup_rooms: rooms,
-          setup_departments: parsedDepartments,
-          setup_roles: parsedRoles,
-        },
-      },
-    });
+    const nextSettings = {
+      ...(currentOrganization.settings as Record<string, unknown>),
+      business_number: businessNumber,
+      plant_location: plantLocation,
+      manager_name: managerName,
+      zero_setup_completed: true,
+      setup_vehicles: vehicles,
+      setup_rooms: rooms,
+      setup_departments: parsedDepartments,
+      setup_roles: parsedRoles,
+    };
+
+    try {
+      if (isLocalAuthEnabled()) {
+        await localUpdateOrganization(currentOrganization.id, {
+          name: companyName,
+          settings: nextSettings,
+        });
+      } else {
+        updateOrgMutation({
+          resource: 'organizations',
+          id: currentOrganization.id,
+          values: {
+            name: companyName,
+            settings: nextSettings,
+          },
+        });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '조직 설정 저장 실패';
+      showToast(msg, 'error');
+      return;
+    }
 
     try {
       const preset = getIndustryPreset(
@@ -311,7 +335,12 @@ export const EpZeroSetupWizard: React.FC = () => {
               <h2 className="text-lg text-slate-900">Step 2. 조직도 및 직급 체계 엑셀 일괄 파싱</h2>
             </div>
             <p className="text-xs text-slate-500">
-              사내 엑셀에서 부서 계층(예: 본부 &gt; 팀 &gt; 파트)과 직급 목록을 복사하여 아래 입력란에 그대로 붙여넣으세요.
+              사내 엑셀에서 부서 계층(예: 본부 &gt; 팀 &gt; 파트)과 직급 목록을 복사해 붙여넣으세요.
+              오른쪽은 POSCO식 직급 추천안이며, 사업장에 맞게 수정하면 됩니다.
+            </p>
+            <p className="text-[11px] text-slate-500 leading-relaxed rounded-xl bg-slate-50 border border-slate-100 px-3 py-2">
+              {RANK_VS_POSITION_GUIDE_KO} 직책 예:{' '}
+              {RECOMMENDED_POSITION_EXAMPLES.join('·')}.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
@@ -343,7 +372,7 @@ export const EpZeroSetupWizard: React.FC = () => {
               {/* 직급 입력 */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between font-bold text-slate-700">
-                  <span>직급 체계 (상위자 순서대로 1줄당 1개)</span>
+                  <span>직급 추천안 (상위→하위, 1줄당 1개 · 수정 가능)</span>
                   <span className="text-indigo-600 text-[11px] font-semibold">{parsedRoles.length}단계 위계 감지</span>
                 </div>
                 <textarea
@@ -351,7 +380,7 @@ export const EpZeroSetupWizard: React.FC = () => {
                   value={roleRawText}
                   onChange={(e) => setRoleRawText(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 p-3 text-xs text-slate-800 font-mono"
-                  placeholder="대표이사&#10;본부장&#10;팀장&#10;사원"
+                  placeholder={'임원\n부장\n차장\n과장\n대리\n사원'}
                 />
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 max-h-36 overflow-y-auto space-y-1">
                   <span className="text-[10px] font-bold text-slate-400 block mb-1">위계 순서 (Rank Order):</span>

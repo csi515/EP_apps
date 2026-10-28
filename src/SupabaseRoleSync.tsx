@@ -44,6 +44,14 @@ export const SupabaseRoleSync: React.FC = () => {
       return;
     }
 
+    const membership = org?.selectedMembership;
+    const rolePermissions = membership?.permissions;
+    const hasRolePermissions =
+      rolePermissions &&
+      typeof rolePermissions === 'object' &&
+      Object.values(rolePermissions).some(Boolean);
+    const featurePermissions = membership?.featurePermissions ?? {};
+
     const activeUser = {
       id: auth.user.id,
       name: fullName,
@@ -51,6 +59,20 @@ export const SupabaseRoleSync: React.FC = () => {
       staffId: org?.currentStaffId ?? null,
       parentCustomerId: org?.currentParentCustomerId ?? null,
       email: auth.user.email || '',
+      feature_permissions: featurePermissions,
+      customRole: hasRolePermissions
+        ? {
+            id: membership?.organizationRoleId ?? undefined,
+            name: membership?.organizationRoleName ?? undefined,
+            permissions: rolePermissions,
+          }
+        : membership?.organizationRoleName
+          ? {
+              id: membership.organizationRoleId ?? undefined,
+              name: membership.organizationRoleName,
+              permissions: rolePermissions ?? {},
+            }
+          : null,
     };
 
     StorageService.setActiveUser(activeUser);

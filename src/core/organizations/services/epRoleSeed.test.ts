@@ -29,5 +29,19 @@ assert.equal(member.booking, true);
 assert.equal(member['rnd_portal:access'], true);
 assert.equal(member.grievances_manage, true);
 assert.equal(member['ownership:transfer'], false);
+assert.equal(member['roles:assign'], false, 'mbo:view alone must not grant role delegation');
+assert.equal(member['members:manage'], false);
+assert.equal(member.resources_manage, false, 'booking:book alone must not grant resource catalog admin');
+assert.equal(member['resources:manage'], false);
+
+const leader = mapPresetPermissionTokensToRoleMap([
+  'approval_workflow:submit',
+  'approval_workflow:view',
+  'mbo:update',
+  'task_pipeline:*',
+]);
+assert.equal(leader['roles:assign'], true, 'mbo:update / task_pipeline:* grants delegation');
+assert.equal(leader['members:manage'], true);
+assert.equal(leader.resources_manage, false, 'leader without resources:* keeps catalog admin off');
 
 console.log('epRoleSeed.test.ts: ok');

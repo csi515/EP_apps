@@ -8,6 +8,8 @@ import {
   ROLE_PERMISSION_KEYS,
   type RolePermissionMap,
 } from '@/domain/permissions';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import { localReplaceOrgRoles } from '@/core/auth/localAuth/localAuthApi';
 import { listDynamicRoles, saveDynamicRole } from './dynamicRoleService';
 
 export type EpSeedRoleInput = {
@@ -38,7 +40,15 @@ export function mapPresetPermissionTokensToRoleMap(
   const hasPrefix = (prefix: string) =>
     tokens.some((t) => t === prefix || t.startsWith(`${prefix}:`) || t === `${prefix}:*`);
 
-  if (hasPrefix('resources') || tokens.includes('booking:book') || tokens.includes('booking:*')) {
+  // 예약 이용(book)과 공용자원 카탈로그 관리(resources:*)는 분리한다.
+  if (
+    tokens.includes('booking:book') ||
+    tokens.includes('booking:*') ||
+    hasPrefix('booking')
+  ) {
+    next.booking = true;
+  }
+  if (hasPrefix('resources') || tokens.includes('booking:*')) {
     next.booking = true;
     next.seat_room = true;
     next.rental_equipment = true;
@@ -71,8 +81,15 @@ export function mapPresetPermissionTokensToRoleMap(
     next['office_supply_request:manage'] = true;
   }
 
-  // MBO·결재·파이프라인은 카탈로그 전용 키가 없으므로 상위 직급에 위임 관리 권한 부여
-  if (hasPrefix('mbo') || hasPrefix('approval_workflow') || hasPrefix('task_pipeline')) {
+  // MBO·결재·파이프라인: view/submit만으로는 직급 위임 권한을 주지 않는다.
+  // * / update / manage / approve 또는 도메인 전체 와일드카드만 위임 관리로 승격.
+  const grantsDelegationAdmin = tokens.some((t) => {
+    if (t === 'mbo:*' || t === 'approval_workflow:*' || t === 'task_pipeline:*') return true;
+    if (/^(mbo|approval_workflow|task_pipeline):(update|manage|approve)\b/.test(t)) return true;
+    if (t === 'task_pipeline:*') return true;
+    return false;
+  });
+  if (grantsDelegationAdmin) {
     next['roles:assign'] = true;
     next['members:manage'] = true;
     next.members_manage = true;
@@ -127,7 +144,12 @@ export async function seedEpOrganizationRoles(input: {
       ? input.wizardRoles
       : presetRoles.map((r) => ({ name: r.name, rankOrder: r.rank_order }));
 
-  let seeded = 0;
+  const built: Array<{
+    name: string;
+    rank_order: number;
+    permissions: RolePermissionMap;
+  }> = [];
+
   for (let i = 0; i < sources.length; i++) {
     const seed = sources[i]!;
     const matched = matchPresetRole(seed, presetRoles, i);
@@ -141,10 +163,34 @@ export async function seedEpOrganizationRoles(input: {
       permissions['ownership:transfer'] = true;
       permissions['rnd_portal:access'] = true;
     }
+    built.push({
+      name: seed.name,
+      rank_order: seed.rankOrder || (i + 1) * 100,
+      permissions,
+    });
+  }
+
+  // 사내 PG / 로컬 인증: 일괄 PUT으로 organization_roles 저장
+  if (isLocalAuthEnabled()) {
+    const result = await localReplaceOrgRoles(
+      input.organizationId,
+      built.map((r) => ({
+        name: r.name,
+        rank_order: r.rank_order,
+        permissions: r.permissions as Record<string, boolean>,
+      })),
+      { replace: existing.length === 0 }
+    );
+    return { seeded: result.seeded, skipped: false };
+  }
+
+  let seeded = 0;
+  for (const row of built) {
     await saveDynamicRole({
       organizationId: input.organizationId,
-      name: seed.name,
-      permissions,
+      name: row.name,
+      permissions: row.permissions,
+      rankOrder: row.rank_order,
     });
     seeded += 1;
   }

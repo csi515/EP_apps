@@ -1,5 +1,12 @@
 import { Session, User, type Provider } from '@supabase/supabase-js';
 import { getCoreClient } from '../../../lib/supabase';
+import { isLocalAuthEnabled } from '../localAuth/isLocalAuth';
+import {
+  localGetSession,
+  localOnAuthStateChange,
+  localSignIn,
+  localSignOut,
+} from '../localAuth/localAuthApi';
 import { setAuthStoragePreference } from './authStorage';
 
 export interface SignUpParams {
@@ -22,6 +29,9 @@ function getAuthRedirectTo(): string {
 }
 
 export async function getSession(): Promise<Session | null> {
+  if (isLocalAuthEnabled()) {
+    return localGetSession();
+  }
   const { data, error } = await getCoreClient().auth.getSession();
   if (error) throw error;
   return data.session;
@@ -35,6 +45,9 @@ export async function signUp({
   user: User;
   session: Session | null;
 }> {
+  if (isLocalAuthEnabled()) {
+    throw new Error('로컬 인증 모드에서는 회원가입이 비활성화되어 있습니다. 시드 계정을 사용하세요.');
+  }
   const { data, error } = await getCoreClient().auth.signUp({
     email,
     password,
@@ -55,6 +68,10 @@ export async function signIn({ email, password, rememberMe }: SignInParams): Pro
     setAuthStoragePreference(rememberMe);
   }
 
+  if (isLocalAuthEnabled()) {
+    return localSignIn(email, password);
+  }
+
   const { data, error } = await getCoreClient().auth.signInWithPassword({
     email,
     password,
@@ -65,8 +82,15 @@ export async function signIn({ email, password, rememberMe }: SignInParams): Pro
   return data.session;
 }
 
+function assertLocalAuthSocialDisabled(): void {
+  if (isLocalAuthEnabled()) {
+    throw new Error('로컬 인증 모드에서는 소셜 로그인을 사용할 수 없습니다.');
+  }
+}
+
 /** 구글 OAuth — 글로벌/외국인 표준 (Supabase Auth Providers) */
 export async function signInWithGoogle(): Promise<void> {
+  assertLocalAuthSocialDisabled();
   const { error } = await getCoreClient().auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -79,6 +103,7 @@ export async function signInWithGoogle(): Promise<void> {
 
 /** 애플 OAuth — iOS App Store 심사 필수 및 프라이버시 로그인 */
 export async function signInWithApple(): Promise<void> {
+  assertLocalAuthSocialDisabled();
   const { error } = await getCoreClient().auth.signInWithOAuth({
     provider: 'apple',
     options: {
@@ -91,6 +116,7 @@ export async function signInWithApple(): Promise<void> {
 
 /** 카카오 OAuth — 로그인·회원가입 공통 (Supabase Auth Providers) */
 export async function signInWithKakao(): Promise<void> {
+  assertLocalAuthSocialDisabled();
   const { error } = await getCoreClient().auth.signInWithOAuth({
     provider: 'kakao',
     options: {
@@ -106,6 +132,7 @@ type OAuthProviderArg = Provider | 'custom:naver';
 
 /** 네이버 OAuth — Custom Auth Provider `custom:naver` (Supabase Dashboard) */
 export async function signInWithNaver(): Promise<void> {
+  assertLocalAuthSocialDisabled();
   const provider: OAuthProviderArg = 'custom:naver';
   const { error } = await getCoreClient().auth.signInWithOAuth({
     // supabase-js Provider 타입에 custom:* 미포함 → 한 곳에서만 단언
@@ -119,12 +146,19 @@ export async function signInWithNaver(): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localSignOut();
+    return;
+  }
   const { error } = await getCoreClient().auth.signOut();
   if (error) throw error;
 }
 
 /** 비밀번호 재설정 이메일 발송 */
 export async function resetPassword(email: string): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    throw new Error('로컬 인증 모드에서는 비밀번호 재설정이 지원되지 않습니다.');
+  }
   const redirectTo = `${getAuthRedirectTo()}/`;
   const { error } = await getCoreClient().auth.resetPasswordForEmail(email.trim(), {
     redirectTo,
@@ -135,6 +169,9 @@ export async function resetPassword(email: string): Promise<void> {
 export function onAuthStateChange(
   callback: (session: Session | null) => void
 ): () => void {
+  if (isLocalAuthEnabled()) {
+    return localOnAuthStateChange(callback);
+  }
   const {
     data: { subscription },
   } = getCoreClient().auth.onAuthStateChange((_event, session) => {

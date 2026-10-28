@@ -2,10 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
+import { localAuthPlugin } from "./server/local-auth/vitePlugin";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), localAuthPlugin()],
   resolve: {
     alias: {
       "@/core/finance": path.resolve(__dirname, "./src/capabilities/billing/finance"),

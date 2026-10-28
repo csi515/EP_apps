@@ -11,8 +11,8 @@ EP_apps는 고성능 백오피스 관리 UI를 위한 **표준 서버 상태 캐
 ```mermaid
 flowchart TD
     subgraph UI_Layer ["사용자 인터페이스 (UI Layer)"]
-        RefineUI["Refine 표준 관리 화면\n(학생 CRUD, 청구서 목록 등)"]
-        IndustryUI["업종별 전문 워크스페이스\n(피아노 키오스크, 현장 출석부 등)"]
+        RefineUI["Refine 표준 관리 화면\n(결재·재고·MBO 등)"]
+        IndustryUI["EP 워크스페이스\n(personal_plant_ops 셸)"]
     end
 
     subgraph Refine_Cache ["Refine / TanStack Query (Server State Cache)"]
@@ -22,11 +22,11 @@ flowchart TD
     subgraph Storage_Cache ["StorageService (Resilience & Outbox Engine)"]
         MemoryCache["Adapter In-Memory Cache"]
         LocalStorageSnapshot["LocalStorage / Native Mirror\n(Offline Snapshot)"]
-        OutboxQueue["Sync Outbox & Pending Queue\n(moa:pending-mutations / moa:sync-outbox)"]
+        OutboxQueue["Sync Outbox & Pending Queue\n(ep:/moa: pending-mutations · sync-outbox)"]
     end
 
-    subgraph Backend_DB ["Supabase / PostgreSQL (Source of Truth)"]
-        PostgREST["Supabase PostgREST & Auth / RLS"]
+    subgraph Backend_DB ["PostgreSQL SoT (Auth API + PostgREST)"]
+        PostgREST["PostgREST / JWT · RLS"]
         AtomicRPC["Atomic Business RPCs (트랜잭션)"]
     end
 
@@ -44,7 +44,7 @@ flowchart TD
    - 브라우저 메모리에 상주하며, 컴포넌트 생명주기 및 사용자 상호작용(페이지 전환, 필터 변경, 검색)에 최적화되어 있습니다.
    - 영속적인 오프라인 큐나 로컬 저장소 쓰기 보증을 담당하지 않습니다.
 2. **StorageService는 현장 연속성을 위한 오프라인 스냅샷 및 쓰기 지연(Outbox) 엔진**입니다.
-   - 네트워크 단절 시에도 현장(학원 키오스크 출석, 룸 예약 등)이 중단 없이 동작할 수 있도록 스냅샷을 제공합니다.
+   - 네트워크 단절 시에도 현장(공용자원 예약·재고 조회 등)이 중단 없이 동작할 수 있도록 스냅샷을 제공합니다.
    - 오프라인 상태에서 발생한 변경사항을 추적하고, 네트워크 복구 시 원자적으로 동기화합니다.
 3. **StorageService를 TanStack Query의 또 다른 단순 서버 캐시로 전락시키지 않으며, 반대로 복잡한 오프라인 Outbox/Rehydrate 복구 엔진을 Refine으로 억지 이전하지 않습니다.**
 
@@ -141,8 +141,8 @@ sequenceDiagram
     Storage->>Storage: 1. 인메모리 cache 갱신
     Storage->>Storage: 2. writeLocal (localStorage offline snapshot)
     Storage->>Outbox: 3. markPendingFromSnapshot & enqueueSyncOutbox
-    Outbox->>Outbox: moa:pending-mutations (revision 증가)
-    Outbox->>Outbox: moa:sync-outbox (재시도 대기열)
+    Outbox->>Outbox: ep:/moa:pending-mutations (revision 증가)
+    Outbox->>Outbox: ep:/moa:sync-outbox (재시도 대기열)
     Storage-->>View: 로컬 반영 완료 (UI 즉각 반응)
 
     Note over User, Server: 네트워크 복구 (Online Event 수신)
@@ -195,8 +195,8 @@ flowchart TD
 | 정책 (Policy) | 해당 데이터 / 엔티티 | 원본 위치 (Source of Truth) | TanStack Query 역할 | StorageService 역할 |
 |---|---|---|---|---|
 | **`server-authoritative`** | 수강료 결제(`payments`), 청구서(`invoices`), 수강권(`session_passes`), 일정(`schedules`), 교재 결제 | **Supabase DB (PostgreSQL 원장)** | 온라인 목록/상세 화면 쿼리 (`useTable`, `useShow`) | 오프라인 읽기용 스냅샷만 제공 (로컬 단독 쓰기 확정 불가, 원자적 RPC 전용) |
-| **`server-with-local-cache`** | 원생 기본정보(`customers`), 강사(`staff`), 학원설정(`settings`), 출석세션(`attendance_sessions`) | **Supabase DB (PostgreSQL)** | 관리자 화면 표준 CRUD 캐시 (`useTable`, `useForm`) | 오프라인 캐시 및 단기 변경 Outbox 큐잉 지원 |
-| **`offline-command`** | 미전송 변경 대기열 (`moa:pending-mutations:*`, `moa:sync-outbox:*`) | **Client Command Queue (LocalStorage)** | 해당 없음 (접근 안 함) | 오프라인 쓰기 보존, 버전/리비전 관리, 온라인 시 순차 재시도 |
+| **`server-with-local-cache`** | 조직·멤버·결재·재고·MBO 등 core 엔티티 | **사내 PG (PostgREST)** | 관리자 화면 표준 CRUD 캐시 (`useTable`, `useForm`) | 오프라인 캐시 및 단기 변경 Outbox 큐잉 지원 |
+| **`offline-command`** | 미전송 변경 대기열 (`ep:`/`moa:` pending-mutations · sync-outbox) | **Client Command Queue (LocalStorage)** | 해당 없음 (접근 안 함) | 오프라인 쓰기 보존, 버전/리비전 관리, 온라인 시 순차 재시도 |
 | **`local-only`** | 활성 사용자(`active_user`), 온보딩 진행 상태, UI 임시 상태, 셔틀 임시 요청 | **Client Device (LocalStorage)** | 해당 없음 | 로컬 디바이스 전용 영속화 (`writeLocal`) |
 
 ---

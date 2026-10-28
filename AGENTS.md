@@ -35,7 +35,7 @@
 ## 3. 안전 및 작업 원칙
 
 1. 정상 동작 보존 — 레거시 삭제 시 진입점 import를 먼저 끊는다.
-2. DB 안전 — 승인 없는 마이그레이션 금지. RLS·원자적 RPC로 무결성 담보.
+2. DB 안전 — 스키마 변경은 버전드 마이그레이션으로만 적용. 프로덕션 반영 전 로컬/스테이징 검증. RLS·원자적 RPC로 무결성 담보.
 3. 상세 문서:
    - `docs/EP_ARCHITECTURE_BOUNDARIES.md`
    - `docs/EP_DEPENDENCY_RULES.md`

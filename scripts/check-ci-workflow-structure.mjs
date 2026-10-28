@@ -14,7 +14,7 @@ const root = join(here, '..');
 const workflowsDir = join(root, '.github', 'workflows');
 
 export const ALLOWED_WORKFLOW_FILES = ['ci-cd.yml'];
-const REQUIRED_JOBS = ['quality', 'build-e2e', 'security-db', 'deploy'];
+const REQUIRED_JOBS = ['quality', 'build-e2e', 'domain-sot-smoke', 'security-db', 'deploy'];
 const BI_SUITE = 'test:business-invariants';
 
 function loadPackageScripts() {

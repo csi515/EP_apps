@@ -13,6 +13,8 @@ export interface User {
   team_id?: string | null;
   email: string;
   permissions?: string[];
+  /** 직무 기능 권한(공용자원/노경/셔틀 등) */
+  feature_permissions?: Record<string, boolean>;
   customRole?: {
     id?: string;
     name?: string;

@@ -229,11 +229,12 @@ Preset은 **필요한 Capability와 설정을 조합해 업종별 사업장 관�
 5. **프리셋-런타임 매핑 단일 진실 공급원(SSOT)**: 업종별 기능 활성화(`hasIndustryCapability`)는 `presetRegistry`의 선언적 정의를 직접 조회하여 판정하며, 수동 플래그 맵을 임의 작성하지 않는다.
 6. **Core Compatibility Shim 동결**: Core(`src/core/`) 내부의 `@/capabilities` 참조 Shim 파일들은 기존 하위 호환을 위해 동결되며, 신규 Shim 생성을 영구 금지한다.
 
-### 레거시 Industry 코드와의 관계 및 전환 방침
+### Industry 코드와의 관계 (EP_apps)
 
-- 현재 코드베이스의 `src/industries/*`에 존재하는 기존 업종별 구현(피아노, 데이케어, 헬스 등 7대 모듈)은 **기존 정상 동작과 서비스 안정성을 위해 보존**된다.
-- 그러나 향후 신규 기능 개발 및 신규 업종 확장은 개별 애플리케이션 복제가 아닌 **Preset + Capability 조립 원칙**을 엄격히 적용한다.
-- 기존 업종 전용 기능 중 공통 본질을 갖는 부분은 점진적으로 Capability로 승격/통합한다.
+- EP_apps는 **`src/industries/*` 전용 업종 모듈을 제품 경로에 포함하지 않는다.** (학원/학부모·Moa 다업종 카탈로그 제외)
+- 런타임 셸은 `GenericIndustryShell` + `personal_plant_ops` Preset Capability만 사용한다.
+- 신규 확장은 개별 앱 복제가 아니라 **Preset + Capability 조립**만 허용한다.
+- 과거 Moa 서술 문서는 `docs/archive/`에 보관한다.
 
 ---
 

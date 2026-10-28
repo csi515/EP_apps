@@ -36,6 +36,8 @@ import {
   nextPersistEpoch,
 } from './persistPolicy';
 import type { IStorageAdapter, StorageChangeKey, StorageListener } from './types';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import { isCorpDomainEnabled } from '@/core/auth/localAuth/isCorpDomain';
 
 const LOCAL_MISS = Symbol('local-miss');
 
@@ -163,6 +165,20 @@ export class SupabaseAdapter implements IStorageAdapter {
     this.hydrated = false;
     this.offlineHydrated = false;
     this.hydrating = true;
+
+    /**
+     * 로컬 인증만 켜고 도메인 SoT(PostgREST)가 없으면 빈 캐시로 셸 진입.
+     * VITE_CORP_DOMAIN=true 이면 app/core hydrate 재개.
+     */
+    if (isLocalAuthEnabled() && !isCorpDomainEnabled()) {
+      if (generation === this.hydrateGeneration) {
+        this.hydrated = true;
+        this.offlineHydrated = false;
+        this.hydrating = false;
+        this.notify('*');
+      }
+      return;
+    }
 
     const cacheAdapter = this.createLiveCacheAdapter();
     const isStale = () => generation !== this.hydrateGeneration;

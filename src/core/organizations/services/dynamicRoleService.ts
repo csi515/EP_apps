@@ -4,6 +4,14 @@ import {
   normalizeRolePermissions,
   type RolePermissionMap,
 } from '@/domain/permissions';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import {
+  localAssignMemberRole,
+  localGrantMemberFeaturePermission,
+  localListOrgMembers,
+  localListOrgRoles,
+  localSaveOrgRole,
+} from '@/core/auth/localAuth/localAuthApi';
 
 export type DynamicRoleRow = {
   id: string;
@@ -11,6 +19,7 @@ export type DynamicRoleRow = {
   description: string;
   is_system: boolean;
   permissions: RolePermissionMap;
+  rank_order?: number;
 };
 
 export type DynamicMemberRow = {
@@ -27,6 +36,18 @@ export type DynamicMemberRow = {
 };
 
 export async function listDynamicRoles(organizationId: string): Promise<DynamicRoleRow[]> {
+  if (isLocalAuthEnabled()) {
+    const roles = await localListOrgRoles(organizationId);
+    return roles.map((row) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description ?? '',
+      is_system: Boolean(row.is_system),
+      rank_order: row.rank_order,
+      permissions: normalizeRolePermissions(row.permissions) ?? EMPTY_ROLE_PERMISSIONS,
+    }));
+  }
+
   const client = getCoreClient();
   const roleRes = await client.from('organization_roles').select('*').eq('tenant_id', organizationId);
   if (roleRes.error) throw new Error(roleRes.error.message);
@@ -37,6 +58,20 @@ export async function listDynamicRoles(organizationId: string): Promise<DynamicR
 }
 
 export async function listRoleMembers(organizationId: string): Promise<DynamicMemberRow[]> {
+  if (isLocalAuthEnabled()) {
+    const members = await localListOrgMembers(organizationId);
+    return members.map((m) => ({
+      id: m.id,
+      user_id: m.user_id,
+      role: m.role,
+      organization_role_id: m.organization_role_id,
+      feature_permissions: m.feature_permissions,
+      email: m.email,
+      name: m.name,
+      is_active: m.is_active !== false,
+    }));
+  }
+
   const client = getCoreClient();
   const memberRes = await (client as any)
     .from('organization_members')
@@ -44,7 +79,6 @@ export async function listRoleMembers(organizationId: string): Promise<DynamicMe
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: true });
   if (memberRes.error) {
-    // fallback if extra columns aren't matched
     const fallbackRes = await client
       .from('organization_members')
       .select('id,user_id,role,organization_role_id')
@@ -60,7 +94,19 @@ export async function saveDynamicRole(input: {
   id?: string | null;
   name: string;
   permissions: RolePermissionMap;
+  rankOrder?: number;
 }): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localSaveOrgRole({
+      organizationId: input.organizationId,
+      id: input.id,
+      name: input.name,
+      rank_order: input.rankOrder,
+      permissions: input.permissions as Record<string, boolean>,
+    });
+    return;
+  }
+
   const client = getCoreClient();
   const payload = {
     tenant_id: input.organizationId,
@@ -75,6 +121,9 @@ export async function saveDynamicRole(input: {
 }
 
 export async function deleteDynamicRole(id: string): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    throw new Error('로컬 인증 모드에서 개별 직급 삭제는 초기 설정의 일괄 저장으로 처리하세요.');
+  }
   const client = getCoreClient();
   const result = await client.from('organization_roles').delete().eq('id', id);
   if (result.error) throw new Error(result.error.message);
@@ -82,14 +131,17 @@ export async function deleteDynamicRole(id: string): Promise<void> {
 
 /**
  * 직원의 직급을 배정하거나 회수(기본 사원으로 강등).
- * PostgreSQL RPC core.assign_or_revoke_member_role을 호출하여
- * 권한 상승 방지, 사업자 침범 방어, 세션 즉시 파기(token_version 증가), 불변 감사 로그를 원자적으로 수행한다.
  */
 export async function assignOrganizationRole(
   memberId: string,
   roleId: string | null,
   reason: string = ''
 ): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localAssignMemberRole(memberId, roleId, reason);
+    return;
+  }
+
   const client = getCoreClient();
   const rpcRes = await (client as any).rpc('assign_or_revoke_member_role', {
     p_target_member_id: memberId,
@@ -113,13 +165,17 @@ export async function assignOrganizationRole(
 
 /**
  * 특정 회원에게 원자적 직무 기능 권한(총무, 노경, 봉사, 셔틀, 소모품 등)을 부여하거나 회수.
- * DB RPC core.grant_member_feature_permission을 호출하여 세션 즉시 만료(token_version 증가)를 수행한다.
  */
 export async function grantMemberFeaturePermission(
   memberId: string,
   featureKey: string,
   enabled: boolean
 ): Promise<void> {
+  if (isLocalAuthEnabled()) {
+    await localGrantMemberFeaturePermission(memberId, featureKey, enabled);
+    return;
+  }
+
   const client = getCoreClient();
   const rpcRes = await (client as any).rpc('grant_member_feature_permission', {
     p_target_member_id: memberId,
@@ -130,7 +186,6 @@ export async function grantMemberFeaturePermission(
   if (rpcRes.error) {
     const msg = rpcRes.error.message || '';
     if (msg.includes('does not exist') || msg.includes('not found in schema')) {
-      // 로컬/테스트 환경 fallback
       const { data: member } = await (client as any)
         .from('organization_members')
         .select('feature_permissions')
