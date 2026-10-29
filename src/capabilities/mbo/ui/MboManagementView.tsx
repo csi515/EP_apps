@@ -39,251 +39,56 @@ import { MboYearlyCapacityForecastView } from './MboYearlyCapacityForecastView';
 import { MboCycleSettingsCard } from './MboCycleSettingsCard';
 import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
 import { MboReviseGoalModal } from './MboReviseGoalModal';
-import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { MboProjectPortfolioView } from './MboProjectPortfolioView';
 import { MboPlanApprovalModal } from './MboPlanApprovalModal';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
-import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import { MboService } from '../services/mboService';
 import { readMboRequirePlanApproval } from '../domain/mboPlanApproval';
+import { formatPeriodYm, listMissingMonthlyCheckins } from '../domain/mboMonthlyCheckin';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
   ensureDefaultProjectCategories,
   listProjectCategories,
 } from '../services/projectCategoryService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
-import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
+import { usePermissions } from '@/core/auth/usePermissions';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { useAuth } from '@/core/auth/AuthProvider';
-
-const SAMPLE_PORTFOLIO_PROJECTS: PortfolioProject[] = [
-  {
-    id: 'proj-sample-1',
-    title: '친환경 촉매 합성 및 파일럿 스케일업',
-    ownerId: 'u-kim',
-    ownerName: '김수석',
-    status: 'in_progress',
-    startDate: '2026-01-15',
-    targetDate: '2026-06-30',
-    progressRate: 42,
-    objectiveId: 'obj-1',
-    description: 'Lab 1 합성 → 항온항습 신뢰성 → 양산 이관 게이트',
-    categoryId: 'local-research',
-    categoryLabel: '연구',
-    categoryColor: '#4f46e5',
-  },
-  {
-    id: 'proj-sample-2',
-    title: 'FE-SEM/XRD 측정 표준 SOP 수립',
-    ownerId: 'u-lee',
-    ownerName: '이선임',
-    status: 'approved',
-    startDate: '2026-03-01',
-    targetDate: '2026-04-30',
-    progressRate: 68,
-    objectiveId: 'obj-2',
-    categoryId: 'local-quality',
-    categoryLabel: '품질',
-    categoryColor: '#059669',
-  },
-  {
-    id: 'proj-sample-3',
-    title: '직무발명 선행기술 조사 및 출원 패키지',
-    ownerId: 'u-kim',
-    ownerName: '김수석',
-    status: 'completed',
-    startDate: '2025-11-01',
-    targetDate: '2026-01-20',
-    progressRate: 100,
-    objectiveId: 'obj-1',
-    categoryId: 'local-patent',
-    categoryLabel: '특허',
-    categoryColor: '#c026d3',
-  },
-  {
-    id: 'proj-sample-4',
-    title: '2027 중장기 R&D 로드맵',
-    ownerId: 'u-park',
-    ownerName: '박센터장',
-    status: 'draft',
-    startDate: '2027-01-01',
-    targetDate: '2027-12-31',
-    progressRate: 5,
-    categoryId: 'local-tech',
-    categoryLabel: '기술',
-    categoryColor: '#0284c7',
-  },
-];
-
-const SAMPLE_CATEGORIES: ProjectCategory[] = [
-  {
-    id: 'local-research',
-    organizationId: 'local',
-    categoryKey: 'research',
-    label: '연구',
-    color: '#4f46e5',
-    sortOrder: 10,
-    isActive: true,
-  },
-  {
-    id: 'local-quality',
-    organizationId: 'local',
-    categoryKey: 'quality',
-    label: '품질',
-    color: '#059669',
-    sortOrder: 20,
-    isActive: true,
-  },
-  {
-    id: 'local-tech',
-    organizationId: 'local',
-    categoryKey: 'technology',
-    label: '기술',
-    color: '#0284c7',
-    sortOrder: 30,
-    isActive: true,
-  },
-  {
-    id: 'local-patent',
-    organizationId: 'local',
-    categoryKey: 'patent',
-    label: '특허',
-    color: '#c026d3',
-    sortOrder: 40,
-    isActive: true,
-  },
-];
-
-// 로컬 폴백 샘플 데이터
-const INITIAL_OBJECTIVES: ObjectiveNode[] = [
-  {
-    id: 'obj-1',
-    parentId: null,
-    level: 'company',
-    departmentName: '전사',
-    ownerName: '대표이사',
-    title: '2026 상반기 고객 유지율 92% 달성 및 재등록 매출 극대화',
-    description: '고객 경험 개선 및 이탈 방지 프로세스 확립을 통한 건강한 성장',
-    successCriteria: '고객 만족도 NPS 85점 이상, 회원 이탈률 5% 미만 유지',
-    status: 'in_progress',
-    startDate: '2026-01-01',
-    targetDate: '2026-06-30',
-    weight: 100,
-    progressRate: 72,
-    revision: 1,
-  },
-  {
-    id: 'obj-2',
-    parentId: 'obj-1',
-    level: 'department',
-    departmentName: '운영기획팀',
-    ownerName: '김팀장',
-    title: '교재 및 출결 통합 알림 체계 고도화',
-    description: '학부모 피드백 루프 단축 및 수업 만족도 향상',
-    successCriteria: '출결 알림 발송 지연율 0%, 교재 배송 리드타임 2일 이내',
-    status: 'approved',
-    startDate: '2026-02-01',
-    targetDate: '2026-05-31',
-    weight: 60,
-    progressRate: 65,
-    revision: 1,
-  },
-  {
-    id: 'obj-3',
-    parentId: 'obj-2',
-    level: 'individual',
-    departmentName: '운영기획팀',
-    ownerName: '이지원 매니저',
-    title: '모바일 출결 안내 및 VOC 접수 채널 개편',
-    description: '1:1 피드백 채널 개설 및 VOC 처리 시간 단축',
-    successCriteria: '고객 문의 평균 응답 시간 15분 이내 달성',
-    status: 'submitted',
-    startDate: '2026-03-01',
-    targetDate: '2026-04-30',
-    weight: 40,
-    progressRate: 25,
-    revision: 2,
-  },
-];
-
-const INITIAL_LOGS: ProgressLogItem[] = [
-  {
-    id: 'log-1',
-    projectId: 'obj-1',
-    authorName: '박상담 실장',
-    logDate: '2026-03-25',
-    progressRate: 80,
-    achievements: '장기 미출결 35명 중 28명 상담 완료, 22명 복귀 확정',
-    issuesAndActions: '야간 시간대 연락 부재 7건 -> 카카오 알림톡 사전 동의 안내 발송',
-    nextSteps: '잔여 7명 2차 통화 및 만족도 조사 설문 발송',
-  },
-];
-
-const INITIAL_FEEDBACKS: FeedbackItem[] = [
-  {
-    id: 'fb-1',
-    projectId: 'obj-1',
-    authorName: '김사업주',
-    authorRole: '사업주',
-    feedbackType: 'praise',
-    content: '복귀율이 목표치를 크게 상회했습니다. 야간 알림톡 선제 대응도 훌륭합니다.',
-    createdAt: '2026-03-26 10:15',
-  },
-];
-
-const INITIAL_EVALUATIONS: EvaluationItem[] = [
-  {
-    id: 'eval-1',
-    projectId: 'obj-1',
-    targetUserName: '박상담 실장',
-    evaluatorName: '김사업주',
-    evaluationType: 'manager',
-    score: 95,
-    grade: 'S',
-    qualitativeFeedback: '탁월한 고객 소통 및 실행력으로 센터 이탈률 방어에 핵심적인 기여를 함.',
-    isConfidential: true,
-    createdAt: '2026-04-01 15:30',
-  },
-];
 
 export const MboManagementView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     'objectives' | 'projects' | 'evaluations' | 'workload' | 'forecast'
   >('objectives');
-  const [projectSubView, setProjectSubView] = useState<'portfolio' | 'quarterly'>('portfolio');
+  const [projectSubView, setProjectSubView] = useState<'portfolio' | 'monthly'>('portfolio');
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
-  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('obj-1');
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
   const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
   const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
 
-  // 로컬 폴백 — 샘플 데이터 없이 빈 상태로 시작 (실데이터 우선)
   const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>([]);
-  const [localLogs, setLocalLogs] = useState<ProgressLogItem[]>([]);
   const [localFeedbacks, setLocalFeedbacks] = useState<FeedbackItem[]>([]);
   const [localEvaluations, setLocalEvaluations] = useState<EvaluationItem[]>([]);
 
-  // 모달 제어 상태
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
   const [rejectionInput, setRejectionInput] = useState('');
 
-  // 신규 목표 입력 폼
   const [newTitle, setNewTitle] = useState('');
   const [newLevel, setNewLevel] = useState<MboLevel>('individual');
   const [newOwner, setNewOwner] = useState('');
   const [newDept, setNewDept] = useState('운영팀');
   const [newCriteria, setNewCriteria] = useState('');
-  const [newStartDate, setNewStartDate] = useState('2026-04-01');
-  const [newTargetDate, setNewTargetDate] = useState('2026-06-30');
+  const [newStartDate, setNewStartDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [newTargetDate, setNewTargetDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 3);
+    return d.toISOString().slice(0, 10);
+  });
   const [newWeight, setNewWeight] = useState(100);
-  const [newVisibility, setNewVisibility] = useState<MboVisibilityType>('PRIVATE');
-  const [shareMemberIds, setShareMemberIds] = useState<string[]>([]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [mboFilterScope, setMboFilterScope] = useState<'all' | 'my' | 'dept'>('all');
   const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
   const [planApprovalObjectiveId, setPlanApprovalObjectiveId] = useState<string | null>(null);
@@ -291,7 +96,9 @@ export const MboManagementView: React.FC = () => {
   const { currentOrganization, activeCapabilities = [] } = useOrganization();
   const { user: authUser } = useAuth();
   const activeUser = useActiveUser();
+  const { isAdmin, isOwner } = usePermissions();
   const orgId = currentOrganization?.id ?? null;
+  const isOrgAdmin = isAdmin || isOwner;
   const requirePlanApproval = readMboRequirePlanApproval(
     (currentOrganization?.settings ?? null) as Record<string, unknown> | null
   );
@@ -300,9 +107,6 @@ export const MboManagementView: React.FC = () => {
     const caps = new Set([...(preset?.capabilities ?? []), ...activeCapabilities]);
     return caps.has('approval_workflow');
   }, [currentOrganization?.industry_type, activeCapabilities]);
-  const { nodes: deptNodes, members: orgMembers, departmentMembers } = useOrganizationTree(
-    currentOrganization?.id,
-  );
 
   const reloadProjectCategories = useCallback(async () => {
     if (!orgId) {
@@ -322,17 +126,65 @@ export const MboManagementView: React.FC = () => {
     void reloadProjectCategories();
   }, [reloadProjectCategories]);
 
-  // Refine 쿼리
+  // 선택 프로젝트의 피드백·평가 hydrate (기밀 평가는 서비스+RLS 경로만)
+  useEffect(() => {
+    const projectId = selectedProjectId;
+    if (!orgId || !projectId) {
+      setLocalFeedbacks([]);
+      setLocalEvaluations([]);
+      return;
+    }
+    let cancelled = false;
+    const userId = authUser?.id || activeUser?.id || '';
+    void Promise.all([
+      MboService.listFeedbackComments(orgId, projectId),
+      MboService.listEvaluations(orgId, projectId, userId, isOrgAdmin),
+    ])
+      .then(([feedbackRows, evalRows]) => {
+        if (cancelled) return;
+        setLocalFeedbacks(
+          feedbackRows.map((row) => ({
+            id: row.id,
+            projectId: row.project_id,
+            authorName: row.author_name,
+            authorRole: row.author_role,
+            feedbackType: row.feedback_type as FeedbackItem['feedbackType'],
+            content: row.content,
+            createdAt: row.created_at ? new Date(row.created_at).toLocaleTimeString() : '',
+          }))
+        );
+        setLocalEvaluations(
+          evalRows.map((row) => ({
+            id: row.id,
+            projectId: row.project_id,
+            targetUserName: '대상자',
+            evaluatorName: row.evaluator_name || '평가자',
+            evaluationType: (row.evaluation_type || 'manager') as MboEvaluationType,
+            score: Number(row.score ?? 0),
+            grade: (row.grade || calculateGradeFromScore(Number(row.score ?? 0))) as MboEvaluationGrade,
+            qualitativeFeedback: row.qualitative_feedback || '',
+            isConfidential: row.is_confidential ?? true,
+            createdAt: row.created_at ? new Date(row.created_at).toLocaleDateString() : '',
+          }))
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLocalFeedbacks([]);
+          setLocalEvaluations([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, selectedProjectId, authUser?.id, activeUser?.id, isOrgAdmin]);
+
   const { query: objQuery } = useList<any>({
     resource: 'mbo_objectives',
     pagination: { mode: 'off' },
   });
   const { query: logQuery } = useList<any>({
     resource: 'mbo_progress_logs',
-    pagination: { mode: 'off' },
-  });
-  const { query: evalQuery } = useList<any>({
-    resource: 'mbo_evaluations',
     pagination: { mode: 'off' },
   });
   const { query: projectQuery } = useList<any>({
@@ -345,7 +197,6 @@ export const MboManagementView: React.FC = () => {
 
   const refineObjectives = objQuery?.data?.data;
   const refineLogs = logQuery?.data?.data;
-  const refineEvals = evalQuery?.data?.data;
   const refineProjects = projectQuery?.data?.data;
 
   // DB 데이터 우선 바인딩
@@ -380,21 +231,6 @@ export const MboManagementView: React.FC = () => {
     }));
   }, [refineObjectives, localObjectives]);
 
-  const filteredObjectives = useMemo(() => {
-    if (mboFilterScope === 'all') return objectives;
-    const currentUserName = activeUser?.name;
-    const currentUserDept = (activeUser as any)?.department;
-    if (mboFilterScope === 'my') {
-      if (!currentUserName) return objectives;
-      return objectives.filter((o) => o.ownerName === currentUserName || o.level === 'company');
-    }
-    if (mboFilterScope === 'dept') {
-      if (!currentUserDept) return objectives;
-      return objectives.filter((o) => o.departmentName === currentUserDept || o.level === 'company');
-    }
-    return objectives;
-  }, [objectives, mboFilterScope, activeUser]);
-
   const logs: ProgressLogItem[] = useMemo(() => {
     if (refineLogs && refineLogs.length > 0) {
       return refineLogs.map((row: any) => ({
@@ -406,28 +242,13 @@ export const MboManagementView: React.FC = () => {
         achievements: row.achievements || '',
         issuesAndActions: row.issues_and_actions,
         nextSteps: row.next_steps,
+        periodYm: row.period_ym || undefined,
       }));
     }
-    return localLogs;
-  }, [refineLogs, localLogs]);
+    return [];
+  }, [refineLogs]);
 
-  const evaluations: EvaluationItem[] = useMemo(() => {
-    if (refineEvals && refineEvals.length > 0) {
-      return refineEvals.map((row: any) => ({
-        id: row.id,
-        projectId: row.project_id,
-        targetUserName: row.target_user_name || '대상자',
-        evaluatorName: row.evaluator_name || '평가자',
-        evaluationType: (row.evaluation_type || 'manager') as MboEvaluationType,
-        score: row.score ?? 0,
-        grade: (row.grade || calculateGradeFromScore(row.score ?? 0)) as MboEvaluationGrade,
-        qualitativeFeedback: row.qualitative_feedback || '',
-        isConfidential: row.is_confidential ?? true,
-        createdAt: row.created_at ? new Date(row.created_at).toLocaleDateString() : '',
-      }));
-    }
-    return localEvaluations;
-  }, [refineEvals, localEvaluations]);
+  const evaluations: EvaluationItem[] = localEvaluations;
 
   const categoryById = useMemo(() => {
     const map = new Map<string, ProjectCategory>();
@@ -457,25 +278,48 @@ export const MboManagementView: React.FC = () => {
         };
       });
     }
-    // DB 비어 있으면 목표 노드를 프로젝트 폴백으로 매핑 + 연구소 샘플
-    const fromObjectives: PortfolioProject[] = objectives.map((obj) => ({
-      id: `obj-as-proj-${obj.id}`,
-      title: obj.title,
-      ownerId: null,
-      ownerName: obj.ownerName,
-      status: obj.status,
-      startDate: obj.startDate,
-      targetDate: obj.targetDate,
-      progressRate: obj.progressRate,
-      objectiveId: obj.id,
-      description: obj.description,
-    }));
-    return fromObjectives;
-  }, [refineProjects, objectives, categoryById]);
+    return [];
+  }, [refineProjects, categoryById]);
+
+  const currentPeriodYm = formatPeriodYm();
+  const missingMonthlyProjectIds = useMemo(
+    () =>
+      listMissingMonthlyCheckins(
+        portfolioProjects.map((p) => p.id),
+        logs.map((l) => ({ projectId: l.projectId, periodYm: l.periodYm })),
+        currentPeriodYm
+      ),
+    [portfolioProjects, logs, currentPeriodYm]
+  );
 
   const selectedObjective = objectives.find((o) => o.id === selectedObjectiveId) || objectives[0];
   const selectedPortfolioProject =
-    portfolioProjects.find((p) => p.id === selectedProjectId) || portfolioProjects[0];
+    portfolioProjects.find((p) => p.id === selectedProjectId) || portfolioProjects[0] || null;
+
+  // 선택 목표에 프로젝트가 없으면 기본 프로젝트 확보
+  useEffect(() => {
+    if (!orgId || !selectedObjective?.id) return;
+    const hasProject = portfolioProjects.some((p) => p.objectiveId === selectedObjective.id);
+    if (hasProject) return;
+    let cancelled = false;
+    void MboService.ensureDefaultProject(orgId, {
+      id: selectedObjective.id,
+      title: selectedObjective.title,
+      owner_id: null,
+      owner_name: selectedObjective.ownerName,
+      start_date: selectedObjective.startDate,
+      target_date: selectedObjective.targetDate,
+    })
+      .then((project) => {
+        if (cancelled) return;
+        setSelectedProjectId(project.id);
+        void projectQuery?.refetch?.();
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, selectedObjective?.id, selectedObjective?.title, selectedObjective?.ownerName, selectedObjective?.startDate, selectedObjective?.targetDate, portfolioProjects, projectQuery]);
 
   // 목표 가중치 100% 인터락 검증
   const weightValidation = useMemo(() => {
@@ -492,120 +336,98 @@ export const MboManagementView: React.FC = () => {
       return;
     }
 
-    if (refineObjectives && refineObjectives.length > 0) {
-      mutateUpdate(
-        {
-          resource: 'mbo_objectives',
-          id,
-          values: {
-            status: targetStatus,
-            rejection_reason: targetStatus === 'rejected' ? reason : null,
-          },
-        },
-        {
-          onSuccess: () => {
-            objQuery?.refetch();
-            showToast(`목표 상태가 [${targetStatus}]로 변경되었습니다.`, 'success');
-          },
-          onError: () => {
-            setLocalObjectives((prev) =>
-              prev.map((o) => (o.id === id ? { ...o, status: targetStatus, rejectionReason: reason } : o))
-            );
-            showToast(`목표 상태가 로컬 변경되었습니다.`, 'info');
-          },
-        }
-      );
-    } else {
-      setLocalObjectives((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, status: targetStatus, rejectionReason: reason } : o))
-      );
-      showToast(`목표 상태가 [${targetStatus}]로 변경되었습니다.`, 'success');
+    if (!orgId) {
+      showToast('조직 컨텍스트가 없습니다.', 'error');
+      return;
     }
+    mutateUpdate(
+      {
+        resource: 'mbo_objectives',
+        id,
+        values: {
+          status: targetStatus,
+          rejection_reason: targetStatus === 'rejected' ? reason : null,
+        },
+      },
+      {
+        onSuccess: () => {
+          void objQuery?.refetch?.();
+          showToast(`목표 상태가 [${targetStatus}]로 변경되었습니다.`, 'success');
+        },
+        onError: (err) => {
+          showToast(err instanceof Error ? err.message : '상태 변경 실패', 'error');
+        },
+      }
+    );
   };
 
-  // 신규 목표 생성
+  // 신규 목표 생성 — 항상 DB + 기본 실행 프로젝트 확보
   const handleCreateObjective = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-
-    if (refineObjectives && refineObjectives.length > 0) {
-      mutateCreate(
-        {
-          resource: 'mbo_objectives',
-            values: {
-            parent_id: selectedObjectiveId === 'none' ? null : selectedObjectiveId,
-            level: newLevel,
-            department_name: newDept,
-            owner_name: newOwner || '신규 담당자',
-            title: newTitle.trim(),
-            success_criteria: newCriteria.trim(),
-            start_date: newStartDate,
-            target_date: newTargetDate,
-            weight: newWeight,
-            progress_rate: 0,
-            status: 'draft',
-            visibility_type: newVisibility,
-          },
-        },
-        {
-          onSuccess: (result) => {
-            const createdId = (result as { data?: { id?: string } })?.data?.id;
-            if (createdId && newVisibility === 'PARTIAL' && shareMemberIds.length > 0) {
-              void MboService.replaceGoalShares(createdId, shareMemberIds).catch(() => undefined);
-            }
-            objQuery?.refetch();
-            setShowCreateModal(false);
-            setNewTitle('');
-            setShareMemberIds([]);
-            setNewVisibility('PRIVATE');
-            showToast('신규 MBO 목표가 DB에 등록되었습니다.', 'success');
-          },
-          onError: () => {
-            const newObj: ObjectiveNode = {
-              id: `obj-${Date.now()}`,
-              parentId: selectedObjectiveId === 'none' ? null : selectedObjectiveId,
-              level: newLevel,
-              departmentName: newDept,
-              ownerName: newOwner || '신규 담당자',
-              title: newTitle.trim(),
-              description: '',
-              successCriteria: newCriteria.trim(),
-              status: 'draft',
-              startDate: newStartDate,
-              targetDate: newTargetDate,
-              weight: newWeight,
-              progressRate: 0,
-              revision: 1,
-            };
-            setLocalObjectives((prev) => [...prev, newObj]);
-            setShowCreateModal(false);
-            setNewTitle('');
-            showToast('신규 MBO 목표가 등록되었습니다.', 'success');
-          },
-        }
-      );
-    } else {
-      const newObj: ObjectiveNode = {
-        id: `obj-${Date.now()}`,
-        parentId: selectedObjectiveId === 'none' ? null : selectedObjectiveId,
-        level: newLevel,
-        departmentName: newDept,
-        ownerName: newOwner || '신규 담당자',
-        title: newTitle.trim(),
-        description: '',
-        successCriteria: newCriteria.trim(),
-        status: 'draft',
-        startDate: newStartDate,
-        targetDate: newTargetDate,
-        weight: newWeight,
-        progressRate: 0,
-        revision: 1,
-      };
-      setLocalObjectives((prev) => [...prev, newObj]);
-      setShowCreateModal(false);
-      setNewTitle('');
-      showToast('신규 MBO 목표가 등록되었습니다.', 'success');
+    if (!orgId) {
+      showToast('조직 컨텍스트가 없습니다. 로그인·조직을 확인하세요.', 'error');
+      return;
     }
+    if (goalsLocked) {
+      showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
+      return;
+    }
+
+    const parentId =
+      selectedObjectiveId && selectedObjectiveId !== 'none' ? selectedObjectiveId : null;
+    const ownerName = newOwner || activeUser?.name || '신규 담당자';
+
+    mutateCreate(
+      {
+        resource: 'mbo_objectives',
+        values: {
+          organization_id: orgId,
+          parent_id: parentId,
+          level: newLevel,
+          department_name: newDept,
+          owner_name: ownerName,
+          title: newTitle.trim(),
+          success_criteria: newCriteria.trim(),
+          start_date: newStartDate,
+          target_date: newTargetDate,
+          weight: newWeight,
+          progress_rate: 0,
+          status: 'draft',
+          target_value: newWeight,
+        },
+      },
+      {
+        onSuccess: async (result) => {
+          const createdId = (result as { data?: { id?: string } })?.data?.id;
+          try {
+            if (createdId) {
+              const project = await MboService.ensureDefaultProject(orgId, {
+                id: createdId,
+                title: newTitle.trim(),
+                owner_id: null,
+                owner_name: ownerName,
+                start_date: newStartDate,
+                target_date: newTargetDate,
+              });
+              setSelectedObjectiveId(createdId);
+              setSelectedProjectId(project.id);
+            }
+          } catch {
+            /* 프로젝트 확보 실패는 목표 생성 성공과 분리 안내 */
+            showToast('목표는 저장됐으나 실행 프로젝트 자동 생성에 실패했습니다.', 'warning');
+          }
+          void objQuery?.refetch?.();
+          void projectQuery?.refetch?.();
+          setShowCreateModal(false);
+          setNewTitle('');
+          showToast('신규 MBO 목표와 실행 프로젝트가 등록되었습니다.', 'success');
+        },
+        onError: (err) => {
+          showToast(err instanceof Error ? err.message : '목표 등록 실패', 'error');
+        },
+      }
+    );
   };
 
   return (
@@ -619,7 +441,7 @@ export const MboManagementView: React.FC = () => {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">MBO 목표 & 성과평가 허브</h1>
           <p className="text-xs text-slate-500 mt-1">
-            전사·부서·개인 목표 계층 연계(가중치 100%), 분기별 진척 일지 및 다면 성과평가를 통합 관리합니다.
+            전사·부서·개인 목표 계층(가중치 100%), 월별 체크인 및 다면 성과평가를 통합 관리합니다. 목표는 조직 멤버 범위에서 공유됩니다.
           </p>
         </div>
 
@@ -639,6 +461,7 @@ export const MboManagementView: React.FC = () => {
           </button>
           <button
             type="button"
+            data-testid="mbo-tab-projects"
             onClick={() => {
               setActiveTab('projects');
               setProjectSubView('portfolio');
@@ -714,7 +537,7 @@ export const MboManagementView: React.FC = () => {
 
       {goalsLocked ? (
         <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
-          목표 잠금이 적용되었습니다. 목표 문장과 핵심 지표는 수정할 수 없습니다. 분기 진척 기록은 계속 작성할 수 있습니다.
+          목표 잠금이 적용되었습니다. 목표 문장과 핵심 지표는 수정할 수 없습니다. 월별 체크인은 계속 작성할 수 있습니다.
         </div>
       ) : null}
 
@@ -723,6 +546,7 @@ export const MboManagementView: React.FC = () => {
         <MboObjectiveTreeViewer
           objectives={objectives}
           selectedObjectiveId={selectedObjectiveId}
+          goalsLocked={goalsLocked}
           onSelectObjective={(id) => setSelectedObjectiveId(id)}
           onOpenCreateModal={() => {
             if (goalsLocked) {
@@ -741,7 +565,13 @@ export const MboManagementView: React.FC = () => {
           onApprove={(id) => handleTransitionStatus(id, 'approved')}
           onOpenRejectModal={(id) => setShowRejectModal(id)}
           onOpenRevisionHistory={(id) => setHistoryGoalId(id)}
-          onOpenRevise={(id) => setReviseGoalId(id)}
+          onOpenRevise={(id) => {
+            if (goalsLocked) {
+              showToast('목표 잠금 기간에는 목표치·마감을 수정할 수 없습니다.', 'warning');
+              return;
+            }
+            setReviseGoalId(id);
+          }}
         />
       )}
 
@@ -776,9 +606,17 @@ export const MboManagementView: React.FC = () => {
         />
       ) : null}
 
-      {/* 탭 2: 진행 프로젝트 (연도/월/개인) + 분기 진척 리뷰 */}
+      {/* 탭 2: 진행 프로젝트 + 월별 체크 */}
       {activeTab === 'projects' && (
         <div className="space-y-4">
+          {missingMonthlyProjectIds.length > 0 ? (
+            <div
+              className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-900"
+              data-testid="mbo-missing-monthly-badge"
+            >
+              {currentPeriodYm} 월별 체크인 미제출 프로젝트 {missingMonthlyProjectIds.length}건
+            </div>
+          ) : null}
           <div className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1">
             <button
               type="button"
@@ -793,59 +631,96 @@ export const MboManagementView: React.FC = () => {
             </button>
             <button
               type="button"
+              data-testid="mbo-tab-monthly-check"
               className={`h-12 rounded-lg px-4 text-xs font-bold ${
-                projectSubView === 'quarterly'
+                projectSubView === 'monthly'
                   ? 'bg-white text-indigo-800 shadow-xs'
                   : 'text-slate-600'
               }`}
-              onClick={() => setProjectSubView('quarterly')}
+              onClick={() => setProjectSubView('monthly')}
             >
-              분기 진척 리뷰
+              월별 체크
             </button>
           </div>
 
           {projectSubView === 'portfolio' ? (
-            <MboProjectPortfolioView
-              projects={portfolioProjects}
-              categories={projectCategories}
-              organizationId={orgId}
-              selectedProjectId={selectedProjectId}
-              onSelectProject={(id) => {
-                setSelectedProjectId(id);
-                const proj = portfolioProjects.find((p) => p.id === id);
-                if (proj?.objectiveId) {
-                  const match = objectives.find((o) => o.id === proj.objectiveId);
-                  if (match) setSelectedObjectiveId(match.id);
-                }
-              }}
-              onOpenQuarterlyReview={(id) => {
-                setSelectedProjectId(id);
-                setProjectSubView('quarterly');
-              }}
-              onCategoriesChanged={() => void reloadProjectCategories()}
-            />
+            portfolioProjects.length === 0 ? (
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                실행 프로젝트가 없습니다. 목표를 등록하면 기본 프로젝트가 자동 생성됩니다.
+              </div>
+            ) : (
+              <MboProjectPortfolioView
+                projects={portfolioProjects}
+                categories={projectCategories}
+                organizationId={orgId}
+                selectedProjectId={selectedProjectId}
+                onSelectProject={(id) => {
+                  setSelectedProjectId(id);
+                  const proj = portfolioProjects.find((p) => p.id === id);
+                  if (proj?.objectiveId) {
+                    const match = objectives.find((o) => o.id === proj.objectiveId);
+                    if (match) setSelectedObjectiveId(match.id);
+                  }
+                }}
+                onOpenQuarterlyReview={(id) => {
+                  setSelectedProjectId(id);
+                  setProjectSubView('monthly');
+                }}
+                onCategoriesChanged={() => void reloadProjectCategories()}
+              />
+            )
+          ) : !selectedPortfolioProject?.id ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+              실행 프로젝트를 먼저 선택하거나, 목표 등록으로 기본 프로젝트를 만드세요.
+            </div>
           ) : (
             <MboQuarterlyReviewForm
-              projectId={selectedPortfolioProject?.id || selectedObjective?.id || 'obj-1'}
-              projectTitle={
-                selectedPortfolioProject?.title || selectedObjective?.title || '선택된 프로젝트'
-              }
+              projectId={selectedPortfolioProject.id}
+              projectTitle={selectedPortfolioProject.title}
               logs={logs}
               feedbacks={localFeedbacks}
-              onCreateLog={(newLog) => {
-                const createdLog: ProgressLogItem = {
-                  ...newLog,
-                  id: `log-${Date.now()}`,
-                };
-                setLocalLogs((prev) => [createdLog, ...prev]);
+              authorName={activeUser?.name || authUser?.email || '실무자'}
+              onCreateLog={async (newLog) => {
+                if (!orgId) throw new Error('조직 컨텍스트가 없습니다.');
+                await MboService.recordProgressLog({
+                  organization_id: orgId,
+                  project_id: newLog.projectId,
+                  author_name: newLog.authorName,
+                  log_date: newLog.logDate,
+                  progress_rate: newLog.progressRate,
+                  achievements: newLog.achievements,
+                  issues_and_actions: newLog.issuesAndActions ?? null,
+                  next_steps: newLog.nextSteps ?? null,
+                  period_ym: newLog.periodYm,
+                });
+                await logQuery?.refetch?.();
+                await projectQuery?.refetch?.();
+                await objQuery?.refetch?.();
               }}
-              onCreateFeedback={(newFb) => {
-                const createdFb: FeedbackItem = {
-                  ...newFb,
-                  id: `fb-${Date.now()}`,
-                  createdAt: new Date().toLocaleTimeString(),
-                };
-                setLocalFeedbacks((prev) => [...prev, createdFb]);
+              onCreateFeedback={async (newFb) => {
+                if (!orgId) throw new Error('조직 컨텍스트가 없습니다.');
+                await MboService.createFeedbackComment({
+                  organization_id: orgId,
+                  project_id: newFb.projectId,
+                  author_name: newFb.authorName,
+                  author_role: newFb.authorRole,
+                  feedback_type: newFb.feedbackType,
+                  content: newFb.content,
+                });
+                const rows = await MboService.listFeedbackComments(orgId, newFb.projectId);
+                setLocalFeedbacks(
+                  rows.map((row) => ({
+                    id: row.id,
+                    projectId: row.project_id,
+                    authorName: row.author_name,
+                    authorRole: row.author_role,
+                    feedbackType: row.feedback_type as FeedbackItem['feedbackType'],
+                    content: row.content,
+                    createdAt: row.created_at
+                      ? new Date(row.created_at).toLocaleTimeString()
+                      : '',
+                  }))
+                );
               }}
             />
           )}
@@ -854,21 +729,70 @@ export const MboManagementView: React.FC = () => {
 
       {/* 탭 3: 다면 성과평가표 뷰 */}
       {activeTab === 'evaluations' && (
-        reviewOpen ? (
+        reviewOpen && !selectedPortfolioProject?.id ? (
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            실행 프로젝트가 없습니다. 목표를 등록하면 기본 프로젝트가 생성되며, 그 프로젝트 기준으로 평가합니다.
+          </div>
+        ) : reviewOpen ? (
           <MboEvaluationMatrixView
-            projectId={selectedObjective?.id || 'obj-1'}
-            projectTitle={selectedObjective?.title || '선택된 목표'}
+            projectId={selectedPortfolioProject?.id || ''}
+            projectTitle={
+              selectedPortfolioProject?.title || selectedObjective?.title || '선택된 목표'
+            }
             targetUserName={selectedObjective?.ownerName || '담당자'}
             evaluations={evaluations}
-            onCreateEvaluation={(newEval) => {
-              const grade = calculateGradeFromScore(newEval.score);
-              const createdEval: EvaluationItem = {
-                ...newEval,
-                id: `eval-${Date.now()}`,
-                grade,
-                createdAt: new Date().toLocaleDateString(),
-              };
-              setLocalEvaluations((prev) => [...prev, createdEval]);
+            onCreateEvaluation={async (newEval) => {
+              if (!orgId) {
+                showToast('조직 컨텍스트가 없습니다.', 'error');
+                return;
+              }
+              const projectId = selectedPortfolioProject?.id;
+              if (!projectId) {
+                showToast('평가할 실행 프로젝트를 선택해주세요.', 'warning');
+                return;
+              }
+              try {
+                const evaluatorId = authUser?.id || activeUser?.id || null;
+                await MboService.createEvaluation({
+                  organization_id: orgId,
+                  project_id: projectId,
+                  evaluator_id: evaluatorId,
+                  evaluator_name: newEval.evaluatorName,
+                  target_user_id: selectedPortfolioProject?.ownerId ?? null,
+                  evaluation_type: newEval.evaluationType,
+                  score: newEval.score,
+                  qualitative_feedback: newEval.qualitativeFeedback,
+                  is_confidential: newEval.isConfidential,
+                  grade: calculateGradeFromScore(newEval.score),
+                } as never);
+                const userId = authUser?.id || activeUser?.id || '';
+                const rows = await MboService.listEvaluations(
+                  orgId,
+                  projectId,
+                  userId,
+                  isOrgAdmin
+                );
+                setLocalEvaluations(
+                  rows.map((row) => ({
+                    id: row.id,
+                    projectId: row.project_id,
+                    targetUserName: '대상자',
+                    evaluatorName: row.evaluator_name || '평가자',
+                    evaluationType: (row.evaluation_type || 'manager') as MboEvaluationType,
+                    score: Number(row.score ?? 0),
+                    grade: (row.grade ||
+                      calculateGradeFromScore(Number(row.score ?? 0))) as MboEvaluationGrade,
+                    qualitativeFeedback: row.qualitative_feedback || '',
+                    isConfidential: row.is_confidential ?? true,
+                    createdAt: row.created_at
+                      ? new Date(row.created_at).toLocaleDateString()
+                      : '',
+                  }))
+                );
+                showToast('평가가 저장되었습니다.', 'success');
+              } catch (cause) {
+                showToast(cause instanceof Error ? cause.message : '평가 저장 실패', 'error');
+              }
             }}
           />
         ) : (
@@ -876,7 +800,7 @@ export const MboManagementView: React.FC = () => {
             <Award className="mx-auto mb-3 h-8 w-8 text-slate-400" />
             <p className="text-base font-bold text-slate-900">평가 기간이 아닙니다</p>
             <p className="mt-2 text-sm text-slate-500">
-              사업주가 설정한 연말 평가 기간에만 평가를 작성·제출할 수 있습니다. 분기 진척 기록은 연중 작성할 수 있습니다.
+              사업주가 설정한 연말 평가 기간에만 평가를 작성·제출할 수 있습니다. 월별 체크인은 연중 작성할 수 있습니다.
             </p>
           </div>
         )
@@ -910,7 +834,7 @@ export const MboManagementView: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateObjective} className="space-y-3.5">
+            <form onSubmit={handleCreateObjective} className="space-y-3.5" data-testid="mbo-create-objective-form">
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">목표 계층 구분</label>
@@ -945,6 +869,7 @@ export const MboManagementView: React.FC = () => {
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="예: 2026 하반기 신규 회원 유치 및 상담 전환율 35% 달성"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  data-testid="mbo-create-objective-title"
                   required
                 />
               </div>
@@ -957,6 +882,7 @@ export const MboManagementView: React.FC = () => {
                   onChange={(e) => setNewCriteria(e.target.value)}
                   placeholder="예: 월 신규 상담 50건 이상, 등록 전환율 35% 돌파"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  data-testid="mbo-create-objective-criteria"
                   required
                 />
               </div>
@@ -983,35 +909,9 @@ export const MboManagementView: React.FC = () => {
                 </div>
               </div>
 
-              <fieldset className="space-y-2 rounded-xl border border-slate-200 p-3">
-                <legend className="px-1 text-xs font-bold text-slate-700">공개 범위</legend>
-                {(
-                  [
-                    ['PUBLIC', '전사 공개 (PUBLIC)'],
-                    ['PRIVATE', '비공개 (본인 및 평가자만, PRIVATE)'],
-                    ['PARTIAL', '특정 인원에게만 부분 공개 (PARTIAL)'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <label key={value} className="flex min-h-12 items-center gap-2 text-xs">
-                    <input
-                      type="radio"
-                      name="mbo-visibility"
-                      checked={newVisibility === value}
-                      onChange={() => setNewVisibility(value)}
-                    />
-                    {label}
-                  </label>
-                ))}
-                {newVisibility === 'PARTIAL' ? (
-                  <button
-                    type="button"
-                    className="min-h-12 w-full rounded-xl border border-slate-300 text-xs font-bold"
-                    onClick={() => setPickerOpen(true)}
-                  >
-                    + 사내 공개 대상자 선택 ({shareMemberIds.length}명)
-                  </button>
-                ) : null}
-              </fieldset>
+              <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
+                등록된 목표는 조직 멤버 범위(테넌트 RLS)에서 공유됩니다. 세부 공개범위는 후속 기능입니다.
+              </p>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -1023,6 +923,7 @@ export const MboManagementView: React.FC = () => {
                 </button>
                 <button
                   type="submit"
+                  data-testid="mbo-create-objective-submit"
                   className="min-h-12 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-indigo-700"
                 >
                   등록 완료
@@ -1032,30 +933,6 @@ export const MboManagementView: React.FC = () => {
           </div>
         </div>
       )}
-
-      <OrganizationMemberPickerModal
-        open={pickerOpen}
-        departments={deptNodes.map((node) => ({
-          id: node.id,
-          name: node.name,
-          parentId: node.parentId,
-        }))}
-        members={orgMembers.map((member) => {
-          const dm = departmentMembers.find((row) => row.member_id === member.id);
-          const dept = deptNodes.find((node) => node.id === dm?.department_id);
-          return {
-            id: member.id,
-            userId: member.user_id,
-            displayName: member.role === 'owner' ? '사업주' : member.user_id.slice(0, 8),
-            departmentId: dm?.department_id ?? null,
-            departmentName: dept?.name,
-          };
-        })}
-        selectedIds={shareMemberIds}
-        onChange={setShareMemberIds}
-        onClose={() => setPickerOpen(false)}
-        onConfirm={() => setPickerOpen(false)}
-      />
 
       <MboRevisionTimelineModal
         open={Boolean(historyGoalId)}

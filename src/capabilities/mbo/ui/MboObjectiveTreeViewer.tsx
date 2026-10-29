@@ -46,6 +46,8 @@ interface MboObjectiveTreeViewerProps {
   onOpenRejectModal: (id: string) => void;
   onOpenRevisionHistory?: (id: string) => void;
   onOpenRevise?: (id: string) => void;
+  /** 목표 잠금 시 수정·신규 등록 UI 비활성 */
+  goalsLocked?: boolean;
 }
 
 export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
@@ -58,6 +60,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
   onOpenRejectModal,
   onOpenRevisionHistory,
   onOpenRevise,
+  goalsLocked = false,
 }) => {
   // 전사 가중 진척률
   const overallProgress = calculateWeightedObjectiveProgress(
@@ -120,8 +123,18 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
           </div>
           <button
             type="button"
-            onClick={onOpenCreateModal}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
+            disabled={goalsLocked}
+            data-testid="mbo-create-objective-open"
+            title={goalsLocked ? '목표 잠금 기간에는 새 목표를 등록할 수 없습니다.' : undefined}
+            onClick={() => {
+              if (goalsLocked) return;
+              onOpenCreateModal();
+            }}
+            className={`inline-flex min-h-12 items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-xs transition-colors ${
+              goalsLocked
+                ? 'cursor-not-allowed bg-slate-300 text-slate-500'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
           >
             <Plus className="w-3.5 h-3.5" />
             <span>신규 목표 등록</span>
@@ -210,8 +223,17 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                   {obj.status !== 'completed' && obj.status !== 'canceled' && (
                     <button
                       type="button"
-                      onClick={() => onOpenRevise?.(obj.id)}
-                      className="min-h-12 rounded-lg bg-amber-50 px-2.5 text-[11px] font-bold text-amber-800"
+                      disabled={goalsLocked}
+                      title={goalsLocked ? '목표 잠금 기간에는 수정할 수 없습니다.' : undefined}
+                      onClick={() => {
+                        if (goalsLocked) return;
+                        onOpenRevise?.(obj.id);
+                      }}
+                      className={`min-h-12 rounded-lg px-2.5 text-[11px] font-bold ${
+                        goalsLocked
+                          ? 'cursor-not-allowed bg-slate-100 text-slate-400'
+                          : 'bg-amber-50 text-amber-800'
+                      }`}
                     >
                       월별 점검·수정
                     </button>

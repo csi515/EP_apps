@@ -35,7 +35,9 @@ interface MboEvaluationMatrixViewProps {
   projectTitle: string;
   targetUserName: string;
   evaluations: EvaluationItem[];
-  onCreateEvaluation: (evalItem: Omit<EvaluationItem, 'id' | 'grade' | 'createdAt'>) => void;
+  onCreateEvaluation: (
+    evalItem: Omit<EvaluationItem, 'id' | 'grade' | 'createdAt'>
+  ) => void | Promise<void>;
 }
 
 export const MboEvaluationMatrixView: React.FC<MboEvaluationMatrixViewProps> = ({
@@ -97,26 +99,32 @@ export const MboEvaluationMatrixView: React.FC<MboEvaluationMatrixViewProps> = (
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedback.trim()) {
       showToast('정성 평가 피드백을 작성해주세요.', 'warning');
       return;
     }
+    if (!projectId) {
+      showToast('평가할 프로젝트를 선택해주세요.', 'warning');
+      return;
+    }
 
-    onCreateEvaluation({
-      projectId,
-      targetUserName,
-      evaluatorName: '현재 평가자',
-      evaluationType: evalType,
-      score,
-      qualitativeFeedback: feedback.trim(),
-      isConfidential,
-    });
-
-    setFeedback('');
-    setShowModal(false);
-    showToast('다면 평가표가 등록되었습니다.', 'success');
+    try {
+      await onCreateEvaluation({
+        projectId,
+        targetUserName,
+        evaluatorName: '현재 평가자',
+        evaluationType: evalType,
+        score,
+        qualitativeFeedback: feedback.trim(),
+        isConfidential,
+      });
+      setFeedback('');
+      setShowModal(false);
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '평가 저장 실패', 'error');
+    }
   };
 
   return (

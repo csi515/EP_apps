@@ -53,6 +53,8 @@ const team = { role: 'staff', customRole: { permissions: teamPerms } };
 assert.equal(canAccessRndPortal(team), true);
 assert.equal(canManageResourceCatalog(team), false);
 assert.equal(canManageShuttleRoutes(team), false);
+assert.equal(teamPerms['mbo:goals:read'], true);
+assert.equal(teamPerms['mbo:evaluations:read_all'], false, 'mbo:view alone keeps evaluations closed');
 
 const hqPerms = mapPresetPermissionTokensToRoleMap([
   'approval_workflow:*',
@@ -64,6 +66,7 @@ const hqPerms = mapPresetPermissionTokensToRoleMap([
 const hq = { role: 'staff', customRole: { permissions: hqPerms } };
 assert.equal(canManageResourceCatalog(hq), true);
 assert.equal(canAccessRndPortal(hq), true);
+assert.equal(hqPerms['mbo:evaluations:read_all'], true);
 
 const owner = { role: 'owner', customRole: null };
 assert.equal(canManageResourceCatalog(owner), true);

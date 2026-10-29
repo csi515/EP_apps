@@ -22,69 +22,12 @@ import {
 import { WorkloadThresholdSettingsModal } from './WorkloadThresholdSettingsModal';
 import { showToast } from '@/shared/feedback/uiFeedback';
 
-// 샘플 부하 데이터
-const SAMPLE_WORKLOAD_ITEMS: TeamMemberWorkloadItem[] = [
-  {
-    memberId: 'mem-1',
-    memberName: '김철수 팀장',
-    departmentId: 'dept-dev',
-    departmentName: '플랫폼개발팀',
-    roleTitle: 'Team Lead',
-    assignedTasksCount: 5,
-    capacityHoursPerWeek: 40,
-    assignedHoursPerWeek: 32,
-    workloadRatePercent: 80,
-  },
-  {
-    memberId: 'mem-2',
-    memberName: '이영희 매니저',
-    departmentId: 'dept-dev',
-    departmentName: '플랫폼개발팀',
-    roleTitle: 'Senior Frontend',
-    assignedTasksCount: 7,
-    capacityHoursPerWeek: 40,
-    assignedHoursPerWeek: 38,
-    workloadRatePercent: 95,
-  },
-  {
-    memberId: 'mem-3',
-    memberName: '박지훈 선임',
-    departmentId: 'dept-dev',
-    departmentName: '플랫폼개발팀',
-    roleTitle: 'Backend Engineer',
-    assignedTasksCount: 4,
-    capacityHoursPerWeek: 40,
-    assignedHoursPerWeek: 28,
-    workloadRatePercent: 70,
-  },
-  {
-    memberId: 'mem-4',
-    memberName: '정수진 팀장',
-    departmentId: 'dept-ops',
-    departmentName: '사업운영팀',
-    roleTitle: 'Ops Lead',
-    assignedTasksCount: 6,
-    capacityHoursPerWeek: 40,
-    assignedHoursPerWeek: 30,
-    workloadRatePercent: 75,
-  },
-  {
-    memberId: 'mem-5',
-    memberName: '최동욱 매니저',
-    departmentId: 'dept-ops',
-    departmentName: '사업운영팀',
-    roleTitle: 'Operations Specialist',
-    assignedTasksCount: 8,
-    capacityHoursPerWeek: 40,
-    assignedHoursPerWeek: 39,
-    workloadRatePercent: 98,
-  },
-];
-
 interface TeamWeeklyWorkloadViewProps {
   currentUser?: WorkloadUserContext;
   initialThresholds?: WorkloadThresholds;
   onThresholdsChange?: (thresholds: WorkloadThresholds) => void;
+  /** 실데이터 연동 전후 — 없으면 빈 상태 */
+  initialItems?: TeamMemberWorkloadItem[];
 }
 
 export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
@@ -96,10 +39,11 @@ export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
   },
   initialThresholds = DEFAULT_WORKLOAD_THRESHOLDS,
   onThresholdsChange,
+  initialItems = [],
 }) => {
   const [thresholds, setThresholds] = useState<WorkloadThresholds>(initialThresholds);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [items, setItems] = useState<TeamMemberWorkloadItem[]>([]);
+  const [items, setItems] = useState<TeamMemberWorkloadItem[]>(initialItems);
   const [selectedDeptId, setSelectedDeptId] = useState<string>('ALL');
 
   // 재분배 모달 상태
@@ -218,9 +162,6 @@ export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
 
   return (
     <div className="space-y-6">
-      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        아래 인원·부하 수치는 UI 시연용 샘플입니다. 조직도·MBO 실데이터 연동 전까지 참고용으로만 사용하세요.
-      </p>
       {/* 상단 컨트롤 바 */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -338,6 +279,16 @@ export const TeamWeeklyWorkloadView: React.FC<TeamWeeklyWorkloadViewProps> = ({
           </div>
         </div>
       </div>
+
+      {scopedItems.length === 0 ? (
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+          <Users className="mx-auto mb-3 h-8 w-8 text-slate-400" />
+          <p className="text-base font-bold text-slate-900 dark:text-white">표시할 부하 데이터가 없습니다</p>
+          <p className="mt-2 text-sm text-slate-500">
+            조직도·MBO 배정 시간이 연동되면 팀원별 주간 부하가 여기에 표시됩니다.
+          </p>
+        </div>
+      ) : null}
 
       {/* 팀원별 부하 카드 그리드 */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

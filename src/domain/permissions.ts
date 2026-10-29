@@ -24,6 +24,10 @@ export const ROLE_PERMISSION_KEYS = [
   'meal_survey:manage',
   'office_supply_request:manage',
   'rnd_portal:access',
+  'mbo:goals:read',
+  'mbo:goals:write',
+  'mbo:evaluations:read_all',
+  'mbo:evaluations:approve',
 ] as const;
 
 export type RolePermissionKey = (typeof ROLE_PERMISSION_KEYS)[number];
@@ -52,6 +56,10 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   'meal_survey:manage': false,
   'office_supply_request:manage': false,
   'rnd_portal:access': false,
+  'mbo:goals:read': false,
+  'mbo:goals:write': false,
+  'mbo:evaluations:read_all': false,
+  'mbo:evaluations:approve': false,
 };
 
 /** 기업 총무팀 기본 직급 템플릿 (Pre-fill 규격) */

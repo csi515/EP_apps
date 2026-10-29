@@ -1,6 +1,7 @@
 export { mboCapability } from './manifest';
 export * from './domain/mboEngine';
 export * from './domain/mboCycle';
+export * from './domain/mboMonthlyCheckin';
 export * from './domain/workloadCapacityEngine';
 export * from './domain/mboVisibilityEngine';
 export * from './services/mboService';

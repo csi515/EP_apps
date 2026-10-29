@@ -20,8 +20,10 @@ export type StandardPermissionKey = (typeof STANDARD_PERMISSION_KEYS)[number];
 
 const RESOURCE_ACTION: Record<string, Partial<Record<string, StandardPermissionKey>>> = {
   mbo_goals: { write: 'mbo:goals:write', create: 'mbo:goals:write', edit: 'mbo:goals:write', read: 'mbo:goals:read', list: 'mbo:goals:read', show: 'mbo:goals:read' },
-  mbo_objectives: { write: 'mbo:goals:write', create: 'mbo:goals:write', read: 'mbo:goals:read', list: 'mbo:goals:read' },
-  mbo_evaluations: { approve: 'mbo:evaluations:approve', read_all: 'mbo:evaluations:read_all', list: 'mbo:evaluations:read_all', read: 'mbo:evaluations:read_all' },
+  mbo_objectives: { write: 'mbo:goals:write', create: 'mbo:goals:write', edit: 'mbo:goals:write', read: 'mbo:goals:read', list: 'mbo:goals:read', show: 'mbo:goals:read' },
+  mbo_projects: { write: 'mbo:goals:write', create: 'mbo:goals:write', edit: 'mbo:goals:write', read: 'mbo:goals:read', list: 'mbo:goals:read', show: 'mbo:goals:read' },
+  mbo_progress_logs: { write: 'mbo:goals:write', create: 'mbo:goals:write', edit: 'mbo:goals:write', read: 'mbo:goals:read', list: 'mbo:goals:read', show: 'mbo:goals:read' },
+  mbo_evaluations: { approve: 'mbo:evaluations:approve', read_all: 'mbo:evaluations:read_all', list: 'mbo:evaluations:read_all', read: 'mbo:evaluations:read_all', create: 'mbo:evaluations:approve', write: 'mbo:evaluations:approve' },
   shuttle_routes: { manage: 'shuttle:manage', edit: 'shuttle:manage', create: 'shuttle:manage', delete: 'shuttle:manage' },
   shuttle_roster: { manage: 'shuttle:manage', list: 'shuttle:manage', edit: 'shuttle:manage' },
   shuttle_dispatch: { operate: 'shuttle:dispatch:operate', edit: 'shuttle:dispatch:operate' },

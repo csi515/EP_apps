@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { formatPeriodYm } from '../domain/mboMonthlyCheckin';
 
 export interface ProgressLogItem {
   id: string;
@@ -20,6 +21,7 @@ export interface ProgressLogItem {
   achievements: string;
   issuesAndActions?: string;
   nextSteps?: string;
+  periodYm?: string;
 }
 
 export interface FeedbackItem {
@@ -37,8 +39,12 @@ interface MboQuarterlyReviewFormProps {
   projectTitle: string;
   logs: ProgressLogItem[];
   feedbacks: FeedbackItem[];
-  onCreateLog: (log: Omit<ProgressLogItem, 'id'>) => void;
-  onCreateFeedback: (feedback: Omit<FeedbackItem, 'id' | 'createdAt'>) => void;
+  defaultPeriodYm?: string;
+  authorName?: string;
+  onCreateLog: (log: Omit<ProgressLogItem, 'id'>) => void | Promise<void>;
+  onCreateFeedback: (
+    feedback: Omit<FeedbackItem, 'id' | 'createdAt'>
+  ) => void | Promise<void>;
 }
 
 export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
@@ -46,6 +52,8 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
   projectTitle,
   logs,
   feedbacks,
+  defaultPeriodYm,
+  authorName = '현재 실무자',
   onCreateLog,
   onCreateFeedback,
 }) => {
@@ -54,6 +62,8 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
   const [logAchievements, setLogAchievements] = useState('');
   const [logIssues, setLogIssues] = useState('');
   const [logNextSteps, setLogNextSteps] = useState('');
+  const [periodYm, setPeriodYm] = useState(defaultPeriodYm || formatPeriodYm());
+  const [busy, setBusy] = useState(false);
 
   const [feedbackInput, setFeedbackInput] = useState('');
   const [feedbackType, setFeedbackType] = useState<'comment' | 'revision_request' | 'praise'>('comment');
@@ -61,44 +71,65 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
   const filteredLogs = logs.filter((l) => l.projectId === projectId);
   const filteredFeedbacks = feedbacks.filter((f) => f.projectId === projectId);
 
-  const handleLogSubmit = (e: React.FormEvent) => {
+  const handleLogSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!logAchievements.trim()) {
       showToast('주요 달성 성과를 입력해주세요.', 'warning');
       return;
     }
+    if (!projectId || projectId.startsWith('obj-')) {
+      showToast('실행 프로젝트를 먼저 선택해주세요.', 'warning');
+      return;
+    }
 
-    onCreateLog({
-      projectId,
-      authorName: '현재 실무자',
-      logDate: new Date().toISOString().slice(0, 10),
-      progressRate: logProgress,
-      achievements: logAchievements.trim(),
-      issuesAndActions: logIssues.trim() || undefined,
-      nextSteps: logNextSteps.trim() || undefined,
-    });
-
-    setLogAchievements('');
-    setLogIssues('');
-    setLogNextSteps('');
-    setShowLogModal(false);
-    showToast('진행 일지가 등록되었습니다.', 'success');
+    setBusy(true);
+    try {
+      await onCreateLog({
+        projectId,
+        authorName,
+        logDate: new Date().toISOString().slice(0, 10),
+        progressRate: logProgress,
+        achievements: logAchievements.trim(),
+        issuesAndActions: logIssues.trim() || undefined,
+        nextSteps: logNextSteps.trim() || undefined,
+        periodYm,
+      });
+      setLogAchievements('');
+      setLogIssues('');
+      setLogNextSteps('');
+      setShowLogModal(false);
+      showToast(`${periodYm} 월별 체크인이 저장되었습니다.`, 'success');
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '체크인 저장 실패', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
+  const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!feedbackInput.trim()) return;
+    if (!projectId || projectId.startsWith('obj-')) {
+      showToast('실행 프로젝트를 먼저 선택해주세요.', 'warning');
+      return;
+    }
 
-    onCreateFeedback({
-      projectId,
-      authorName: '평가 관리자',
-      authorRole: '팀장/디렉터',
-      feedbackType,
-      content: feedbackInput.trim(),
-    });
-
-    setFeedbackInput('');
-    showToast('상사 피드백이 등록되었습니다.', 'success');
+    setBusy(true);
+    try {
+      await onCreateFeedback({
+        projectId,
+        authorName: authorName || '평가 관리자',
+        authorRole: '팀장/디렉터',
+        feedbackType,
+        content: feedbackInput.trim(),
+      });
+      setFeedbackInput('');
+      showToast('상사 피드백이 등록되었습니다.', 'success');
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '피드백 저장 실패', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -108,19 +139,22 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
         <div>
           <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 mb-1">
             <FolderKanban className="w-3.5 h-3.5" />
-            <span>실행 프로젝트 리뷰</span>
+            <span>월별 체크</span>
           </div>
-          <h2 className="text-base font-extrabold text-slate-900">{projectTitle}</h2>
-          <p className="text-xs text-slate-500 mt-0.5">정기 진척 일지 작성 및 상하 간 1:1 피드백 루프</p>
+          <h2 className="text-base font-extrabold text-slate-900" data-testid="mbo-monthly-project-title">
+            {projectTitle}
+          </h2>
+          <p className="text-xs text-slate-500 mt-0.5">월별 진척 체크인 및 상사 피드백 루프</p>
         </div>
 
         <button
           type="button"
+          data-testid="mbo-monthly-checkin-open"
           onClick={() => setShowLogModal(true)}
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>진행 일지 등록</span>
+          <span>월별 체크인 등록</span>
         </button>
       </div>
 
@@ -128,7 +162,7 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
         {/* 좌측: 분기별 진행 로그 타임라인 (2열) */}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            진행 이력 로그 ({filteredLogs.length}건)
+            월별 체크인 이력 ({filteredLogs.length}건)
           </h3>
 
           {filteredLogs.length === 0 ? (
@@ -270,8 +304,19 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
       {showLogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100">
-            <h3 className="text-base font-extrabold text-slate-900">정기 진행 일지 작성</h3>
-            <form onSubmit={handleLogSubmit} className="space-y-3.5">
+            <h3 className="text-base font-extrabold text-slate-900">월별 체크인 작성</h3>
+            <form onSubmit={handleLogSubmit} className="space-y-3.5" data-testid="mbo-monthly-checkin-form">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">대상 월 (YYYY-MM)</label>
+                <input
+                  type="month"
+                  data-testid="mbo-monthly-period"
+                  value={periodYm}
+                  onChange={(e) => setPeriodYm(e.target.value)}
+                  className="w-full min-h-12 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm"
+                  required
+                />
+              </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   현재 누적 진척률: {logProgress}%
@@ -327,9 +372,11 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs"
+                  data-testid="mbo-monthly-checkin-submit"
+                  disabled={busy}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs disabled:opacity-40"
                 >
-                  일지 등록
+                  {busy ? '저장 중…' : '월별 체크인 저장'}
                 </button>
               </div>
             </form>

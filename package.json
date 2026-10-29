@@ -66,6 +66,7 @@
     "test:facility-incident": "tsx src/capabilities/facility_incident_report/domain/incidentReportEngine.test.ts",
     "test:mbo-engine": "tsx src/capabilities/mbo/domain/mboEngine.test.ts",
     "test:mbo-plan-approval": "tsx src/capabilities/mbo/domain/mboPlanApproval.test.ts",
+    "test:mbo-monthly-checkin": "tsx src/capabilities/mbo/domain/mboMonthlyCheckin.test.ts",
     "test:ep-role-seed": "tsx src/core/organizations/services/epRoleSeed.test.ts",
     "test:research-project-engine": "tsx src/capabilities/research_project/domain/researchProjectEngine.test.ts",
     "test:approval-engine": "tsx src/capabilities/approval_workflow/domain/approvalEngine.test.ts",

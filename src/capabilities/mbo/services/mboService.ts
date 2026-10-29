@@ -11,12 +11,14 @@ import {
   canTransitionMboStatus,
   detectHierarchyCycle,
   calculateGradeFromScore,
+  calculateWeightedObjectiveProgress,
   validateEvaluationPayload,
   canAccessEvaluation,
   type MboStatus,
   type MboLevel,
 } from '../domain/mboEngine';
 import { areGoalsLocked, isReviewWindowOpen } from '../domain/mboCycle';
+import { formatPeriodYm, isValidPeriodYm } from '../domain/mboMonthlyCheckin';
 import { getMboCycleSettings } from './mboCycleService';
 
 export type MboObjectiveRow = Database['core']['Tables']['mbo_objectives']['Row'];
@@ -244,6 +246,32 @@ export class MboService {
   }
 
   /**
+   * 목표에 실행 프로젝트가 없으면 기본 1건 생성
+   */
+  static async ensureDefaultProject(
+    organizationId: string,
+    objective: Pick<
+      MboObjectiveRow,
+      'id' | 'title' | 'owner_id' | 'owner_name' | 'start_date' | 'target_date'
+    >
+  ): Promise<MboProjectRow> {
+    const existing = await this.listProjects(organizationId, objective.id);
+    if (existing.length > 0) return existing[0]!;
+
+    return this.createProject({
+      organization_id: organizationId,
+      objective_id: objective.id,
+      title: objective.title,
+      owner_id: objective.owner_id,
+      owner_name: objective.owner_name,
+      start_date: objective.start_date,
+      target_date: objective.target_date,
+      status: 'in_progress',
+      progress_rate: 0,
+    });
+  }
+
+  /**
    * 실행 프로젝트 수정
    */
   static async updateProject(
@@ -309,21 +337,52 @@ export class MboService {
   }
 
   /**
-   * 일자별 진행 기록 작성 및 프로젝트/상위 목표 진척률 동기화
+   * 월별 진행 기록 작성 및 프로젝트/상위 목표 진척률 동기화
    */
   static async recordProgressLog(
-    payload: MboProgressLogInsert
+    payload: MboProgressLogInsert & { period_ym?: string | null }
   ): Promise<MboProgressLogRow> {
     const client = getCoreClient();
-    const { data: log, error: logErr } = await client
+    const periodYm =
+      payload.period_ym && isValidPeriodYm(payload.period_ym)
+        ? payload.period_ym
+        : formatPeriodYm(payload.log_date ? new Date(payload.log_date) : new Date());
+
+    const { data: existing } = await client
       .from('mbo_progress_logs')
-      .insert(payload)
-      .select()
-      .single();
+      .select('id')
+      .eq('organization_id', payload.organization_id)
+      .eq('project_id', payload.project_id)
+      .eq('period_ym', periodYm)
+      .maybeSingle();
 
-    if (logErr) throw logErr;
+    let log: MboProgressLogRow;
+    if (existing?.id) {
+      const { data, error } = await client
+        .from('mbo_progress_logs')
+        .update({
+          ...payload,
+          period_ym: periodYm,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existing.id)
+        .select()
+        .single();
+      if (error) throw error;
+      log = data as MboProgressLogRow;
+    } else {
+      const { data, error } = await client
+        .from('mbo_progress_logs')
+        .insert({
+          ...payload,
+          period_ym: periodYm,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      log = data as MboProgressLogRow;
+    }
 
-    // 프로젝트의 현재 진척률 자동 갱신
     await client
       .from('mbo_projects')
       .update({
@@ -333,7 +392,44 @@ export class MboService {
       .eq('id', payload.project_id)
       .eq('organization_id', payload.organization_id);
 
+    await this.rollupObjectiveProgressFromProject(
+      payload.organization_id,
+      payload.project_id
+    );
+
     return log as MboProgressLogRow;
+  }
+
+  /** 프로젝트 진척 변경 후 상위 objective 가중 진척 롤업 */
+  static async rollupObjectiveProgressFromProject(
+    organizationId: string,
+    projectId: string
+  ): Promise<void> {
+    const client = getCoreClient();
+    const { data: project } = await client
+      .from('mbo_projects')
+      .select('id, objective_id, progress_rate')
+      .eq('id', projectId)
+      .eq('organization_id', organizationId)
+      .maybeSingle();
+    if (!project?.objective_id) return;
+
+    const siblings = await this.listProjects(organizationId, project.objective_id);
+    const progress = calculateWeightedObjectiveProgress(
+      siblings.map((p) => ({
+        weight: 1,
+        progressRate: p.id === projectId ? (project.progress_rate ?? 0) : (p.progress_rate ?? 0),
+      }))
+    );
+
+    await client
+      .from('mbo_objectives')
+      .update({
+        progress_rate: progress,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', project.objective_id)
+      .eq('organization_id', organizationId);
   }
 
   /**
@@ -407,6 +503,7 @@ export class MboService {
 
   /**
    * 최종 평가 등록
+   * evaluator_id 미지정 시 세션 사용자로 채움 — 기밀 RLS·canAccessEvaluation과 정합
    */
   static async createEvaluation(
     payload: MboEvaluationInsert
@@ -427,13 +524,19 @@ export class MboService {
       throw new Error('연말 평가 기간이 아닙니다. 평가를 작성할 수 없습니다.');
     }
 
-    // 등급 자동 보정 (제공되지 않았거나 재계산 필요 시)
+    let evaluatorId = payload.evaluator_id ?? null;
+    if (!evaluatorId) {
+      const { data: authData } = await client.auth.getUser();
+      evaluatorId = authData.user?.id ?? null;
+    }
+
     const grade = payload.grade || calculateGradeFromScore(payload.score);
 
     const { data, error } = await client
       .from('mbo_evaluations')
       .insert({
         ...payload,
+        evaluator_id: evaluatorId,
         grade,
         is_confidential: payload.is_confidential ?? true,
       })
@@ -444,7 +547,7 @@ export class MboService {
     return data as MboEvaluationRow;
   }
 
-  /** 원자적 목표 수정 (스냅샷 + 플래그 + 감사 로그) */
+  /** 원자적 목표 수정 (objective 스냅샷 → mbo_objective_revisions) */
   static async reviseGoal(input: {
     goalId: string;
     newTargetValue: number;
@@ -454,7 +557,7 @@ export class MboService {
   }): Promise<void> {
     const client = getCoreClient();
     const { error } = await client.rpc('revise_mbo_goal' as never, {
-      p_goal_id: input.goalId,
+      p_objective_id: input.goalId,
       p_new_target_value: input.newTargetValue,
       p_new_due_date: input.newDueDate,
       p_unmet_reason: input.unmetReason,
@@ -476,40 +579,33 @@ export class MboService {
   > {
     const client = getCoreClient();
     const { data, error } = await client
-      .from('mbo_goal_revisions' as never)
+      .from('mbo_objective_revisions' as never)
       .select('*')
-      .eq('goal_id', goalId)
+      .eq('objective_id', goalId)
       .order('created_at', { ascending: true });
     if (error) throw new Error(error.message);
-    return (data ?? []) as Array<{
-      id: string;
-      previous_target_value: number | null;
-      previous_due_date: string | null;
-      unmet_reason: string | null;
-      revision_reason: string;
-      revised_by: string;
-      created_at: string;
-    }>;
+    return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+      id: String(row.id),
+      previous_target_value:
+        row.previous_target_value == null ? null : Number(row.previous_target_value),
+      previous_due_date: (row.previous_due_date as string | null) ?? null,
+      unmet_reason: (row.unmet_reason as string | null) ?? null,
+      revision_reason: String(row.revision_reason ?? ''),
+      revised_by: String(row.revised_by ?? ''),
+      created_at: String(row.created_at ?? ''),
+    }));
   }
 
-  static async replaceGoalShares(goalId: string, memberIds: string[]): Promise<void> {
-    const client = getCoreClient();
-    const { error } = await client.rpc('replace_mbo_goal_shares' as never, {
-      p_goal_id: goalId,
-      p_member_ids: memberIds,
-    } as never);
-    if (error) throw new Error(error.message);
+  /** PARTIAL 공유는 후속 RLS 범위 — 현재 제품 경로에서는 no-op */
+  static async replaceGoalShares(_goalId: string, _memberIds: string[]): Promise<void> {
+    return;
   }
 
+  /** mbo_goals 이중 모델 미사용 — visibility는 후속 */
   static async updateGoalVisibility(
-    goalId: string,
-    visibilityType: 'PUBLIC' | 'PRIVATE' | 'PARTIAL',
+    _goalId: string,
+    _visibilityType: 'PUBLIC' | 'PRIVATE' | 'PARTIAL',
   ): Promise<void> {
-    const client = getCoreClient();
-    const { error } = await client
-      .from('mbo_goals' as never)
-      .update({ visibility_type: visibilityType, updated_at: new Date().toISOString() } as never)
-      .eq('id', goalId);
-    if (error) throw new Error(error.message);
+    return;
   }
 }

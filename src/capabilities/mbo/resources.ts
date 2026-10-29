@@ -5,7 +5,7 @@ export const mboResources: CapabilityResourceDefinition = {
   resources: [
     {
       name: 'mbo_objectives',
-      list: '/operations/mbo',
+      list: '/workspace/mbo',
       meta: {
         label: '목표관리(MBO)',
         icon: 'Target',
@@ -14,7 +14,7 @@ export const mboResources: CapabilityResourceDefinition = {
     },
     {
       name: 'mbo_projects',
-      list: '/operations/mbo/projects',
+      list: '/workspace/mbo',
       meta: {
         label: 'MBO 실행 프로젝트',
         icon: 'FolderKanban',
@@ -23,11 +23,20 @@ export const mboResources: CapabilityResourceDefinition = {
     },
     {
       name: 'mbo_evaluations',
-      list: '/operations/mbo/evaluations',
+      list: '/workspace/mbo',
       meta: {
         label: 'MBO 성과 평가',
         icon: 'Award',
         order: 192,
+      },
+    },
+    {
+      name: 'mbo_progress_logs',
+      list: '/workspace/mbo',
+      meta: {
+        label: 'MBO 월별 체크인',
+        icon: 'Activity',
+        order: 193,
       },
     },
   ],

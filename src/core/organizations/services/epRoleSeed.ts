@@ -81,6 +81,35 @@ export function mapPresetPermissionTokensToRoleMap(
     next['office_supply_request:manage'] = true;
   }
 
+  // MBO ACL: mbo:view → goals:read만. evaluations:read_all은 상위 권한만.
+  if (
+    tokens.includes('mbo:view') ||
+    tokens.includes('mbo:goals:read') ||
+    tokens.includes('mbo:*') ||
+    hasPrefix('mbo')
+  ) {
+    next['mbo:goals:read'] = true;
+  }
+  if (
+    tokens.includes('mbo:update') ||
+    tokens.includes('mbo:goals:write') ||
+    tokens.includes('mbo:*') ||
+    tokens.some((t) => /^mbo:(update|manage|write)\b/.test(t))
+  ) {
+    next['mbo:goals:write'] = true;
+    next['mbo:goals:read'] = true;
+    next['mbo:evaluations:read_all'] = true;
+  }
+  if (
+    tokens.includes('mbo:evaluations:approve') ||
+    tokens.includes('mbo:evaluations:read_all') ||
+    tokens.includes('mbo:*') ||
+    tokens.some((t) => /^mbo:evaluations:(approve|write|read_all)\b/.test(t))
+  ) {
+    next['mbo:evaluations:approve'] = true;
+    next['mbo:evaluations:read_all'] = true;
+  }
+
   // MBO·결재·파이프라인: view/submit만으로는 직급 위임 권한을 주지 않는다.
   // * / update / manage / approve 또는 도메인 전체 와일드카드만 위임 관리로 승격.
   const grantsDelegationAdmin = tokens.some((t) => {

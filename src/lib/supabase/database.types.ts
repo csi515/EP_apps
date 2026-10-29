@@ -4532,6 +4532,7 @@ export interface Database {
           target_date: string;
           weight: number;
           progress_rate: number;
+          target_value: number | null;
           rejection_reason: string | null;
           approved_by: string | null;
           approved_at: string | null;
@@ -4556,6 +4557,7 @@ export interface Database {
           target_date: string;
           weight?: number;
           progress_rate?: number;
+          target_value?: number | null;
           rejection_reason?: string | null;
           approved_by?: string | null;
           approved_at?: string | null;
@@ -5234,6 +5236,7 @@ export interface Database {
           author_id: string | null;
           author_name: string;
           log_date: string;
+          period_ym: string;
           progress_rate: number;
           achievements: string;
           issues_and_actions: string | null;
@@ -5249,6 +5252,7 @@ export interface Database {
           author_id?: string | null;
           author_name: string;
           log_date?: string;
+          period_ym?: string;
           progress_rate: number;
           achievements: string;
           issues_and_actions?: string | null;

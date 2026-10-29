@@ -345,20 +345,26 @@ export function createAccessControlProvider(
         }
       }
 
-      const userPermissions =
-        activeUser.permissions ||
-        (Array.isArray(activeUser.customRole?.permissions) ? activeUser.customRole?.permissions : []) ||
-        [];
+      const rawPerms = activeUser.permissions ?? activeUser.customRole?.permissions;
+      const userPermissions: string[] = Array.isArray(rawPerms)
+        ? rawPerms.map(String)
+        : rawPerms && typeof rawPerms === 'object'
+          ? Object.entries(rawPerms as Record<string, unknown>)
+              .filter(([, v]) => v === true)
+              .map(([k]) => k)
+          : [];
       const standardKey = resolveStandardPermissionKey(resource, action);
       if (standardKey) {
         const granted = hasStandardPermission(
-          Array.isArray(userPermissions) ? userPermissions.map(String) : [],
+          userPermissions,
           standardKey,
           role
         );
         if (!granted) {
           return { can: false, reason: "이 화면에 접근할 권한이 없습니다." };
         }
+        // 표준 키 허용이면 이후 custom resource:action 매칭으로 fail-closed 되지 않게 즉시 통과
+        return { can: true };
       }
 
       const requiredActionStr = `${resource}:${action || "view"}`;

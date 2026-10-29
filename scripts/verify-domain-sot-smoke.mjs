@@ -109,6 +109,7 @@ const approval = await pgrst('/approval_requests', token, {
 assertOk('approval insert', approval, [200, 201]);
 
 const today = new Date().toISOString().slice(0, 10);
+const periodYm = today.slice(0, 7);
 const mbo = await pgrst('/mbo_objectives', token, {
   method: 'POST',
   body: JSON.stringify({
@@ -118,9 +119,97 @@ const mbo = await pgrst('/mbo_objectives', token, {
     start_date: today,
     target_date: today,
     status: 'draft',
+    target_value: 100,
   }),
 });
 assertOk('mbo insert', mbo, [200, 201]);
+const objectiveId = Array.isArray(mbo.body) ? mbo.body[0]?.id : mbo.body?.id;
+if (!objectiveId) fail('mbo insert missing id', mbo.body);
+
+const mboProject = await pgrst('/mbo_projects', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    objective_id: objectiveId,
+    title: 'domain-smoke-mbo-project',
+    owner_name: 'smoke',
+    start_date: today,
+    target_date: today,
+    status: 'in_progress',
+    progress_rate: 0,
+  }),
+});
+assertOk('mbo project insert', mboProject, [200, 201]);
+const projectId = Array.isArray(mboProject.body)
+  ? mboProject.body[0]?.id
+  : mboProject.body?.id;
+if (!projectId) fail('mbo project missing id', mboProject.body);
+
+const progressLog = await pgrst('/mbo_progress_logs', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    project_id: projectId,
+    author_name: 'smoke',
+    log_date: today,
+    period_ym: periodYm,
+    progress_rate: 40,
+    achievements: 'domain-smoke monthly checkin',
+  }),
+});
+assertOk('mbo progress_log insert', progressLog, [200, 201]);
+
+const revise = await pgrst('/rpc/revise_mbo_goal', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_objective_id: objectiveId,
+    p_new_target_value: 90,
+    p_new_due_date: today,
+    p_unmet_reason: 'smoke unmet',
+    p_revision_reason: 'smoke revise',
+  }),
+});
+assertOk('mbo revise rpc', revise, [200, 201]);
+
+const evaluation = await pgrst('/mbo_evaluations', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    project_id: projectId,
+    evaluator_name: 'smoke',
+    evaluation_type: 'manager',
+    score: 88,
+    grade: 'A',
+    qualitative_feedback: 'domain-smoke evaluation',
+    is_confidential: false,
+  }),
+});
+assertOk('mbo evaluation insert', evaluation, [200, 201]);
+
+const confidentialEval = await pgrst('/mbo_evaluations', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    project_id: projectId,
+    evaluator_name: 'smoke-confidential',
+    evaluation_type: 'manager',
+    score: 70,
+    grade: 'B',
+    qualitative_feedback: 'domain-smoke confidential',
+    is_confidential: true,
+  }),
+});
+assertOk('mbo confidential evaluation insert', confidentialEval, [200, 201]);
+const confidentialId = Array.isArray(confidentialEval.body)
+  ? confidentialEval.body[0]?.id
+  : confidentialEval.body?.id;
+if (confidentialId) {
+  const confList = await pgrst(
+    `/mbo_evaluations?id=eq.${confidentialId}&select=id,is_confidential`,
+    token
+  );
+  assertOk('mbo confidential evaluation select (owner/admin JWT)', confList, [200]);
+}
 
 const inv = await pgrst('/inventory_items', token, {
   method: 'POST',

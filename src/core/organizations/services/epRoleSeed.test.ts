@@ -33,6 +33,12 @@ assert.equal(member['roles:assign'], false, 'mbo:view alone must not grant role 
 assert.equal(member['members:manage'], false);
 assert.equal(member.resources_manage, false, 'booking:book alone must not grant resource catalog admin');
 assert.equal(member['resources:manage'], false);
+assert.equal(member['mbo:goals:read'], true, 'mbo:view maps to goals:read');
+assert.equal(
+  member['mbo:evaluations:read_all'],
+  false,
+  'mbo:view must not grant evaluations:read_all'
+);
 
 const leader = mapPresetPermissionTokensToRoleMap([
   'approval_workflow:submit',
@@ -43,5 +49,7 @@ const leader = mapPresetPermissionTokensToRoleMap([
 assert.equal(leader['roles:assign'], true, 'mbo:update / task_pipeline:* grants delegation');
 assert.equal(leader['members:manage'], true);
 assert.equal(leader.resources_manage, false, 'leader without resources:* keeps catalog admin off');
+assert.equal(leader['mbo:goals:write'], true);
+assert.equal(leader['mbo:evaluations:read_all'], true, 'mbo:update grants evaluations:read_all');
 
 console.log('epRoleSeed.test.ts: ok');

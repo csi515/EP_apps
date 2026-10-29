@@ -234,24 +234,31 @@ console.log('[test:login-to-delegation] start');
 // ── 6. 기능 표면: 직급별 네비/포털 접근 ───────────────────────────
 {
   const owner = member('owner');
-  const teamMember = member('staff', normalizeRolePermissions(
+  const teamMemberPerms = normalizeRolePermissions(
     mapPresetPermissionTokensToRoleMap([
       'booking:book',
       'whistleblower_grievance:create',
       'mbo:view',
       'research_project:view',
     ])
-  )!);
-  const hq = member(
-    'staff',
-    mapPresetPermissionTokensToRoleMap([
-      'approval_workflow:*',
-      'mbo:*',
-      'task_pipeline:*',
-      'research_project:*',
-      'resources:*',
-    ])
+  )!;
+  const teamMember = member('staff', teamMemberPerms);
+  const hqPerms = mapPresetPermissionTokensToRoleMap([
+    'approval_workflow:*',
+    'mbo:*',
+    'task_pipeline:*',
+    'research_project:*',
+    'resources:*',
+  ]);
+  const hq = member('staff', hqPerms);
+
+  assert.equal(teamMemberPerms['mbo:goals:read'], true, 'mbo:view → goals:read');
+  assert.equal(
+    teamMemberPerms['mbo:evaluations:read_all'],
+    false,
+    'mbo:view must not grant evaluations:read_all'
   );
+  assert.equal(hqPerms['mbo:evaluations:read_all'], true, 'mbo:* grants evaluations:read_all');
 
   assert.equal(canAccessRndPortal(owner), true);
   assert.equal(canAccessRndPortal(hq), true);

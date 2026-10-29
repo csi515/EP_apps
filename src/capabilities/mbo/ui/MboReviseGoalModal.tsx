@@ -39,17 +39,6 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             return;
           }
           setBusy(true);
-          const finishLocal = () => {
-            showToast('목표가 수정되었고 이력이 저장되었습니다.', 'success');
-            onRevised();
-            onClose();
-          };
-          // 로컬 샘플 목표(obj-*)는 RPC 대신 UI 상태만 갱신
-          if (goalId.startsWith('obj-')) {
-            finishLocal();
-            setBusy(false);
-            return;
-          }
           void MboService.reviseGoal({
             goalId,
             newTargetValue: Number(targetValue),
@@ -57,7 +46,11 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             unmetReason: unmetReason.trim(),
             revisionReason: revisionReason.trim(),
           })
-            .then(finishLocal)
+            .then(() => {
+              showToast('목표가 수정되었고 이력이 저장되었습니다.', 'success');
+              onRevised();
+              onClose();
+            })
             .catch((cause) => {
               showToast(cause instanceof Error ? cause.message : '수정 실패', 'error');
             })
