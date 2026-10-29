@@ -5,16 +5,15 @@ import {
   Lock,
   ArrowRight,
   RefreshCw,
-  MessageSquare,
   ShieldCheck,
   Globe,
   Loader2,
 } from "lucide-react";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
-import { loginLandingCopy } from "@/pages/auth/loginLandingCopy";
-
-/** SNS(OAuth) 로그인 — 연동 완료 전까지 클릭 비활성화 */
-const SNS_LOGIN_ENABLED = false;
+import {
+  getLoginLandingCopy,
+  type LoginLocale,
+} from "@/pages/auth/loginLandingCopy";
 
 export interface MobileLoginFormProps {
   email: string;
@@ -24,14 +23,10 @@ export interface MobileLoginFormProps {
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   errorMessage?: string | null;
-  onGoogleLogin?: () => void;
-  onAppleLogin?: () => void;
-  onKakaoLogin?: () => void;
-  onNaverLogin?: () => void;
   onTossLogin?: () => void;
   isTossLoading?: boolean;
-  language?: 'ko' | 'en';
-  onLanguageChange?: (lang: 'ko' | 'en') => void;
+  language?: LoginLocale;
+  onLanguageChange?: (lang: LoginLocale) => void;
   rememberMe?: boolean;
   onRememberMeChange?: (remember: boolean) => void;
   returnUrl?: string;
@@ -45,10 +40,6 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
   onSubmit,
   isLoading,
   errorMessage,
-  onGoogleLogin,
-  onAppleLogin,
-  onKakaoLogin,
-  onNaverLogin,
   onTossLogin,
   isTossLoading = false,
   language = 'ko',
@@ -59,29 +50,24 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
 }) => {
   const navigate = useNavigate();
   const [internalRememberMe, setInternalRememberMe] = useState(true);
+  const copy = getLoginLandingCopy(language);
 
   const isRemember = externalRememberMe ?? internalRememberMe;
   const setRemember = onRememberMeChange ?? setInternalRememberMe;
 
   const inToss = isAppsInToss();
-  const isEn = language === 'en';
+  const isJa = language === 'ja';
 
   const forgotPath = returnUrl
     ? `/signup?mode=forgot&returnUrl=${encodeURIComponent(returnUrl)}`
     : "/signup?mode=forgot";
-  const signupPath = returnUrl
-    ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}`
-    : "/signup";
 
-  // =========================================================================
-  // 토스 환경 (Apps in Toss): 타사 소셜 배제 및 토스 원클릭 로그인 전용 화면
-  // =========================================================================
   if (inToss) {
     return (
       <div data-testid="login-container" className="w-full space-y-6">
         <div className="flex items-center justify-center space-x-2 py-1 px-3 bg-blue-50 border border-blue-100 rounded-full mx-auto w-fit">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-          <span className="text-[11px] font-semibold text-blue-700">토스 앱 보안 연동</span>
+          <span className="text-[11px] font-semibold text-blue-700">{copy.tossSecureBadge}</span>
         </div>
 
         {isTossLoading || isLoading ? (
@@ -91,10 +77,10 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                토스 원클릭 자동 로그인 중
+                {copy.tossAutoLoginTitle}
               </h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {loginLandingCopy.tossConnecting}
+                {copy.tossConnecting}
               </p>
             </div>
           </div>
@@ -112,12 +98,12 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               disabled={isLoading || isTossLoading}
               className="w-full h-12 flex items-center justify-center space-x-2 rounded-xl bg-[#0064FF] hover:bg-[#0052D4] active:bg-[#0040A8] text-white text-sm font-semibold transition-all shadow-md shadow-blue-100 disabled:opacity-50"
             >
-              <span>토스 간편 로그인</span>
+              <span>{copy.tossLoginButton}</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </button>
 
             <p className="text-center text-xs text-slate-400 leading-normal">
-              토스 계정 인증만 제공됩니다.
+              {copy.tossLoginOnlyHint}
             </p>
           </div>
         )}
@@ -125,90 +111,15 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
     );
   }
 
-  // =========================================================================
-  // 임직원 단일 로그인: 소셜(비활성) → 이메일/비밀번호 → 초대·회원가입
-  // =========================================================================
   return (
     <div data-testid="login-container" className="w-full space-y-4">
-      {/* 소셜 / 간편 로그인 버튼 순서 (테스트 불변식 준수) */}
-      <div className="pt-1">
-        {SNS_LOGIN_ENABLED ? (
-          <div className="space-y-2">
-            <button
-              type="button"
-              data-testid="btn-google-login"
-              onClick={onGoogleLogin}
-              disabled={isLoading}
-              className="w-full h-11 flex items-center justify-center space-x-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all shadow-2xs"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden>
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
-              </svg>
-              <span>{isEn ? "Continue with Google" : "Google로 계속하기"}</span>
-            </button>
-
-            <button
-              type="button"
-              data-testid="btn-apple-login"
-              onClick={onAppleLogin}
-              disabled={isLoading}
-              className="w-full h-11 flex items-center justify-center space-x-2.5 rounded-xl bg-black hover:bg-neutral-900 text-white text-xs font-semibold transition-all shadow-2xs"
-            >
-              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24" aria-hidden>
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 0.92-2.85-.9.04-1.99.6-2.64 1.35-.58.67-.99 1.74-.88 2.76 1.01.08 2.03-.54 2.6-1.26z" />
-              </svg>
-              <span>{isEn ? "Sign in with Apple" : "Apple로 계속하기"}</span>
-            </button>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                data-testid="btn-kakao-login"
-                onClick={onKakaoLogin}
-                disabled={isLoading}
-                className="h-10 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FEE500] hover:bg-[#FDD835] text-[#191919] text-xs font-semibold transition-all shadow-2xs"
-              >
-                <MessageSquare className="w-3.5 h-3.5 fill-current shrink-0" />
-                <span>카카오</span>
-              </button>
-              <button
-                type="button"
-                data-testid="btn-naver-login"
-                onClick={onNaverLogin}
-                disabled={isLoading}
-                className="h-10 flex items-center justify-center space-x-1.5 rounded-xl bg-[#03C75A] hover:bg-[#02B150] text-white text-xs font-semibold transition-all shadow-2xs"
-              >
-                <span className="font-extrabold text-xs leading-none font-sans">N</span>
-                <span>네이버</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-2 text-center mb-1">
-            <div className="flex items-center justify-center gap-1.5 text-slate-400 mb-0.5">
-              <div className="w-4 h-4 rounded-full bg-white flex items-center justify-center border border-slate-200 text-[8px] font-bold text-slate-600">G</div>
-              <div className="w-4 h-4 rounded-full bg-black text-white flex items-center justify-center text-[8px]">🍎</div>
-              <div className="w-4 h-4 rounded-full bg-[#FEE500] text-[#191919] flex items-center justify-center text-[8px] font-bold">K</div>
-              <div className="w-4 h-4 rounded-full bg-[#03C75A] text-white flex items-center justify-center text-[8px] font-extrabold">N</div>
-            </div>
-            <p className="text-xs text-slate-400" data-testid="sns-login-disabled-hint">
-              {isEn ? "Social login is coming soon" : "간편 로그인은 준비 중입니다"}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* 메인 이메일 / 비밀번호 폼 */}
       <form onSubmit={onSubmit} className="space-y-3">
         <div>
           <label
             htmlFor="login-email"
             className="block text-xs font-semibold text-slate-700 mb-1"
           >
-            {isEn ? loginLandingCopy.emailLabelEn : loginLandingCopy.emailLabel}
+            {copy.emailLabel}
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -222,7 +133,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder={loginLandingCopy.emailPlaceholder}
+              placeholder={copy.emailPlaceholder}
               className="w-full min-h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:border-transparent transition-all bg-slate-50/50 focus:bg-white"
             />
           </div>
@@ -234,7 +145,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               htmlFor="login-password"
               className="block text-xs font-semibold text-slate-700"
             >
-              {isEn ? "Password" : "비밀번호"}
+              {copy.passwordLabel}
             </label>
             <Link
               to="/signup?mode=forgot"
@@ -247,7 +158,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               className="text-xs text-indigo-600 hover:text-indigo-800 min-h-[32px] inline-flex items-center font-medium"
               data-testid="link-forgot-password"
             >
-              {isEn ? "Forgot password?" : "비밀번호 찾기"}
+              {copy.forgotPassword}
             </Link>
           </div>
           <div className="relative">
@@ -268,8 +179,7 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           </div>
         </div>
 
-        {/* 로그인 유지 체크박스 */}
-        <div className="flex items-center justify-between py-0.5">
+        <div className="flex items-center py-0.5">
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -277,13 +187,8 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
               onChange={(e) => setRemember(e.target.checked)}
               className="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500"
             />
-            <span className="text-xs text-slate-600 font-medium">
-              {isEn ? "Keep me signed in" : "로그인 상태 유지"}
-            </span>
+            <span className="text-xs text-slate-600 font-medium">{copy.rememberMe}</span>
           </label>
-          <span className="text-[11px] text-slate-400">
-            {isEn ? "Shared device caution" : "공용 기기 해제 권장"}
-          </span>
         </div>
 
         {errorMessage && (
@@ -301,67 +206,44 @@ export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>로그인 중...</span>
+              <span>{copy.loggingIn}</span>
             </>
           ) : (
-            <span>
-              {isEn ? loginLandingCopy.submitLabelEn : loginLandingCopy.submitLabel}
-            </span>
+            <span>{copy.submitLabel}</span>
           )}
         </button>
       </form>
 
-      {/* 보조 링크: 직원 초대 코드 */}
-      <div className="pt-1 text-center">
-        <p className="text-xs text-slate-500">
-          {loginLandingCopy.invitePrompt}{' '}
-          <Link to="/invite/accept" className="font-bold text-indigo-600 hover:underline">
-            {loginLandingCopy.inviteLink}
-          </Link>
-        </p>
-      </div>
-
-      {/* 하단 회원가입 및 언어 전환 바 */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
-        <Link
-          to="/signup"
-          onClick={(e) => {
-            if (returnUrl) {
-              e.preventDefault();
-              navigate(signupPath);
-            }
-          }}
-          data-testid="link-signup"
-          className="text-xs text-slate-600 hover:text-indigo-600 font-bold inline-flex items-center gap-1 min-h-[36px]"
-        >
-          <span>{isEn ? "Need an account? Sign Up" : "계정이 없으신가요? 회원가입"}</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
-
-        {onLanguageChange && (
-          <div className="inline-flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg text-xs font-semibold text-slate-600 shrink-0">
+      {onLanguageChange ? (
+        <div className="pt-2 border-t border-slate-100 flex justify-end">
+          <div
+            className="inline-flex items-center gap-1 p-0.5 bg-slate-100 rounded-lg text-xs font-semibold text-slate-600 shrink-0"
+            data-testid="login-locale-switch"
+            role="group"
+            aria-label="Language"
+          >
             <Globe className="w-3.5 h-3.5 ml-1.5 text-slate-400" />
             <button
               type="button"
               onClick={() => onLanguageChange('ko')}
               className={`px-2 py-1 rounded-md transition-all ${
-                !isEn ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
+                !isJa ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
               }`}
             >
               KO
             </button>
             <button
               type="button"
-              onClick={() => onLanguageChange('en')}
+              onClick={() => onLanguageChange('ja')}
               className={`px-2 py-1 rounded-md transition-all ${
-                isEn ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
+                isJa ? 'bg-white text-indigo-600 shadow-xs' : 'hover:text-slate-900'
               }`}
             >
-              EN
+              JA
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 };

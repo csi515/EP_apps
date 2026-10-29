@@ -8,16 +8,16 @@ const SCOPE_OPTIONS: DepartmentScopeType[] = ['SELF_ONLY', 'DESCENDANTS', 'GLOBA
 
 export const SCOPE_LABELS: Record<DepartmentScopeType, { title: string; hint: string }> = {
   SELF_ONLY: {
-    title: '해당 부서만 (기본 팀원/실무자)',
-    hint: '소속된 해당 부서의 데이터만 열람 및 관리할 수 있습니다.',
+    title: '구성원 (해당 조직만)',
+    hint: '소속 조직의 구성원으로 배치됩니다. MBO는 본인 목표 중심입니다.',
   },
   DESCENDANTS: {
-    title: '해당 부서 및 모든 하위 부서 (부서장/실장 권장)',
-    hint: '본인 부서뿐 아니라 산하 하위 팀/파트의 데이터까지 포괄 관리합니다.',
+    title: '조직 리더 (하위 조직 포함)',
+    hint: '이 조직과 모든 하위 조직의 인원·MBO를 별도 위임 없이 관리합니다 (팀장·그룹장 등).',
   },
   GLOBAL: {
-    title: '전사 전체 (대표이사/임원 전용)',
-    hint: '조직도 트리 전체의 모든 부서 데이터를 포괄 관리합니다.',
+    title: '전사 스코프 (임원)',
+    hint: '조직도 전체 데이터를 포괄합니다. 소유권/전사 운영과 별개로 데이터 범위만 넓힙니다.',
   },
 };
 
@@ -179,7 +179,8 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
               const roleName = roles.find((r) => r.id === row.custom_role_id)?.name;
               return (
                 <li key={row.id} className="min-h-10 rounded-lg bg-slate-50 px-2 py-2">
-                  {member ? memberLabel(member) : row.member_id.slice(0, 8)} · {row.scope_type}
+                  {member ? memberLabel(member) : row.member_id.slice(0, 8)} ·{' '}
+                  {SCOPE_LABELS[row.scope_type]?.title ?? row.scope_type}
                   {roleName ? ` · ${roleName}` : ''}
                 </li>
               );

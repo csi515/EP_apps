@@ -26,3 +26,14 @@ export { BirthDateInput, formatBirthDateDigits } from './BirthDateInput';
 export { SegmentedControl } from './SegmentedControl';
 export { Section, type SectionProps } from './Section';
 export { ResponsiveTable, type ResponsiveColumn, type ResponsiveTableProps } from './ResponsiveTable';
+export { Pagination, type PaginationProps } from './Pagination';
+export {
+  DEFAULT_PAGE_SIZE_OPTIONS,
+  clampPage,
+  computeItemRange,
+  computePageCount,
+  computePageWindow,
+  toRefinePaginationOptions,
+  type PageToken,
+} from './paginationModel';
+

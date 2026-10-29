@@ -14,14 +14,9 @@ import {
   ChevronRight,
   Sparkles,
   X,
-  FileCheck,
-  Warehouse,
   MessageSquareWarning,
   AlertTriangle,
   ClipboardCheck,
-  Kanban,
-  Wrench,
-  FlaskRound,
 } from 'lucide-react';
 import { useList, useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -224,27 +219,15 @@ export const CompanyAppLauncherDashboard: React.FC<{
     ];
   }, [approvalsQuery?.data?.data, sopPendingCount]);
 
-  const pendingBadgeCount = (approvalsQuery?.data?.data?.length ?? 0) + sopPendingCount;
-
   const appTiles: CompanyAppTile[] = useMemo(() => {
+    const iconCls = 'h-5 w-5 text-white drop-shadow-sm';
     const all: CompanyAppTile[] = [
-      {
-        id: 'approvals',
-        to: '/workspace/approvals',
-        label: '전자 결재',
-        description: '기안·승인·반려',
-        icon: <FileCheck className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-indigo-500 to-blue-600',
-        requiredAnyCapability: ['approval_workflow'],
-        badge: pendingBadgeCount || null,
-        badgeColor: 'bg-rose-500 text-white',
-      },
       {
         id: 'research',
         to: '/rnd',
         label: '연구소',
         description: '과제·장비·특허',
-        icon: <FlaskConical className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <FlaskConical className={iconCls} />,
         gradient: 'from-violet-500 to-purple-600',
         requiredAnyCapability: ['research_project'],
         requiresPermissionCheck: true,
@@ -254,7 +237,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/mbo',
         label: 'MBO',
         description: '목표·마일스톤',
-        icon: <Target className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <Target className={iconCls} />,
         gradient: 'from-emerald-500 to-teal-600',
         requiredAnyCapability: ['mbo'],
       },
@@ -263,7 +246,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/shuttle/my',
         label: '통근 셔틀',
         description: '탑승·노선·운행표',
-        icon: <Bus className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <Bus className={iconCls} />,
         gradient: 'from-blue-500 to-indigo-600',
         requiredAnyCapability: ['shuttle_dispatch'],
       },
@@ -271,44 +254,28 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'resources',
         to: '/workspace/resources',
         label: '공용 자원',
-        description: '차량·회의실 예약',
-        icon: <Car className="h-8 w-8 text-white drop-shadow-sm" />,
+        description: '차량·건강관리실 예약',
+        icon: <Car className={iconCls} />,
         gradient: 'from-amber-500 to-orange-600',
         requiredAnyCapability: ['booking', 'seat_room'],
-      },
-      {
-        id: 'inventory',
-        to: '/workspace/inventory',
-        label: '현장 자재',
-        description: '재고 수불',
-        icon: <Warehouse className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-cyan-500 to-teal-600',
-        requiredAnyCapability: ['inventory'],
-      },
-      {
-        id: 'supply_restock',
-        to: '/workspace/supply-restock',
-        label: '소모품·발주',
-        description: '안전재고·간이 발주',
-        icon: <Package className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-teal-500 to-cyan-700',
-        requiredAnyCapability: ['supply_restock'],
       },
       {
         id: 'sop_risk',
         to: '/workspace/sop-risk',
         label: '작업표준·위험성평가',
         description: 'SOP 및 위험성평가',
-        icon: <ShieldAlert className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <ShieldAlert className={iconCls} />,
         gradient: 'from-rose-500 to-red-600',
         requiredAnyCapability: ['sop_risk_assessment'],
+        badge: sopPendingCount || null,
+        badgeColor: 'bg-rose-500 text-white',
       },
       {
         id: 'facility_incident',
         to: '/workspace/facility-incident-report',
         label: '사고·위험 보고',
         description: '현장 사고·아차사고',
-        icon: <AlertTriangle className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <AlertTriangle className={iconCls} />,
         gradient: 'from-orange-500 to-amber-600',
         requiredAnyCapability: ['facility_incident_report'],
       },
@@ -317,43 +284,16 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/maintenance',
         label: '설비 점검',
         description: '점검 체크리스트',
-        icon: <ClipboardCheck className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <ClipboardCheck className={iconCls} />,
         gradient: 'from-slate-500 to-zinc-700',
         requiredAnyCapability: ['maintenance_checklist'],
-      },
-      {
-        id: 'pipelines',
-        to: '/workspace/pipelines',
-        label: '업무 파이프라인',
-        description: '칸반·작업 지시',
-        icon: <Kanban className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-fuchsia-500 to-purple-700',
-        requiredAnyCapability: ['task_pipeline'],
-      },
-      {
-        id: 'equipment_lifecycle',
-        to: '/workspace/equipment-lifecycle',
-        label: '장비 수명관리',
-        description: '교정·수리·폐기',
-        icon: <Wrench className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-stone-500 to-neutral-700',
-        requiredAnyCapability: ['equipment_lifecycle'],
-      },
-      {
-        id: 'hazardous_substance',
-        to: '/workspace/hazardous-substances',
-        label: '유해물질 MSDS',
-        description: '취급·보관·MSDS',
-        icon: <FlaskRound className="h-8 w-8 text-white drop-shadow-sm" />,
-        gradient: 'from-yellow-500 to-orange-700',
-        requiredAnyCapability: ['hazardous_substance_msds'],
       },
       {
         id: 'grievances',
         to: '/workspace/grievances',
         label: '노경 건의함',
         description: '건의·제보',
-        icon: <MessageSquareWarning className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <MessageSquareWarning className={iconCls} />,
         gradient: 'from-indigo-500 to-violet-600',
         requiredAnyCapability: ['whistleblower_grievance'],
       },
@@ -362,7 +302,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/volunteer',
         label: '봉사활동',
         description: '모집·참여 신청',
-        icon: <HeartHandshake className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <HeartHandshake className={iconCls} />,
         gradient: 'from-pink-500 to-rose-600',
         requiredAnyCapability: ['volunteer_activity'],
       },
@@ -371,7 +311,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/meal-survey',
         label: '식수인원 조사',
         description: '조·중·석 사전 표시',
-        icon: <UtensilsCrossed className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <UtensilsCrossed className={iconCls} />,
         gradient: 'from-lime-500 to-green-600',
         requiredAnyCapability: ['meal_survey'],
       },
@@ -380,7 +320,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/office-supply',
         label: '사무용품 취합',
         description: '월별 신청·부서 취합',
-        icon: <Package className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <Package className={iconCls} />,
         gradient: 'from-sky-500 to-blue-600',
         requiredAnyCapability: ['office_supply_request'],
       },
@@ -389,7 +329,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
         to: '/workspace/settings/roles',
         label: '설정',
         description: '조직도·권한·숨긴 기능 다시 켜기',
-        icon: <Settings className="h-8 w-8 text-white drop-shadow-sm" />,
+        icon: <Settings className={iconCls} />,
         gradient: 'from-zinc-500 to-slate-600',
       },
     ];
@@ -416,7 +356,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
       });
   }, [
     enabledCaps,
-    pendingBadgeCount,
+    sopPendingCount,
     activeUser?.role,
     activeUser?.customRole,
     userFeaturePermissions,
@@ -442,7 +382,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
 
   return (
     <div
-      className="mx-auto max-w-4xl px-4 py-6 sm:py-10"
+      className="mx-auto max-w-5xl px-4 py-5 sm:py-8"
       data-testid="company-app-launcher"
       data-variant={variant}
     >
@@ -499,7 +439,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
                   <p className="text-xs font-bold text-amber-900">
                     처리 대기 승인 {pendingApprovals.length}건
                   </p>
-                  <p className="text-[11px] text-amber-700">전자 결재함에서 검토</p>
+                  <p className="text-[11px] text-amber-700">관련 앱에서 검토</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-amber-500 transition-transform group-hover:translate-x-0.5" />
               </button>
@@ -522,17 +462,17 @@ export const CompanyAppLauncherDashboard: React.FC<{
           </div>
         ) : null}
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-2.5">
           {appTiles.map((app) => (
             <Link
               key={app.id}
               to={app.to}
               onClick={(e) => handleTileClick(app, e)}
-              className="group relative flex flex-col items-center justify-center rounded-3xl border border-slate-100 bg-white p-5 sm:p-6 text-center shadow-xs transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-lg active:scale-95"
+              className="group relative flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white px-2 py-3 text-center shadow-xs transition-all duration-150 hover:border-slate-300 hover:shadow-sm active:scale-[0.98] min-h-[96px]"
             >
               {app.badge ? (
                 <span
-                  className={`absolute top-3 right-3 flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-bold shadow-xs ${
+                  className={`absolute top-1.5 right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-xs ${
                     app.badgeColor || 'bg-rose-500 text-white'
                   }`}
                 >
@@ -541,17 +481,17 @@ export const CompanyAppLauncherDashboard: React.FC<{
               ) : null}
 
               <div
-                className={`relative mb-3.5 flex h-20 w-20 sm:h-22 sm:w-22 items-center justify-center rounded-[24px] bg-gradient-to-br ${app.gradient} shadow-md transition-transform duration-200 group-hover:scale-105 group-hover:shadow-lg`}
+                className={`relative mb-2 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${app.gradient} shadow-sm transition-transform duration-150 group-hover:scale-105`}
               >
                 {app.icon}
-                <div className="absolute inset-0 rounded-[24px] bg-gradient-to-t from-black/5 via-transparent to-white/20 pointer-events-none" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-black/5 via-transparent to-white/20 pointer-events-none" />
               </div>
 
-              <div className="w-full">
-                <span className="block text-base sm:text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+              <div className="w-full px-0.5">
+                <span className="block text-xs font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
                   {app.label}
                 </span>
-                <span className="mt-0.5 block text-xs font-medium text-slate-500 line-clamp-1">
+                <span className="mt-0.5 block text-[10px] font-medium text-slate-500 line-clamp-1">
                   {app.description}
                 </span>
               </div>
@@ -603,7 +543,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
                       onClick={() => setShowApprovalModal(false)}
                       className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700"
                     >
-                      <span>결재함에서 검토</span>
+                      <span>앱에서 검토</span>
                       <ChevronRight className="h-3 w-3" />
                     </Link>
                   </div>

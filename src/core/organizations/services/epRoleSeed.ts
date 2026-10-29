@@ -122,7 +122,12 @@ export function mapPresetPermissionTokensToRoleMap(
     next['roles:assign'] = true;
     next['members:manage'] = true;
     next.members_manage = true;
+    next['org_structure:manage'] = true;
     next.policies = true;
+  }
+
+  if (tokens.includes('org_structure:manage')) {
+    next['org_structure:manage'] = true;
   }
 
   if (tokens.includes('roles:assign') || tokens.includes('members:manage')) {

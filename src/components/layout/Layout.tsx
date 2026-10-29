@@ -111,7 +111,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     return (
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <GlobalNetworkStatusBar />
-        {children}
+        {/* 인트라넷·모듈 허브 등 ModuleAppShell 밖 라우트도 세로 스크롤 가능해야 함 */}
+        <div
+          className="flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto"
+          data-work-scroll-root
+          data-testid="app-work-main"
+        >
+          {children}
+        </div>
         <OmniSearchModal />
         <ConfirmDialog />
         <KeyboardShortcutsModal />

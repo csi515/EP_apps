@@ -10,6 +10,7 @@ const ALWAYS_VISIBLE: ReadonlySet<RolePermissionKey> = new Set([
   'members:manage',
   'members_manage',
   'roles:assign',
+  'org_structure:manage',
   'ownership:transfer',
   'policies',
 ]);
@@ -35,6 +36,10 @@ const KEY_REQUIRES_ANY_CAPABILITY: Partial<Record<RolePermissionKey, readonly st
   'meal_survey:manage': ['meal_survey'],
   'office_supply_request:manage': ['office_supply_request'],
   'rnd_portal:access': ['research_project', 'patent_ip_asset'],
+  'mbo:goals:read': ['mbo'],
+  'mbo:goals:write': ['mbo'],
+  'mbo:evaluations:read_all': ['mbo'],
+  'mbo:evaluations:approve': ['mbo'],
 };
 
 export function resolveActiveCapabilityIds(

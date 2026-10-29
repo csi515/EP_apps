@@ -475,7 +475,10 @@ export class MboService {
     organizationId: string,
     projectId: string,
     currentUserId: string,
-    isOrgAdmin: boolean
+    isOrgAdmin: boolean,
+    options?: {
+      isSubtreeLeaderOfTarget?: (targetUserId: string | null) => boolean;
+    },
   ): Promise<MboEvaluationRow[]> {
     const client = getCoreClient();
     const { data, error } = await client
@@ -497,6 +500,7 @@ export class MboService {
         evaluatorId: row.evaluator_id,
         currentUserId,
         isOrgAdmin,
+        isSubtreeLeaderOfTarget: options?.isSubtreeLeaderOfTarget?.(row.target_user_id) === true,
       })
     );
   }

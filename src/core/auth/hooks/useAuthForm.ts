@@ -18,7 +18,7 @@ function resolveInitialMode(pathname: string, search: string): AuthMode {
 }
 
 export function useAuthForm() {
-  const { signIn, signUp, signInWithNaver } = useAuth();
+  const { signIn, signInWithNaver } = useAuth();
   const location = useLocation();
   const [mode, setMode] = useState<AuthMode>(() =>
     resolveInitialMode(location.pathname, location.search)
@@ -54,18 +54,12 @@ export function useAuthForm() {
 
     try {
       if (mode === 'signup') {
-        if (!agreedToTerms) {
-          throw new Error('이용약관 및 개인정보처리방침에 동의해 주세요.');
-        }
-        saveOAuthSignupIntent({
-          mode: 'signup',
-          fullName: fullName.trim() || undefined,
-        });
-      } else if (mode === 'forgot') {
-        throw new Error('비밀번호 찾기는 이메일로 진행해 주세요.');
-      } else {
-        saveOAuthSignupIntent({ mode: 'login' });
+        throw new Error('회원가입은 지원하지 않습니다. 관리자에게 계정 발급을 요청해 주세요.');
       }
+      if (mode === 'forgot') {
+        throw new Error('비밀번호 찾기는 이메일로 진행해 주세요.');
+      }
+      saveOAuthSignupIntent({ mode: 'login' });
 
       setLoading(true);
       await signInWithNaver();
@@ -97,18 +91,7 @@ export function useAuthForm() {
         return;
       }
 
-      if (!fullName.trim()) {
-        throw new Error('이름을 입력해 주세요.');
-      }
-      if (password.length < 6) {
-        throw new Error('비밀번호는 6자 이상이어야 합니다.');
-      }
-      if (!agreedToTerms) {
-        throw new Error('이용약관 및 개인정보처리방침에 동의해 주세요.');
-      }
-
-      // 역할·사업장은 가입 후 멤버십 자동 선택 / 초대·연결에서 결정
-      await signUp(email.trim(), password, fullName.trim());
+      throw new Error('회원가입은 지원하지 않습니다. 관리자에게 계정 발급을 요청해 주세요.');
     } catch (err) {
       const raw =
         err instanceof Error ? err.message : '인증 처리 중 오류가 발생했습니다.';

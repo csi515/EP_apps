@@ -9,7 +9,7 @@ async function runTests() {
   assert.match(mapLoginErrorMessage('User not found'), /등록되지 않은 계정/);
   assert.match(mapLoginErrorMessage('Too many requests'), /너무 많습니다/);
   assert.equal(mapLoginErrorMessage('네트워크 오류'), '네트워크 오류');
-  assert.match(mapLoginErrorMessage(null), /회원가입을 진행/);
+  assert.match(mapLoginErrorMessage(null), /관리자에게 계정 발급/);
   console.log('mapLoginErrorMessage tests passed');
 }
 

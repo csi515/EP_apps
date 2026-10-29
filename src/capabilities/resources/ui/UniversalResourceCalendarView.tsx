@@ -51,6 +51,8 @@ export type UniversalResourceCalendarViewProps = {
   /** 자원 마스터 등록 버튼 숨김 (워크스페이스 카탈로그 탭 사용 시) */
   hideMasterButton?: boolean;
   defaultCategory?: ResourceCategory | 'all';
+  /** true면 카테고리 탭을 숨기고 defaultCategory만 사용 */
+  lockCategory?: boolean;
   bookingMode?: 'member' | 'customer';
 };
 
@@ -96,6 +98,7 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   hideApprovalInbox = true,
   hideMasterButton = false,
   defaultCategory = 'all',
+  lockCategory = false,
   bookingMode = 'member',
 }) => {
   const {
@@ -112,6 +115,10 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   const [viewMode, setViewMode] = useState<ViewMode>('day');
   const [selectedCategory, setSelectedCategory] = useState<ResourceCategory | 'all'>(defaultCategory);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    setSelectedCategory(defaultCategory);
+  }, [defaultCategory]);
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [reservations, setReservations] = useState<ResourceReservation[]>([]);
@@ -337,33 +344,35 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
       ) : (
         /* 예약 달력 메인 화면 */
         <div className="space-y-4">
-          {/* 2. 카테고리 필터 탭 */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {CATEGORY_TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isSelected = selectedCategory === tab.id;
-              const count = categoryCountMap[tab.id] ?? 0;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setSelectedCategory(tab.id)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shrink-0 cursor-pointer ${
-                    isSelected
-                      ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-2xs'
-                      : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
-                  }`}
-                >
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
-                  <span>{tab.label}</span>
-                  <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-indigo-200 text-indigo-900' : 'bg-slate-100 text-slate-500'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {!lockCategory ? (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {CATEGORY_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isSelected = selectedCategory === tab.id;
+                const count = categoryCountMap[tab.id] ?? 0;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(tab.id)}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all shrink-0 cursor-pointer ${
+                      isSelected
+                        ? 'border-indigo-600 bg-indigo-50/70 text-indigo-900 shadow-2xs'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                    <span className={`text-[11px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-indigo-200 text-indigo-900' : 'bg-slate-100 text-slate-500'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
-          {/* 3. 날짜 내비게이션 & 3-Way 뷰 모드 전환 바 */}
+          {/* 날짜 내비게이션 & 3-Way 뷰 모드 전환 바 */}
           <div className="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
             {/* 날짜 조작 */}
             <div className="flex items-center gap-2">

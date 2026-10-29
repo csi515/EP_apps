@@ -5,40 +5,18 @@ import {
   LogOut,
   User,
   Bell,
-  Building2,
   UserPlus,
   X,
 } from "lucide-react";
 import { useOrganization } from "@/core/organizations/OrganizationProvider";
-import { getIndustryLabel } from "@/core/industry/types";
-import { getIndustryPreset } from "@/app/presets/presetRegistry";
-import { cn } from "@/shared/lib/utils";
 import { appBrand } from "@/core/brand";
 import { customerJoinService } from "@/core/customer/services/customerJoinService";
 import { CustomerJoinRequestsPanel } from "@/core/customer/CustomerJoinRequestsPanel";
-
-const THEME_BADGE_STYLES: Record<string, string> = {
-  emerald: "text-emerald-700 bg-emerald-50 border-emerald-200/80",
-  rose: "text-rose-700 bg-rose-50 border-rose-200/80",
-  orange: "text-orange-700 bg-orange-50 border-orange-200/80",
-  amber: "text-amber-700 bg-amber-50 border-amber-200/80",
-  sky: "text-sky-700 bg-sky-50 border-sky-200/80",
-  teal: "text-teal-700 bg-teal-50 border-teal-200/80",
-  purple: "text-purple-700 bg-purple-50 border-purple-200/80",
-  slate: "text-slate-700 bg-slate-100 border-slate-200/80",
-  indigo: "text-indigo-700 bg-indigo-50 border-indigo-100/80",
-};
 
 export const Header: React.FC = () => {
   const { data: user } = useGetIdentity<{ name?: string; email?: string }>();
   const { mutate: logout } = useLogout();
   const { currentOrganization } = useOrganization();
-
-  const preset = currentOrganization?.industry_type
-    ? getIndustryPreset(currentOrganization.industry_type)
-    : null;
-  const badgeEmoji = preset?.theme?.badgeEmoji || "🏢";
-  const badgeColor = preset?.theme?.accentColor || "indigo";
 
   const [pendingJoinCount, setPendingJoinCount] = useState<number>(0);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState<boolean>(false);
@@ -82,23 +60,6 @@ export const Header: React.FC = () => {
               {appBrand.shortName}
             </span>
           </Link>
-          {currentOrganization && (
-            <div className="flex items-center gap-2 border-l border-slate-200 pl-3 min-w-0">
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 max-w-[120px] truncate sm:max-w-xs">
-                <Building2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-                <span className="truncate">{currentOrganization.name}</span>
-              </span>
-              <span
-                className={cn(
-                  "hidden sm:inline-flex items-center gap-1.5 text-xs font-bold border px-2.5 py-0.5 rounded-lg shadow-2xs",
-                  THEME_BADGE_STYLES[badgeColor] || THEME_BADGE_STYLES.indigo
-                )}
-              >
-                <span>{badgeEmoji}</span>
-                <span>{preset?.name || getIndustryLabel(currentOrganization.industry_type)}</span>
-              </span>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center gap-3">

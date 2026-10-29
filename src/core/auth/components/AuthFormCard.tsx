@@ -72,33 +72,6 @@ export function AuthFormCard({
 
   return (
     <>
-      {mode !== 'forgot' && (
-        <div className="flex rounded-xl bg-slate-100 p-1 mb-6">
-          <button
-            type="button"
-            onClick={() => onSwitchMode('login')}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-colors min-h-[44px] ${
-              mode === 'login'
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            로그인
-          </button>
-          <button
-            type="button"
-            onClick={() => onSwitchMode('signup')}
-            className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-colors min-h-[44px] ${
-              mode === 'signup'
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            회원가입
-          </button>
-        </div>
-      )}
-
       {mode === 'forgot' && (
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900">비밀번호 찾기</h2>

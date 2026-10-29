@@ -1,4 +1,5 @@
 import { scopeAllowsResource, type DepartmentScopeType } from '@/core/organizations/departmentScope';
+import { isOmnipotentOrgRole } from '@/core/auth/permissionsRole';
 
 /** 사업주 및 위임 관리자가 설정한 직급 권한(JSONB boolean) 판정 및 RBAC 위임 관리 로직. */
 
@@ -11,6 +12,7 @@ export const ROLE_PERMISSION_KEYS = [
   'members_manage',
   'members:manage',
   'roles:assign',
+  'org_structure:manage',
   'seat_room',
   'rental_equipment',
   'policies',
@@ -43,6 +45,7 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   members_manage: false,
   'members:manage': false,
   'roles:assign': false,
+  'org_structure:manage': false,
   seat_room: false,
   rental_equipment: false,
   policies: false,
@@ -69,6 +72,7 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
   permissions: {
     'members:manage': true,
     'roles:assign': true,
+    'org_structure:manage': true,
     seat_room: true,
     booking: true,
     rental_equipment: true,
@@ -148,7 +152,7 @@ export function isRolePermissionMap(value: unknown): value is RolePermissionMap 
  * 호출자의 보유 권한 전체를 key-value 맵으로 반환 (권한 상승 방어 및 검증용)
  */
 export function getCallerEffectivePermissions(caller: AccessMember): Record<string, boolean> {
-  if (caller.role === 'owner') {
+  if (isOmnipotentOrgRole(caller.role)) {
     return Object.fromEntries(ROLE_PERMISSION_KEYS.map((k) => [k, true]));
   }
   const result: Record<string, boolean> = {};
@@ -190,33 +194,47 @@ export function getCallerEffectivePermissions(caller: AccessMember): Record<stri
  * 2. permissions['roles:assign'] === true 또는 customRole.permissions['roles:assign'] === true -> true
  * 3. 그 외 일반 직원 -> false
  */
-export function canManageRoles(callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null): boolean {
+function memberHasPermissionFlag(
+  callerMember: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null | undefined,
+  keys: readonly string[],
+): boolean {
   if (!callerMember) return false;
-  if (callerMember.role === 'owner') return true;
-
-  // Direct permissions check
   const direct = callerMember.permissions;
   if (direct) {
     if (Array.isArray(direct)) {
-      if (direct.includes('roles:assign') || direct.includes('roles_assign') || direct.includes('roles:manage')) return true;
+      if (keys.some((k) => direct.includes(k))) return true;
     } else if (typeof direct === 'object') {
       const rec = direct as Record<string, unknown>;
-      if (rec['roles:assign'] === true || rec.roles_assign === true || rec['roles:manage'] === true) return true;
+      if (keys.some((k) => rec[k] === true)) return true;
     }
   }
-
-  // customRole permissions check
   const customRolePerms = callerMember.customRole?.permissions;
   if (customRolePerms) {
     if (Array.isArray(customRolePerms)) {
-      if (customRolePerms.includes('roles:assign') || customRolePerms.includes('roles_assign')) return true;
+      if (keys.some((k) => customRolePerms.includes(k))) return true;
     } else if (typeof customRolePerms === 'object') {
       const rec = customRolePerms as Record<string, unknown>;
-      if (rec['roles:assign'] === true || rec.roles_assign === true) return true;
+      if (keys.some((k) => rec[k] === true)) return true;
     }
   }
-
   return false;
+}
+
+export function canManageRoles(callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null): boolean {
+  if (!callerMember) return false;
+  if (isOmnipotentOrgRole(callerMember.role)) return true;
+  return memberHasPermissionFlag(callerMember, ['roles:assign', 'roles_assign', 'roles:manage']);
+}
+
+/** 조직도(부서 트리·인원 배치) 편집 — 최고관리자/manager 또는 org_structure:manage 위임 */
+export function canManageOrgStructure(
+  callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null,
+): boolean {
+  if (!callerMember) return false;
+  if (isOmnipotentOrgRole(callerMember.role) || callerMember.role === 'manager') {
+    return true;
+  }
+  return memberHasPermissionFlag(callerMember, ['org_structure:manage']);
 }
 
 /**
@@ -289,7 +307,7 @@ export function canTransferOwnership(
   callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null
 ): boolean {
   if (!callerMember) return false;
-  if (callerMember.role === 'owner') return true;
+  if (isOmnipotentOrgRole(callerMember.role)) return true;
 
   // Direct permissions check
   const direct = callerMember.permissions;
@@ -337,7 +355,7 @@ export function evaluateMemberAccess(
   targetResource: string,
   action: string
 ): boolean {
-  if (member.role === 'owner') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
 
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags) {
@@ -366,7 +384,7 @@ const NAV_RESOURCE: Record<string, RolePermissionKey> = {
 };
 
 export function canManageResourceCatalog(member: AccessMember): boolean {
-  if (member.role === 'owner') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (!flags) return false;
   return flags.resources_manage || flags['resources:manage'];
@@ -374,7 +392,7 @@ export function canManageResourceCatalog(member: AccessMember): boolean {
 
 /** 사내 통근 셔틀 노선·정류장·명부 관리 위임 권한 */
 export function canManageShuttleRoutes(member: AccessMember): boolean {
-  if (member.role === 'owner' || member.role === 'admin') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags?.['shuttle:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
@@ -387,7 +405,7 @@ export function canManageShuttleRoutes(member: AccessMember): boolean {
 
 /** 사내 봉사활동 게시·모집 관리 위임 권한 */
 export function canManageVolunteer(member: AccessMember): boolean {
-  if (member.role === 'owner' || member.role === 'admin') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags?.['volunteer:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
@@ -396,7 +414,7 @@ export function canManageVolunteer(member: AccessMember): boolean {
 
 /** 사내 식수인원 조사 설정·전체 현황 위임 권한 */
 export function canManageMealSurvey(member: AccessMember): boolean {
-  if (member.role === 'owner' || member.role === 'admin') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags?.['meal_survey:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
@@ -405,7 +423,7 @@ export function canManageMealSurvey(member: AccessMember): boolean {
 
 /** 사무용품 월별 취합 카탈로그·캠페인·취합 위임 권한 */
 export function canManageOfficeSupplyRequest(member: AccessMember): boolean {
-  if (member.role === 'owner' || member.role === 'admin') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags?.['office_supply_request:manage']) return true;
   const effective = getCallerEffectivePermissions(member);
@@ -414,7 +432,7 @@ export function canManageOfficeSupplyRequest(member: AccessMember): boolean {
 
 /** 연구소 통합 포털 진입 (과제 조회 view 와 분리) */
 export function canAccessRndPortal(member: AccessMember): boolean {
-  if (member.role === 'owner' || member.role === 'admin') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (flags?.['rnd_portal:access']) return true;
   const effective = getCallerEffectivePermissions(member);
@@ -422,7 +440,7 @@ export function canAccessRndPortal(member: AccessMember): boolean {
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {
-  if (member.role === 'owner') return true;
+  if (isOmnipotentOrgRole(member.role)) return true;
   const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
   if (!flags) return false;
   return flags.grievances_manage || flags['feedbacks:read_all'];

@@ -84,6 +84,12 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     description: '타 직원에게 직급을 부여하거나 회수 (권한 상승 방지 적용)',
   },
   {
+    key: 'org_structure:manage',
+    label: '조직도·부서·인원 배치',
+    group: 'hr_rbac',
+    description: '조직 단위 추가·이름변경·이동·삭제 및 부서원 배치 (인사 위임 가능)',
+  },
+  {
     key: 'ownership:transfer',
     label: '대표이사(CEO) 변경·소유권 이전',
     group: 'hr_rbac',
@@ -162,6 +168,30 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     label: '연구소 포털 접속',
     group: 'intranet',
     description: '연구소 통합 포털(과제·장비·특허) 진입. 일반 과제 조회와 별도',
+  },
+  {
+    key: 'mbo:goals:read',
+    label: 'MBO 목표 열람',
+    group: 'intranet',
+    description: '본인·하위 조직 MBO 목표 조회 (리더는 조직도 기준으로 자동)',
+  },
+  {
+    key: 'mbo:goals:write',
+    label: 'MBO 목표 전사 편집',
+    group: 'intranet',
+    description: '조직 전역 MBO 목표 작성·수정 (팀장 하위 관리는 조직 리더 배정으로)',
+  },
+  {
+    key: 'mbo:evaluations:read_all',
+    label: 'MBO 평가 전사 열람',
+    group: 'intranet',
+    description: '조직 전역 평가 열람 (하위 리더 열람은 조직도 상속)',
+  },
+  {
+    key: 'mbo:evaluations:approve',
+    label: 'MBO 평가 승인',
+    group: 'intranet',
+    description: 'MBO 평가 승인·확정',
   },
 ] as const;
 

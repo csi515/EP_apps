@@ -292,8 +292,9 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       {
         name: '과장',
         rank_order: 400,
-        permissions: ['approval_workflow:submit', 'approval_workflow:view', 'mbo:update', 'task_pipeline:*'],
-        description: '추천 직급. 예: 과장(직급)+팀장/리더(직책) 병행 가능',
+        permissions: ['approval_workflow:submit', 'approval_workflow:view', 'mbo:view', 'task_pipeline:*'],
+        description:
+          '추천 직급. 팀장·그룹장 직책은 조직도 리더(DESCENDANTS) 배정으로 하위 MBO 관리 — 전역 mbo:update 불필요',
       },
       {
         name: '대리',

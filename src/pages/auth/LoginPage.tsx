@@ -11,20 +11,27 @@ import {
   Info,
 } from "lucide-react";
 import { MobileLoginForm } from "@/components/auth/MobileLoginForm";
-import { useAuth } from "@/core/auth/AuthProvider";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 import { loginWithToss } from "@/core/auth/services/tossAuthService";
 import { mapLoginErrorMessage } from "@/core/auth/utils/mapLoginErrorMessage";
 import { appBrand } from "@/core/brand";
-import { loginLandingCopy } from "./loginLandingCopy";
+import {
+  getLoginLandingCopy,
+  type LoginLocale,
+} from "./loginLandingCopy";
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isTossLoading, setIsTossLoading] = useState(false);
-  const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+  const [language, setLanguage] = useState<LoginLocale>('ko');
   const [rememberMe, setRememberMe] = useState(true);
+  const copy = getLoginLandingCopy(language);
+
+  useEffect(() => {
+    document.documentElement.lang = language === 'ja' ? 'ja' : 'ko';
+  }, [language]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -34,48 +41,7 @@ export const LoginPage: React.FC = () => {
       ? rawReturnUrl
       : null;
   const { mutate: login, isPending: isLoading } = useLogin();
-  const { signInWithGoogle, signInWithApple, signInWithKakao, signInWithNaver } = useAuth();
   const inToss = isAppsInToss();
-
-  const handleGoogleLogin = async () => {
-    try {
-      if (signInWithGoogle) {
-        await signInWithGoogle();
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "Google 로그인 연동 실패");
-    }
-  };
-
-  const handleAppleLogin = async () => {
-    try {
-      if (signInWithApple) {
-        await signInWithApple();
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "Apple 로그인 연동 실패");
-    }
-  };
-
-  const handleNaverLogin = async () => {
-    try {
-      if (signInWithNaver) {
-        await signInWithNaver();
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "네이버 로그인 연동 실패");
-    }
-  };
-
-  const handleKakaoLogin = async () => {
-    try {
-      if (signInWithKakao) {
-        await signInWithKakao();
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "카카오 로그인 연동 실패");
-    }
-  };
 
   const handleTossLogin = async () => {
     setIsTossLoading(true);
@@ -169,14 +135,15 @@ export const LoginPage: React.FC = () => {
 
           {/* 서비스 가치 메인 카피 */}
           <h1 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight mb-4">
-            {loginLandingCopy.heroTitleLine1}
+            {copy.heroTitleLine1}
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-indigo-200 to-blue-200">
-              {loginLandingCopy.heroTitleHighlight}
+              {copy.heroTitleHighlight}
             </span>
           </h1>
           <p className="text-sm xl:text-base text-slate-400 leading-relaxed max-w-lg">
-            {appBrand.description}. {loginLandingCopy.heroDescription}
+            {language === 'ko' ? `${appBrand.description}. ` : ''}
+            {copy.heroDescription}
           </p>
 
           {/* 추가 로그인 안내 (데스크톱) */}
@@ -187,10 +154,10 @@ export const LoginPage: React.FC = () => {
             <Info className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" aria-hidden />
             <div>
               <p className="text-sm font-semibold text-amber-100">
-                {loginLandingCopy.extraLoginTitle}
+                {copy.extraLoginTitle}
               </p>
               <p className="mt-1 text-xs text-amber-100/80 leading-relaxed">
-                {loginLandingCopy.extraLoginBody}
+                {copy.extraLoginBody}
               </p>
             </div>
           </div>
@@ -203,10 +170,10 @@ export const LoginPage: React.FC = () => {
               <FileCheck className="w-4 h-4" />
             </div>
             <h4 className="text-xs font-bold text-slate-200 mb-1">
-              {loginLandingCopy.featureApprovalTitle}
+              {copy.featureApprovalTitle}
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              {loginLandingCopy.featureApprovalBody}
+              {copy.featureApprovalBody}
             </p>
           </div>
 
@@ -215,10 +182,10 @@ export const LoginPage: React.FC = () => {
               <Warehouse className="w-4 h-4" />
             </div>
             <h4 className="text-xs font-bold text-slate-200 mb-1">
-              {loginLandingCopy.featureOpsTitle}
+              {copy.featureOpsTitle}
             </h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              {loginLandingCopy.featureOpsBody}
+              {copy.featureOpsBody}
             </p>
           </div>
         </div>
@@ -227,11 +194,11 @@ export const LoginPage: React.FC = () => {
         <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>{loginLandingCopy.securityRls}</span>
+            <span>{copy.securityRls}</span>
           </div>
           <div className="flex items-center space-x-1">
             <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-            <span>{loginLandingCopy.securityAccount}</span>
+            <span>{copy.securityAccount}</span>
           </div>
         </div>
       </div>
@@ -241,14 +208,10 @@ export const LoginPage: React.FC = () => {
         <div className="w-full max-w-md bg-white rounded-3xl lg:shadow-none border border-slate-100 lg:border-none p-8 sm:p-10">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-slate-900">
-              {inToss
-                ? loginLandingCopy.formTitleToss
-                : loginLandingCopy.formTitle}
+              {inToss ? copy.formTitleToss : copy.formTitle}
             </h2>
             <p className="text-xs text-slate-500 mt-1.5">
-              {inToss
-                ? loginLandingCopy.formSubtitleToss
-                : loginLandingCopy.formSubtitle}
+              {inToss ? copy.formSubtitleToss : copy.formSubtitle}
             </p>
           </div>
 
@@ -260,10 +223,6 @@ export const LoginPage: React.FC = () => {
             onSubmit={handleSubmit}
             isLoading={isLoading}
             errorMessage={errorMessage}
-            onGoogleLogin={handleGoogleLogin}
-            onAppleLogin={handleAppleLogin}
-            onKakaoLogin={handleKakaoLogin}
-            onNaverLogin={handleNaverLogin}
             onTossLogin={handleTossLogin}
             isTossLoading={isTossLoading}
             language={language}

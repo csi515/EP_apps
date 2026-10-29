@@ -17,8 +17,6 @@ import {
   isCapabilityRequired,
   toggleCapabilityVisibility,
 } from './menuVisibilityEngine';
-import { CustomTermsSettingCard } from './CustomTermsSettingCard';
-
 export const MenuVisibilitySettingsView: React.FC = () => {
   const { currentOrganization, hiddenCapabilities, updateHiddenCapabilities } = useOrganization();
   const [saving, setSaving] = useState(false);
@@ -272,8 +270,6 @@ export const MenuVisibilitySettingsView: React.FC = () => {
         )}
       </div>
 
-      {/* 3. 업종 맞춤 명칭(용어) 커스텀 카드 */}
-      <CustomTermsSettingCard />
     </div>
   );
 };

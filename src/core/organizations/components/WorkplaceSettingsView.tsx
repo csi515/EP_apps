@@ -26,7 +26,7 @@ import {
   SlidersHorizontal,
   Shield,
 } from 'lucide-react';
-import { getIndustryAccent, getCustomerLabel, getOwnerLabel, getPlaceLabel, getFeeLabel, getBankAccountPlaceholder, supportsDeposit as industrySupportsDeposit, showsTextbooksLink as industryShowsTextbooksLink, getRoomConfig } from '@/core/industry/industryUi';
+import { getIndustryAccent, getCustomerLabel, getPlaceLabel, getFeeLabel, getBankAccountPlaceholder, supportsDeposit as industrySupportsDeposit, showsTextbooksLink as industryShowsTextbooksLink, getRoomConfig } from '@/core/industry/industryUi';
 import { renderStaffHoursFields } from '@/core/staff/staffUi';
 import { useModuleLabels } from '@/core/labels';
 import * as orgService from '@/core/organizations/services/organizationService';
@@ -40,12 +40,7 @@ import {
   formatOrganizationAddress,
   type OrganizationAddressValue,
 } from '@/core/address';
-import {
-  OrganizationProfileFields,
-  OrganizationBackupCard,
-  OrganizationDangerZoneCard,
-} from './OrganizationSettingsCards';
-import { CustomTermsSettingCard } from '@/pages/settings/CustomTermsSettingCard';
+import { OrganizationBackupCard } from './OrganizationSettingsCards';
 import { buildWorkplaceSettingsSavePayload } from '../workplaceSettingsSave';
 
 export const WorkplaceSettingsView: FC = () => {
@@ -55,10 +50,7 @@ export const WorkplaceSettingsView: FC = () => {
   const labels = useModuleLabels();
   const placeLabel = getPlaceLabel(industry);
   const customerLabel = labels.customer.singular || getCustomerLabel(industry);
-  const contactLabel = labels.contact.singular;
-  const ownerLabel = getOwnerLabel(industry);
   const feeLabel = getFeeLabel(industry);
-  const staffLabel = labels.staff.singular;
   const org = useOrganization();
   const roomCfg = getRoomConfig(industry);
   const depositSupported = industrySupportsDeposit(industry);
@@ -202,30 +194,10 @@ export const WorkplaceSettingsView: FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SettingsCard
           className="lg:col-span-2 sm:p-8"
-          title={`${placeLabel} 기본 프로필`}
+          title={`${placeLabel} 운영 설정`}
           icon={<Building className={`w-4 h-4 ${accentIcon}`} />}
         >
           <form onSubmit={handleSaveSettings} className="space-y-4">
-            <OrganizationProfileFields
-              name={settings.name}
-              directorName={settings.directorName || ''}
-              phone={settings.phone}
-              businessNumber={settings.businessNumber || ''}
-              addressParts={addressParts}
-              placeLabel={placeLabel}
-              ownerLabel={ownerLabel}
-              contactLabel={contactLabel}
-              publicCode={org.currentOrganization?.public_code}
-              onProfileChange={(patch) => setSettings((prev) => ({ ...prev, ...patch }))}
-              onAddressChange={(next) => {
-                setAddressParts(next);
-                setSettings((prev) => ({
-                  ...prev,
-                  address: formatOrganizationAddress(next) || prev.address,
-                }));
-              }}
-            />
-
             {depositSupported && (
               <div className="space-y-3 rounded-xl border border-rose-100 bg-rose-50/40 p-3">
                 <label className="flex items-start gap-2">
@@ -410,8 +382,6 @@ export const WorkplaceSettingsView: FC = () => {
             </div>
           </div>
 
-          <CustomTermsSettingCard />
-
           <OrganizationBackupCard
             placeLabel={placeLabel}
             customerLabel={customerLabel}
@@ -421,18 +391,8 @@ export const WorkplaceSettingsView: FC = () => {
           />
 
           <div className="pt-2 pb-4">
-            <p className="text-xs text-slate-500 text-center mb-2">
-              계정 탈퇴는 <strong>내 계정</strong> 메뉴에서 진행할 수 있습니다.
-            </p>
             <LegalLinks className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-slate-500" />
           </div>
-
-          <OrganizationDangerZoneCard
-            customerLabel={customerLabel}
-            contactLabel={contactLabel}
-            feeLabel={feeLabel}
-            staffLabel={staffLabel}
-          />
         </div>
       </div>
 

@@ -40,8 +40,13 @@ const launcher = readFileSync(
   'utf8'
 );
 assert.match(launcher, /requiredAnyCapability/);
-assert.match(launcher, /approval_workflow|mbo|research_project|shuttle/);
+assert.match(launcher, /mbo|research_project|shuttle/);
 assert.doesNotMatch(launcher, /출결 패드|수강료|학부모/);
+assert.doesNotMatch(
+  launcher,
+  /id:\s*'approvals'|label:\s*'전자 결재'|유해물질 MSDS|hazardous_substance_msds/,
+  'standalone approval / MSDS launcher tiles must be removed'
+);
 
 const teamPerms = mapPresetPermissionTokensToRoleMap([
   'booking:book',

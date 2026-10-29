@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Car, HeartPulse, ArrowLeft } from 'lucide-react';
 import { useCreate, useDelete, useList } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { canManageResourceCatalog } from '@/domain/permissions';
@@ -24,9 +24,38 @@ type ResourceTypeRow = {
 };
 
 type TabId = 'bookings' | 'catalog' | 'instances';
+type BookingEntry = 'vehicle' | 'health_room';
 
 const DEFAULT_OPEN = '08:00';
 const DEFAULT_CLOSE = '20:00';
+
+const BOOKING_ENTRIES: Array<{
+  id: BookingEntry;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  accentClass: string;
+}> = [
+  {
+    id: 'vehicle',
+    title: '차량 예약',
+    description: '업무용 법인 차량 배차·반납',
+    icon: <Car className="h-7 w-7" aria-hidden />,
+    accentClass: 'border-amber-200 bg-amber-50 text-amber-800 hover:border-amber-400',
+  },
+  {
+    id: 'health_room',
+    title: '건강관리실 예약',
+    description: '상담·휴식 공간 이용 신청',
+    icon: <HeartPulse className="h-7 w-7" aria-hidden />,
+    accentClass: 'border-teal-200 bg-teal-50 text-teal-800 hover:border-teal-400',
+  },
+];
+
+const BOOKING_ENTRY_TITLE: Record<BookingEntry, string> = {
+  vehicle: '차량 예약',
+  health_room: '건강관리실 예약',
+};
 
 function slugifyKind(name: string): string {
   const base = name
@@ -37,14 +66,28 @@ function slugifyKind(name: string): string {
   return base.length >= 2 ? base : `resource_${Date.now()}`;
 }
 
-/** resource_types.category → 캘린더 메타 category */
-function mapTypeCategoryToMeta(category: 'EQUIPMENT' | 'SPACE'): ResourceCategory {
-  return category === 'SPACE' ? 'meeting_room' : 'vehicle';
+function dbCategoryFromBooking(category: ResourceCategory): 'EQUIPMENT' | 'SPACE' {
+  return category === 'vehicle' || category === 'display' ? 'EQUIPMENT' : 'SPACE';
+}
+
+function resolveBookingCategory(typeRow: ResourceTypeRow | null): ResourceCategory {
+  const schema = typeRow?.spec_schema as { booking_category?: ResourceCategory } | null;
+  if (schema?.booking_category) return schema.booking_category;
+  if (typeRow?.category === 'EQUIPMENT') return 'vehicle';
+  const hint = `${typeRow?.kind_slug ?? ''} ${typeRow?.name ?? ''}`;
+  if (/health|보건|건강/.test(hint)) return 'health_room';
+  if (typeRow?.category === 'SPACE') return 'meeting_room';
+  return 'other';
+}
+
+function parseBookingEntry(value: string | null): BookingEntry | null {
+  return value === 'vehicle' || value === 'health_room' ? value : null;
 }
 
 export const WorkspaceResourcesPage: React.FC = () => {
   const { currentOrganization } = useOrganization();
   const memberScope = useWorkspaceMemberScope();
+  const [searchParams, setSearchParams] = useSearchParams();
   const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
   const defaultRequiresApproval = settings?.resource_types_require_approval_default === true;
   const orgId = currentOrganization?.id ?? null;
@@ -54,13 +97,23 @@ export const WorkspaceResourcesPage: React.FC = () => {
     customRole: { permissions: active?.customRole?.permissions ?? null },
   });
 
+  const bookingEntry = parseBookingEntry(searchParams.get('entry'));
   const [tab, setTab] = useState<TabId>('bookings');
   const [instances, setInstances] = useState<Awaited<ReturnType<typeof listBookableResources>>>([]);
   const [loadingInstances, setLoadingInstances] = useState(false);
 
   const [typeName, setTypeName] = useState('');
-  const [typeCategory, setTypeCategory] = useState<'EQUIPMENT' | 'SPACE'>('SPACE');
+  const [bookingCategory, setBookingCategory] = useState<ResourceCategory>('health_room');
   const [requiresApproval, setRequiresApproval] = useState(defaultRequiresApproval);
+
+  const openBookingEntry = (entry: BookingEntry) => {
+    setTab('bookings');
+    setSearchParams({ entry });
+  };
+
+  const clearBookingEntry = () => {
+    setSearchParams({});
+  };
 
   useEffect(() => {
     setRequiresApproval(defaultRequiresApproval);
@@ -128,10 +181,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
         values: {
           organization_id: orgId,
           name,
-          category: typeCategory,
+          category: dbCategoryFromBooking(bookingCategory),
           kind_slug,
           requires_approval: requiresApproval,
-          spec_schema: [],
+          spec_schema: { booking_category: bookingCategory },
         },
         meta: { schema: 'core' },
       },
@@ -160,7 +213,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
         openTime: DEFAULT_OPEN,
         closeTime: DEFAULT_CLOSE,
         metadata: {
-          category: typeRow ? mapTypeCategoryToMeta(typeRow.category) : 'other',
+          category: resolveBookingCategory(typeRow),
           // v1 예약은 즉시 확정. 플래그는 후속 승인제 연동용으로만 저장.
           require_approval: typeRow?.requires_approval === true,
         },
@@ -181,53 +234,77 @@ export const WorkspaceResourcesPage: React.FC = () => {
 
   return (
     <main className="mx-auto max-w-6xl p-4 pb-12">
-      <div className="mb-4">
-        <Link
-          to="/workspace/intranet"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>사내 앱 런처로 돌아가기</span>
-        </Link>
-      </div>
-      <h1 className="text-lg font-semibold text-slate-900">공용 자원 (건강관리실, 차량 예약)</h1>
+      <h1 className="text-lg font-semibold text-slate-900">공용 자원</h1>
       <p className="mt-1 text-sm text-slate-600">
-        건강관리실 이용 및 업무용 법인 차량 배차를 예약하고, 총무는 자원 종류·인스턴스를 관리합니다.
+        차량·건강관리실 예약을 선택해 진입합니다. 총무는 자원 종류·인스턴스를 관리할 수 있습니다.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {(['bookings', 'catalog', 'instances'] as TabId[]).map((id) => {
-          if ((id === 'catalog' || id === 'instances') && !canManage && id === 'catalog') {
-            // 종류 탭은 조회는 가능, 쓰기는 canManage
-          }
-          return (
-            <button
-              key={id}
-              type="button"
-              className={`min-h-12 flex-1 rounded-xl border px-3 text-sm font-medium sm:flex-none sm:px-5 ${
-                tab === id
-                  ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
-                  : 'border-slate-200 bg-white'
-              }`}
-              onClick={() => setTab(id)}
-            >
-              {tabLabel[id]}
-            </button>
-          );
-        })}
+        {(['bookings', 'catalog', 'instances'] as TabId[]).map((id) => (
+          <button
+            key={id}
+            type="button"
+            className={`min-h-12 flex-1 rounded-xl border px-3 text-sm font-medium sm:flex-none sm:px-5 ${
+              tab === id
+                ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
+                : 'border-slate-200 bg-white'
+            }`}
+            onClick={() => {
+              setTab(id);
+              if (id !== 'bookings') clearBookingEntry();
+            }}
+          >
+            {tabLabel[id]}
+          </button>
+        ))}
       </div>
 
       {tab === 'bookings' ? (
-        <section className="mt-6">
-          {orgId ? (
-            <UniversalResourceCalendarView
-              compact
-              hideApprovalInbox
-              hideMasterButton
-              bookingMode="member"
-            />
+        <section className="mt-6 space-y-4">
+          {!bookingEntry ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {BOOKING_ENTRIES.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => openBookingEntry(entry.id)}
+                  className={`flex min-h-[120px] flex-col items-start justify-between rounded-2xl border p-5 text-left transition-colors ${entry.accentClass}`}
+                >
+                  <span className="rounded-xl bg-white/80 p-2.5 shadow-2xs">{entry.icon}</span>
+                  <span>
+                    <span className="block text-base font-bold">{entry.title}</span>
+                    <span className="mt-1 block text-xs font-medium opacity-80">{entry.description}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
           ) : (
-            <p className="text-sm text-slate-500">조직을 선택하세요.</p>
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={clearBookingEntry}
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
+                  예약 선택으로
+                </button>
+                <h2 className="text-sm font-bold text-slate-900">{BOOKING_ENTRY_TITLE[bookingEntry]}</h2>
+              </div>
+              {orgId ? (
+                <UniversalResourceCalendarView
+                  key={bookingEntry}
+                  compact
+                  hideApprovalInbox
+                  hideMasterButton
+                  lockCategory
+                  defaultCategory={bookingEntry}
+                  bookingMode="member"
+                />
+              ) : (
+                <p className="text-sm text-slate-500">조직을 선택하세요.</p>
+              )}
+            </>
           )}
         </section>
       ) : null}
@@ -245,11 +322,12 @@ export const WorkspaceResourcesPage: React.FC = () => {
               />
               <select
                 className="min-h-12 w-full rounded-xl border border-slate-200 px-3"
-                value={typeCategory}
-                onChange={(e) => setTypeCategory(e.target.value as 'EQUIPMENT' | 'SPACE')}
+                value={bookingCategory}
+                onChange={(e) => setBookingCategory(e.target.value as ResourceCategory)}
               >
-                <option value="SPACE">공간 (SPACE)</option>
-                <option value="EQUIPMENT">장비 (EQUIPMENT)</option>
+                <option value="vehicle">차량</option>
+                <option value="health_room">건강관리실</option>
+                <option value="meeting_room">회의실</option>
               </select>
               <label className="flex min-h-12 items-center gap-2 text-sm text-slate-500">
                 <input
@@ -276,7 +354,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
                 <div>
                   <p className="font-medium text-slate-900">{row.name}</p>
                   <p className="text-xs text-slate-500">
-                    {row.category} · kind={row.kind_slug}
+                    {resolveBookingCategory(row)} · {row.category} · kind={row.kind_slug}
                     {row.requires_approval ? ' · 결재플래그' : ''}
                   </p>
                 </div>

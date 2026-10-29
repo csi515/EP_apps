@@ -9,6 +9,7 @@ import type { User } from "@/types";
 import { evaluateCustomPermission } from "@/core/authorization";
 import { hasStandardPermission, resolveStandardPermissionKey } from "@/core/authorization/standardPermissionKeys";
 import { canManageRoles, canTransferOwnership, evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
+import { isOmnipotentOrgRole } from "@/core/auth/permissionsRole";
 
 /**
  * AccessControl Context Resolver.
@@ -283,6 +284,23 @@ export function createAccessControlProvider(
       const role = activeUser.role || null;
       const activeLocationId = resolver.getLocationId(organizationId) || null;
       const parentCustomerId = activeUser.parentCustomerId || null;
+
+      // params.permission으로 임의 canonical permission을 주입하는 경로 차단 (owner 포함)
+      if (params?.permission != null) {
+        const suppliedPerm = typeof params.permission === "string" ? params.permission : "";
+        if (!isKnownPermission(suppliedPerm)) {
+          return { can: false, reason: "유효하지 않은 권한 식별자입니다." };
+        }
+        return {
+          can: false,
+          reason: "params.permission을 통한 권한 지정은 허용되지 않습니다.",
+        };
+      }
+
+      // 최고 관리자(owner/admin/director/super_admin)는 모든 권한 보유
+      if (isOmnipotentOrgRole(role)) {
+        return { can: true };
+      }
 
       // 2.4 Delegated RBAC Management Check (resource: "members", action: "assign_role")
       if (

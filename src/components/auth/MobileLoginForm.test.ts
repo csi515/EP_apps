@@ -6,14 +6,12 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 async function runTests() {
-  console.log('Running MobileLoginForm & Social Auth verification tests...');
+  console.log('Running MobileLoginForm verification tests...');
 
-  // 1. MobileLoginForm.tsx exists
   const componentPath = join(root, 'src/components/auth/MobileLoginForm.tsx');
   assert.ok(existsSync(componentPath), 'MobileLoginForm.tsx must exist');
   const code = readFileSync(componentPath, 'utf8');
 
-  // 2. Desktop 2-column <-> Mobile single card responsive layout (verified via LoginPage container)
   const loginPagePath = join(root, 'src/pages/auth/LoginPage.tsx');
   assert.ok(existsSync(loginPagePath), 'LoginPage.tsx must exist');
   const loginPageCode = readFileSync(loginPagePath, 'utf8');
@@ -34,79 +32,18 @@ async function runTests() {
     'Desktop brand panel test ID must exist'
   );
 
-  // 3. Global social login order verification
-  // 1) Google (top, full width)
-  // 2) Apple (iOS App Store review standard, full width)
-  // 3) Kakao & Naver (2 columns grid)
-  // 4) Email form
-  const googleIndex = code.indexOf('data-testid="btn-google-login"');
-  const appleIndex = code.indexOf('data-testid="btn-apple-login"');
-  const kakaoIndex = code.indexOf('data-testid="btn-kakao-login"');
-  const naverIndex = code.indexOf('data-testid="btn-naver-login"');
-  const emailFormIndex = code.indexOf('data-testid="btn-email-submit"');
-
-  assert.ok(googleIndex >= 0, 'Google login button must exist');
-  assert.ok(appleIndex >= 0, 'Apple login button must exist');
-  assert.ok(kakaoIndex >= 0, 'Kakao login button must exist');
-  assert.ok(naverIndex >= 0, 'Naver login button must exist');
-  assert.ok(emailFormIndex >= 0, 'Email submit button must exist');
-
-  // Verify exact order
-  assert.ok(
-    googleIndex < appleIndex,
-    'Google login button must appear BEFORE Apple login button'
-  );
-  assert.ok(
-    appleIndex < kakaoIndex,
-    'Apple login button must appear BEFORE Kakao login button'
-  );
-  assert.ok(
-    kakaoIndex < emailFormIndex && naverIndex < emailFormIndex,
-    'Kakao & Naver buttons must appear BEFORE email form'
+  assert.doesNotMatch(code, /btn-google-login/, 'Google login button must be removed');
+  assert.doesNotMatch(code, /SNS_LOGIN_ENABLED/, 'SNS_LOGIN_ENABLED flag must be removed');
+  assert.doesNotMatch(code, /간편 로그인/, '간편 로그인 copy must be removed from login form');
+  assert.doesNotMatch(code, /link-signup|회원가입|초대 코드|invite\/accept/, 'Signup and invite entry must be removed');
+  assert.doesNotMatch(code, /공용 기기/, 'Shared-device caution copy must be removed');
+  assert.doesNotMatch(
+    loginPageCode,
+    /onGoogleLogin|signInWithGoogle|signInWithApple|signInWithKakao|signInWithNaver/,
+    'LoginPage must not wire social OAuth handlers'
   );
 
-  // Kakao & Naver must be in 2-column grid
-  assert.match(
-    code,
-    /grid\s+grid-cols-2\s+gap-(?:2\.5|3)/,
-    'Kakao and Naver must be arranged in a 2-column grid'
-  );
-
-  // 4. SNS login temporarily disabled until OAuth is wired
-  assert.match(
-    code,
-    /SNS_LOGIN_ENABLED\s*=\s*false/,
-    'SNS_LOGIN_ENABLED must be false until social login is ready'
-  );
-  assert.match(
-    code,
-    /data-testid=["']sns-login-disabled-hint["']/,
-    'Disabled SNS login must show a coming-soon hint'
-  );
-
-  // 4b. Apple guideline compliance check
-  assert.match(
-    code,
-    /Apple로 계속하기|Sign in with Apple/,
-    'Apple button must display standard Apple Sign In text'
-  );
-  assert.match(
-    code,
-    /bg-black/,
-    'Apple button must conform to Apple design guidelines (black background)'
-  );
-
-  // 5. Signup / forgot entry points on login form
-  assert.match(
-    code,
-    /data-testid=["']link-signup["']/,
-    'MobileLoginForm must expose a signup link'
-  );
-  assert.match(
-    code,
-    /to=["']\/signup["']/,
-    'Signup link must navigate to /signup'
-  );
+  assert.ok(code.includes('data-testid="btn-email-submit"'), 'Email submit button must exist');
   assert.match(
     code,
     /data-testid=["']link-forgot-password["']/,
@@ -118,7 +55,6 @@ async function runTests() {
     'Forgot-password link must navigate to /signup?mode=forgot'
   );
 
-  // 5b. LoginPage must surface auth failure on success:false (Refine contract)
   assert.match(
     loginPageCode,
     /!data\?\.success/,
@@ -135,7 +71,6 @@ async function runTests() {
     'LoginPage must not show Project Moa v2 branding'
   );
 
-  // 5c. LoginPage integration check
   assert.match(
     loginPageCode,
     /<MobileLoginForm/,
@@ -157,19 +92,14 @@ async function runTests() {
     'LoginPage.tsx must pass rememberMe in login payload'
   );
 
-  // 6. authService support for Google and Apple OAuth & rememberMe session partitioning
+  const landingCopy = readFileSync(join(root, 'src/pages/auth/loginLandingCopy.ts'), 'utf8');
+  assert.doesNotMatch(landingCopy, /invitePrompt|inviteLink|초대 코드/, 'Landing copy must not mention invite codes');
+  assert.match(landingCopy, /LoginLocale|'ko'\s*\|\s*'ja'/, 'Login locale must be ko|ja');
+  assert.doesNotMatch(code, /\bEN\b|language === 'en'/, 'English locale toggle must be removed');
+  assert.match(code, /onLanguageChange\('ja'\)|LoginLocale/, 'Japanese locale switch must exist');
+
   const authServicePath = join(root, 'src/core/auth/services/authService.ts');
   const authServiceCode = readFileSync(authServicePath, 'utf8');
-  assert.match(
-    authServiceCode,
-    /export async function signInWithGoogle/,
-    'authService must export signInWithGoogle'
-  );
-  assert.match(
-    authServiceCode,
-    /export async function signInWithApple/,
-    'authService must export signInWithApple'
-  );
   assert.match(
     authServiceCode,
     /rememberMe\?: boolean/,
@@ -181,7 +111,6 @@ async function runTests() {
     'authService.signIn must apply setAuthStoragePreference when rememberMe is provided'
   );
 
-  // 7. Dynamic Auth Storage module check
   const authStoragePath = join(root, 'src/core/auth/services/authStorage.ts');
   assert.ok(existsSync(authStoragePath), 'authStorage.ts must exist');
   const authStorageCode = readFileSync(authStoragePath, 'utf8');
@@ -196,7 +125,7 @@ async function runTests() {
     'dynamicAuthStorage must leverage sessionStorage for shared kiosk partitioning'
   );
 
-  console.log('MobileLoginForm & Social Auth tests passed successfully!');
+  console.log('MobileLoginForm tests passed successfully!');
 }
 
 void runTests();

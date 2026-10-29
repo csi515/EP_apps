@@ -148,6 +148,20 @@ export async function localSignOut(): Promise<void> {
   }
 }
 
+/** 로그인 사용자 비밀번호 변경 (현재 비밀번호 확인) */
+export async function localChangePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  await apiFetch<{ ok: boolean }>('/password/change', {
+    method: 'POST',
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}
+
 export function localOnAuthStateChange(
   callback: (session: Session | null) => void
 ): () => void {

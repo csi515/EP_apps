@@ -38,7 +38,7 @@ export const LegalPageView: React.FC<LegalPageViewProps> = ({ page }) => {
               to="/login"
               className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-2 rounded-lg hover:bg-indigo-50"
             >
-              로그인 / 회원가입
+              로그인
             </Link>
           </div>
 

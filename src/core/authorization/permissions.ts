@@ -22,8 +22,13 @@ export function evaluateCustomPermission(
   requiredAction: string,
   role?: string | null
 ): boolean {
-  // 1. Backward compatibility: Owner and Admin have omnipotent access
-  if (role === 'owner' || role === 'admin') {
+  // 1. 최고 관리자(owner/admin/director/super_admin)는 전 권한
+  if (
+    role === 'owner' ||
+    role === 'admin' ||
+    role === 'director' ||
+    role === 'super_admin'
+  ) {
     return true;
   }
 

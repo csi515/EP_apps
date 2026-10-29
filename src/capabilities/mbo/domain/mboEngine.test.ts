@@ -154,6 +154,12 @@ assert.equal(canAccessEvaluation({ ...confidentialParams, isOrgAdmin: true }), t
 
 // 5.5 비공개 평가가 아닌 경우 타 직원도 열람 가능
 assert.equal(canAccessEvaluation({ ...confidentialParams, isConfidential: false }), true);
+
+// 5.6 조직 하위 리더는 대상자 기밀 평가 열람 가능
+assert.equal(
+  canAccessEvaluation({ ...confidentialParams, isSubtreeLeaderOfTarget: true }),
+  true,
+);
 console.log('  -> 비공개 성과 평가 권한 격리 검증 성공');
 
 console.log('=== [6] Objective Weights 100% Interlock Validation ===');

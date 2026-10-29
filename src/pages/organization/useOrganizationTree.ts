@@ -4,8 +4,11 @@ import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRole
 import {
   assignDepartmentScope,
   createDepartment,
+  deleteDepartment,
   loadOrganizationTree,
   moveDepartment,
+  reassignMemberDepartment,
+  renameDepartment,
   revokeMemberRoleViaRpc,
   transferOrganizationOwnership,
   type DepartmentMemberRow,
@@ -47,7 +50,7 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
   }, [reload]);
 
   const create = useCallback(
-    async (name: string, parentId: string | null) => {
+    async (name: string, parentId: string | null, unitKind?: string | null) => {
       if (!organizationId) return;
       const parent = parentId ? nodes.find((node) => node.id === parentId) : null;
       await createDepartment({
@@ -55,18 +58,36 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
         name,
         parentId,
         parentPath: parent?.path ?? null,
+        unitKind,
       });
       await reload();
     },
     [organizationId, nodes, reload],
   );
 
-  const move = useCallback(
-    async (departmentId: string, newParentId: string | null) => {
-      await moveDepartment(departmentId, newParentId);
+  const rename = useCallback(
+    async (departmentId: string, name: string, unitKind?: string | null) => {
+      await renameDepartment({ departmentId, name, unitKind });
       await reload();
     },
     [reload],
+  );
+
+  const remove = useCallback(
+    async (departmentId: string) => {
+      if (!organizationId) return;
+      await deleteDepartment({ organizationId, departmentId });
+      await reload();
+    },
+    [organizationId, reload],
+  );
+
+  const move = useCallback(
+    async (departmentId: string, newParentId: string | null) => {
+      await moveDepartment(departmentId, newParentId, organizationId ?? undefined);
+      await reload();
+    },
+    [organizationId, reload],
   );
 
   const assignScope = useCallback(
@@ -84,6 +105,15 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
         scopeType: input.scopeType,
         customRoleId: input.customRoleId,
       });
+      await reload();
+    },
+    [organizationId, reload],
+  );
+
+  const reassignMember = useCallback(
+    async (memberId: string, departmentId: string) => {
+      if (!organizationId) return;
+      await reassignMemberDepartment({ organizationId, memberId, departmentId });
       await reload();
     },
     [organizationId, reload],
@@ -118,8 +148,11 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
     error,
     reload,
     createDepartment: create,
+    renameDepartment: rename,
+    deleteDepartment: remove,
     moveDepartment: move,
     assignScope,
+    reassignMember,
     revokeMemberRole,
     transferOwnership,
   };

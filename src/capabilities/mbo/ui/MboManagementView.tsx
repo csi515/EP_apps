@@ -44,6 +44,11 @@ import { MboPlanApprovalModal } from './MboPlanApprovalModal';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import { MboService } from '../services/mboService';
+import {
+  canManageObjectiveOwner,
+  loadMboViewerOrgScope,
+  type MboViewerOrgScope,
+} from '../services/mboOrgScopeService';
 import { readMboRequirePlanApproval } from '../domain/mboPlanApproval';
 import { formatPeriodYm, listMissingMonthlyCheckins } from '../domain/mboMonthlyCheckin';
 import { useActiveUser } from '@/shared/session/useActiveUser';
@@ -99,9 +104,27 @@ export const MboManagementView: React.FC = () => {
   const { isAdmin, isOwner } = usePermissions();
   const orgId = currentOrganization?.id ?? null;
   const isOrgAdmin = isAdmin || isOwner;
+  const [orgScope, setOrgScope] = useState<MboViewerOrgScope | null>(null);
+  const isSubtreeManager = orgScope?.isSubtreeManager === true;
+  const isManager = isOrgAdmin || isSubtreeManager;
   const requirePlanApproval = readMboRequirePlanApproval(
     (currentOrganization?.settings ?? null) as Record<string, unknown> | null
   );
+
+  useEffect(() => {
+    const userId = authUser?.id || activeUser?.id || '';
+    if (!orgId || !userId) {
+      setOrgScope(null);
+      return;
+    }
+    let cancelled = false;
+    void loadMboViewerOrgScope(orgId, userId).then((scope) => {
+      if (!cancelled) setOrgScope(scope);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, authUser?.id, activeUser?.id]);
   const hasApprovalWorkflow = useMemo(() => {
     const preset = getIndustryPreset(currentOrganization?.industry_type ?? '');
     const caps = new Set([...(preset?.capabilities ?? []), ...activeCapabilities]);
@@ -138,7 +161,9 @@ export const MboManagementView: React.FC = () => {
     const userId = authUser?.id || activeUser?.id || '';
     void Promise.all([
       MboService.listFeedbackComments(orgId, projectId),
-      MboService.listEvaluations(orgId, projectId, userId, isOrgAdmin),
+      MboService.listEvaluations(orgId, projectId, userId, isOrgAdmin, {
+        isSubtreeLeaderOfTarget: orgScope?.isSubtreeLeaderOfTarget,
+      }),
     ])
       .then(([feedbackRows, evalRows]) => {
         if (cancelled) return;
@@ -177,7 +202,7 @@ export const MboManagementView: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [orgId, selectedProjectId, authUser?.id, activeUser?.id, isOrgAdmin]);
+  }, [orgId, selectedProjectId, authUser?.id, activeUser?.id, isOrgAdmin, orgScope]);
 
   const { query: objQuery } = useList<any>({
     resource: 'mbo_objectives',
@@ -199,37 +224,47 @@ export const MboManagementView: React.FC = () => {
   const refineLogs = logQuery?.data?.data;
   const refineProjects = projectQuery?.data?.data;
 
-  // DB 데이터 우선 바인딩
+  const viewerUserId = authUser?.id || activeUser?.id || '';
+
+  // DB 데이터 우선 바인딩 — org admin / 본인 / 하위 리더 스코프
   const objectives: ObjectiveNode[] = useMemo(() => {
-    if (refineObjectives && refineObjectives.length > 0) {
-      return refineObjectives.map((row: any) => ({
-        id: row.id,
-        parentId: row.parent_id,
-        level: row.level as MboLevel,
-        departmentName: row.department_name || '부서',
-        ownerName: row.owner_name || '담당자',
-        title: row.title,
-        description: row.description || '',
-        successCriteria: row.success_criteria || '',
-        status: (row.status || 'draft') as MboStatus,
-        startDate: row.start_date || '2026-01-01',
-        targetDate: row.target_date || '2026-12-31',
-        weight: row.weight ?? 100,
-        progressRate: row.progress_rate ?? 0,
-        revision: row.revision_count ?? row.revision ?? 1,
-        isRevised: Boolean(row.is_revised),
-        revisionCount: row.revision_count ?? row.revision ?? 1,
-        targetValue: row.target_value ?? row.weight ?? null,
-        rejectionReason: row.rejection_reason,
-      }));
-    }
-    return localObjectives.map((obj) => ({
-      ...obj,
-      isRevised: obj.revision > 1,
-      revisionCount: obj.revision,
-      targetValue: obj.weight,
-    }));
-  }, [refineObjectives, localObjectives]);
+    const scope = orgScope;
+    const mapRow = (row: any): ObjectiveNode & { ownerId?: string | null } => ({
+      id: row.id,
+      parentId: row.parent_id,
+      level: row.level as MboLevel,
+      departmentName: row.department_name || '부서',
+      ownerName: row.owner_name || '담당자',
+      title: row.title,
+      description: row.description || '',
+      successCriteria: row.success_criteria || '',
+      status: (row.status || 'draft') as MboStatus,
+      startDate: row.start_date || '2026-01-01',
+      targetDate: row.target_date || '2026-12-31',
+      weight: row.weight ?? 100,
+      progressRate: row.progress_rate ?? 0,
+      revision: row.revision_count ?? row.revision ?? 1,
+      isRevised: Boolean(row.is_revised),
+      revisionCount: row.revision_count ?? row.revision ?? 1,
+      targetValue: row.target_value ?? row.weight ?? null,
+      rejectionReason: row.rejection_reason,
+      ownerId: row.owner_id ?? null,
+    });
+    const raw =
+      refineObjectives && refineObjectives.length > 0
+        ? refineObjectives.map(mapRow)
+        : localObjectives.map((obj) => ({
+            ...obj,
+            isRevised: obj.revision > 1,
+            revisionCount: obj.revision,
+            targetValue: obj.weight,
+            ownerId: null as string | null,
+          }));
+    if (isOrgAdmin || !scope) return raw;
+    return raw.filter((obj) =>
+      canManageObjectiveOwner(scope, obj.ownerId, viewerUserId, isOrgAdmin),
+    );
+  }, [refineObjectives, localObjectives, orgScope, isOrgAdmin, viewerUserId]);
 
   const logs: ProgressLogItem[] = useMemo(() => {
     if (refineLogs && refineLogs.length > 0) {
@@ -258,7 +293,7 @@ export const MboManagementView: React.FC = () => {
 
   const portfolioProjects: PortfolioProject[] = useMemo(() => {
     if (refineProjects && refineProjects.length > 0) {
-      return refineProjects.map((row: any) => {
+      const mapped = refineProjects.map((row: any) => {
         const cat = row.category_id ? categoryById.get(row.category_id) : undefined;
         return {
           id: row.id,
@@ -277,9 +312,13 @@ export const MboManagementView: React.FC = () => {
           categoryColor: cat?.color ?? null,
         };
       });
+      if (isOrgAdmin || !orgScope) return mapped;
+      return mapped.filter((proj) =>
+        canManageObjectiveOwner(orgScope, proj.ownerId, viewerUserId, isOrgAdmin),
+      );
     }
     return [];
-  }, [refineProjects, categoryById]);
+  }, [refineProjects, categoryById, orgScope, isOrgAdmin, viewerUserId]);
 
   const currentPeriodYm = formatPeriodYm();
   const missingMonthlyProjectIds = useMemo(
@@ -331,8 +370,15 @@ export const MboManagementView: React.FC = () => {
     const target = objectives.find((o) => o.id === id);
     if (!target) return;
 
-    if (!canTransitionMboStatus(target.status, targetStatus)) {
-      showToast(`전이할 수 없는 상태입니다: ${target.status} -> ${targetStatus}`, 'warning');
+    const transition = canTransitionMboStatus(target.status, targetStatus, {
+      isManager,
+      rejectionReason: reason,
+    });
+    if (!transition.allowed) {
+      showToast(
+        transition.reason || `전이할 수 없는 상태입니다: ${target.status} -> ${targetStatus}`,
+        'warning',
+      );
       return;
     }
 
@@ -770,7 +816,8 @@ export const MboManagementView: React.FC = () => {
                   orgId,
                   projectId,
                   userId,
-                  isOrgAdmin
+                  isOrgAdmin,
+                  { isSubtreeLeaderOfTarget: orgScope?.isSubtreeLeaderOfTarget },
                 );
                 setLocalEvaluations(
                   rows.map((row) => ({

@@ -54,10 +54,11 @@ const settings = read('src/core/organizations/components/WorkplaceSettingsView.t
 assert.doesNotMatch(settings, /기본 수강 형태|월 수강료|AttendanceFeatureToggle|출석 키오스크/);
 assert.doesNotMatch(settings, /원장,\s*강사|교재·연주회비/);
 assert.match(settings, /대표, 팀장, 실무자/);
+assert.doesNotMatch(settings, /기본 프로필|CustomTermsSettingCard|OrganizationDangerZoneCard|조직 영구 삭제|계정 탈퇴/);
 
-const terms = read('src/pages/settings/CustomTermsSettingCard.tsx');
-assert.doesNotMatch(terms, /예:\s*원생|예:\s*수강권|학원,/);
-assert.match(terms, /운영자|임직원|회의실|작업자/);
+const account = read('src/core/account/MyAccountView.tsx');
+assert.match(account, /PasswordChangeCard/);
+assert.doesNotMatch(account, /AccountDeletionCard|계정 탈퇴/);
 
 const app = read('src/App.tsx');
 assert.match(app, /path="\/signup\/customer"[\s\S]*?Navigate to="\/workspace"/);
@@ -67,8 +68,5 @@ const login = read('src/pages/auth/LoginPage.tsx');
 assert.doesNotMatch(login, /extra-login-notice-mobile|lg:hidden text-center mb-6/);
 assert.match(login, /임직원 로그인|formTitle/);
 assert.match(login, /MobileLoginForm/);
-
-const danger = read('src/core/organizations/components/OrganizationSettingsCards.tsx');
-assert.doesNotMatch(danger, /출결,/);
 
 console.log('epAppsShellSurface.contract.test.ts: ok');

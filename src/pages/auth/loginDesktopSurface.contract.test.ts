@@ -35,7 +35,9 @@ assert.doesNotMatch(
   /hidden lg:block mb-6[\s\S]{0,40}formTitle/,
   'form title must not be desktop-only hidden block'
 );
-assert.match(login, /loginLandingCopy\.formTitle/);
+assert.match(login, /copy\.formTitle|getLoginLandingCopy/);
+assert.match(copy, /LoginLocale|'ko'\s*\|\s*'ja'|getLoginLandingCopy/);
+assert.doesNotMatch(copy, /emailLabelEn|submitLabelEn|Company email|Sign in/);
 
 // 랜딩 카피가 학원 용어가 아닌지
 assert.doesNotMatch(copy, /학원|원생|수강|학부모|출결 패드/);

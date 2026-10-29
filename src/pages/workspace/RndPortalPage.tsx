@@ -1,6 +1,4 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
@@ -61,9 +59,6 @@ export const RndPortalPage: React.FC = () => {
         <p className="mt-3 text-center text-sm text-slate-600">
           연구소 포털은 권한이 부여된 담당자만 이용할 수 있습니다.
         </p>
-        <Link to="/workspace/intranet" className="mt-4 block text-center text-sm font-medium text-indigo-600">
-          사내 업무 허브로 이동
-        </Link>
       </main>
     );
   }
@@ -72,9 +67,6 @@ export const RndPortalPage: React.FC = () => {
     return (
       <main className="mx-auto max-w-lg p-6 text-center">
         <p className="text-sm text-slate-600">연구소 포털 모듈이 활성화되지 않았습니다.</p>
-        <Link to="/workspace/intranet" className="mt-4 inline-block text-sm font-medium text-indigo-600">
-          사내 업무 허브로 이동
-        </Link>
       </main>
     );
   }
@@ -82,25 +74,8 @@ export const RndPortalPage: React.FC = () => {
   return (
     <main className="min-h-[100svh] bg-slate-50">
       <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
-        <div className="mb-2">
-          <Link
-            to="/workspace/intranet"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            <span>사내 앱 런처로 돌아가기</span>
-          </Link>
-        </div>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
-          {enabledCaps.includes('approval_workflow') ? (
-            <Link
-              to="/workspace/approvals"
-              className="ml-auto min-h-11 rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700"
-            >
-              전자 결재
-            </Link>
-          ) : null}
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {visibleTabs.map((id) => (

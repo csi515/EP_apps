@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Eye, History, Plus, Printer, Send } from 'lucide-react';
+import { Eye, History, Plus, Printer, Send } from 'lucide-react';
 import { DocumentApprovalStepper } from './DocumentApprovalStepper';
 import { SopHistoryModal, SopNewDocumentModal, SopReviseModal } from './SopDocumentModals';
 import { SopPendingApprovalStrip } from './SopPendingApprovalStrip';
@@ -86,10 +85,6 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
       <SopPendingApprovalStrip />
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
         <div className="flex flex-wrap items-center gap-2">
-          <Link to="/workspace/intranet" className="inline-flex h-11 items-center gap-1 rounded-xl border border-slate-200 px-3 text-xs font-bold">
-            <ArrowLeft className="h-3.5 w-3.5" />
-            사내 앱 런처
-          </Link>
           <select
             className="h-11 rounded-xl border border-slate-300 px-3 text-sm font-bold"
             value={doc?.document_no ?? ''}

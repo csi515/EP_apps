@@ -15,6 +15,19 @@ export function isOrgAdmin(role: UserRole | string | null | undefined): boolean 
   );
 }
 
+/**
+ * 최고 관리자 — 모든 기능·직급 플래그를 보유한 것으로 본다.
+ * manager는 포함하지 않는다(운영 위임과 구분).
+ */
+export function isOmnipotentOrgRole(role: UserRole | string | null | undefined): boolean {
+  return (
+    role === 'owner' ||
+    role === 'director' ||
+    role === 'admin' ||
+    role === 'super_admin'
+  );
+}
+
 export function isOrgOwner(role: UserRole | string | null | undefined): boolean {
   return role === 'owner' || role === 'director';
 }

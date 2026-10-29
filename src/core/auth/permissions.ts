@@ -22,6 +22,7 @@ import {
 
 export {
   isOrgAdmin,
+  isOmnipotentOrgRole,
   isOrgOwner,
   isParentRole,
   isStaffRole,

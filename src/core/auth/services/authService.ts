@@ -2,6 +2,7 @@ import { Session, User, type Provider } from '@supabase/supabase-js';
 import { getCoreClient } from '../../../lib/supabase';
 import { isLocalAuthEnabled } from '../localAuth/isLocalAuth';
 import {
+  localChangePassword,
   localGetSession,
   localOnAuthStateChange,
   localSignIn,
@@ -163,6 +164,35 @@ export async function resetPassword(email: string): Promise<void> {
   const { error } = await getCoreClient().auth.resetPasswordForEmail(email.trim(), {
     redirectTo,
   });
+  if (error) throw error;
+}
+
+/** 로그인 중 비밀번호 변경 (현재 비밀번호 확인) */
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<void> {
+  if (newPassword.length < 8) {
+    throw new Error('새 비밀번호는 8자 이상이어야 합니다.');
+  }
+  if (isLocalAuthEnabled()) {
+    await localChangePassword(currentPassword, newPassword);
+    return;
+  }
+  const client = getCoreClient();
+  const session = await getSession();
+  const email = session?.user?.email;
+  if (!email) throw new Error('로그인 세션이 없습니다.');
+
+  const { error: reauthError } = await client.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+  if (reauthError) {
+    throw new Error('현재 비밀번호가 올바르지 않습니다.');
+  }
+
+  const { error } = await client.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }
 

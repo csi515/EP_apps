@@ -284,8 +284,17 @@ export function canAccessEvaluation(params: {
   evaluatorId: string | null;
   currentUserId: string;
   isOrgAdmin: boolean;
+  /** 대상자의 조직 상위 리더(DESCENDANTS) */
+  isSubtreeLeaderOfTarget?: boolean;
 }): boolean {
-  const { isConfidential, targetUserId, evaluatorId, currentUserId, isOrgAdmin } = params;
+  const {
+    isConfidential,
+    targetUserId,
+    evaluatorId,
+    currentUserId,
+    isOrgAdmin,
+    isSubtreeLeaderOfTarget = false,
+  } = params;
 
   // 비공개가 아니면 같은 테넌트 내 공개 열람 가능
   if (!isConfidential) {
@@ -294,6 +303,11 @@ export function canAccessEvaluation(params: {
 
   // 최고 관리자/오너는 모든 평가 열람 가능
   if (isOrgAdmin) {
+    return true;
+  }
+
+  // 조직 리더는 하위 대상자의 기밀 평가 열람 가능 (별도 MBO 위임 불필요)
+  if (isSubtreeLeaderOfTarget) {
     return true;
   }
 

@@ -77,7 +77,14 @@ export function hasStandardPermission(
   key: StandardPermissionKey,
   role: string | null
 ): boolean {
-  if (role === 'owner' || role === 'admin') return true;
+  if (
+    role === 'owner' ||
+    role === 'admin' ||
+    role === 'director' ||
+    role === 'super_admin'
+  ) {
+    return true;
+  }
   const list = granted ?? [];
   return list.includes(key) || list.includes('*');
 }
