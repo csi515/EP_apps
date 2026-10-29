@@ -1,6 +1,8 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { dynamicAuthStorage } from '@/core/auth/services/authStorage';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
+import { getLocalAuthToken } from '@/core/auth/localAuth/localSessionStore';
 
 import { createLogger } from '@/core/logging';
 
@@ -21,6 +23,19 @@ if (isProd && !hasEnvConfig) {
 const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || defaultKey;
 
+/** 로컬 Auth JWT를 PostgREST(Authorization)에 주입 — supabase.auth 세션과 분리 */
+function corpDomainFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  if (!isLocalAuthEnabled()) {
+    return fetch(input, init);
+  }
+  const headers = new Headers(init?.headers);
+  const token = getLocalAuthToken();
+  if (token && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  return fetch(input, { ...init, headers });
+}
+
 /** Supabase 클라이언트 (core 스키마 기본) */
 export const supabase: SupabaseClient<Database> = createClient<Database>(
   supabaseUrl,
@@ -34,6 +49,9 @@ export const supabase: SupabaseClient<Database> = createClient<Database>(
     },
     db: {
       schema: 'core',
+    },
+    global: {
+      fetch: corpDomainFetch,
     },
   }
 );

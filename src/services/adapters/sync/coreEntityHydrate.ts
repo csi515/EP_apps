@@ -41,6 +41,59 @@ import { checkHydrateErrors } from './persistHelpers';
 import { rowToSessionPass } from './sessionPassMappers';
 import { applyDirtyListMerge } from '../pendingMutations';
 
+/**
+ * EP personal_plant_ops — 학원 테이블(customers/schedules/…) 없이
+ * organizations·staff만 적재하고 나머지 캐시는 빈 목록으로 둔다.
+ */
+async function hydrateEpPlantCoreEntities(
+  organizationId: string,
+  cache: SyncCache
+): Promise<void> {
+  const client = getCoreClient();
+  const [orgResult, staffResult] = await Promise.all([
+    client.from('organizations').select('settings, name, industry_type').eq('id', organizationId).single(),
+    client.from('staff').select('*').eq('organization_id', organizationId),
+  ]);
+  checkHydrateErrors({ org: orgResult.error, staff: staffResult.error }, 'ep-plant-core');
+
+  const defaultSettings = readLocal<AcademySettings>(STORAGE_KEYS.SETTINGS, {
+    name: orgResult.data?.name || '',
+    address: '',
+    phone: '',
+    defaultTuitionFee: 0,
+  });
+  const settings = parseOrganizationSettings(orgResult.data?.settings, defaultSettings);
+  if (orgResult.data?.name) settings.name = orgResult.data.name;
+
+  const teachers = (staffResult.data || []).map(staffRowToTeacher);
+  const entities: [StorageKey, unknown][] = [
+    [STORAGE_KEYS.SETTINGS, settings],
+    [STORAGE_KEYS.TEACHERS, teachers],
+    [STORAGE_KEYS.STUDENTS, []],
+    [STORAGE_KEYS.PARENTS, []],
+    [STORAGE_KEYS.CLASSES, []],
+    [STORAGE_KEYS.SERVICE_OFFERINGS, []],
+    [STORAGE_KEYS.SCHEDULES, []],
+    [STORAGE_KEYS.PRACTICE_ROOM_BOOKINGS, []],
+    [STORAGE_KEYS.SESSION_PASSES, []],
+    [STORAGE_KEYS.INVOICES, []],
+    [STORAGE_KEYS.TUITION_PAYMENTS, []],
+    [STORAGE_KEYS.EXPENSES, []],
+    [STORAGE_KEYS.INCOME_ENTRIES, []],
+    [STORAGE_KEYS.TEACHER_PAYROLL_SETTLEMENTS, []],
+    [STORAGE_KEYS.CONSULTATIONS, []],
+    [STORAGE_KEYS.NOTIFICATIONS, []],
+    [STORAGE_KEYS.ATTENDANCE_SESSIONS, []],
+    [STORAGE_KEYS.CUSTOMER_PINS, []],
+    [STORAGE_KEYS.PARENT_STUDENT_LINKS, []],
+  ];
+  for (const [key, value] of entities) {
+    cache.set(key, value);
+    writeLocal(key, value);
+  }
+  writeLocal(STORAGE_KEYS.SLOT_RECRUITMENTS, settings.slotRecruitments || []);
+}
+
 /** Core 엔티티 전체 hydrate */
 export async function hydrateCoreEntities(
   organizationId: string,
@@ -48,6 +101,12 @@ export async function hydrateCoreEntities(
   industryTypeRaw?: string | null
 ): Promise<void> {
   const industryType = normalizeIndustryType(industryTypeRaw);
+  // EP_apps 단일 프리셋 — 학원 SoT 테이블이 스키마에 없음
+  if (!industryType || industryType === 'personal_plant_ops') {
+    await hydrateEpPlantCoreEntities(organizationId, cache);
+    return;
+  }
+
   const client = getCoreClient();
 
   const [
