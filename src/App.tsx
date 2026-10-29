@@ -84,7 +84,6 @@ const WorkspaceOfficeSupplyMyPage = lazy(() => import("./pages/workspace/Workspa
 const WorkspaceOfficeSupplyManagePage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyManagePage })));
 const WorkspaceOfficeSupplyCatalogPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyCatalogPage })));
 const WorkspaceHazardousSubstancesPage = lazy(() => import("./pages/workspace/WorkspaceHazardousSubstancesPage").then((m) => ({ default: m.WorkspaceHazardousSubstancesPage })));
-const WorkspaceVehicleMileagePage = lazy(() => import("./pages/workspace/WorkspaceVehicleMileagePage").then((m) => ({ default: m.WorkspaceVehicleMileagePage })));
 const EpZeroSetupWizard = lazy(() => import("./pages/onboarding/EpZeroSetupWizard").then((m) => ({ default: m.EpZeroSetupWizard })));
 const WeeklyTimetableView = lazy(() =>
   import("@/capabilities/scheduling/components/timetable/WeeklyTimetableView").then((m) => ({
@@ -246,7 +245,6 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/office-supply/manage" element={<WorkspaceOfficeSupplyManagePage />} />
             <Route path="/workspace/office-supply/catalog" element={<WorkspaceOfficeSupplyCatalogPage />} />
             <Route path="/workspace/hazardous-substances" element={<WorkspaceHazardousSubstancesPage />} />
-            <Route path="/workspace/vehicle-mileage" element={<WorkspaceVehicleMileagePage />} />
             <Route path="/workspace/setup-wizard" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/ep-setup" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/quick" element={<Navigate to="/onboarding/ep-setup" replace />} />
