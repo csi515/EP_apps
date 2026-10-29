@@ -3,10 +3,11 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { localAuthPlugin } from "./server/local-auth/vitePlugin";
+import { postgrestViteProxyPlugin } from "./server/local-auth/postgrestViteProxy";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss(), localAuthPlugin()],
+  plugins: [react(), tailwindcss(), postgrestViteProxyPlugin(), localAuthPlugin()],
   resolve: {
     alias: {
       "@/core/finance": path.resolve(__dirname, "./src/capabilities/billing/finance"),
@@ -25,22 +26,6 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
-    // supabase-js는 /rest/v1/* 를 호출하고, 사내 PostgREST는 루트 경로만 제공한다.
-    proxy: {
-      "/rest/v1": {
-        target: process.env.EP_POSTGREST_URL || "http://127.0.0.1:3001",
-        changeOrigin: true,
-        rewrite: (p) => {
-          const next = p.replace(/^\/rest\/v1/, "");
-          return next.length > 0 ? next : "/";
-        },
-        configure: (proxy) => {
-          proxy.on("error", (err) => {
-            console.error("[vite→postgrest proxy]", err.message);
-          });
-        },
-      },
-    },
   },
   build: {
     rollupOptions: {
