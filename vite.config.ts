@@ -30,7 +30,15 @@ export default defineConfig({
       "/rest/v1": {
         target: process.env.EP_POSTGREST_URL || "http://127.0.0.1:3001",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/rest\/v1/, "") || "/",
+        rewrite: (p) => {
+          const next = p.replace(/^\/rest\/v1/, "");
+          return next.length > 0 ? next : "/";
+        },
+        configure: (proxy) => {
+          proxy.on("error", (err) => {
+            console.error("[vite→postgrest proxy]", err.message);
+          });
+        },
       },
     },
   },

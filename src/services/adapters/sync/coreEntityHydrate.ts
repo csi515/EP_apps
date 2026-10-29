@@ -41,31 +41,11 @@ import { checkHydrateErrors } from './persistHelpers';
 import { rowToSessionPass } from './sessionPassMappers';
 import { applyDirtyListMerge } from '../pendingMutations';
 
-/**
- * EP personal_plant_ops — 학원 테이블(customers/schedules/…) 없이
- * organizations·staff만 적재하고 나머지 캐시는 빈 목록으로 둔다.
- */
-async function hydrateEpPlantCoreEntities(
-  organizationId: string,
-  cache: SyncCache
-): Promise<void> {
-  const client = getCoreClient();
-  const [orgResult, staffResult] = await Promise.all([
-    client.from('organizations').select('settings, name, industry_type').eq('id', organizationId).single(),
-    client.from('staff').select('*').eq('organization_id', organizationId),
-  ]);
-  checkHydrateErrors({ org: orgResult.error, staff: staffResult.error }, 'ep-plant-core');
-
-  const defaultSettings = readLocal<AcademySettings>(STORAGE_KEYS.SETTINGS, {
-    name: orgResult.data?.name || '',
-    address: '',
-    phone: '',
-    defaultTuitionFee: 0,
-  });
-  const settings = parseOrganizationSettings(orgResult.data?.settings, defaultSettings);
-  if (orgResult.data?.name) settings.name = orgResult.data.name;
-
-  const teachers = (staffResult.data || []).map(staffRowToTeacher);
+function writeEpPlantEmptyCaches(
+  cache: SyncCache,
+  settings: AcademySettings,
+  teachers: ReturnType<typeof staffRowToTeacher>[] = []
+): void {
   const entities: [StorageKey, unknown][] = [
     [STORAGE_KEYS.SETTINGS, settings],
     [STORAGE_KEYS.TEACHERS, teachers],
@@ -92,6 +72,50 @@ async function hydrateEpPlantCoreEntities(
     writeLocal(key, value);
   }
   writeLocal(STORAGE_KEYS.SLOT_RECRUITMENTS, settings.slotRecruitments || []);
+}
+
+/**
+ * EP personal_plant_ops — 학원 테이블(customers/schedules/…) 없이
+ * organizations·staff만 적재하고 나머지 캐시는 빈 목록으로 둔다.
+ * PostgREST 일시 실패 시에도 데스크톱 셸 진입은 막지 않는다(Capability는 각자 live fetch).
+ */
+async function hydrateEpPlantCoreEntities(
+  organizationId: string,
+  cache: SyncCache
+): Promise<void> {
+  const fallbackSettings = readLocal<AcademySettings>(STORAGE_KEYS.SETTINGS, {
+    name: '',
+    address: '',
+    phone: '',
+    defaultTuitionFee: 0,
+  });
+  try {
+    const client = getCoreClient();
+    const [orgResult, staffResult] = await Promise.all([
+      client
+        .from('organizations')
+        .select('settings, name, industry_type')
+        .eq('id', organizationId)
+        .maybeSingle(),
+      client.from('staff').select('*').eq('organization_id', organizationId),
+    ]);
+    if (orgResult.error || staffResult.error) {
+      console.warn('[hydrate] EP plant PostgREST soft-fail', {
+        org: orgResult.error?.message,
+        staff: staffResult.error?.message,
+      });
+      writeEpPlantEmptyCaches(cache, fallbackSettings);
+      return;
+    }
+
+    const settings = parseOrganizationSettings(orgResult.data?.settings, fallbackSettings);
+    if (orgResult.data?.name) settings.name = orgResult.data.name;
+    const teachers = (staffResult.data || []).map(staffRowToTeacher);
+    writeEpPlantEmptyCaches(cache, settings, teachers);
+  } catch (err) {
+    console.warn('[hydrate] EP plant exception soft-fail', err);
+    writeEpPlantEmptyCaches(cache, fallbackSettings);
+  }
 }
 
 /** Core 엔티티 전체 hydrate */
