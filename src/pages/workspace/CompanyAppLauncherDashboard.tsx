@@ -10,6 +10,7 @@ import {
   UtensilsCrossed,
   Package,
   Settings,
+  Shield,
   Bell,
   ChevronRight,
   Sparkles,
@@ -17,14 +18,20 @@ import {
   MessageSquareWarning,
   AlertTriangle,
   ClipboardCheck,
+  UserRound,
 } from 'lucide-react';
 import { useList, useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
-import { canAccessRndPortal, normalizeRolePermissions } from '@/domain/permissions';
+import {
+  canAccessRndPortal,
+  canManageRoles,
+  normalizeRolePermissions,
+} from '@/domain/permissions';
 import { listMyPendingApprovalLines } from '@/capabilities/sop_risk_assessment/services/riskAssessmentApprovalService';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export interface CompanyAppTile {
   id: string;
@@ -326,11 +333,29 @@ export const CompanyAppLauncherDashboard: React.FC<{
       },
       {
         id: 'settings',
-        to: '/workspace/settings/roles',
+        to: '/workspace/account',
         label: '설정',
-        description: '조직도·권한·숨긴 기능 다시 켜기',
-        icon: <Settings className={iconCls} />,
+        description: '내 계정·비밀번호',
+        icon: <UserRound className={iconCls} />,
         gradient: 'from-zinc-500 to-slate-600',
+      },
+      {
+        id: 'roles',
+        to: '/workspace/settings/roles',
+        label: '직급·권한',
+        description: '역할·권한 위임 관리',
+        icon: <Shield className={iconCls} />,
+        gradient: 'from-slate-500 to-zinc-700',
+        requiresPermissionCheck: true,
+      },
+      {
+        id: 'org_settings',
+        to: '/workspace/settings',
+        label: '사업장 설정',
+        description: '조직·메뉴 표시',
+        icon: <Settings className={iconCls} />,
+        gradient: 'from-stone-500 to-neutral-700',
+        requiresPermissionCheck: true,
       },
     ];
     const rndOk = canAccessRndPortal({
@@ -338,8 +363,16 @@ export const CompanyAppLauncherDashboard: React.FC<{
       permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
       customRole: activeUser?.customRole ?? null,
     });
+    const rolesOk = canManageRoles({
+      role: activeUser?.role ?? null,
+      permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
+      customRole: activeUser?.customRole ?? null,
+    });
     return all
       .filter((t) => {
+        if (t.id === 'roles' || t.id === 'org_settings') {
+          return rolesOk;
+        }
         const permOk = t.requiresPermissionCheck && t.id === 'research' ? rndOk : true;
         return tileAllowed(t, enabledCaps, permOk);
       })
@@ -381,20 +414,16 @@ export const CompanyAppLauncherDashboard: React.FC<{
   }, []);
 
   return (
-    <div
-      className="mx-auto max-w-5xl px-4 py-5 sm:py-8"
-      data-testid="company-app-launcher"
-      data-variant={variant}
-    >
+    <WorkPageFrame width="hub" data-testid="company-app-launcher" data-variant={variant}>
       {variant === 'home' ? (
-        <section className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/80 pb-5">
+        <section className="mb-8">
+          <div className="flex flex-row items-center justify-between gap-3 border-b border-slate-200/80 pb-5">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
                 <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
                 <span>{orgName}</span>
               </div>
-              <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
                 안녕하세요, {userName}님
               </h1>
               <p className="mt-1 text-sm text-slate-500">{todayStr} · 사내 업무 런처</p>
@@ -462,7 +491,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
           </div>
         ) : null}
 
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-2.5">
+        <div className="grid grid-cols-5 gap-2.5">
           {appTiles.map((app) => (
             <Link
               key={app.id}
@@ -563,7 +592,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
           </div>
         </div>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 };
 

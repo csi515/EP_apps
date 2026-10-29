@@ -6,10 +6,14 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 async function runTests() {
-  console.log('Running MobileLoginForm verification tests...');
+  console.log('Running LoginForm verification tests...');
 
-  const componentPath = join(root, 'src/components/auth/MobileLoginForm.tsx');
-  assert.ok(existsSync(componentPath), 'MobileLoginForm.tsx must exist');
+  const componentPath = join(root, 'src/components/auth/LoginForm.tsx');
+  assert.ok(existsSync(componentPath), 'LoginForm.tsx must exist');
+  assert.ok(
+    !existsSync(join(root, 'src/components/auth/MobileLoginForm.tsx')),
+    'MobileLoginForm.tsx must be removed'
+  );
   const code = readFileSync(componentPath, 'utf8');
 
   const loginPagePath = join(root, 'src/pages/auth/LoginPage.tsx');
@@ -18,18 +22,23 @@ async function runTests() {
 
   assert.match(
     loginPageCode,
-    /flex-col\s+lg:flex-row/,
-    'LoginPage must support mobile single card (flex-col) to desktop 2-column (lg:flex-row)'
+    /flex flex-row/,
+    'LoginPage must use fixed desktop 2-column flex-row'
   );
-  assert.match(
+  assert.doesNotMatch(
     loginPageCode,
     /hidden\s+lg:flex/,
-    'Desktop branding panel must be hidden on mobile and flex on lg screens'
+    'Desktop branding panel must always be visible (no lg:hidden branch)'
   );
   assert.match(
     loginPageCode,
     /data-testid=["']desktop-brand-panel["']/,
     'Desktop brand panel test ID must exist'
+  );
+  assert.doesNotMatch(
+    loginPageCode,
+    /\blg:hidden\b|\bmd:hidden\b|\bsm:hidden\b/,
+    'LoginPage must not use mobile-only hidden breakpoints'
   );
 
   assert.doesNotMatch(code, /btn-google-login/, 'Google login button must be removed');
@@ -47,7 +56,7 @@ async function runTests() {
   assert.match(
     code,
     /data-testid=["']link-forgot-password["']/,
-    'MobileLoginForm must expose a forgot-password link'
+    'LoginForm must expose a forgot-password link'
   );
   assert.match(
     code,
@@ -73,18 +82,18 @@ async function runTests() {
 
   assert.match(
     loginPageCode,
-    /<MobileLoginForm/,
-    'LoginPage.tsx must mount MobileLoginForm component'
+    /<LoginForm/,
+    'LoginPage.tsx must mount LoginForm component'
   );
   assert.match(
     loginPageCode,
     /rememberMe=\{rememberMe\}/,
-    'LoginPage.tsx must bind rememberMe state to MobileLoginForm'
+    'LoginPage.tsx must bind rememberMe state to LoginForm'
   );
   assert.match(
     loginPageCode,
     /onRememberMeChange=\{setRememberMe\}/,
-    'LoginPage.tsx must bind onRememberMeChange to MobileLoginForm'
+    'LoginPage.tsx must bind onRememberMeChange to LoginForm'
   );
   assert.match(
     loginPageCode,
@@ -125,7 +134,7 @@ async function runTests() {
     'dynamicAuthStorage must leverage sessionStorage for shared kiosk partitioning'
   );
 
-  console.log('MobileLoginForm tests passed successfully!');
+  console.log('LoginForm tests passed successfully!');
 }
 
 void runTests();

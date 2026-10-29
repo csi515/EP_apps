@@ -13,6 +13,11 @@ export { Input, type InputProps } from './Input';
 export { FilterBar } from './FilterBar';
 export { Modal } from './Modal';
 export { PageHeader } from './PageHeader';
+export {
+  WorkPageFrame,
+  type WorkPageFrameProps,
+  type WorkPageWidth,
+} from './WorkPageFrame';
 export { EmptyState, EmptyStateHero, type EmptyStateGuide } from './EmptyState';
 export { SearchField } from './SearchField';
 export { FilterTabs, type FilterTabItem } from './FilterTabs';

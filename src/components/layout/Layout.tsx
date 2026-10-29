@@ -131,7 +131,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       <GlobalNetworkStatusBar />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
+        <main className="flex-1 overflow-auto p-6 md:p-8">
           {children}
         </main>
       </div>

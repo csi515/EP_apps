@@ -1,20 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { memberMatchesQuery } from '../domain/mboVisibilityEngine';
+import type {
+  MboPickerDepartment as PickerDepartment,
+  MboPickerMember as PickerMember,
+} from '../services/mboOrgScopeService';
 
-export type PickerMember = {
-  id: string;
-  userId: string;
-  displayName: string;
-  departmentId?: string | null;
-  departmentName?: string;
-};
-
-export type PickerDepartment = {
-  id: string;
-  name: string;
-  parentId: string | null;
-};
+export type { PickerDepartment, PickerMember };
 
 interface Props {
   open: boolean;
@@ -24,6 +16,9 @@ interface Props {
   onChange: (ids: string[]) => void;
   onClose: () => void;
   onConfirm: () => void;
+  /** single: 담당자 1명, multiple: PARTIAL 공유 */
+  mode?: 'single' | 'multiple';
+  title?: string;
 }
 
 export const OrganizationMemberPickerModal: React.FC<Props> = ({
@@ -34,6 +29,8 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
   onChange,
   onClose,
   onConfirm,
+  mode = 'multiple',
+  title,
 }) => {
   const [query, setQuery] = useState('');
   const [departmentId, setDepartmentId] = useState('');
@@ -58,7 +55,12 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
         className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-2xl bg-white sm:rounded-2xl"
       >
         <header className="flex items-center justify-between border-b px-4 py-3">
-          <h2 className="text-base font-bold">사내 공개 대상자 선택 ({selectedIds.length}명)</h2>
+          <h2 className="text-base font-bold">
+            {title ||
+              (mode === 'single'
+                ? '담당자 선택'
+                : `사내 공개 대상자 선택 (${selectedIds.length}명)`)}
+          </h2>
           <button type="button" className="min-h-12 min-w-12 p-2" aria-label="닫기" onClick={onClose}>
             <X className="h-5 w-5" />
           </button>
@@ -111,9 +113,14 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
                 <li key={member.id}>
                   <label className="flex min-h-12 items-center gap-3 px-3 py-2 text-sm">
                     <input
-                      type="checkbox"
+                      type={mode === 'single' ? 'radio' : 'checkbox'}
+                      name={mode === 'single' ? 'mbo-member-picker' : undefined}
                       checked={checked}
                       onChange={() => {
+                        if (mode === 'single') {
+                          onChange([member.id]);
+                          return;
+                        }
                         onChange(
                           checked
                             ? selectedIds.filter((id) => id !== member.id)

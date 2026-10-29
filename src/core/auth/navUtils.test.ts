@@ -3,7 +3,6 @@
  */
 import assert from 'node:assert/strict';
 import { groupMoreNavItems, type NavMenuItem } from './navUtils';
-import { mobileMainNavIssues } from './mobileNavPolicy';
 
 function item(tab: NavMenuItem['tab'], section?: string): NavMenuItem {
   return { tab, label: tab, icon: null, section };
@@ -26,16 +25,6 @@ function run(): void {
     ['업무', '관리', '설정']
   );
   assert.equal(grouped[0].items.length, 2);
-
-  assert.deepEqual(mobileMainNavIssues({ tabs: ['dashboard', 'students', 'timetable', 'attendance'] }), []);
-  assert.ok(mobileMainNavIssues({ tabs: ['dashboard', 'sales', 'retail', 'inventory', 'members'] }).length > 0);
-  assert.deepEqual(
-    mobileMainNavIssues({
-      tabs: ['dashboard', 'sales', 'retail', 'inventory', 'members'],
-      reason: 'POS 카운터 핵심',
-    }),
-    []
-  );
 
   console.log('navUtils.test.ts: ok');
 }

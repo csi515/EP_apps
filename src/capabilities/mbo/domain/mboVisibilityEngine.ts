@@ -48,16 +48,20 @@ export function canViewMboGoal(
   return false;
 }
 
+export type MboRevisionChangeKind = 'revise' | 'delete' | 'field';
+
 export interface MboRevisionSnapshot {
   id: string;
   previousTargetValue: number | null;
   previousDueDate: string | null;
+  previousTitle?: string | null;
   newTargetValue?: number | null;
   newDueDate?: string | null;
   unmetReason?: string | null;
   revisionReason: string;
   revisedBy: string;
   createdAt: string;
+  changeKind?: MboRevisionChangeKind;
 }
 
 export interface FormattedRevisionItem {
@@ -68,6 +72,9 @@ export interface FormattedRevisionItem {
   revisionReason: string;
   targetDiff: string;
   dueDateDiff: string;
+  changeKind: MboRevisionChangeKind;
+  titleLabel: string;
+  isDelete: boolean;
 }
 
 export function formatRevisionHistory(
@@ -78,6 +85,8 @@ export function formatRevisionHistory(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
   return sorted.map((rev, index) => {
+    const changeKind: MboRevisionChangeKind = rev.changeKind ?? 'revise';
+    const isDelete = changeKind === 'delete';
     const next = sorted[index + 1];
     const afterTarget = next?.previousTargetValue ?? current?.targetValue ?? null;
     const afterDue = next?.previousDueDate ?? current?.dueDate ?? null;
@@ -87,9 +96,74 @@ export function formatRevisionHistory(
       revisedBy: rev.revisedBy,
       unmetReason: rev.unmetReason?.trim() || '-',
       revisionReason: rev.revisionReason,
-      targetDiff: formatNumericDiff(rev.previousTargetValue, afterTarget),
-      dueDateDiff: formatDateDiff(rev.previousDueDate, afterDue),
+      targetDiff: isDelete
+        ? String(rev.previousTargetValue ?? '-')
+        : formatNumericDiff(rev.previousTargetValue, afterTarget),
+      dueDateDiff: isDelete
+        ? String(rev.previousDueDate ?? '-')
+        : formatDateDiff(rev.previousDueDate, afterDue),
+      changeKind,
+      titleLabel: rev.previousTitle?.trim() || '-',
+      isDelete,
     };
+  });
+}
+
+/** 목록 필터용: 삭제분 제외 + 공개범위 + 스코프 */
+export type MboListScope = 'mine' | 'team' | 'visible';
+
+export function filterObjectivesForViewer<
+  T extends {
+    ownerId?: string | null;
+    authorId?: string | null;
+    visibilityType?: MboVisibilityType | null;
+    sharedMemberIds?: readonly string[];
+    deletedAt?: string | null;
+  },
+>(
+  rows: readonly T[],
+  opts: {
+    scope: MboListScope;
+    currentUserId: string | null | undefined;
+    currentMemberId: string | null | undefined;
+    isOwnerOrAdmin?: boolean;
+    managedUserIds?: ReadonlySet<string>;
+    viewerLeadDepartmentPath?: string | null;
+    authorDepartmentPathByOwnerId?: (ownerId: string | null | undefined) => string | null;
+    ownerFilterId?: string | null;
+  },
+): T[] {
+  const uid = opts.currentUserId ?? null;
+  return rows.filter((row) => {
+    if (row.deletedAt) return false;
+    const ownerId = row.ownerId ?? row.authorId ?? null;
+    if (opts.ownerFilterId && ownerId !== opts.ownerFilterId) return false;
+
+    if (opts.scope === 'mine') {
+      return Boolean(uid && ownerId === uid);
+    }
+    if (opts.scope === 'team') {
+      if (!uid) return false;
+      if (ownerId === uid) return true;
+      if (opts.isOwnerOrAdmin) return true;
+      return Boolean(ownerId && opts.managedUserIds?.has(ownerId));
+    }
+
+    const visibilityType = row.visibilityType ?? 'PRIVATE';
+    return canViewMboGoal(
+      {
+        authorId: ownerId || '',
+        visibilityType,
+        sharedMemberIds: row.sharedMemberIds,
+        authorDepartmentPath: opts.authorDepartmentPathByOwnerId?.(ownerId) ?? null,
+      },
+      opts.currentMemberId,
+      uid,
+      {
+        isOwnerOrAdmin: opts.isOwnerOrAdmin,
+        viewerLeadDepartmentPath: opts.viewerLeadDepartmentPath,
+      },
+    );
   });
 }
 

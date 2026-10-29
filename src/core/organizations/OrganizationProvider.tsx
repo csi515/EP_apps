@@ -51,7 +51,7 @@ import { evictTenantMemoryCache } from '@/core/query/tenantQueryKeys';
  * OrganizationProvider 책임 (단일 Context 유지):
  * 1. membership 목록 조회·갱신 (login bootstrap 포함)
  * 2. Organization Selection (selectedMembership + localStorage org id)
- * 3. Portal Mode (parent/customer/none) — Selection 과 별개
+ * 3. Portal Mode (none|parent; 고객 포털 제거) — Selection 과 별개
  * 4. parent profile (globalParentId, portalChildCount)
  * 5. blocked owner org ids
  * 6. 선택·포털 플래그에서 파생된 role/org/staff/parentCustomer/access flags 노출
@@ -98,8 +98,6 @@ interface OrganizationContextType {
   patchOrganization: (organizationId: string, patch: { name: string }) => void;
   enterParentPortal: () => void;
   exitParentPortal: () => void;
-  enterCustomerPortal: () => void;
-  exitCustomerPortal: () => void;
   activeCapabilities: string[];
   hiddenCapabilities: string[];
   customTerms: Record<string, string>;
@@ -112,8 +110,9 @@ interface OrganizationContextType {
 const OrganizationContext = createContext<OrganizationContextType | undefined>(undefined);
 
 function readStoredPortalMode(): AppPortalMode {
+  // 고객 포털 잔여 키 정리 (항상 inactive)
+  isCustomerPortalModeActive();
   if (isParentPortalModeActive()) return 'parent';
-  if (isCustomerPortalModeActive()) return 'customer';
   return 'none';
 }
 
@@ -191,7 +190,7 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const commitPortalMode = useCallback((mode: AppPortalMode) => {
     setPortalMode(mode);
     setParentPortalModeActive(mode === 'parent');
-    setCustomerPortalModeActive(mode === 'customer');
+    setCustomerPortalModeActive(false);
   }, []);
 
   const applyMembershipSelection = useCallback(
@@ -441,14 +440,6 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
     commitPortalMode('none');
   }, [commitPortalMode]);
 
-  const enterCustomerPortal = useCallback(() => {
-    commitPortalMode('customer');
-  }, [commitPortalMode]);
-
-  const exitCustomerPortal = useCallback(() => {
-    commitPortalMode('none');
-  }, [commitPortalMode]);
-
   const activeCapabilities = useMemo(() => {
     const raw = (currentOrganization as any)?.active_capabilities;
     const fromSettings = (currentOrganization?.settings as any)?.active_capabilities;
@@ -664,8 +655,6 @@ export const OrganizationProvider: React.FC<{ children: ReactNode }> = ({ childr
         patchOrganization,
         enterParentPortal,
         exitParentPortal,
-        enterCustomerPortal,
-        exitCustomerPortal,
         activeCapabilities,
         hiddenCapabilities,
         customTerms,

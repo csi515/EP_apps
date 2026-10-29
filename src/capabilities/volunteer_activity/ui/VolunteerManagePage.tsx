@@ -14,6 +14,7 @@ import {
 import { validateVolunteerActivityDraft } from '../domain/volunteerActivityEngine';
 import { downloadCsv } from '@/shared/utils/csvDownload';
 import { VolunteerManageGate } from './VolunteerAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 function VolunteerManageInner() {
   const { currentOrganization, selectedMembership } = useOrganization();
@@ -143,7 +144,7 @@ function VolunteerManageInner() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4" data-testid="volunteer-manage-page">
+    <WorkPageFrame width="hub">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-slate-900">봉사활동 게시·관리</h1>
@@ -337,7 +338,7 @@ function VolunteerManageInner() {
           )}
         </section>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 }
 

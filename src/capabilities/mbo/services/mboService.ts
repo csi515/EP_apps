@@ -20,10 +20,25 @@ import {
 import { areGoalsLocked, isReviewWindowOpen } from '../domain/mboCycle';
 import { formatPeriodYm, isValidPeriodYm } from '../domain/mboMonthlyCheckin';
 import { getMboCycleSettings } from './mboCycleService';
+import type { MboRevisionChangeKind, MboVisibilityType } from '../domain/mboVisibilityEngine';
 
-export type MboObjectiveRow = Database['core']['Tables']['mbo_objectives']['Row'];
-export type MboObjectiveInsert = Database['core']['Tables']['mbo_objectives']['Insert'];
-export type MboObjectiveUpdate = Database['core']['Tables']['mbo_objectives']['Update'];
+/** database.types 반영 전 로컬 확장 (011_mbo_visibility_audit) */
+export type MboObjectiveRow = Database['core']['Tables']['mbo_objectives']['Row'] & {
+  visibility_type?: MboVisibilityType | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  delete_reason?: string | null;
+};
+export type MboObjectiveInsert = Database['core']['Tables']['mbo_objectives']['Insert'] & {
+  visibility_type?: MboVisibilityType | null;
+  owner_id?: string | null;
+};
+export type MboObjectiveUpdate = Database['core']['Tables']['mbo_objectives']['Update'] & {
+  visibility_type?: MboVisibilityType | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
+  delete_reason?: string | null;
+};
 
 export type MboProjectRow = Database['core']['Tables']['mbo_projects']['Row'];
 export type MboProjectInsert = Database['core']['Tables']['mbo_projects']['Insert'];
@@ -44,7 +59,7 @@ export class MboService {
    */
   static async listObjectives(
     organizationId: string,
-    options: { level?: MboLevel; status?: MboStatus } = {}
+    options: { level?: MboLevel; status?: MboStatus; includeDeleted?: boolean } = {}
   ): Promise<MboObjectiveRow[]> {
     const client = getCoreClient();
     let query = client
@@ -63,7 +78,42 @@ export class MboService {
 
     const { data, error } = await query;
     if (error) throw error;
-    return (data as MboObjectiveRow[]) || [];
+    const rows = (data as MboObjectiveRow[]) || [];
+    if (options.includeDeleted) return rows;
+    return rows.filter((row) => !row.deleted_at);
+  }
+
+  static async listObjectiveShareMemberIds(objectiveId: string): Promise<string[]> {
+    const client = getCoreClient();
+    const { data, error } = await client
+      .from('mbo_objective_shares' as never)
+      .select('shared_with_member_id')
+      .eq('objective_id', objectiveId);
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as Array<{ shared_with_member_id: string }>).map(
+      (row) => row.shared_with_member_id
+    );
+  }
+
+  static async listObjectiveSharesByOrg(
+    organizationId: string
+  ): Promise<Map<string, string[]>> {
+    const client = getCoreClient();
+    const { data, error } = await client
+      .from('mbo_objective_shares' as never)
+      .select('objective_id, shared_with_member_id')
+      .eq('organization_id', organizationId);
+    if (error) throw new Error(error.message);
+    const map = new Map<string, string[]>();
+    for (const row of (data ?? []) as Array<{
+      objective_id: string;
+      shared_with_member_id: string;
+    }>) {
+      const list = map.get(row.objective_id) ?? [];
+      list.push(row.shared_with_member_id);
+      map.set(row.objective_id, list);
+    }
+    return map;
   }
 
   /**
@@ -97,7 +147,8 @@ export class MboService {
         progress_rate: payload.progress_rate ?? 0,
         weight: payload.weight ?? 100,
         revision: 1,
-      })
+        visibility_type: payload.visibility_type || 'PRIVATE',
+      } as never)
       .select()
       .single();
 
@@ -169,7 +220,7 @@ export class MboService {
         ...payload,
         revision: nextRevision,
         updated_at: new Date().toISOString(),
-      })
+      } as never)
       .eq('id', id)
       .eq('organization_id', organizationId)
       .select()
@@ -575,10 +626,12 @@ export class MboService {
       id: string;
       previous_target_value: number | null;
       previous_due_date: string | null;
+      previous_title: string | null;
       unmet_reason: string | null;
       revision_reason: string;
       revised_by: string;
       created_at: string;
+      change_kind: MboRevisionChangeKind;
     }>
   > {
     const client = getCoreClient();
@@ -593,23 +646,69 @@ export class MboService {
       previous_target_value:
         row.previous_target_value == null ? null : Number(row.previous_target_value),
       previous_due_date: (row.previous_due_date as string | null) ?? null,
+      previous_title: (row.previous_title as string | null) ?? null,
       unmet_reason: (row.unmet_reason as string | null) ?? null,
       revision_reason: String(row.revision_reason ?? ''),
       revised_by: String(row.revised_by ?? ''),
       created_at: String(row.created_at ?? ''),
+      change_kind: (String(row.change_kind ?? 'revise') as MboRevisionChangeKind),
     }));
   }
 
-  /** PARTIAL 공유는 후속 RLS 범위 — 현재 제품 경로에서는 no-op */
-  static async replaceGoalShares(_goalId: string, _memberIds: string[]): Promise<void> {
-    return;
+  static async softDeleteObjective(objectiveId: string, deleteReason: string): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client.rpc('soft_delete_mbo_objective' as never, {
+      p_objective_id: objectiveId,
+      p_delete_reason: deleteReason,
+    } as never);
+    if (error) throw new Error(error.message);
   }
 
-  /** mbo_goals 이중 모델 미사용 — visibility는 후속 */
-  static async updateGoalVisibility(
-    _goalId: string,
-    _visibilityType: 'PUBLIC' | 'PRIVATE' | 'PARTIAL',
+  static async replaceGoalShares(
+    organizationId: string,
+    objectiveId: string,
+    memberIds: string[]
   ): Promise<void> {
-    return;
+    const client = getCoreClient();
+    const unique = [...new Set(memberIds.filter(Boolean))];
+    const { error: delError } = await client
+      .from('mbo_objective_shares' as never)
+      .delete()
+      .eq('objective_id', objectiveId)
+      .eq('organization_id', organizationId);
+    if (delError) throw new Error(delError.message);
+    if (unique.length === 0) return;
+    const { error: insError } = await client.from('mbo_objective_shares' as never).insert(
+      unique.map((shared_with_member_id) => ({
+        organization_id: organizationId,
+        objective_id: objectiveId,
+        shared_with_member_id,
+      })) as never
+    );
+    if (insError) throw new Error(insError.message);
+  }
+
+  static async updateGoalVisibility(
+    organizationId: string,
+    objectiveId: string,
+    visibilityType: MboVisibilityType,
+    sharedMemberIds: string[] = []
+  ): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client
+      .from('mbo_objectives')
+      .update({
+        visibility_type: visibilityType,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq('id', objectiveId)
+      .eq('organization_id', organizationId)
+      .is('deleted_at', null);
+    if (error) throw new Error(error.message);
+    if (visibilityType === 'PARTIAL') {
+      await this.replaceGoalShares(organizationId, objectiveId, sharedMemberIds);
+    } else {
+      await this.replaceGoalShares(organizationId, objectiveId, []);
+    }
   }
 }

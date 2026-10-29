@@ -8,12 +8,8 @@ const VehicleMileageLogManagementView = lazy(() =>
   }))
 );
 
-export const WorkspaceVehicleMileagePage: React.FC = () => {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
-      <Suspense fallback={<LoadingScreen message="업무용 승용차 운행기록부 로딩…" />}>
-        <VehicleMileageLogManagementView />
-      </Suspense>
-    </div>
-  );
-};
+export const WorkspaceVehicleMileagePage: React.FC = () => (
+  <Suspense fallback={<LoadingScreen message="업무용 승용차 운행기록부 로딩…" />}>
+    <VehicleMileageLogManagementView />
+  </Suspense>
+);

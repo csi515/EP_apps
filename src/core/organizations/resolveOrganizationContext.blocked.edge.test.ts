@@ -135,12 +135,10 @@ console.log('[test:org-blocked-edge] start');
   assert.equal(nextOrganizationLocalStateAction(undefined, 'o1'), 'clear');
 }
 
-// planBootstrapApply: enter_* 는 레거시 호환만 유지, 런타임 bootstrap은 사용 안 함
+// planBootstrapApply: enter_parent 는 레거시 호환만 유지, 런타임 bootstrap은 사용 안 함
 {
   const parent = planBootstrapApply({ kind: 'enter_parent' });
   assert.equal(parent.portalMode, 'parent');
-  const customer = planBootstrapApply({ kind: 'enter_customer', membershipId: 'x' });
-  assert.equal(customer.portalMode, 'customer');
   const clear = planBootstrapApply({
     kind: 'select_organization_or_clear',
     organizationId: null,

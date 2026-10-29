@@ -15,7 +15,7 @@ import {
   type LoginLocale,
 } from "@/pages/auth/loginLandingCopy";
 
-export interface MobileLoginFormProps {
+export interface LoginFormProps {
   email: string;
   setEmail: (email: string) => void;
   password: string;
@@ -32,7 +32,7 @@ export interface MobileLoginFormProps {
   returnUrl?: string;
 }
 
-export const MobileLoginForm: React.FC<MobileLoginFormProps> = ({
+export const LoginForm: React.FC<LoginFormProps> = ({
   email,
   setEmail,
   password,

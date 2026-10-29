@@ -19,6 +19,7 @@ import {
   type MealSurveyOverview,
 } from '../mealSurveyService';
 import { MealSurveyManageGate } from './MealSurveyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 function overviewSettings(overview: MealSurveyOverview | null): MealSurveySettings {
   if (!overview) return { ...DEFAULT_MEAL_SURVEY_SETTINGS };
@@ -82,7 +83,7 @@ const MealSurveyManageInner: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 p-4 pb-24">
+    <WorkPageFrame width="hub">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">조리팀 식수 모니터</h1>
@@ -226,7 +227,7 @@ const MealSurveyManageInner: React.FC = () => {
           </section>
         </>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

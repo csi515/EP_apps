@@ -5,6 +5,7 @@ import { listRoleMembers } from '@/core/organizations/services/dynamicRoleServic
 import { ShuttleManageGate } from './ShuttleAccessGate';
 import { aggregateStopHeadcounts, type ShuttleRegistration, type ShuttleStop } from '../domain/shuttleRosterEngine';
 import { downloadCsv } from '@/shared/utils/csvDownload';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import './shuttlePrint.css';
 
 type RouteRow = {
@@ -131,7 +132,7 @@ export const ShuttleRosterPage: React.FC = () => {
 
   return (
     <ShuttleManageGate>
-      <div className="mx-auto max-w-5xl space-y-4 p-4">
+      <WorkPageFrame width="hub">
         <header className="shuttle-no-print flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold">기사 전달용 셔틀 명부</h1>
@@ -238,7 +239,7 @@ export const ShuttleRosterPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </WorkPageFrame>
     </ShuttleManageGate>
   );
 };

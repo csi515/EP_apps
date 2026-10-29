@@ -29,6 +29,7 @@ import {
   upsertMealSurveyResponse,
 } from '../mealSurveyService';
 import { useMealSurveyManageAccess } from './MealSurveyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type ViewMode = 'month' | 'week' | 'day';
 
@@ -156,7 +157,7 @@ export const MealSurveyMyView: React.FC = () => {
         : range.from;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24">
+    <WorkPageFrame width="form">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">내 식수</h1>
@@ -292,6 +293,6 @@ export const MealSurveyMyView: React.FC = () => {
           </table>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };

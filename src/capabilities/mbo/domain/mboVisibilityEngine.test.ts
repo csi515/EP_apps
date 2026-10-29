@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   buildRevisedGoalFlags,
   canViewMboGoal,
+  filterObjectivesForViewer,
   formatRevisionHistory,
   hangulToChosung,
   memberMatchesQuery,
@@ -87,6 +88,7 @@ const history = formatRevisionHistory(
       revisionReason: '하반기 목표 재설정',
       revisedBy: 'u1',
       createdAt: '2026-07-01T00:00:00Z',
+      changeKind: 'revise',
     },
     {
       id: 'r2',
@@ -96,14 +98,40 @@ const history = formatRevisionHistory(
       revisionReason: '일정 연장',
       revisedBy: 'u1',
       createdAt: '2026-10-01T00:00:00Z',
+      changeKind: 'revise',
+    },
+    {
+      id: 'r3',
+      previousTargetValue: 70,
+      previousDueDate: '2026-12-31',
+      previousTitle: '종료 과제',
+      revisionReason: '과제 중단',
+      revisedBy: 'u1',
+      createdAt: '2026-11-01T00:00:00Z',
+      changeKind: 'delete',
     },
   ],
   { targetValue: 70, dueDate: '2026-12-31' },
 );
-assert.equal(history.length, 2);
+assert.equal(history.length, 3);
 assert.equal(history[0].targetDiff, '100 → 80');
 assert.equal(history[1].targetDiff, '80 → 70');
 assert.equal(history[1].dueDateDiff, '2026-09-30 → 2026-12-31');
+assert.equal(history[2].isDelete, true);
+assert.equal(history[2].revisionReason, '과제 중단');
+assert.equal(history[2].titleLabel, '종료 과제');
+
+const mineOnly = filterObjectivesForViewer(
+  [
+    { ownerId: 'u1', visibilityType: 'PRIVATE' as const, deletedAt: null },
+    { ownerId: 'u2', visibilityType: 'PUBLIC' as const, deletedAt: null },
+    { ownerId: 'u1', visibilityType: 'PRIVATE' as const, deletedAt: '2026-01-01' },
+  ],
+  { scope: 'mine', currentUserId: 'u1', currentMemberId: 'm1' },
+);
+assert.equal(mineOnly.length, 1);
+assert.equal(mineOnly[0].ownerId, 'u1');
+assert.equal(mineOnly[0].deletedAt, null);
 
 assert.ok(hangulToChosung('김민수').startsWith('ㄱ'));
 assert.equal(memberMatchesQuery('김민수', 'ㄱㅁ'), true);

@@ -24,6 +24,7 @@ import {
   type ChecklistItem,
   type CapaTicketDraft,
 } from '../domain/maintenanceChecklistEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type MaintenanceRow = {
   id: string;
@@ -132,7 +133,7 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -431,7 +432,7 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

@@ -34,7 +34,6 @@ import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/compon
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 
 import { DynamicRoleSettingsPage } from "@/pages/settings/DynamicRoleSettingsPage";
-import { ConsentSignatureModal } from "@/capabilities/safety_consent/ui/ConsentSignatureModal";
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -48,7 +47,6 @@ const IndustryAppRouter = lazy(() =>
 );
 const MemberList = lazy(() => import("@/pages/members/MemberList").then((m) => ({ default: m.MemberList })));
 const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/ScheduleCalendarPage").then((m) => ({ default: m.ScheduleCalendarPage })));
-const MemberBookingView = lazy(() => import("@/capabilities/booking/pages/MemberBookingView").then((m) => ({ default: m.MemberBookingView })));
 const RolesPage = lazy(() => import("./pages/settings/RolesPage").then((m) => ({ default: m.RolesPage })));
 const AcceptStaffInvitePage = lazy(() => import("./pages/invite/AcceptStaffInvitePage").then((m) => ({ default: m.AcceptStaffInvitePage })));
 const OrganizationTreePage = lazy(() => import("./pages/organization/OrganizationTreePage").then((m) => ({ default: m.OrganizationTreePage })));
@@ -259,7 +257,7 @@ const RefineApp: React.FC = () => {
 
             <Route path="/schedules" element={<WeeklyTimetableView />} />
             <Route path="/booking/week" element={<ScheduleCalendarPage />} />
-            <Route path="/customer/booking" element={<><MemberBookingView /><ConsentSignatureModal /></>} />
+            <Route path="/customer/booking" element={<Navigate to="/workspace" replace />} />
             <Route path="/settings/roles" element={<RolesPage />} />
             <Route path="/workspace/*" element={<IndustryAppRouter />} />
 

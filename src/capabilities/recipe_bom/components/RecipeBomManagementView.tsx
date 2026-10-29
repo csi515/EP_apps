@@ -24,6 +24,7 @@ import {
   type RecipeIngredient,
   type CostSimulationResult,
 } from '../domain/recipeBomEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const DEFAULT_RECIPES: RecipeItem[] = [
   {
@@ -225,7 +226,7 @@ export const RecipeBomManagementView: React.FC = () => {
   }, [recipes, searchQuery]);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <WorkPageFrame width="hub">
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
@@ -551,6 +552,6 @@ export const RecipeBomManagementView: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </WorkPageFrame>
   );
 };

@@ -17,6 +17,7 @@ import {
   evaluateEquipmentUrgency,
   reportEquipmentBreakdown,
 } from '../domain/equipmentLifecycleEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type LifecycleRow = {
   id: string;
@@ -98,7 +99,7 @@ export function EquipmentLifecycleManagementView() {
   const breakdownCount = assets.filter((a) => a.status === 'breakdown').length;
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-12">
+    <WorkPageFrame width="hub">
       {/* 헤더 */}
       <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -326,6 +327,6 @@ export function EquipmentLifecycleManagementView() {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 }

@@ -37,6 +37,7 @@ import {
   type StockAuditSlip,
   type ExpiryAlertStatus,
 } from '../domain/inventoryEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const STORAGE_KEY_ITEMS = 'ep_inventory_items';
 const STORAGE_KEY_LOTS = 'ep_inventory_lots';
@@ -318,7 +319,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -785,7 +786,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
           }}
         />
       )}
-    </div>
+    </WorkPageFrame>
   );
 
   function handleCreateAuditAuditSlipClick() {

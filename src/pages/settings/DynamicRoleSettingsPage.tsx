@@ -25,6 +25,7 @@ import {
 import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
 import { OwnershipTransferCard } from './OwnershipTransferCard';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type RoleRow = DynamicRoleRow;
 type MemberRow = DynamicMemberRow;
@@ -139,7 +140,7 @@ export function DynamicRoleSettingsPage() {
   if (!canManage) return <AccessDeniedBanner />;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4">
+    <WorkPageFrame width="hub">
       <div className="flex gap-2 border-b border-slate-200 pb-3">
         <button
           type="button"
@@ -385,6 +386,6 @@ export function DynamicRoleSettingsPage() {
           </div>
         </div>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 }

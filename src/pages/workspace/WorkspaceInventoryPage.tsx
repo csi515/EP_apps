@@ -8,12 +8,8 @@ const InventoryManagementView = lazy(() =>
 );
 
 /** 현장 자재 전용 워크스페이스 (런처 딥링크 SSOT) */
-export const WorkspaceInventoryPage: React.FC = () => {
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
-      <Suspense fallback={<LoadingScreen message="현장 자재 로딩…" />}>
-        <InventoryManagementView title="현장 자재·재고" />
-      </Suspense>
-    </div>
-  );
-};
+export const WorkspaceInventoryPage: React.FC = () => (
+  <Suspense fallback={<LoadingScreen message="현장 자재 로딩…" />}>
+    <InventoryManagementView title="현장 자재·재고" />
+  </Suspense>
+);

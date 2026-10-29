@@ -17,6 +17,7 @@ import {
   type ApprovalStepRow,
   type SavedApprovalLine,
 } from '../services/approvalWorkflowService';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type Identity = { id?: string; name?: string };
 
@@ -164,7 +165,7 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+    <WorkPageFrame width="hub">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <div className="flex items-center gap-2">
@@ -310,6 +311,6 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
           </div>
         </div>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 };

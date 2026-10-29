@@ -13,6 +13,7 @@ import {
   upsertMealSurveySettings,
 } from '../mealSurveyService';
 import { MealSurveyManageGate } from './MealSurveyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const MealSurveySettingsInner: React.FC = () => {
   const { currentOrganization } = useOrganization();
@@ -58,7 +59,7 @@ const MealSurveySettingsInner: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 p-4 pb-24">
+    <WorkPageFrame width="form">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">식수 슬롯·마감 설정</h1>
@@ -145,7 +146,7 @@ const MealSurveySettingsInner: React.FC = () => {
       >
         {saving ? '저장 중…' : '저장'}
       </button>
-    </div>
+    </WorkPageFrame>
   );
 };
 

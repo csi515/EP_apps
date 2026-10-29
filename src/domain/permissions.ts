@@ -226,6 +226,15 @@ export function canManageRoles(callerMember?: AccessMember | { role?: string | n
   return memberHasPermissionFlag(callerMember, ['roles:assign', 'roles_assign', 'roles:manage']);
 }
 
+/** 임직원·가입 신청 승인 — 최고관리자 또는 members:manage */
+export function canApproveMemberJoins(
+  callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null,
+): boolean {
+  if (!callerMember) return false;
+  if (isOmnipotentOrgRole(callerMember.role)) return true;
+  return memberHasPermissionFlag(callerMember, ['members:manage', 'members_manage']);
+}
+
 /** 조직도(부서 트리·인원 배치) 편집 — 최고관리자/manager 또는 org_structure:manage 위임 */
 export function canManageOrgStructure(
   callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null,

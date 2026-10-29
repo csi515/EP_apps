@@ -7,6 +7,8 @@ import {
 } from './core/organizations/resolveOrganizationContext';
 import { StorageService } from './services/storage';
 import { bindAccessControlContextResolver } from './providers/accessControlProvider';
+import type { User } from './core/auth/types/sessionUser';
+import type { RolePermissionMap } from './domain/permissions';
 
 /** Supabase 로그인 사용자 → 조직 역할·staffId 및 MOA Authorization 컨텍스트 동기화 */
 export const SupabaseRoleSync: React.FC = () => {
@@ -24,13 +26,7 @@ export const SupabaseRoleSync: React.FC = () => {
       auth.user.email?.split('@')[0] ||
       '사용자';
 
-    const portalMode: AppPortalMode = org
-      ? org.parentPortalActive
-        ? 'parent'
-        : org.customerPortalActive
-          ? 'customer'
-          : 'none'
-      : 'none';
+    const portalMode: AppPortalMode = org?.parentPortalActive ? 'parent' : 'none';
 
     // membership 없음 ≠ parent. loading 중에는 sync skip.
     const role = resolveActiveUserRole({
@@ -64,16 +60,16 @@ export const SupabaseRoleSync: React.FC = () => {
         ? {
             id: membership?.organizationRoleId ?? undefined,
             name: membership?.organizationRoleName ?? undefined,
-            permissions: rolePermissions,
+            permissions: rolePermissions as RolePermissionMap,
           }
         : membership?.organizationRoleName
           ? {
               id: membership.organizationRoleId ?? undefined,
               name: membership.organizationRoleName,
-              permissions: rolePermissions ?? {},
+              permissions: (rolePermissions ?? {}) as RolePermissionMap,
             }
           : null,
-    };
+    } satisfies User;
 
     StorageService.setActiveUser(activeUser);
 
@@ -107,7 +103,6 @@ export const SupabaseRoleSync: React.FC = () => {
     org?.currentStaffId,
     org?.currentParentCustomerId,
     org?.parentPortalActive,
-    org?.customerPortalActive,
   ]);
 
   return null;

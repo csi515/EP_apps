@@ -9,6 +9,7 @@ import {
   type ShuttleDirection,
   type ShuttleStopDraft,
 } from '../domain/shuttleRosterEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type RouteRow = {
   id: string;
@@ -295,7 +296,7 @@ export const ShuttleRoutesPage: React.FC = () => {
 
   return (
     <ShuttleManageGate>
-      <div className="mx-auto max-w-6xl space-y-4 p-4">
+      <WorkPageFrame width="hub">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-bold">셔틀 노선·정류장 관리</h1>
@@ -597,7 +598,7 @@ export const ShuttleRoutesPage: React.FC = () => {
             </div>
           </div>
         ) : null}
-      </div>
+      </WorkPageFrame>
     </ShuttleManageGate>
   );
 };

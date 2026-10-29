@@ -14,6 +14,7 @@ import {
 import { useResearchProjectWorkspace } from '../hooks/useResearchProjectWorkspace';
 import { ResearchProjectDetailPanel } from './ResearchProjectDetailPanel';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type Identity = { id?: string; name?: string };
 
@@ -96,15 +97,15 @@ export const ResearchProjectManagementView: React.FC = () => {
 
   if (!ws.orgId) {
     return (
-      <div className="p-8 text-center text-slate-500">
+      <WorkPageFrame width="form" className="text-center text-slate-500">
         사업장을 선택한 후 연구과제를 관리할 수 있습니다.
-      </div>
+      </WorkPageFrame>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <WorkPageFrame width="hub">
+      <div className="flex flex-row items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-semibold text-slate-900">
             <FolderKanban className="h-5 w-5 text-indigo-600" />
@@ -362,6 +363,6 @@ export const ResearchProjectManagementView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };

@@ -38,6 +38,7 @@ import {
 } from '../reservationService';
 import { ResourceMasterSettingsModal } from './ResourceMasterSettingsModal';
 import { ResourceReservationRequestModal } from './ResourceReservationRequestModal';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { ResourceApprovalInboxView } from './ResourceApprovalInboxView';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { listApprovalOrgMembers } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
@@ -262,10 +263,21 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
   const displayBookingLabel = (booked: ResourceReservation) =>
     booked.requesterName || booked.customerName || '예약 이용 중';
 
+  const rootClassName = 'space-y-6';
+  const Root: React.ElementType = compact ? 'div' : WorkPageFrame;
+  const rootProps = compact
+    ? { className: rootClassName }
+    : { width: 'hub' as const, className: rootClassName };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* 1. 상단 글로벌 컨트롤 바 */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-200 pb-5">
+    <Root {...rootProps}>
+      {/* 1. 상단 글로벌 컨트롤 바 — compact+lockCategory 시 상위 페이지 H1과 중복 제거 */}
+      <div className={`flex flex-row items-center justify-between gap-4 ${compact && lockCategory ? '' : 'border-b border-slate-200 pb-5'}`}>
+        {compact && lockCategory ? (
+          <div className="sr-only">
+            <h2>공용자원 예약 달력</h2>
+          </div>
+        ) : (
         <div>
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
@@ -275,12 +287,15 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
               <h1 className={`${compact ? 'text-lg' : 'text-2xl'} font-bold text-slate-900`}>
                 공용자원 예약
               </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                시간·자원을 선택해 예약합니다. 조직 구성원 모두가 예약자를 확인할 수 있으며, 취소는 본인(또는 총무)만 가능합니다.
-              </p>
+              {!compact ? (
+                <p className="text-xs text-slate-500 mt-0.5">
+                  시간·자원을 선택해 예약합니다. 조직 구성원 모두가 예약자를 확인할 수 있으며, 취소는 본인(또는 총무)만 가능합니다.
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
+        )}
 
         <div className="flex items-center gap-2">
           {!hideApprovalInbox ? (
@@ -700,7 +715,7 @@ export const UniversalResourceCalendarView: React.FC<UniversalResourceCalendarVi
           </div>
         </div>
       ) : null}
-    </div>
+    </Root>
   );
 };
 

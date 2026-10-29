@@ -17,7 +17,8 @@ export interface ResponsiveColumn<T> {
 export interface ResponsiveTableProps<T> {
   data: T[];
   columns: ResponsiveColumn<T>[];
-  renderMobileCard: (record: T, index: number) => React.ReactNode;
+  /** @deprecated 데스크톱 전용 — 무시됨. 호환을 위해 optional 유지 */
+  renderMobileCard?: (record: T, index: number) => React.ReactNode;
   keyExtractor: (record: T, index: number) => string;
   isLoading?: boolean;
   emptyState?: React.ReactNode;
@@ -27,7 +28,6 @@ export interface ResponsiveTableProps<T> {
 export function ResponsiveTable<T>({
   data,
   columns,
-  renderMobileCard,
   keyExtractor,
   isLoading = false,
   emptyState,
@@ -53,10 +53,7 @@ export function ResponsiveTable<T>({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* =========================================================================
-          데스크톱 표준 테이블 뷰 (화면 폭 md 이상)
-          ========================================================================= */}
-      <div className="hidden md:block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50/80 text-xs font-semibold text-slate-700 border-b border-slate-200">
@@ -130,17 +127,6 @@ export function ResponsiveTable<T>({
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* =========================================================================
-          모바일 카드 리스트 뷰 (화면 폭 md 미만, 가로 스크롤 전면 배제)
-          ========================================================================= */}
-      <div className="block md:hidden space-y-3">
-        {data.map((record, index) => (
-          <div key={keyExtractor(record, index)} className="animate-in fade-in duration-150">
-            {renderMobileCard(record, index)}
-          </div>
-        ))}
       </div>
     </div>
   );

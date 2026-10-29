@@ -9,6 +9,7 @@ import {
   ensureDefaultProjectCategories,
   listProjectCategories,
 } from '../services/projectCategoryService';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 /**
  * 연구소 전용 진행 프로젝트 페이지 (MBO 평가 허브와 분리된 진입점)
@@ -72,7 +73,7 @@ export const LabProjectsView: React.FC = () => {
   }, [refineRows, categoryById]);
 
   return (
-    <div className="mx-auto max-w-7xl space-y-4 p-4 sm:p-6">
+    <WorkPageFrame width="hub">
       {projects.length === 0 ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
           등록된 연구소 프로젝트가 없습니다. MBO 목표 등록 시 생성된 실행 프로젝트가 여기에 표시됩니다.
@@ -90,6 +91,6 @@ export const LabProjectsView: React.FC = () => {
           onCategoriesChanged={() => void reloadCategories()}
         />
       )}
-    </div>
+    </WorkPageFrame>
   );
 };

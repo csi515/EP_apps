@@ -344,13 +344,6 @@ export type {
 /** @deprecated 신규 코드는 `@/core/public/types` */
 export type { ConsultationSubmission, PublicOrgInfo } from '@/core/public/types';
 
-/** @deprecated 신규 코드는 `@/core/customer/joinTypes` */
-export type {
-  CustomerJoinRequest,
-  JoinRequestStatus,
-  JoinRequestType,
-} from '@/core/customer/joinTypes';
-
 /** @deprecated 신규 코드는 `@/core/schedules/types` */
 export type {
   BookableSchedule,

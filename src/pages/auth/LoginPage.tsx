@@ -10,7 +10,7 @@ import {
   Warehouse,
   Info,
 } from "lucide-react";
-import { MobileLoginForm } from "@/components/auth/MobileLoginForm";
+import { LoginForm } from "@/components/auth/LoginForm";
 import { isAppsInToss } from "@/core/auth/domain/platformDetector";
 import { loginWithToss } from "@/core/auth/services/tossAuthService";
 import { mapLoginErrorMessage } from "@/core/auth/utils/mapLoginErrorMessage";
@@ -102,19 +102,15 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100svh] h-dvh w-full flex flex-col lg:flex-row bg-slate-50">
-      {/* =========================================================================
-          데스크톱 좌측 영역 (lg:flex, w-1/2): 슬레이트 다크톤 전문 SaaS 연출
-          ========================================================================= */}
+    <div className="min-h-[100svh] h-dvh w-full flex flex-row bg-slate-50">
+      {/* 좌측: 브랜드 패널 (데스크톱 고정) */}
       <div
         data-testid="desktop-brand-panel"
-        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-12 lg:p-16 flex-col justify-between relative overflow-hidden"
+        className="flex w-1/2 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-12 xl:p-16 flex-col justify-between relative overflow-hidden"
       >
-        {/* 장식용 글로우 효과 */}
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* 브랜드 헤더 */}
         <div className="relative z-10">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-11 h-11 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
@@ -133,7 +129,6 @@ export const LoginPage: React.FC = () => {
             <span>{appBrand.tagline}</span>
           </div>
 
-          {/* 서비스 가치 메인 카피 */}
           <h1 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight mb-4">
             {copy.heroTitleLine1}
             <br />
@@ -146,7 +141,6 @@ export const LoginPage: React.FC = () => {
             {copy.heroDescription}
           </p>
 
-          {/* 추가 로그인 안내 (데스크톱) */}
           <div
             data-testid="extra-login-notice-desktop"
             className="mt-6 flex gap-3 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4"
@@ -163,7 +157,6 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 핵심 기능 카드 */}
         <div className="relative z-10 grid grid-cols-2 gap-4 my-8">
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
             <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 mb-2.5">
@@ -190,7 +183,6 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 보안 인증 뱃지 */}
         <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
@@ -204,8 +196,8 @@ export const LoginPage: React.FC = () => {
       </div>
 
       {/* 우측: 로그인 폼 */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
-        <div className="w-full max-w-md bg-white rounded-3xl lg:shadow-none border border-slate-100 lg:border-none p-8 sm:p-10">
+      <div className="w-1/2 flex items-center justify-center p-8 xl:p-12">
+        <div className="w-full max-w-md bg-white rounded-3xl p-10">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-slate-900">
               {inToss ? copy.formTitleToss : copy.formTitle}
@@ -215,7 +207,7 @@ export const LoginPage: React.FC = () => {
             </p>
           </div>
 
-          <MobileLoginForm
+          <LoginForm
             email={email}
             setEmail={setEmail}
             password={password}

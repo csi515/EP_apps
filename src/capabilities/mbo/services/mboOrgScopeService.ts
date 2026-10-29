@@ -6,6 +6,19 @@ import {
   type DeptLeadAssignment,
   type DeptMembership,
 } from '@/core/organizations/departmentLeadScope';
+export type MboPickerMember = {
+  id: string;
+  userId: string;
+  displayName: string;
+  departmentId?: string | null;
+  departmentName?: string;
+};
+
+export type MboPickerDepartment = {
+  id: string;
+  name: string;
+  parentId: string | null;
+};
 
 export type MboViewerOrgScope = {
   viewerMemberId: string | null;
@@ -84,4 +97,53 @@ export function canManageObjectiveOwner(
   if (!ownerId) return isOrgAdmin || scope.isSubtreeManager;
   if (currentUserId && ownerId === currentUserId) return true;
   return scope.managedUserIds.has(ownerId);
+}
+
+export type MboOrgDirectory = {
+  members: MboPickerMember[];
+  departments: MboPickerDepartment[];
+  viewerMemberId: string | null;
+};
+
+/** 멤버 피커·사람 필터용 조직 디렉터리 */
+export async function loadMboOrgDirectory(
+  organizationId: string,
+  viewerUserId: string | null | undefined,
+): Promise<MboOrgDirectory> {
+  if (!organizationId) {
+    return { members: [], departments: [], viewerMemberId: null };
+  }
+  const { nodes, members, departmentMembers } = await loadOrganizationTree(organizationId);
+  const deptNameById = new Map(nodes.map((n) => [n.id, n.name]));
+  const primaryDeptByMember = new Map<string, string>();
+  for (const dm of departmentMembers) {
+    if (!primaryDeptByMember.has(dm.member_id)) {
+      primaryDeptByMember.set(dm.member_id, dm.department_id);
+    }
+  }
+  const pickerMembers: MboPickerMember[] = members
+    .filter((m) => m.is_active !== false && Boolean(m.user_id))
+    .map((m) => {
+      const departmentId = primaryDeptByMember.get(m.id) ?? null;
+      return {
+        id: m.id,
+        userId: m.user_id,
+        displayName: m.name || m.email || '멤버',
+        departmentId,
+        departmentName: departmentId ? deptNameById.get(departmentId) : undefined,
+      };
+    });
+  const departments: MboPickerDepartment[] = nodes.map((n) => ({
+    id: n.id,
+    name: n.name,
+    parentId: n.parentId,
+  }));
+  const viewer = viewerUserId
+    ? members.find((m) => m.user_id === viewerUserId)
+    : undefined;
+  return {
+    members: pickerMembers,
+    departments,
+    viewerMemberId: viewer?.id ?? null,
+  };
 }

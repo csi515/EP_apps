@@ -19,6 +19,7 @@ import { useOrganization } from "@/core/organizations/OrganizationProvider";
 import { isCorporateChromePreset } from "@/app/industry/resolveModuleIndustry";
 import { StaffInviteQrModal } from "@/components/staff/StaffInviteQrModal";
 import { getZeroConfigRoleTemplates } from "@/core/authorization/roleMatrix";
+import { WorkPageFrame } from "@/shared/components/ui/WorkPageFrame";
 
 export interface TenantRoleRecord {
   id: string;
@@ -300,7 +301,7 @@ export const RolesPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+    <WorkPageFrame width="hub">
       <div
         role="status"
         className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950"
@@ -671,6 +672,6 @@ export const RolesPage: React.FC = () => {
         onClose={() => setInviteModalOpen(false)}
         roles={roles}
       />
-    </div>
+    </WorkPageFrame>
   );
 };

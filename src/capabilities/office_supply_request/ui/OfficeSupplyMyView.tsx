@@ -19,6 +19,7 @@ import {
   upsertMyRequestLines,
 } from '../officeSupplyRequestService';
 import { useOfficeSupplyManageAccess } from './OfficeSupplyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const OfficeSupplyMyView: React.FC = () => {
   const { currentOrganization, selectedMembership } = useOrganization();
@@ -101,7 +102,7 @@ export const OfficeSupplyMyView: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24">
+    <WorkPageFrame width="form">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">사무용품 신청</h1>
@@ -246,6 +247,6 @@ export const OfficeSupplyMyView: React.FC = () => {
           {saving ? '저장 중…' : writable ? '신청 저장' : '마감됨'}
         </button>
       </div>
-    </div>
+    </WorkPageFrame>
   );
 };

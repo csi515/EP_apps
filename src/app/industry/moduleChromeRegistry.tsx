@@ -8,7 +8,6 @@ import type { ModuleTheme } from '@/shared/components/layout/moduleTheme';
 export type ModuleChrome = {
   theme: ModuleTheme;
   Sidebar: ComponentType;
-  BottomNav: ComponentType;
 };
 
 const MODULE_CHROME: Partial<Record<ModuleIndustryId, ModuleChrome>> = {};

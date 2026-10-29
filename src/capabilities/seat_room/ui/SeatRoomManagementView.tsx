@@ -3,6 +3,7 @@ import { useOpsTable } from '@/hooks/useOpsTable';
 import { readOpsRuntimeSettings } from '@/core/capabilities/opsRuntimeSettings';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useTenantTerms } from '@/core/i18n';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type SeatRoomRow = {
   id: string;
@@ -40,7 +41,7 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
   const [capacity, setCapacity] = useState(String(defaultCapacity ?? runtime.seat_capacity_default ?? 1));
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4 p-4">
+    <WorkPageFrame width="form" as="main">
       <header>
         <h1 className="text-xl font-bold text-slate-900 truncate">{resolvedTitle}</h1>
         <p className="text-sm text-slate-500">{resolvedSubtitle}</p>
@@ -88,6 +89,6 @@ export const SeatRoomManagementView: React.FC<SeatRoomManagementViewProps> = ({
           </li>
         ))}
       </ul>
-    </main>
+    </WorkPageFrame>
   );
 };

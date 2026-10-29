@@ -10,6 +10,7 @@ import { formatRevisionNo } from '../domain/sopNumberingAndAuditEngine';
 import type { ApprovalStepState } from '../domain/approvalEngine';
 import type { ApprovalLineRow } from '../services/riskAssessmentApprovalService';
 import type { RejectionNote } from '../domain/sopStepDocument';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 function RejectionRecord({
   history,
@@ -81,7 +82,7 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
   const live = workspace.viewVersion === 'live';
 
   return (
-    <div className="mx-auto w-full max-w-[1920px] space-y-4 px-4 py-4 sm:px-6" data-testid="desktop-sop-risk-matrix">
+    <WorkPageFrame width="hub" data-testid="desktop-sop-risk-matrix">
       <SopPendingApprovalStrip />
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
         <div className="flex flex-wrap items-center gap-2">
@@ -265,6 +266,6 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
         onClose={() => setShowHistory(false)}
         onOpen={(version) => workspace.setViewVersion(version)}
       />
-    </div>
+    </WorkPageFrame>
   );
 };

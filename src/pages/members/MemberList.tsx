@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuthorization } from '@/hooks/useAuthorization';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import {
   listDynamicRoles,
   listRoleMembers,
@@ -186,7 +187,7 @@ export function MemberList(): React.JSX.Element {
   const selectedRole = roles.find((r) => r.id === selectedRoleId);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" data-testid="member-list-page">
+    <WorkPageFrame width="hub" data-testid="member-list-page">
       {/* 상단 헤더 */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -738,7 +739,7 @@ export function MemberList(): React.JSX.Element {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 }
 

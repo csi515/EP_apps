@@ -106,10 +106,6 @@ function run() {
   assert.match(service, /eq\('organization_id', organizationId\)/);
   assert.doesNotMatch(service, /sauna_jjimjilbang|bath_room|massage_room|scrub_station/);
 
-  const pianoFacade = readSrc('src/core/customer/services/practiceRoomReservationService.ts');
-  assert.match(pianoFacade, /resourceReservationCapability/);
-  assert.match(pianoFacade, /PRACTICE_ROOM_RESOURCE_KIND/);
-
   const reservationCap = readSrc('src/core/resources/resourceReservationCapability.ts');
   assert.match(reservationCap, /resourceCapability/);
   assert.match(reservationCap, /listBookable|upsert/);

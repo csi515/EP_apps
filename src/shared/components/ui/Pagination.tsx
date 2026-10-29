@@ -38,7 +38,7 @@ export interface PaginationProps {
 }
 
 /**
- * 목록 공통 페이지네이션.
+ * 목록 공통 페이지네이션 (데스크톱 전용).
  * Refine: `pagination: toRefinePaginationOptions(current, pageSize)` + total은 query.data.total
  */
 export const Pagination: React.FC<PaginationProps> = ({
@@ -67,20 +67,20 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <nav
       aria-label={PAGINATION_COPY.navLabel}
-      className={`flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between ${className}`}
+      className={`flex flex-row items-center justify-between gap-2.5 ${className}`}
     >
       {!hideSummary ? (
         <p className="text-xs font-medium text-slate-500 tabular-nums" aria-live="polite">
           {PAGINATION_COPY.summary(from, to, total)}
         </p>
       ) : (
-        <span className="hidden sm:block" />
+        <span />
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         {showPageSize ? (
           <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-            <span className="hidden sm:inline">{PAGINATION_COPY.pageSizeLabel}</span>
+            <span>{PAGINATION_COPY.pageSizeLabel}</span>
             <select
               className="min-h-[44px] rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 shadow-2xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               value={pageSize}
@@ -109,7 +109,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             <ChevronLeft className="h-4 w-4" aria-hidden />
           </Button>
 
-          <div className="hidden items-center gap-1 sm:inline-flex">
+          <div className="inline-flex items-center gap-1">
             {window.map((token, idx) =>
               token === 'ellipsis' ? (
                 <span
@@ -135,10 +135,6 @@ export const Pagination: React.FC<PaginationProps> = ({
               )
             )}
           </div>
-
-          <span className="min-w-[4.5rem] text-center text-xs font-bold tabular-nums text-slate-700 sm:hidden">
-            {page} / {pageCount}
-          </span>
 
           <Button
             type="button"

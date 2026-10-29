@@ -4,13 +4,9 @@ import { CompanyAppLauncherDashboard } from './CompanyAppLauncherDashboard';
 /** 사내 업무 허브 — 앱 목록만 (홈 런처의 브리핑·결재 배지와 역할 분리) */
 export const WorkspaceIntranetHubPage: React.FC<{
   enabledCapabilityIds?: readonly string[];
-}> = ({ enabledCapabilityIds }) => {
-  return (
-    <main className="min-h-[100svh] bg-slate-50/60 pb-16">
-      <CompanyAppLauncherDashboard
-        variant="hub"
-        enabledCapabilityIds={enabledCapabilityIds}
-      />
-    </main>
-  );
-};
+}> = ({ enabledCapabilityIds }) => (
+  <CompanyAppLauncherDashboard
+    variant="hub"
+    enabledCapabilityIds={enabledCapabilityIds}
+  />
+);

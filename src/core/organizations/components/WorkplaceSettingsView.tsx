@@ -27,6 +27,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { getIndustryAccent, getCustomerLabel, getPlaceLabel, getFeeLabel, getBankAccountPlaceholder, supportsDeposit as industrySupportsDeposit, showsTextbooksLink as industryShowsTextbooksLink, getRoomConfig } from '@/core/industry/industryUi';
+import { normalizeIndustryType } from '@/core/industry/types';
 import { renderStaffHoursFields } from '@/core/staff/staffUi';
 import { useModuleLabels } from '@/core/labels';
 import * as orgService from '@/core/organizations/services/organizationService';
@@ -56,6 +57,9 @@ export const WorkplaceSettingsView: FC = () => {
   const depositSupported = industrySupportsDeposit(industry);
   const textbooksLinkVisible = industryShowsTextbooksLink(industry);
   const bankAccountPlaceholder = getBankAccountPlaceholder(industry);
+  /** personal_plant_ops: 예약금·강의실·교재 등 학원 잔재 숨김 */
+  const isPlantOps = normalizeIndustryType(industry) === 'personal_plant_ops';
+  const showAcademyFacilityBlocks = !isPlantOps && (depositSupported || textbooksLinkVisible || Boolean(roomCfg));
 
   const accent = getIndustryAccent(industry);
   const accentBtn = `${accent.btn} ${accent.btnHover}`;
@@ -237,92 +241,96 @@ export const WorkplaceSettingsView: FC = () => {
               </div>
             )}
 
-            <FormField label="수납용 계좌번호 안내 (영수증 및 청구서에 표기)">
-              <input
-                type="text"
-                placeholder={bankAccountPlaceholder}
-                value={typeof settings.bankAccount === 'string' ? settings.bankAccount : ''}
-                onChange={(e) => setSettings({ ...settings, bankAccount: e.target.value })}
-                className={FORM_CONTROL_CLASS}
-              />
-            </FormField>
+            {showAcademyFacilityBlocks ? (
+              <>
+                <FormField label="수납용 계좌번호 안내 (영수증 및 청구서에 표기)">
+                  <input
+                    type="text"
+                    placeholder={bankAccountPlaceholder}
+                    value={typeof settings.bankAccount === 'string' ? settings.bankAccount : ''}
+                    onChange={(e) => setSettings({ ...settings, bankAccount: e.target.value })}
+                    className={FORM_CONTROL_CLASS}
+                  />
+                </FormField>
 
-            <div className="pt-4 border-t border-slate-100 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <DoorOpen className={`w-4 h-4 ${accentIcon}`} />
-                  <p className="text-sm font-bold text-slate-800">{roomCfg.sectionTitle}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={addRoom}
-                  className={`inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-bold rounded-xl ${accent.hoverBg} ${accentIcon}`}
-                >
-                  <Plus className="w-4 h-4" />
-                  추가
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                {roomCfg.sectionDescription}
-              </p>
-              {rooms.length === 0 ? (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
-                  등록된 실이 없습니다. 추가하거나 온보딩에서 설정해 주세요.
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {rooms.map((room) => (
-                    <li
-                      key={room.id}
-                      className="flex flex-col sm:flex-row gap-2 sm:items-center rounded-xl border border-slate-100 bg-slate-50/80 p-2.5"
+                <div className="pt-4 border-t border-slate-100 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <DoorOpen className={`w-4 h-4 ${accentIcon}`} />
+                      <p className="text-sm font-bold text-slate-800">{roomCfg.sectionTitle}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addRoom}
+                      className={`inline-flex items-center gap-1 px-3 py-2 min-h-[44px] text-xs font-bold rounded-xl ${accent.hoverBg} ${accentIcon}`}
                     >
-                      <input
-                        type="text"
-                        value={room.name}
-                        onChange={(e) => updateRoom(room.id, { name: e.target.value })}
-                        className={`${FORM_CONTROL_CLASS} flex-1 min-h-[44px]`}
-                        placeholder={roomCfg.placeholder}
-                      />
-                      <select
-                        value={room.kind}
-                        onChange={(e) =>
-                          updateRoom(room.id, { kind: e.target.value as AcademyRoomKind })
-                        }
-                        className={`${FORM_CONTROL_CLASS} sm:w-32 min-h-[44px]`}
-                      >
-                        {(roomCfg.allowedKinds as string[]).includes('treatment') && (
-                          <option value="treatment">{ROOM_KIND_LABEL.treatment}</option>
-                        )}
-                        {(roomCfg.allowedKinds as string[]).includes('classroom') && (
-                          <option value="classroom">{ROOM_KIND_LABEL.classroom}</option>
-                        )}
-                        {(roomCfg.allowedKinds as string[]).includes('practice') && (
-                          <option value="practice">{ROOM_KIND_LABEL.practice}</option>
-                        )}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={() => removeRoom(room.id)}
-                        className="p-2.5 min-h-[44px] min-w-[44px] text-rose-500 hover:bg-rose-50 rounded-xl"
-                        aria-label={`${room.name} 삭제`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {textbooksLinkVisible && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('textbooks')}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 min-h-[44px]"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  사용 교재는 교재 관리에서 등록
-                </button>
-              )}
-            </div>
+                      <Plus className="w-4 h-4" />
+                      추가
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    {roomCfg.sectionDescription}
+                  </p>
+                  {rooms.length === 0 ? (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2.5">
+                      등록된 실이 없습니다. 추가하거나 온보딩에서 설정해 주세요.
+                    </p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {rooms.map((room) => (
+                        <li
+                          key={room.id}
+                          className="flex flex-row gap-2 items-center rounded-xl border border-slate-100 bg-slate-50/80 p-2.5"
+                        >
+                          <input
+                            type="text"
+                            value={room.name}
+                            onChange={(e) => updateRoom(room.id, { name: e.target.value })}
+                            className={`${FORM_CONTROL_CLASS} flex-1 min-h-[44px]`}
+                            placeholder={roomCfg.placeholder}
+                          />
+                          <select
+                            value={room.kind}
+                            onChange={(e) =>
+                              updateRoom(room.id, { kind: e.target.value as AcademyRoomKind })
+                            }
+                            className={`${FORM_CONTROL_CLASS} w-32 min-h-[44px]`}
+                          >
+                            {(roomCfg.allowedKinds as string[]).includes('treatment') && (
+                              <option value="treatment">{ROOM_KIND_LABEL.treatment}</option>
+                            )}
+                            {(roomCfg.allowedKinds as string[]).includes('classroom') && (
+                              <option value="classroom">{ROOM_KIND_LABEL.classroom}</option>
+                            )}
+                            {(roomCfg.allowedKinds as string[]).includes('practice') && (
+                              <option value="practice">{ROOM_KIND_LABEL.practice}</option>
+                            )}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => removeRoom(room.id)}
+                            className="p-2.5 min-h-[44px] min-w-[44px] text-rose-500 hover:bg-rose-50 rounded-xl"
+                            aria-label={`${room.name} 삭제`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {textbooksLinkVisible && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('textbooks')}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 min-h-[44px]"
+                    >
+                      <BookOpen className="w-4 h-4" />
+                      사용 교재는 교재 관리에서 등록
+                    </button>
+                  )}
+                </div>
+              </>
+            ) : null}
 
             <div className="flex justify-end pt-4">
               <button

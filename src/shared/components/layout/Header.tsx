@@ -10,11 +10,6 @@ import { HeaderLocationControl } from '@/core/locations/HeaderLocationControl';
 import { useStorageRefresh } from '@/hooks/useStorageRefresh';
 import { Layers, Users } from 'lucide-react';
 
-const PORTAL_MODE_LABEL = {
-  parent: '학부모 포털',
-  customer: '수강생 포털',
-} as const;
-
 export const Header: React.FC = () => {
   const { setActiveTab } = useApp();
   const supabaseOrg = useOptionalOrganization();
@@ -37,11 +32,8 @@ export const Header: React.FC = () => {
         supabaseOrg.selectedMembership.organization.industry_type
       )
     : '';
-  const portalMode = supabaseOrg?.portalMode ?? 'none';
   const portalLabel =
-    portalMode === 'parent' || portalMode === 'customer'
-      ? PORTAL_MODE_LABEL[portalMode]
-      : null;
+    supabaseOrg?.portalMode === 'parent' ? '학부모 포털' : null;
   const locationLoading = supabaseOrg?.locationsStatus === 'loading';
 
   return (

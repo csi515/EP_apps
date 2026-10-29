@@ -30,6 +30,7 @@ import {
   type PipelineStage,
   type TaskOrder,
 } from '../domain/taskPipelineEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const STORAGE_KEY_PIPELINES = 'moa_task_pipeline_orders';
 
@@ -183,7 +184,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
   }, [orders, searchTerm]);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -654,7 +655,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
           }}
         />
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

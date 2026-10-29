@@ -6,6 +6,7 @@ import { useActiveUser } from '@/shared/session/useActiveUser';
 import { listResources, setResourceActive, upsertBookableResource } from '../resourceService';
 import type { Resource } from '../types';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const VEHICLE_RESOURCE_KIND = 'vehicle';
 
@@ -90,7 +91,7 @@ export function SharedVehicleCatalogView() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4" data-testid="shared-vehicle-catalog">
+    <WorkPageFrame width="form">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
@@ -175,7 +176,7 @@ export function SharedVehicleCatalogView() {
           ))}
         </ul>
       )}
-    </div>
+    </WorkPageFrame>
   );
 }
 

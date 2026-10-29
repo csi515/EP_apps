@@ -12,25 +12,19 @@ const ShuttleRegisterView = lazy(() =>
 );
 
 export const WorkspaceShuttleRoutesPage: React.FC = () => (
-  <div className="mx-auto max-w-5xl px-4 py-4">
-    <Suspense fallback={<LoadingScreen message="셔틀 노선 화면 로딩…" />}>
-      <ShuttleRoutesPage />
-    </Suspense>
-  </div>
+  <Suspense fallback={<LoadingScreen message="셔틀 노선 화면 로딩…" />}>
+    <ShuttleRoutesPage />
+  </Suspense>
 );
 
 export const WorkspaceShuttleRosterPage: React.FC = () => (
-  <div className="mx-auto max-w-5xl px-4 py-4">
-    <Suspense fallback={<LoadingScreen message="셔틀 명부 화면 로딩…" />}>
-      <ShuttleRosterPage />
-    </Suspense>
-  </div>
+  <Suspense fallback={<LoadingScreen message="셔틀 명부 화면 로딩…" />}>
+    <ShuttleRosterPage />
+  </Suspense>
 );
 
 export const WorkspaceShuttleMyPage: React.FC = () => (
-  <div className="mx-auto max-w-5xl px-4 py-4">
-    <Suspense fallback={<LoadingScreen message="내 셔틀 설정 로딩…" />}>
-      <ShuttleRegisterView />
-    </Suspense>
-  </div>
+  <Suspense fallback={<LoadingScreen message="내 셔틀 설정 로딩…" />}>
+    <ShuttleRegisterView />
+  </Suspense>
 );

@@ -29,6 +29,7 @@ import {
   listApprovalOrgMembers,
   type ApprovalMemberOption,
 } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type Identity = { id?: string; name?: string };
 
@@ -249,7 +250,7 @@ export const SupplyRestockView: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <WorkPageFrame width="hub">
       {/* 헤더 및 탭 전환 */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -727,6 +728,6 @@ export const SupplyRestockView: React.FC = () => {
           </div>
         </div>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 };

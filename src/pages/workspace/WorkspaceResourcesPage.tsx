@@ -10,6 +10,8 @@ import type { ResourceCategory } from '@/capabilities/resources';
 import { UniversalResourceCalendarView } from '@/capabilities/resources';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { filterRowsByMemberDepartmentScope } from '@/core/organizations/departmentScope';
+import { Pagination } from '@/shared/components/ui/Pagination';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { useWorkspaceMemberScope } from './useWorkspaceMemberScope';
 
 type ResourceTypeRow = {
@@ -105,6 +107,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
   const [typeName, setTypeName] = useState('');
   const [bookingCategory, setBookingCategory] = useState<ResourceCategory>('health_room');
   const [requiresApproval, setRequiresApproval] = useState(defaultRequiresApproval);
+  const [catalogPage, setCatalogPage] = useState(1);
+  const [catalogPageSize, setCatalogPageSize] = useState(20);
+  const [selectedKind, setSelectedKind] = useState<string | null>(null);
+  const [instanceName, setInstanceName] = useState('');
 
   const openBookingEntry = (entry: BookingEntry) => {
     setTab('bookings');
@@ -118,8 +124,12 @@ export const WorkspaceResourcesPage: React.FC = () => {
   useEffect(() => {
     setRequiresApproval(defaultRequiresApproval);
   }, [defaultRequiresApproval]);
-  const [selectedKind, setSelectedKind] = useState<string | null>(null);
-  const [instanceName, setInstanceName] = useState('');
+
+  useEffect(() => {
+    if (!canManage && (tab === 'catalog' || tab === 'instances')) {
+      setTab('bookings');
+    }
+  }, [canManage, tab]);
 
   const { query: typesQuery } = useList<ResourceTypeRow>({
     resource: 'resource_types',
@@ -163,6 +173,10 @@ export const WorkspaceResourcesPage: React.FC = () => {
   }, [reloadInstances]);
 
   const filteredTypes = useMemo(() => types, [types]);
+  const pagedCatalogTypes = useMemo(() => {
+    const start = (catalogPage - 1) * catalogPageSize;
+    return filteredTypes.slice(start, start + catalogPageSize);
+  }, [filteredTypes, catalogPage, catalogPageSize]);
 
   const selectedTypeRow = useMemo(
     () => filteredTypes.find((t) => t.kind_slug === selectedKind) ?? null,
@@ -233,18 +247,24 @@ export const WorkspaceResourcesPage: React.FC = () => {
   };
 
   return (
-    <main className="mx-auto max-w-6xl p-4 pb-12">
-      <h1 className="text-lg font-semibold text-slate-900">공용 자원</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        차량·건강관리실 예약을 선택해 진입합니다. 총무는 자원 종류·인스턴스를 관리할 수 있습니다.
-      </p>
+    <WorkPageFrame width="hub" as="main">
+      <div>
+        <h1 className="text-lg font-semibold text-slate-900">공용 자원</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          차량·건강관리실 예약을 선택해 진입합니다. 총무는 자원 종류·인스턴스를 관리할 수 있습니다.
+        </p>
+      </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(['bookings', 'catalog', 'instances'] as TabId[]).map((id) => (
+      <div className="flex flex-wrap gap-2">
+        {(
+          (canManage
+            ? (['bookings', 'catalog', 'instances'] as TabId[])
+            : (['bookings'] as TabId[]))
+        ).map((id) => (
           <button
             key={id}
             type="button"
-            className={`min-h-12 flex-1 rounded-xl border px-3 text-sm font-medium sm:flex-none sm:px-5 ${
+            className={`min-h-12 rounded-xl border px-5 text-sm font-medium ${
               tab === id
                 ? 'border-indigo-600 bg-indigo-50 text-indigo-800'
                 : 'border-slate-200 bg-white'
@@ -260,9 +280,9 @@ export const WorkspaceResourcesPage: React.FC = () => {
       </div>
 
       {tab === 'bookings' ? (
-        <section className="mt-6 space-y-4">
+        <section className="space-y-4">
           {!bookingEntry ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 grid-cols-2">
               {BOOKING_ENTRIES.map((entry) => (
                 <button
                   key={entry.id}
@@ -310,7 +330,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
       ) : null}
 
       {tab === 'catalog' ? (
-        <section className="mt-6 mx-auto max-w-3xl space-y-4">
+        <section className="mx-auto w-full max-w-3xl space-y-4">
           {canManage ? (
             <form onSubmit={handleAddType} className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
               <label className="block text-sm font-medium">자원 종류 추가</label>
@@ -349,7 +369,7 @@ export const WorkspaceResourcesPage: React.FC = () => {
           )}
 
           <ul className="divide-y rounded-2xl border border-slate-200 bg-white">
-            {filteredTypes.map((row) => (
+            {pagedCatalogTypes.map((row) => (
               <li key={row.id} className="flex items-center justify-between gap-3 p-4">
                 <div>
                   <p className="font-medium text-slate-900">{row.name}</p>
@@ -378,11 +398,23 @@ export const WorkspaceResourcesPage: React.FC = () => {
               <li className="p-4 text-sm text-slate-500">등록된 자원 종류가 없습니다.</li>
             ) : null}
           </ul>
+          {filteredTypes.length > 0 ? (
+            <Pagination
+              current={catalogPage}
+              pageSize={catalogPageSize}
+              total={filteredTypes.length}
+              onPageChange={setCatalogPage}
+              onPageSizeChange={(size) => {
+                setCatalogPageSize(size);
+                setCatalogPage(1);
+              }}
+            />
+          ) : null}
         </section>
       ) : null}
 
       {tab === 'instances' ? (
-        <section className="mt-6 mx-auto max-w-3xl space-y-4">
+        <section className="mx-auto w-full max-w-3xl space-y-4">
           <select
             className="min-h-12 w-full rounded-xl border border-slate-200 px-3"
             value={selectedKind ?? ''}
@@ -432,6 +464,6 @@ export const WorkspaceResourcesPage: React.FC = () => {
           </ul>
         </section>
       ) : null}
-    </main>
+    </WorkPageFrame>
   );
 };

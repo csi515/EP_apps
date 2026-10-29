@@ -46,11 +46,21 @@ import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import { MboService } from '../services/mboService';
 import {
   canManageObjectiveOwner,
+  loadMboOrgDirectory,
   loadMboViewerOrgScope,
+  type MboPickerDepartment,
+  type MboPickerMember,
   type MboViewerOrgScope,
 } from '../services/mboOrgScopeService';
 import { readMboRequirePlanApproval } from '../domain/mboPlanApproval';
 import { formatPeriodYm, listMissingMonthlyCheckins } from '../domain/mboMonthlyCheckin';
+import {
+  filterObjectivesForViewer,
+  memberMatchesQuery,
+  type MboListScope,
+  type MboVisibilityType,
+} from '../domain/mboVisibilityEngine';
+import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
   ensureDefaultProjectCategories,
@@ -60,6 +70,7 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const MboManagementView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
@@ -84,9 +95,11 @@ export const MboManagementView: React.FC = () => {
 
   const [newTitle, setNewTitle] = useState('');
   const [newLevel, setNewLevel] = useState<MboLevel>('individual');
-  const [newOwner, setNewOwner] = useState('');
-  const [newDept, setNewDept] = useState('운영팀');
+  const [newOwnerMemberId, setNewOwnerMemberId] = useState<string>('');
+  const [newDept, setNewDept] = useState('');
   const [newCriteria, setNewCriteria] = useState('');
+  const [newVisibility, setNewVisibility] = useState<MboVisibilityType>('PRIVATE');
+  const [newShareMemberIds, setNewShareMemberIds] = useState<string[]>([]);
   const [newStartDate, setNewStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [newTargetDate, setNewTargetDate] = useState(() => {
     const d = new Date();
@@ -97,6 +110,18 @@ export const MboManagementView: React.FC = () => {
   const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
   const [planApprovalObjectiveId, setPlanApprovalObjectiveId] = useState<string | null>(null);
+  const [listScope, setListScope] = useState<MboListScope>('mine');
+  const [ownerFilterId, setOwnerFilterId] = useState<string>('');
+  const [personQuery, setPersonQuery] = useState('');
+  const [orgMembers, setOrgMembers] = useState<MboPickerMember[]>([]);
+  const [orgDepartments, setOrgDepartments] = useState<MboPickerDepartment[]>([]);
+  const [viewerMemberId, setViewerMemberId] = useState<string | null>(null);
+  const [sharesByObjective, setSharesByObjective] = useState<Map<string, string[]>>(new Map());
+  const [ownerPickerOpen, setOwnerPickerOpen] = useState(false);
+  const [sharePickerOpen, setSharePickerOpen] = useState(false);
+  const [sharePickerObjectiveId, setSharePickerObjectiveId] = useState<string | null>(null);
+  const [deleteGoalId, setDeleteGoalId] = useState<string | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
 
   const { currentOrganization, activeCapabilities = [] } = useOrganization();
   const { user: authUser } = useAuth();
@@ -115,11 +140,27 @@ export const MboManagementView: React.FC = () => {
     const userId = authUser?.id || activeUser?.id || '';
     if (!orgId || !userId) {
       setOrgScope(null);
+      setOrgMembers([]);
+      setOrgDepartments([]);
+      setViewerMemberId(null);
+      setSharesByObjective(new Map());
       return;
     }
     let cancelled = false;
-    void loadMboViewerOrgScope(orgId, userId).then((scope) => {
-      if (!cancelled) setOrgScope(scope);
+    void Promise.all([
+      loadMboViewerOrgScope(orgId, userId),
+      loadMboOrgDirectory(orgId, userId),
+      MboService.listObjectiveSharesByOrg(orgId).catch(() => new Map<string, string[]>()),
+    ]).then(([scope, directory, shares]) => {
+      if (cancelled) return;
+      setOrgScope(scope);
+      setOrgMembers(directory.members);
+      setOrgDepartments(directory.departments);
+      setViewerMemberId(directory.viewerMemberId);
+      setSharesByObjective(shares);
+      if (!newOwnerMemberId && directory.viewerMemberId) {
+        setNewOwnerMemberId(directory.viewerMemberId);
+      }
     });
     return () => {
       cancelled = true;
@@ -226,10 +267,14 @@ export const MboManagementView: React.FC = () => {
 
   const viewerUserId = authUser?.id || activeUser?.id || '';
 
-  // DB 데이터 우선 바인딩 — org admin / 본인 / 하위 리더 스코프
+  const selectedOwnerMember = useMemo(
+    () => orgMembers.find((m) => m.id === newOwnerMemberId) ?? null,
+    [orgMembers, newOwnerMemberId]
+  );
+
+  // DB 데이터 우선 바인딩 — 공개범위 + 스코프 + 사람 필터
   const objectives: ObjectiveNode[] = useMemo(() => {
-    const scope = orgScope;
-    const mapRow = (row: any): ObjectiveNode & { ownerId?: string | null } => ({
+    const mapRow = (row: any): ObjectiveNode => ({
       id: row.id,
       parentId: row.parent_id,
       level: row.level as MboLevel,
@@ -249,6 +294,9 @@ export const MboManagementView: React.FC = () => {
       targetValue: row.target_value ?? row.weight ?? null,
       rejectionReason: row.rejection_reason,
       ownerId: row.owner_id ?? null,
+      visibilityType: (row.visibility_type || 'PRIVATE') as MboVisibilityType,
+      sharedMemberIds: sharesByObjective.get(row.id) ?? [],
+      deletedAt: row.deleted_at ?? null,
     });
     const raw =
       refineObjectives && refineObjectives.length > 0
@@ -258,13 +306,36 @@ export const MboManagementView: React.FC = () => {
             isRevised: obj.revision > 1,
             revisionCount: obj.revision,
             targetValue: obj.weight,
-            ownerId: null as string | null,
+            ownerId: obj.ownerId ?? null,
+            visibilityType: obj.visibilityType ?? ('PRIVATE' as MboVisibilityType),
+            sharedMemberIds: obj.sharedMemberIds ?? [],
+            deletedAt: obj.deletedAt ?? null,
           }));
-    if (isOrgAdmin || !scope) return raw;
-    return raw.filter((obj) =>
-      canManageObjectiveOwner(scope, obj.ownerId, viewerUserId, isOrgAdmin),
-    );
-  }, [refineObjectives, localObjectives, orgScope, isOrgAdmin, viewerUserId]);
+    return filterObjectivesForViewer(raw, {
+      scope: listScope,
+      currentUserId: viewerUserId,
+      currentMemberId: viewerMemberId ?? orgScope?.viewerMemberId,
+      isOwnerOrAdmin: isOrgAdmin,
+      managedUserIds: orgScope?.managedUserIds,
+      viewerLeadDepartmentPath: orgScope?.leadDepartmentPaths[0] ?? null,
+      ownerFilterId: ownerFilterId || null,
+    });
+  }, [
+    refineObjectives,
+    localObjectives,
+    sharesByObjective,
+    listScope,
+    viewerUserId,
+    viewerMemberId,
+    orgScope,
+    isOrgAdmin,
+    ownerFilterId,
+  ]);
+
+  const personFilterOptions = useMemo(() => {
+    const q = personQuery.trim();
+    return orgMembers.filter((m) => !q || memberMatchesQuery(m.displayName, q));
+  }, [orgMembers, personQuery]);
 
   const logs: ProgressLogItem[] = useMemo(() => {
     if (refineLogs && refineLogs.length > 0) {
@@ -344,7 +415,7 @@ export const MboManagementView: React.FC = () => {
     void MboService.ensureDefaultProject(orgId, {
       id: selectedObjective.id,
       title: selectedObjective.title,
-      owner_id: null,
+      owner_id: selectedObjective.ownerId ?? null,
       owner_name: selectedObjective.ownerName,
       start_date: selectedObjective.startDate,
       target_date: selectedObjective.targetDate,
@@ -419,10 +490,21 @@ export const MboManagementView: React.FC = () => {
       showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
       return;
     }
+    if (!selectedOwnerMember?.userId) {
+      showToast('담당자를 조직 멤버에서 선택해 주세요.', 'warning');
+      return;
+    }
+    if (newVisibility === 'PARTIAL' && newShareMemberIds.length === 0) {
+      showToast('선택 공개일 때 공유 대상자를 지정해 주세요.', 'warning');
+      return;
+    }
 
     const parentId =
       selectedObjectiveId && selectedObjectiveId !== 'none' ? selectedObjectiveId : null;
-    const ownerName = newOwner || activeUser?.name || '신규 담당자';
+    const ownerName = selectedOwnerMember.displayName;
+    const ownerUserId = selectedOwnerMember.userId;
+    const departmentName =
+      newDept.trim() || selectedOwnerMember.departmentName || '부서';
 
     mutateCreate(
       {
@@ -431,7 +513,8 @@ export const MboManagementView: React.FC = () => {
           organization_id: orgId,
           parent_id: parentId,
           level: newLevel,
-          department_name: newDept,
+          department_name: departmentName,
+          owner_id: ownerUserId,
           owner_name: ownerName,
           title: newTitle.trim(),
           success_criteria: newCriteria.trim(),
@@ -441,6 +524,7 @@ export const MboManagementView: React.FC = () => {
           progress_rate: 0,
           status: 'draft',
           target_value: newWeight,
+          visibility_type: newVisibility,
         },
       },
       {
@@ -448,26 +532,34 @@ export const MboManagementView: React.FC = () => {
           const createdId = (result as { data?: { id?: string } })?.data?.id;
           try {
             if (createdId) {
+              if (newVisibility === 'PARTIAL') {
+                await MboService.replaceGoalShares(orgId, createdId, newShareMemberIds);
+              }
               const project = await MboService.ensureDefaultProject(orgId, {
                 id: createdId,
                 title: newTitle.trim(),
-                owner_id: null,
+                owner_id: ownerUserId,
                 owner_name: ownerName,
                 start_date: newStartDate,
                 target_date: newTargetDate,
               });
               setSelectedObjectiveId(createdId);
               setSelectedProjectId(project.id);
+              const shares = await MboService.listObjectiveSharesByOrg(orgId).catch(
+                () => new Map<string, string[]>()
+              );
+              setSharesByObjective(shares);
             }
           } catch {
-            /* 프로젝트 확보 실패는 목표 생성 성공과 분리 안내 */
             showToast('목표는 저장됐으나 실행 프로젝트 자동 생성에 실패했습니다.', 'warning');
           }
           void objQuery?.refetch?.();
           void projectQuery?.refetch?.();
           setShowCreateModal(false);
           setNewTitle('');
-          showToast('신규 MBO 목표와 실행 프로젝트가 등록되었습니다.', 'success');
+          setNewShareMemberIds([]);
+          setNewVisibility('PRIVATE');
+          showToast('신규 MBO 과제와 실행 프로젝트가 등록되었습니다.', 'success');
         },
         onError: (err) => {
           showToast(err instanceof Error ? err.message : '목표 등록 실패', 'error');
@@ -476,23 +568,63 @@ export const MboManagementView: React.FC = () => {
     );
   };
 
+  const handleChangeVisibility = useCallback(
+    async (objectiveId: string, visibility: MboVisibilityType) => {
+      if (!orgId) return;
+      if (visibility === 'PARTIAL') {
+        setSharePickerObjectiveId(objectiveId);
+        setNewShareMemberIds(sharesByObjective.get(objectiveId) ?? []);
+        setSharePickerOpen(true);
+        return;
+      }
+      try {
+        await MboService.updateGoalVisibility(orgId, objectiveId, visibility, []);
+        const shares = await MboService.listObjectiveSharesByOrg(orgId);
+        setSharesByObjective(shares);
+        void objQuery?.refetch?.();
+        showToast('공개범위가 변경되었습니다.', 'success');
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : '공개범위 변경 실패', 'error');
+      }
+    },
+    [orgId, sharesByObjective, objQuery]
+  );
+
+  const handleConfirmSoftDelete = () => {
+    if (!deleteGoalId || !deleteReason.trim()) {
+      showToast('삭제 사유를 입력해 주세요.', 'warning');
+      return;
+    }
+    void MboService.softDeleteObjective(deleteGoalId, deleteReason.trim())
+      .then(() => {
+        showToast('과제가 삭제되었고 이력이 저장되었습니다.', 'success');
+        setDeleteGoalId(null);
+        setDeleteReason('');
+        void objQuery?.refetch?.();
+        void projectQuery?.refetch?.();
+      })
+      .catch((err) => {
+        showToast(err instanceof Error ? err.message : '삭제 실패', 'error');
+      });
+  };
+
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 최상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold mb-1.5">
             <Target className="w-3.5 h-3.5" />
-            <span>조직 목표 및 성과 관리 (MBO)</span>
+            <span>MBO 개인 과제</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">MBO 목표 & 성과평가 허브</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">내가 맡은 과제 관리</h1>
           <p className="text-xs text-slate-500 mt-1">
-            전사·부서·개인 목표 계층(가중치 100%), 월별 체크인 및 다면 성과평가를 통합 관리합니다. 목표는 조직 멤버 범위에서 공유됩니다.
+            약속한 과제를 등록·수정·삭제하고, 공개범위를 정하며 월별 점검 이력을 남깁니다. 부서장은 하위 구성원 과제를 열람할 수 있습니다.
           </p>
         </div>
 
-        {/* 상단 네비게이션 탭 */}
-        <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
+        {/* 상단 네비게이션 탭 — 데스크톱 고정 폭에서 넘치면 가로 스크롤 */}
+        <div className="flex max-w-full overflow-x-auto bg-slate-100 p-1 rounded-2xl gap-1 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('objectives')}
@@ -589,36 +721,95 @@ export const MboManagementView: React.FC = () => {
 
       {/* 탭 1: 목표 트리 뷰 */}
       {activeTab === 'objectives' && (
-        <MboObjectiveTreeViewer
-          objectives={objectives}
-          selectedObjectiveId={selectedObjectiveId}
-          goalsLocked={goalsLocked}
-          onSelectObjective={(id) => setSelectedObjectiveId(id)}
-          onOpenCreateModal={() => {
-            if (goalsLocked) {
-              showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
-              return;
-            }
-            setShowCreateModal(true);
-          }}
-          onRequestApproval={(id) => {
-            if (requirePlanApproval && hasApprovalWorkflow) {
-              setPlanApprovalObjectiveId(id);
-              return;
-            }
-            handleTransitionStatus(id, 'submitted');
-          }}
-          onApprove={(id) => handleTransitionStatus(id, 'approved')}
-          onOpenRejectModal={(id) => setShowRejectModal(id)}
-          onOpenRevisionHistory={(id) => setHistoryGoalId(id)}
-          onOpenRevise={(id) => {
-            if (goalsLocked) {
-              showToast('목표 잠금 기간에는 목표치·마감을 수정할 수 없습니다.', 'warning');
-              return;
-            }
-            setReviseGoalId(id);
-          }}
-        />
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <div className="inline-flex rounded-xl bg-slate-100 p-1">
+              {(
+                [
+                  { id: 'mine' as const, label: '내 과제' },
+                  { id: 'team' as const, label: '팀(하위)' },
+                  { id: 'visible' as const, label: '열람 가능' },
+                ] as const
+              ).map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  disabled={chip.id === 'team' && !isManager}
+                  onClick={() => setListScope(chip.id)}
+                  className={`min-h-12 rounded-lg px-3 text-xs font-bold ${
+                    listScope === chip.id
+                      ? 'bg-white text-indigo-700 shadow-xs'
+                      : 'text-slate-600'
+                  } ${chip.id === 'team' && !isManager ? 'opacity-40' : ''}`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+            <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs font-bold text-slate-600">
+              사람 검색
+              <input
+                className="min-h-12 rounded-lg border border-slate-200 px-3 text-sm font-semibold"
+                value={personQuery}
+                onChange={(e) => setPersonQuery(e.target.value)}
+                placeholder="이름 또는 초성"
+              />
+            </label>
+            <label className="flex min-w-[180px] flex-col gap-1 text-xs font-bold text-slate-600">
+              담당자
+              <select
+                className="min-h-12 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-semibold"
+                value={ownerFilterId}
+                onChange={(e) => setOwnerFilterId(e.target.value)}
+              >
+                <option value="">전체</option>
+                {personFilterOptions.map((m) => (
+                  <option key={m.id} value={m.userId}>
+                    {m.displayName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <MboObjectiveTreeViewer
+            objectives={objectives}
+            selectedObjectiveId={selectedObjectiveId}
+            goalsLocked={goalsLocked}
+            onSelectObjective={(id) => setSelectedObjectiveId(id)}
+            onOpenCreateModal={() => {
+              if (goalsLocked) {
+                showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
+                return;
+              }
+              if (viewerMemberId && !newOwnerMemberId) {
+                setNewOwnerMemberId(viewerMemberId);
+              }
+              setShowCreateModal(true);
+            }}
+            onRequestApproval={(id) => {
+              if (requirePlanApproval && hasApprovalWorkflow) {
+                setPlanApprovalObjectiveId(id);
+                return;
+              }
+              handleTransitionStatus(id, 'submitted');
+            }}
+            onApprove={(id) => handleTransitionStatus(id, 'approved')}
+            onOpenRejectModal={(id) => setShowRejectModal(id)}
+            onOpenRevisionHistory={(id) => setHistoryGoalId(id)}
+            onOpenRevise={(id) => {
+              if (goalsLocked) {
+                showToast('목표 잠금 기간에는 목표치·마감을 수정할 수 없습니다.', 'warning');
+                return;
+              }
+              setReviseGoalId(id);
+            }}
+            onOpenDelete={(id) => {
+              setDeleteGoalId(id);
+              setDeleteReason('');
+            }}
+            onChangeVisibility={(id, visibility) => void handleChangeVisibility(id, visibility)}
+          />
+        </div>
       )}
 
       {planApprovalObjectiveId ? (
@@ -871,7 +1062,7 @@ export const MboManagementView: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-extrabold text-slate-900">신규 MBO 목표 등록</h3>
+              <h3 className="text-base font-extrabold text-slate-900">새 과제 등록</h3>
               <button
                 type="button"
                 onClick={() => setShowCreateModal(false)}
@@ -941,24 +1132,43 @@ export const MboManagementView: React.FC = () => {
                     type="text"
                     value={newDept}
                     onChange={(e) => setNewDept(e.target.value)}
+                    placeholder={selectedOwnerMember?.departmentName || '부서명'}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">책임 담당자</label>
-                  <input
-                    type="text"
-                    value={newOwner}
-                    onChange={(e) => setNewOwner(e.target.value)}
-                    placeholder="담당자명"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 mb-1">책임 담당자 *</label>
+                  <button
+                    type="button"
+                    onClick={() => setOwnerPickerOpen(true)}
+                    className="w-full min-h-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-left"
+                  >
+                    {selectedOwnerMember?.displayName || '조직 멤버에서 선택'}
+                  </button>
                 </div>
               </div>
 
-              <p className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
-                등록된 목표는 조직 멤버 범위(테넌트 RLS)에서 공유됩니다. 세부 공개범위는 후속 기능입니다.
-              </p>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">공개범위</label>
+                <select
+                  value={newVisibility}
+                  onChange={(e) => setNewVisibility(e.target.value as MboVisibilityType)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                >
+                  <option value="PRIVATE">비공개 (본인·부서장·관리자)</option>
+                  <option value="PUBLIC">전체 공개 (조직 멤버)</option>
+                  <option value="PARTIAL">선택 공개</option>
+                </select>
+                {newVisibility === 'PARTIAL' ? (
+                  <button
+                    type="button"
+                    className="mt-2 min-h-12 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-xs font-bold text-indigo-800"
+                    onClick={() => setSharePickerOpen(true)}
+                  >
+                    공유 대상 {newShareMemberIds.length}명 선택
+                  </button>
+                ) : null}
+              </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -1043,6 +1253,94 @@ export const MboManagementView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+
+      {deleteGoalId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
+          <div className="w-full max-w-sm space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-2xl">
+            <h3 className="text-base font-extrabold text-slate-900">과제 삭제</h3>
+            <p className="text-xs text-slate-500">
+              삭제하면 목록에서 숨겨지며, 삭제 사유와 시점이 이력에 남습니다.
+            </p>
+            <textarea
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              placeholder="삭제 사유 *"
+              className="h-24 w-full resize-none rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs"
+              required
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="min-h-12 px-4 text-xs font-semibold text-slate-500"
+                onClick={() => {
+                  setDeleteGoalId(null);
+                  setDeleteReason('');
+                }}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className="min-h-12 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white"
+                onClick={handleConfirmSoftDelete}
+              >
+                삭제 확정
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <OrganizationMemberPickerModal
+        open={ownerPickerOpen}
+        mode="single"
+        title="담당자 선택"
+        departments={orgDepartments}
+        members={orgMembers}
+        selectedIds={newOwnerMemberId ? [newOwnerMemberId] : []}
+        onChange={(ids) => setNewOwnerMemberId(ids[0] ?? '')}
+        onClose={() => setOwnerPickerOpen(false)}
+        onConfirm={() => setOwnerPickerOpen(false)}
+      />
+
+      <OrganizationMemberPickerModal
+        open={sharePickerOpen}
+        mode="multiple"
+        title="선택 공개 대상"
+        departments={orgDepartments}
+        members={orgMembers}
+        selectedIds={newShareMemberIds}
+        onChange={setNewShareMemberIds}
+        onClose={() => {
+          setSharePickerOpen(false);
+          setSharePickerObjectiveId(null);
+        }}
+        onConfirm={() => {
+          if (sharePickerObjectiveId && orgId) {
+            void MboService.updateGoalVisibility(
+              orgId,
+              sharePickerObjectiveId,
+              'PARTIAL',
+              newShareMemberIds
+            )
+              .then(async () => {
+                const shares = await MboService.listObjectiveSharesByOrg(orgId);
+                setSharesByObjective(shares);
+                void objQuery?.refetch?.();
+                showToast('선택 공개 대상이 저장되었습니다.', 'success');
+              })
+              .catch((err) => {
+                showToast(err instanceof Error ? err.message : '공유 저장 실패', 'error');
+              })
+              .finally(() => {
+                setSharePickerOpen(false);
+                setSharePickerObjectiveId(null);
+              });
+            return;
+          }
+          setSharePickerOpen(false);
+        }}
+      />
+    </WorkPageFrame>
   );
 };

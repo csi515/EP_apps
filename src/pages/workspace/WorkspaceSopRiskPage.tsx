@@ -7,13 +7,9 @@ const DesktopSopRiskMatrixView = lazy(() =>
   }))
 );
 
-/** 작업 표준(SOP) 및 위험성평가 와이드 데스크톱 통합 관리 워크스페이스 라우트 */
-export const WorkspaceSopRiskPage: React.FC = () => {
-  return (
-    <main className="min-h-[100svh] bg-slate-50/60 pb-16">
-      <Suspense fallback={<LoadingScreen message="작업 표준 및 위험성평가 와이드 매트릭스 로딩…" />}>
-        <DesktopSopRiskMatrixView />
-      </Suspense>
-    </main>
-  );
-};
+/** 작업 표준(SOP) 및 위험성평가 — Capability 루트가 WorkPageFrame 담당 */
+export const WorkspaceSopRiskPage: React.FC = () => (
+  <Suspense fallback={<LoadingScreen message="작업 표준 및 위험성평가 와이드 매트릭스 로딩…" />}>
+    <DesktopSopRiskMatrixView />
+  </Suspense>
+);

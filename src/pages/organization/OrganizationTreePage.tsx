@@ -12,6 +12,7 @@ import { DepartmentTreeView } from './DepartmentTreeView';
 import { useOrganizationTree } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 function isOrgChartEnabled(
   industryType: string | null | undefined,
@@ -86,24 +87,24 @@ export const OrganizationTreePage: React.FC = () => {
 
   if (!enabled) {
     return (
-      <main className="mx-auto max-w-lg p-4">
+      <WorkPageFrame width="form" as="main">
         <p className="text-sm text-slate-600">{ORG_CHART_COPY.hiddenHint}</p>
-      </main>
+      </WorkPageFrame>
     );
   }
 
   return (
-    <main className="mx-auto max-w-6xl p-4 pb-16">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <WorkPageFrame width="hub" as="main">
+      <div className="flex flex-row items-center justify-between gap-2">
         <h1 className="text-lg font-semibold">{ORG_CHART_COPY.title}</h1>
       </div>
 
-      {loading ? <p className="mt-2 text-sm text-slate-500">불러오는 중…</p> : null}
+      {loading ? <p className="text-sm text-slate-500">불러오는 중…</p> : null}
       {error || localError ? (
-        <p className="mt-2 text-sm text-rose-600">{error || localError}</p>
+        <p className="text-sm text-rose-600">{error || localError}</p>
       ) : null}
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-2">
+      <div className={`grid gap-6 ${canManage ? 'grid-cols-2' : 'grid-cols-1'}`}>
         <section className="space-y-4">
           {canManage ? (
             <form
@@ -254,21 +255,23 @@ export const OrganizationTreePage: React.FC = () => {
           />
         </section>
 
-        <section>
-          <OrganizationGovernancePanel
-            isOwner={isOwner}
-            canManage={canManage}
-            nodes={sortedNodes}
-            members={members}
-            departmentMembers={departmentMembers}
-            roles={roles}
-            selectedDepartmentId={selectedDeptId}
-            onAssignScope={assignScope}
-            onRevokeRole={revokeMemberRole}
-            onTransferOwnership={transferOwnership}
-          />
-        </section>
+        {canManage ? (
+          <section>
+            <OrganizationGovernancePanel
+              isOwner={isOwner}
+              canManage={canManage}
+              nodes={sortedNodes}
+              members={members}
+              departmentMembers={departmentMembers}
+              roles={roles}
+              selectedDepartmentId={selectedDeptId}
+              onAssignScope={assignScope}
+              onRevokeRole={revokeMemberRole}
+              onTransferOwnership={transferOwnership}
+            />
+          </section>
+        ) : null}
       </div>
-    </main>
+    </WorkPageFrame>
   );
 };

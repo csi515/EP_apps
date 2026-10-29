@@ -1,5 +1,5 @@
 /**
- * 로그인 데스크톱 표면 계약 — 모바일 전용 학원/중복 안내 제거
+ * 로그인 데스크톱 표면 계약 — 데스크톱 전용 2열 고정
  * 실행: npm run test:login-desktop-surface
  */
 import assert from 'node:assert/strict';
@@ -13,28 +13,25 @@ console.log('[test:login-desktop-surface] start');
 
 const loginPath = join(root, 'src/pages/auth/LoginPage.tsx');
 const copyPath = join(root, 'src/pages/auth/loginLandingCopy.ts');
+const formPath = join(root, 'src/components/auth/LoginForm.tsx');
 assert.ok(existsSync(loginPath));
 assert.ok(existsSync(copyPath));
+assert.ok(existsSync(formPath));
 
 const login = readFileSync(loginPath, 'utf8');
 const copy = readFileSync(copyPath, 'utf8');
 
-// 데스크톱 브랜드 패널 유지
+// 데스크톱 브랜드 패널 항상 표시 (lg:hidden 분기 금지)
 assert.match(login, /data-testid=["']desktop-brand-panel["']/);
-assert.match(login, /hidden\s+lg:flex/);
-assert.match(login, /flex-col\s+lg:flex-row/);
+assert.match(login, /flex flex-row/);
+assert.doesNotMatch(login, /hidden\s+lg:flex/);
+assert.doesNotMatch(login, /flex-col\s+lg:flex-row/);
+assert.doesNotMatch(login, /\blg:hidden\b|\bmd:hidden\b|\bsm:hidden\b/);
 
 // 모바일 전용 중복 헤더/안내 제거
 assert.doesNotMatch(login, /data-testid=["']extra-login-notice-mobile["']/);
-assert.doesNotMatch(login, /lg:hidden text-center mb-6/);
 assert.doesNotMatch(login, /mobileSubtitle/);
 
-// 우측 폼 타이틀은 항상 표시 (hidden lg:block 제거)
-assert.doesNotMatch(
-  login,
-  /hidden lg:block mb-6[\s\S]{0,40}formTitle/,
-  'form title must not be desktop-only hidden block'
-);
 assert.match(login, /copy\.formTitle|getLoginLandingCopy/);
 assert.match(copy, /LoginLocale|'ko'\s*\|\s*'ja'|getLoginLandingCopy/);
 assert.doesNotMatch(copy, /emailLabelEn|submitLabelEn|Company email|Sign in/);
@@ -45,8 +42,9 @@ assert.match(copy, /결재/);
 assert.match(copy, /현장/);
 assert.match(copy, /임직원 로그인/);
 
-// 소셜/이메일 폼은 유지
-assert.match(login, /<MobileLoginForm/);
+// 로그인 폼
+assert.match(login, /<LoginForm/);
 assert.match(login, /rememberMe=\{rememberMe\}/);
+assert.doesNotMatch(login, /MobileLoginForm/);
 
 console.log('loginDesktopSurface.contract.test.ts: ok');

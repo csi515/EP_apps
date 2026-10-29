@@ -10,6 +10,7 @@ import {
   type CatalogItemRow,
 } from '../officeSupplyRequestService';
 import { OfficeSupplyManageGate } from './OfficeSupplyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const CatalogInner: React.FC = () => {
   const { currentOrganization } = useOrganization();
@@ -75,7 +76,7 @@ const CatalogInner: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 p-4 pb-24">
+    <WorkPageFrame width="form">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">구매 가능 품목</h1>
@@ -171,7 +172,7 @@ const CatalogInner: React.FC = () => {
           ) : null}
         </ul>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

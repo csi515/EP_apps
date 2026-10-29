@@ -21,6 +21,7 @@ import {
   type RentalStatus,
   type RentalAction,
 } from '../domain/rentalEquipmentEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type RentalRow = {
   id: string;
@@ -103,7 +104,7 @@ export const RentalEquipmentManagementView: React.FC = () => {
   }, [items]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -328,7 +329,7 @@ export const RentalEquipmentManagementView: React.FC = () => {
           }}
         />
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

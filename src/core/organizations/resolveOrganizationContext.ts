@@ -4,7 +4,7 @@
  *
  * 개념 분리:
  * - Organization Selection = selectedMembership (및 localStorage org id)
- * - Portal Mode = parent | customer | none (앱 모드, 선택과 독립)
+ * - Portal Mode = none | parent (고객 포털 제거; parent도 EP_apps에서 비활성)
  */
 import type { MemberRole } from '../../lib/supabase';
 import type { UserRole } from '../../types';
@@ -19,8 +19,8 @@ export const STAFF_ROLES = new Set<string>([
 ]);
 export const CUSTOMER_ROLES = new Set<string>(['customer', 'member']);
 
-/** 앱 포털 모드 — 조직 선택(selectedMembership)과 별개 */
-export type AppPortalMode = 'none' | 'parent' | 'customer';
+/** 앱 포털 모드 — 조직 선택(selectedMembership)과 별개. 고객 포털 제거. */
+export type AppPortalMode = 'none' | 'parent';
 
 export type MembershipStorageAction =
   | { action: 'store'; organizationId: string }
@@ -137,7 +137,6 @@ export function computePortalAccessFlags(
  */
 export type OrganizationBootstrapDecision =
   | { kind: 'enter_parent' }
-  | { kind: 'enter_customer'; membershipId: string }
   | { kind: 'select_membership'; membershipId: string }
   | { kind: 'select_organization'; organizationId: string }
   | { kind: 'select_organization_or_clear'; organizationId: string | null };
@@ -161,12 +160,6 @@ export function planBootstrapApply(
         portalMode: 'parent',
         selection: { by: 'membership', membershipId: null },
         clearStoredOrganizationId: true,
-      };
-    case 'enter_customer':
-      return {
-        portalMode: 'customer',
-        selection: { by: 'membership', membershipId: decision.membershipId },
-        clearStoredOrganizationId: false,
       };
     case 'select_membership':
       return {
@@ -298,7 +291,7 @@ export function deriveSelectionFields(membership: OrganizationMembership | null)
 
 /**
  * StorageService activeUser.role 파생.
- * membership 없음 ≠ parent. 포털 모드가 있을 때만 parent/customer로 확정.
+ * membership 없음 ≠ parent. 포털 모드가 parent일 때만 parent로 확정.
  * loading 중에는 null → sync skip.
  * 선택·포털 모두 없으면 'member'(최소 권한 placeholder).
  */
@@ -310,7 +303,6 @@ export function resolveActiveUserRole(input: {
   if (input.loading) return null;
   if (input.currentRole) return input.currentRole as UserRole;
   if (input.portalMode === 'parent') return 'parent';
-  if (input.portalMode === 'customer') return 'customer';
   return 'member';
 }
 
@@ -320,7 +312,7 @@ export function portalModeToFlags(mode: AppPortalMode): {
 } {
   return {
     parentPortalActive: mode === 'parent',
-    customerPortalActive: mode === 'customer',
+    customerPortalActive: false,
   };
 }
 

@@ -116,18 +116,16 @@ const CapabilitySwitchboardView = lazy(() =>
   import('@/pages/settings/CapabilitySwitchboardPage').then((m) => ({ default: m.CapabilitySwitchboardPage }))
 );
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
-import { DirectorFloatingFab, ToastContainer, ConfirmDialog } from '@/shared/components';
+import { ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ExecutiveRiskDashboardWidget } from '@/shared/components/ExecutiveRiskDashboardWidget';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
 import { ModuleSidebar } from '@/shared/components/layout/ModuleSidebar';
-import { ModuleBottomNav } from '@/shared/components/layout/ModuleBottomNav';
 import { getModuleChrome } from '@/app/industry/moduleChromeRegistry';
 import {
   isCorporateChromePreset,
   resolveModuleIndustryId,
 } from '@/app/industry/resolveModuleIndustry';
 import { SupabaseRoleSync } from '@/SupabaseRoleSync';
-import { MORE_NAV_SECTION } from '@/core/auth/navUtils';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { getIndustryLabel, shouldUseGenericShell } from '@/core/industry/types';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -486,27 +484,27 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const defaultViewMap: Record<string, () => ReactNode> = {
     dashboard: () => <GenericDashboardView onNavigate={setActiveTab} enabledCaps={enabledCaps} />,
     'intranet-hub': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">사내 허브를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사내 허브를 불러오는 중…</div>}>
         <WorkspaceIntranetHubPage enabledCapabilityIds={enabledCaps} />
       </Suspense>
     ),
     'approval-workflow': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중…</div>}>
         <ApprovalWorkflowWithLinkedSync />
       </Suspense>
     ),
     approvals: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">전자 결재를 불러오는 중…</div>}>
         <ApprovalWorkflowWithLinkedSync />
       </Suspense>
     ),
     bookings: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">예약 화면을 불러오는 중…</div>}>
         <BookingView />
       </Suspense>
     ),
     fleet: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">공용자원 예약을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공용자원 예약을 불러오는 중…</div>}>
         <UniversalResourceCalendarView
           compact
           hideApprovalInbox
@@ -517,112 +515,112 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       </Suspense>
     ),
     grievances: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">노경 건의함을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">노경 건의함을 불러오는 중…</div>}>
         <GrievanceListPage />
       </Suspense>
     ),
     'seat-rooms': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">공간·좌석 현황을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">공간·좌석 현황을 불러오는 중…</div>}>
         <SeatRoomView />
       </Suspense>
     ),
     'billing-invoices': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">청구서 관리를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">청구서 관리를 불러오는 중…</div>}>
         {financeViewEntries.finance()}
       </Suspense>
     ),
     ledger: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">원장 내역을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">원장 내역을 불러오는 중…</div>}>
         {financeViewEntries.finance()}
       </Suspense>
     ),
     wallets: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">크레딧 지갑을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">크레딧 지갑을 불러오는 중…</div>}>
         {financeViewEntries.finance()}
       </Suspense>
     ),
     inventory: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">재고 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">재고 화면을 불러오는 중…</div>}>
         <InventoryView />
       </Suspense>
     ),
     consents: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전 동의서 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전 동의서 화면을 불러오는 중…</div>}>
         <SafetyConsentView />
       </Suspense>
     ),
     pipelines: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업 파이프라인 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업 파이프라인 화면을 불러오는 중…</div>}>
         <TaskPipelineView />
       </Suspense>
     ),
     rentals: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 대여 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 대여 화면을 불러오는 중…</div>}>
         <RentalEquipmentView />
       </Suspense>
     ),
     maintenance: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">시설 점검 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">시설 점검 화면을 불러오는 중…</div>}>
         <MaintenanceChecklistView />
       </Suspense>
     ),
     'recipe-bom': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">레시피 BOM 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">레시피 BOM 화면을 불러오는 중…</div>}>
         <RecipeBomView />
       </Suspense>
     ),
     'equipment-lifecycle': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 수명 주기 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 수명 주기 화면을 불러오는 중…</div>}>
         <EquipmentLifecycleView />
       </Suspense>
     ),
     'sop-risk': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업표준 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">작업표준 화면을 불러오는 중…</div>}>
         <DesktopSopRiskMatrixView />
       </Suspense>
     ),
     'risk-approvals': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">결재 대기함을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">결재 대기함을 불러오는 중…</div>}>
         <RiskApprovalInboxView />
       </Suspense>
     ),
     'supply-restock': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">소모품 안전재고를 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">소모품 안전재고를 불러오는 중…</div>}>
         <SupplyRestockView />
       </Suspense>
     ),
     'facility-incident-report': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전사고 대장 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전사고 대장 화면을 불러오는 중…</div>}>
         <FacilityIncidentReportView />
       </Suspense>
     ),
     mbo: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">목표관리(MBO) 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">목표관리(MBO) 화면을 불러오는 중…</div>}>
         <MboManagementView />
       </Suspense>
     ),
     'lab-projects': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중…</div>}>
         <ResearchProjectManagementView />
       </Suspense>
     ),
     'research-projects': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">연구과제 화면을 불러오는 중…</div>}>
         <ResearchProjectManagementView />
       </Suspense>
     ),
     'patent-ip-asset': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">특허 및 직무발명 관리 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">특허 및 직무발명 관리 화면을 불러오는 중…</div>}>
         <PatentAssetManagementView />
       </Suspense>
     ),
     capabilities: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중…</div>}>
         <CapabilitySwitchboardView />
       </Suspense>
     ),
     'menu-visibility': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">사이드바 메뉴 표시 설정을 불러오는 중…</div>}>
         <CapabilitySwitchboardView />
       </Suspense>
     ),
@@ -630,7 +628,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       Object.entries(CAPABILITY_LIST_VIEWS).map(([tab, { View }]) => [
         tab,
         () => (
-          <Suspense fallback={<div className="p-8 text-center text-slate-400">화면을 불러오는 중...</div>}>
+          <Suspense fallback={<div className="p-8 text-center text-slate-400">화면을 불러오는 중…</div>}>
             <View />
           </Suspense>
         ),
@@ -638,7 +636,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     ),
     ...financeViewEntries,
     settings: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">설정 화면을 불러오는 중...</div>}>
+      <Suspense fallback={<div className="p-8 text-center text-slate-400">설정 화면을 불러오는 중…</div>}>
         <WorkplaceSettingsView />
       </Suspense>
     ),
@@ -778,32 +776,10 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const moduleId = resolveModuleIndustryId(industryKey);
   const moduleChrome = externalViewMap && moduleId ? getModuleChrome(moduleId) : null;
   const ChromeSidebar = moduleChrome?.Sidebar;
-  const ChromeBottomNav = moduleChrome?.BottomNav;
   const useCorporateChrome = !externalViewMap && isCorporateChromePreset(industryKey);
-
-  const corporateMainTabs = useMemo(() => {
-    // 런처가 홈; 하단은 홈·사내 업무만 두고 결재/자재 등은 런처 딥링크로
-    const preferred = ['dashboard', 'intranet-hub'] as const;
-    const byTab = new Map(
-      filteredSections.flatMap((s) => s.items).map((item) => [item.tab, item])
-    );
-    return preferred.map((tab) => byTab.get(tab)).filter(Boolean) as typeof filteredSections[0]['items'];
-  }, [filteredSections]);
-
-  const corporateMoreTabs = useMemo(() => {
-    const mainSet = new Set(corporateMainTabs.map((t) => t.tab));
-    return filteredSections
-      .flatMap((s) => s.items)
-      .filter((item) => !mainSet.has(item.tab))
-      .map((item) => ({
-        ...item,
-        section: item.tab === 'settings' || item.tab === 'account' ? MORE_NAV_SECTION.settings : MORE_NAV_SECTION.manage,
-      }));
-  }, [filteredSections, corporateMainTabs]);
 
   const body = (
     <>
-      {isOwner && <DirectorFloatingFab />}
       {Overlays && <Overlays />}
       {(enabledCaps.includes('sop_risk_assessment') || enabledCaps.includes('safety_consent')) && (
         <Suspense fallback={null}>
@@ -816,15 +792,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     </>
   );
 
-  if (moduleChrome && ChromeSidebar && ChromeBottomNav) {
+  if (moduleChrome && ChromeSidebar) {
     return (
-      <ModuleAppShell
-        theme={moduleChrome.theme}
-        omitHeader
-        nested
-        sidebar={<ChromeSidebar />}
-        bottomNav={<ChromeBottomNav />}
-      >
+      <ModuleAppShell theme={moduleChrome.theme} omitHeader nested sidebar={<ChromeSidebar />}>
         {body}
       </ModuleAppShell>
     );
@@ -845,27 +815,12 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
             user={{ name: currentUser.name, roleLabel, roleBadge }}
           />
         }
-        bottomNav={
-          <ModuleBottomNav
-            theme="indigo"
-            mainTabs={corporateMainTabs}
-            moreTabs={corporateMoreTabs}
-            activeTab={activeTab}
-            onNavigate={navigateCorporateTab}
-            moreMenuTitle="더보기"
-            moreMenuDescription="맞춤 운영 도구 · 설정"
-          />
-        }
       >
         {body}
       </ModuleAppShell>
     );
   }
 
-  return (
-    <div className="flex-1 p-3 sm:p-4 lg:p-5 max-w-full overflow-x-hidden">
-      {body}
-    </div>
-  );
+  return <div className="max-w-full flex-1 overflow-x-hidden p-5">{body}</div>;
 };
 

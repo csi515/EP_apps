@@ -17,6 +17,8 @@ import {
   isCapabilityRequired,
   toggleCapabilityVisibility,
 } from './menuVisibilityEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+
 export const MenuVisibilitySettingsView: React.FC = () => {
   const { currentOrganization, hiddenCapabilities, updateHiddenCapabilities } = useOrganization();
   const [saving, setSaving] = useState(false);
@@ -78,7 +80,7 @@ export const MenuVisibilitySettingsView: React.FC = () => {
   const hiddenCount = optionalItems.filter((i) => !i.isVisible).length;
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-16">
+    <WorkPageFrame width="hub">
       {/* 토스트 알림 */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg border border-slate-700 animate-in fade-in slide-in-from-bottom-2">
@@ -270,7 +272,7 @@ export const MenuVisibilitySettingsView: React.FC = () => {
         )}
       </div>
 
-    </div>
+    </WorkPageFrame>
   );
 };
 

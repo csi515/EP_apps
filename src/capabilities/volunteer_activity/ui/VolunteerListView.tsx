@@ -15,6 +15,7 @@ import {
   remainingVolunteerSlots,
 } from '../domain/volunteerActivityEngine';
 import { useVolunteerManageAccess } from './VolunteerAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const VolunteerListView: React.FC = () => {
   const { currentOrganization, selectedMembership } = useOrganization();
@@ -94,7 +95,7 @@ export const VolunteerListView: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4" data-testid="volunteer-list-view">
+    <WorkPageFrame width="form">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-slate-900">사내 봉사활동</h1>
@@ -184,6 +185,6 @@ export const VolunteerListView: React.FC = () => {
           );
         })}
       </ul>
-    </div>
+    </WorkPageFrame>
   );
 };

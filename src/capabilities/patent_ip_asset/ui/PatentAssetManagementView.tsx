@@ -30,6 +30,7 @@ import {
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { usePatentWorkspace } from '../hooks/usePatentWorkspace';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const PatentAssetManagementView: React.FC = () => {
   const { currentOrganization } = useOrganization();
@@ -163,7 +164,7 @@ export const PatentAssetManagementView: React.FC = () => {
   const totalShare = inventors.reduce((sum, inv) => sum + (Number(inv.sharePercentage) || 0), 0);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-6">
+    <WorkPageFrame width="hub">
       {isLoading ? <p className="text-sm text-slate-500">특허 목록을 불러오는 중…</p> : null}
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 text-white p-5 rounded-2xl shadow-xs">
@@ -700,6 +701,6 @@ export const PatentAssetManagementView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };

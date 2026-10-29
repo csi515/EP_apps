@@ -7,11 +7,10 @@ import { cn } from '@/shared/lib/utils';
 interface ModuleAppShellProps {
   theme: ModuleTheme;
   sidebar: ReactNode;
-  bottomNav: ReactNode;
   children: ReactNode;
   /** Header 위 (예: SupabaseRoleSync) */
   beforeHeader?: ReactNode;
-  /** FAB, Toast, Confirm 등 */
+  /** Toast, Confirm 등 */
   overlays?: ReactNode;
   /**
    * App.tsx 가 이미 Header를 렌더할 때 true.
@@ -21,17 +20,17 @@ interface ModuleAppShellProps {
   /**
    * Layout 메인 영역 안에 넣을 때 true.
    * min-h-screen 셸 배경 대신 flex-1로 부모 높이를 채운다.
+   * nested일 때 스크롤은 Layout이 담당하므로 main은 overflow-hidden.
    */
   nested?: boolean;
 }
 
 /**
- * 모듈 공통 앱 셸 — Header + 사이드바 + 메인 + 하단 네비.
+ * 모듈 공통 앱 셸 — Header + 사이드바 + 메인 (데스크톱 전용).
  */
 export function ModuleAppShell({
   theme,
   sidebar,
-  bottomNav,
   children,
   beforeHeader,
   overlays,
@@ -54,14 +53,16 @@ export function ModuleAppShell({
       <div className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1">
         {sidebar}
         <main
-          data-work-scroll-root
-          data-testid="app-work-main"
-          className="main-with-bottom-nav max-w-full flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-4 lg:p-5"
+          data-work-scroll-root={nested ? undefined : true}
+          data-testid={nested ? undefined : 'app-work-main'}
+          className={cn(
+            'max-w-full flex-1 p-5',
+            nested ? 'min-h-0 overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
+          )}
         >
           {children}
         </main>
       </div>
-      {bottomNav}
       {overlays}
     </div>
   );

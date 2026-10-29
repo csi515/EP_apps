@@ -54,7 +54,7 @@
     "test:tenant-query": "tsx src/core/query/tenantQueryKeys.test.ts",
     "test:booking-logic": "tsx src/core/booking/bookingLogic.test.ts",
     "test:ads-cloudflare": "tsx src/components/ads/AdSlotPlaceholder.test.ts",
-    "test:login-form": "tsx src/components/auth/MobileLoginForm.test.ts",
+    "test:login-form": "tsx src/components/auth/LoginForm.test.ts",
     "test:auth-storage": "tsx src/core/auth/services/authStorage.test.ts",
     "test:operation-bundles": "tsx src/core/presets/operationBundles.test.ts",
     "test:switchboard-store": "tsx src/pages/settings/CapabilitySwitchboardPage.test.ts",
@@ -141,6 +141,7 @@
     "test:ep-shell-surface": "tsx src/core/organizations/epAppsShellSurface.contract.test.ts",
     "test:command-palette-edge": "tsx src/components/common/commandPalette.edge.test.ts",
     "test:login-desktop-surface": "tsx src/pages/auth/loginDesktopSurface.contract.test.ts",
+    "test:work-page-frame": "tsx src/shared/components/ui/workPageFrame.contract.test.ts",
     "test:plant-ops-surface-edge": "tsx src/app/presets/personalPlantOps.surface.edge.test.ts",
     "test:ep-surface-suite": "npm run test:org-bootstrap-edge && npm run test:org-blocked-edge && npm run test:app-portal-mode-edge && npm run test:role-labels-edge && npm run test:ep-shell-surface && npm run test:command-palette-edge && npm run test:login-desktop-surface && npm run test:plant-ops-surface-edge && npm run test:org-context-resolve && npm run test:org-selection && npm run test:org-onboarding"
   },

@@ -18,6 +18,8 @@ import { canReadAllFeedbacks, type AccessMember } from '@/domain/permissions';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { Pagination } from '@/shared/components/ui/Pagination';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 
 function resolveAccessMember(): AccessMember {
@@ -78,13 +80,14 @@ export const GrievanceListPage: React.FC = () => {
   const [inquiryPin, setInquiryPin] = useState('');
   const [inquiryResult, setInquiryResult] = useState<AnonymousGrievanceRecord | null>(null);
   const [inquiryError, setInquiryError] = useState('');
-
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const { query } = useList<AnonymousGrievanceRecord>({
     resource: 'anonymous_grievances',
     meta: { schema: 'core' },
     sorters: [{ field: 'submitted_at', order: 'desc' }],
-    pagination: { pageSize: 50 },
+    pagination: { pageSize: 200 },
   });
 
   const records = (query?.data?.data as AnonymousGrievanceRecord[]) || [];
@@ -101,6 +104,16 @@ export const GrievanceListPage: React.FC = () => {
       (r) => r.visibility !== 'anonymous' && r.author_user_id && uid && r.author_user_id === uid
     );
   }, [records, isHandler, user?.id]);
+
+  const pagedRecords = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return visibleRecords.slice(start, start + pageSize);
+  }, [visibleRecords, page, pageSize]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(visibleRecords.length / pageSize) || 1);
+    if (page > maxPage) setPage(maxPage);
+  }, [visibleRecords.length, pageSize, page]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,7 +241,7 @@ export const GrievanceListPage: React.FC = () => {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6" data-testid="grievance-list-page">
+    <WorkPageFrame width="hub">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-bold text-slate-800">
@@ -268,7 +281,7 @@ export const GrievanceListPage: React.FC = () => {
             {isLoading ? (
               <tr>
                 <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
-                  불러오는 중...
+                  불러오는 중…
                 </td>
               </tr>
             ) : visibleRecords.length === 0 ? (
@@ -278,7 +291,7 @@ export const GrievanceListPage: React.FC = () => {
                 </td>
               </tr>
             ) : (
-              visibleRecords.map((r) => (
+              pagedRecords.map((r) => (
                 <tr key={r.id} className="hover:bg-slate-50">
                   <td className="p-3 font-mono font-bold text-rose-600">{r.ticket_code}</td>
                   <td className="p-3 text-xs">{r.visibility === 'anonymous' ? '익명' : '기명'}</td>
@@ -332,6 +345,19 @@ export const GrievanceListPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {!isLoading && visibleRecords.length > 0 ? (
+        <Pagination
+          current={page}
+          pageSize={pageSize}
+          total={visibleRecords.length}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      ) : null}
 
       {replyModalOpen && selectedTicket && isHandler ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -457,6 +483,6 @@ export const GrievanceListPage: React.FC = () => {
           </div>
         </div>
       ) : null}
-    </div>
+    </WorkPageFrame>
   );
 };

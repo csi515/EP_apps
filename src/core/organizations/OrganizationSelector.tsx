@@ -11,7 +11,6 @@ import {
   UserPlus,
   KeyRound,
   Sparkles,
-  UserRound,
   Compass,
 } from 'lucide-react';
 import { appBrand } from '@/core/brand';
@@ -33,8 +32,6 @@ export const OrganizationSelector: React.FC = () => {
     organizationsError,
     refreshOrganizations,
     blockedOwnerOrgIds,
-    canAccessCustomerPortal,
-    enterCustomerPortal,
     canAccessParentPortal,
     enterParentPortal,
   } = useOrganization();
@@ -50,7 +47,7 @@ export const OrganizationSelector: React.FC = () => {
   const missingEmail = !user?.email?.trim();
 
   // 기존 소속이 아예 없는 완전 신규 가입자인지 판정
-  const isNewUser = organizations.length === 0 && !canAccessCustomerPortal && !canAccessParentPortal;
+  const isNewUser = organizations.length === 0 && !canAccessParentPortal;
 
   const handleSignOut = () => {
     setSigningOut(true);
@@ -266,33 +263,6 @@ export const OrganizationSelector: React.FC = () => {
                CASE B: 기존 소속 사업장 또는 포털 이용자 — 즉시 진입 최우선 정돈
                ========================================================================= */
             <div className="space-y-4">
-              {/* 고객/학부모 포털 진입 배너 */}
-              {canAccessCustomerPortal && (
-                <button
-                  type="button"
-                  onClick={enterCustomerPortal}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-indigo-50/80 border border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 transition-all text-left min-h-[44px] shadow-xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-indigo-200">
-                      <UserRound className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-bold text-slate-900">내 수강권 · 회원권 포털로 이동</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900 font-bold">
-                          고객 전용
-                        </span>
-                      </div>
-                      <p className="text-xs text-indigo-700 font-medium mt-0.5">
-                        등록된 매장의 출석·이용권·예약 현황을 확인합니다
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-indigo-500 shrink-0" />
-                </button>
-              )}
-
               {canAccessParentPortal && (
                 <button
                   type="button"

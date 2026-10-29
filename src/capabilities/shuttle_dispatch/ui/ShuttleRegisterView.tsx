@@ -4,6 +4,7 @@ import { useCreate, useList, useUpdate } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { normalizeDriverPhoneForTel } from '../domain/shuttleRosterEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type RouteRow = {
   id: string;
@@ -149,7 +150,7 @@ export const ShuttleRegisterView: React.FC = () => {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-4 p-4">
+    <WorkPageFrame width="form">
       <header>
         <h1 className="text-xl font-bold text-slate-900">내 통근 셔틀 설정</h1>
         <p className="text-sm text-slate-500">한 번만 설정하면 매일 동일하게 적용됩니다.</p>
@@ -300,6 +301,6 @@ export const ShuttleRegisterView: React.FC = () => {
           설정 저장하기
         </button>
       </div>
-    </div>
+    </WorkPageFrame>
   );
 };

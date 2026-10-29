@@ -1,5 +1,5 @@
 /**
- * 포털 모드 플래그 엣지 케이스 (학부모 항상 off, 고객 세션 스토리지)
+ * 포털 모드 플래그 — 학부모·고객 포털 모두 inactive
  * 실행: npm run test:app-portal-mode-edge
  */
 import assert from 'node:assert/strict';
@@ -52,46 +52,15 @@ assert.equal(isParentPortalModeActive(), false);
 setParentPortalModeActive(false);
 assert.equal(isParentPortalModeActive(), false);
 
-// 고객 포털: 기본 false
-assert.equal(isCustomerPortalModeActive(), false);
-
-// 켜기 / 끄기
-setCustomerPortalModeActive(true);
-assert.equal(isCustomerPortalModeActive(), true);
-assert.equal(store.get('ep_customer_portal_active'), '1');
-
-setCustomerPortalModeActive(false);
+// 고객 포털은 항상 inactive — 잔여 키만 정리
+store.set('ep_customer_portal_active', '1');
+store.set('moa_customer_portal_active', '1');
 assert.equal(isCustomerPortalModeActive(), false);
 assert.equal(store.has('ep_customer_portal_active'), false);
-
-// 레거시 키(moa_*) → 신규 키로 마이그레이션
-store.clear();
-store.set('moa_customer_portal_active', '1');
-assert.equal(isCustomerPortalModeActive(), true);
-assert.equal(store.get('ep_customer_portal_active'), '1');
 assert.equal(store.has('moa_customer_portal_active'), false);
 
-// 레거시 값이 '1'이 아니면 활성 아님
-store.clear();
-store.set('moa_customer_portal_active', '0');
-assert.equal(isCustomerPortalModeActive(), false);
-
-// 신규 키가 있으면 레거시 무시
-store.clear();
-store.set('ep_customer_portal_active', '0');
-store.set('moa_customer_portal_active', '1');
-assert.equal(isCustomerPortalModeActive(), false);
-
-store.set('ep_customer_portal_active', '1');
-assert.equal(isCustomerPortalModeActive(), true);
-
-// set 시 레거시 키 정리
-store.set('moa_customer_portal_active', '1');
 setCustomerPortalModeActive(true);
-assert.equal(store.has('moa_customer_portal_active'), false);
-
-setCustomerPortalModeActive(false);
-assert.equal(store.has('moa_customer_portal_active'), false);
+assert.equal(isCustomerPortalModeActive(), false);
 assert.equal(store.has('ep_customer_portal_active'), false);
 
 // sessionStorage throw 시 false / no-throw

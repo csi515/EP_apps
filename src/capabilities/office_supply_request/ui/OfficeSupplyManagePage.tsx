@@ -19,6 +19,7 @@ import {
   type CampaignRow,
 } from '../officeSupplyRequestService';
 import { OfficeSupplyManageGate } from './OfficeSupplyAccessGate';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 function toLocalDatetimeValue(iso: string): string {
   const d = new Date(iso);
@@ -167,7 +168,7 @@ const ManageInner: React.FC = () => {
   const domainSelected = selected ? campaignRowToDomain(selected) : null;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 p-4 pb-24">
+    <WorkPageFrame width="hub">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">사무용품 취합·마감</h1>
@@ -366,7 +367,7 @@ const ManageInner: React.FC = () => {
           </>
         )}
       </section>
-    </div>
+    </WorkPageFrame>
   );
 };
 

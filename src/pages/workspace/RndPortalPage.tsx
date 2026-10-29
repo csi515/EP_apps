@@ -13,6 +13,7 @@ const PatentAssetManagementView = lazy(() =>
   import('@/capabilities/patent_ip_asset').then((m) => ({ default: m.PatentAssetManagementView })),
 );
 import { RndEquipmentPortalSection } from './RndEquipmentPortalSection';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const TAB_LABEL: Record<RndTab, string> = {
   projects: '연구 프로젝트',
@@ -54,29 +55,27 @@ export const RndPortalPage: React.FC = () => {
 
   if (!hasPortalAccess) {
     return (
-      <main className="mx-auto max-w-lg p-6">
+      <WorkPageFrame width="form" as="main">
         <AccessDeniedBanner />
-        <p className="mt-3 text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-slate-600">
           연구소 포털은 권한이 부여된 담당자만 이용할 수 있습니다.
         </p>
-      </main>
+      </WorkPageFrame>
     );
   }
 
   if (visibleTabs.length === 0) {
     return (
-      <main className="mx-auto max-w-lg p-6 text-center">
+      <WorkPageFrame width="form" as="main" className="text-center">
         <p className="text-sm text-slate-600">연구소 포털 모듈이 활성화되지 않았습니다.</p>
-      </main>
+      </WorkPageFrame>
     );
   }
 
   return (
-    <main className="min-h-[100svh] bg-slate-50">
-      <div className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
-        </div>
+    <WorkPageFrame width="hub" as="main">
+      <div className="border-b border-slate-200 pb-3">
+        <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {visibleTabs.map((id) => (
             <button
@@ -97,6 +96,6 @@ export const RndPortalPage: React.FC = () => {
         {tab === 'equipment' ? <RndEquipmentPortalSection /> : null}
         {tab === 'patents' ? <PatentAssetManagementView /> : null}
       </Suspense>
-    </main>
+    </WorkPageFrame>
   );
 };

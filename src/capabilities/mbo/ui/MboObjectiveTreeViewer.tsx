@@ -14,6 +14,7 @@ import {
   type MboStatus,
   type MboLevel,
 } from '../domain/mboEngine';
+import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 
 export interface ObjectiveNode {
   id: string;
@@ -21,6 +22,7 @@ export interface ObjectiveNode {
   level: MboLevel;
   departmentName: string;
   ownerName: string;
+  ownerId?: string | null;
   title: string;
   description: string;
   successCriteria: string;
@@ -34,6 +36,9 @@ export interface ObjectiveNode {
   revisionCount?: number;
   targetValue?: number | null;
   rejectionReason?: string;
+  visibilityType?: MboVisibilityType;
+  sharedMemberIds?: string[];
+  deletedAt?: string | null;
 }
 
 interface MboObjectiveTreeViewerProps {
@@ -46,6 +51,8 @@ interface MboObjectiveTreeViewerProps {
   onOpenRejectModal: (id: string) => void;
   onOpenRevisionHistory?: (id: string) => void;
   onOpenRevise?: (id: string) => void;
+  onOpenDelete?: (id: string) => void;
+  onChangeVisibility?: (id: string, visibility: MboVisibilityType) => void;
   /** 목표 잠금 시 수정·신규 등록 UI 비활성 */
   goalsLocked?: boolean;
 }
@@ -60,6 +67,8 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
   onOpenRejectModal,
   onOpenRevisionHistory,
   onOpenRevise,
+  onOpenDelete,
+  onChangeVisibility,
   goalsLocked = false,
 }) => {
   // 전사 가중 진척률
@@ -164,6 +173,13 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                   <span className="text-xs font-bold text-slate-500">{obj.departmentName}</span>
                   <span className="text-slate-300">·</span>
                   <span className="text-xs font-semibold text-slate-700">{obj.ownerName}</span>
+                  <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                    {obj.visibilityType === 'PUBLIC'
+                      ? '전체 공개'
+                      : obj.visibilityType === 'PARTIAL'
+                        ? '선택 공개'
+                        : '비공개'}
+                  </span>
                   <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded-full">
                     가중치 {obj.weight}%
                   </span>
@@ -219,7 +235,21 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                   기한: {obj.startDate} ~ {obj.targetDate}
                 </span>
 
-                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  {onChangeVisibility ? (
+                    <select
+                      className="min-h-12 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700"
+                      value={obj.visibilityType || 'PRIVATE'}
+                      aria-label="공개범위"
+                      onChange={(event) =>
+                        onChangeVisibility(obj.id, event.target.value as MboVisibilityType)
+                      }
+                    >
+                      <option value="PRIVATE">비공개</option>
+                      <option value="PUBLIC">전체 공개</option>
+                      <option value="PARTIAL">선택 공개</option>
+                    </select>
+                  ) : null}
                   {obj.status !== 'completed' && obj.status !== 'canceled' && (
                     <button
                       type="button"
@@ -238,6 +268,22 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                       월별 점검·수정
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() => onOpenRevisionHistory?.(obj.id)}
+                    className="min-h-12 rounded-lg bg-slate-100 px-2.5 text-[11px] font-bold text-slate-700"
+                  >
+                    이력
+                  </button>
+                  {onOpenDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => onOpenDelete(obj.id)}
+                      className="min-h-12 rounded-lg bg-rose-50 px-2.5 text-[11px] font-bold text-rose-700"
+                    >
+                      삭제
+                    </button>
+                  ) : null}
                   {obj.status === 'draft' && (
                     <button
                       type="button"

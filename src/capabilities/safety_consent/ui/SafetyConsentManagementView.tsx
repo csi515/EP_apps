@@ -25,6 +25,7 @@ import {
   type ConsentAuditRecord,
   type SignatureMetadata,
 } from '../domain/safetyConsentEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const DEFAULT_TEMPLATES: ConsentTemplate[] = [
   {
@@ -123,7 +124,7 @@ export const SafetyConsentManagementView: React.FC = () => {
   }, [auditRecords, searchTerm]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pt-2 pb-12">
+    <WorkPageFrame width="hub">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -308,7 +309,7 @@ export const SafetyConsentManagementView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };
 

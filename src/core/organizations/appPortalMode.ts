@@ -1,6 +1,6 @@
 /**
- * EP_apps 포털 모드 — 고객 포털만 유지.
- * 학부모 포털(parent) 활성화는 제거됨 (항상 inactive).
+ * EP_apps 포털 모드 — 학부모·고객 포털 제거됨.
+ * 레거시 sessionStorage 키만 정리한다.
  */
 
 const CUSTOMER_PORTAL_MODE_KEY = 'ep_customer_portal_active';
@@ -16,30 +16,21 @@ export function setParentPortalModeActive(_active: boolean): void {
   /* parent portal removed */
 }
 
+/** @deprecated 고객 포털 제거 — 항상 false, 잔여 키 정리 */
 export function isCustomerPortalModeActive(): boolean {
   try {
-    const current = sessionStorage.getItem(CUSTOMER_PORTAL_MODE_KEY);
-    if (current === '1') return true;
-    if (current != null) return false;
-    const legacy = sessionStorage.getItem(LEGACY_CUSTOMER_PORTAL_MODE_KEY);
-    if (legacy === '1') {
-      sessionStorage.setItem(CUSTOMER_PORTAL_MODE_KEY, '1');
-      sessionStorage.removeItem(LEGACY_CUSTOMER_PORTAL_MODE_KEY);
-      return true;
-    }
-    return false;
+    sessionStorage.removeItem(CUSTOMER_PORTAL_MODE_KEY);
+    sessionStorage.removeItem(LEGACY_CUSTOMER_PORTAL_MODE_KEY);
   } catch {
-    return false;
+    /* ignore */
   }
+  return false;
 }
 
-export function setCustomerPortalModeActive(active: boolean): void {
+/** @deprecated 고객 포털 제거 — 잔여 키만 삭제 */
+export function setCustomerPortalModeActive(_active: boolean): void {
   try {
-    if (active) {
-      sessionStorage.setItem(CUSTOMER_PORTAL_MODE_KEY, '1');
-    } else {
-      sessionStorage.removeItem(CUSTOMER_PORTAL_MODE_KEY);
-    }
+    sessionStorage.removeItem(CUSTOMER_PORTAL_MODE_KEY);
     sessionStorage.removeItem(LEGACY_CUSTOMER_PORTAL_MODE_KEY);
   } catch {
     /* ignore */

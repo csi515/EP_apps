@@ -19,6 +19,7 @@ import {
   type HazardClass,
 } from '../domain/hazardousSubstanceEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const INITIAL_REAGENTS: ChemicalReagent[] = [
   {
@@ -132,7 +133,7 @@ export const HazardousSubstanceManagementView: React.FC = () => {
   const compResult = reagentA && reagentB ? checkStorageCompatibility(reagentA, reagentB) : null;
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
+    <WorkPageFrame width="hub">
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
@@ -459,6 +460,6 @@ export const HazardousSubstanceManagementView: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </WorkPageFrame>
   );
 };

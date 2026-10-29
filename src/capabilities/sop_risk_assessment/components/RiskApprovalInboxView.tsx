@@ -14,6 +14,7 @@ import {
 } from '../services/riskAssessmentApprovalService';
 import { readDocumentBody, type OrgMemberOption } from '../domain/sopStepDocument';
 import type { ApprovalStepState } from '../domain/approvalEngine';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type Identity = { id?: string };
 
@@ -79,8 +80,8 @@ export const RiskApprovalInboxView: React.FC = () => {
   }, [reload]);
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6">
-      <header className="mb-4">
+    <WorkPageFrame width="hub">
+      <header>
         <h2 className="text-xl font-bold text-slate-900">내 결재 대기함</h2>
         <p className="mt-1 text-sm text-slate-500">
           사업주·관리감독자가 검토/승인해야 할 작업표준·위험성평가 문서를 모았습니다.
@@ -185,6 +186,6 @@ export const RiskApprovalInboxView: React.FC = () => {
           await reload();
         }}
       />
-    </div>
+    </WorkPageFrame>
   );
 };
