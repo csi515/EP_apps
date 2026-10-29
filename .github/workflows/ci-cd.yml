@@ -67,8 +67,8 @@ jobs:
       DATABASE_URL: postgresql://ep:ep@127.0.0.1:54329/ep_local
       EP_LOCAL_AUTH_SEED_MODE: dev
       EP_MIGRATE_STRICT: '1'
-      # PostgREST HS256 시크릿은 32자 이상 필요
-      EP_JWT_SECRET: ep-ci-jwt-secret-change-me-ok32x
+      # Auth 기본값(.env.example)과 동일·32자+ — Vite Auth와 PostgREST 서명 일치
+      EP_JWT_SECRET: ep-local-dev-jwt-secret-change-me
       AUTH_API_PORT: '8787'
       EP_AUTH_API_BASE: http://127.0.0.1:8787/api/local-auth
       EP_POSTGREST_URL: http://127.0.0.1:3001
@@ -98,6 +98,7 @@ jobs:
             -e PGRST_DB_PRE_REQUEST=app.postgrest_pre_request \
             -e PGRST_JWT_SECRET="$EP_JWT_SECRET" \
             -e PGRST_JWT_SECRET_IS_BASE64=false \
+            -e PGRST_SERVER_CORS_ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000" \
             -e PGRST_SERVER_PORT=3001 \
             postgrest/postgrest:v12.2.3
           sleep 3
@@ -127,8 +128,8 @@ jobs:
       DATABASE_URL: postgresql://ep:ep@127.0.0.1:54329/ep_local
       EP_LOCAL_AUTH_SEED_MODE: dev
       EP_MIGRATE_STRICT: '1'
-      # PostgREST HS256 시크릿은 32자 이상 필요
-      EP_JWT_SECRET: ep-ci-jwt-secret-change-me-ok32x
+      # Auth 기본값(.env.example)과 동일·32자+ — Vite Auth와 PostgREST 서명 일치
+      EP_JWT_SECRET: ep-local-dev-jwt-secret-change-me
       VITE_LOCAL_AUTH: 'true'
       VITE_CORP_DOMAIN: 'true'
       VITE_SUPABASE_URL: http://127.0.0.1:3001
@@ -159,6 +160,7 @@ jobs:
             -e PGRST_DB_PRE_REQUEST=app.postgrest_pre_request \
             -e PGRST_JWT_SECRET="$EP_JWT_SECRET" \
             -e PGRST_JWT_SECRET_IS_BASE64=false \
+            -e PGRST_SERVER_CORS_ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000" \
             -e PGRST_SERVER_PORT=3001 \
             postgrest/postgrest:v12.2.3
           sleep 3

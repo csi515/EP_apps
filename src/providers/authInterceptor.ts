@@ -51,6 +51,8 @@ function shouldIgnore(url: string): boolean {
 export function installAuthInterceptor(): void {
   if (installed || typeof window === 'undefined') return;
   installed = true;
+  // E2E에서는 모든 401을 세션 모달로 가리면 원인 진단이 어려워 모달을 건너뛴다.
+  const skipReAuthModal = import.meta.env.VITE_E2E === '1';
   const original = window.fetch.bind(window);
   window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init);
@@ -59,6 +61,7 @@ export function installAuthInterceptor(): void {
     }
     const response = await original(request.clone());
     if (response.status !== 401) return response;
+    if (skipReAuthModal) return response;
     openReAuthModal();
     return new Promise<Response>((resolve, reject) => {
       queue.push({

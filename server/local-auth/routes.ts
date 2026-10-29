@@ -285,6 +285,10 @@ export async function handleLocalAuthRequest(
         `
         INSERT INTO app.sessions (user_id, token_hash, expires_at)
         VALUES ($1::uuid, $2, NOW() + ($3::text)::interval)
+        ON CONFLICT (token_hash) DO UPDATE
+          SET user_id = EXCLUDED.user_id,
+              expires_at = EXCLUDED.expires_at,
+              revoked_at = NULL
       `,
         [user.id, hashSessionToken(jwt), getSessionTtlSqlInterval()]
       );

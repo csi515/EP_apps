@@ -19,7 +19,7 @@ export function localAuthPlugin(): Plugin {
       void getLocalAuthPool()
         .then(async (pool) => {
           const count = await pool.query<{ c: string }>(
-            `SELECT COUNT(*)::text AS c FROM app_users`
+            `SELECT COUNT(*)::text AS c FROM app.users`
           );
           const emails = [
             ...LOCAL_AUTH_ROLE_ACCOUNTS.map((a) => a.email),
