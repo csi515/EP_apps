@@ -16,8 +16,10 @@ export function isOrgAdmin(role: UserRole | string | null | undefined): boolean 
 }
 
 /**
- * 최고 관리자 — 모든 기능·직급 플래그를 보유한 것으로 본다.
- * manager는 포함하지 않는다(운영 위임과 구분).
+ * 전권 역할 — 모든 기능·직급 위임 플래그를 보유한 것으로 본다.
+ * - admin: 시스템 관리자 계정 (권한 위임·조직 설정 포함 전권)
+ * - owner/director: 조직상 대표이사 멤버십 (최고 직급)
+ * manager는 포함하지 않는다(부분 운영 위임과 구분).
  */
 export function isOmnipotentOrgRole(role: UserRole | string | null | undefined): boolean {
   return (
@@ -28,6 +30,7 @@ export function isOmnipotentOrgRole(role: UserRole | string | null | undefined):
   );
 }
 
+/** 조직 대표이사 멤버십(owner) — 관리자(admin)와 구분 */
 export function isOrgOwner(role: UserRole | string | null | undefined): boolean {
   return role === 'owner' || role === 'director';
 }

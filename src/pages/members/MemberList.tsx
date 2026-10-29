@@ -25,7 +25,6 @@ import {
   type DynamicMemberRow,
   type DynamicRoleRow,
 } from '@/core/organizations/services/dynamicRoleService';
-import { OwnershipTransferCard } from '@/pages/settings/OwnershipTransferCard';
 import { listAuditLogs } from '@/core/audit';
 import type { AuditLog } from '@/core/audit/types';
 import { StorageService } from '@/services/storage';
@@ -310,7 +309,7 @@ export function MemberList(): React.JSX.Element {
                         {isOwner ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
                             <Shield className="h-3 w-3" />
-                            대표 사업자
+                            대표이사
                           </span>
                         ) : member.role === 'admin' ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-800">
@@ -640,11 +639,6 @@ export function MemberList(): React.JSX.Element {
         </section>
       ) : null}
 
-      {/* CEO 대표 사업자 소유권 이전 관리 카드 (대표 전용) */}
-      <section className="pt-6">
-        <OwnershipTransferCard />
-      </section>
-    
       {/* ------------------------------------------------------------------------ */}
       {/* 회원별 직무 기능 권한(총무/봉사/노경/셔틀 등) 개별 토글 모달 */}
       {/* ------------------------------------------------------------------------ */}

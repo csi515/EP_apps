@@ -1,4 +1,5 @@
 import { loadOrganizationTree } from '@/core/organizations/services/organizationTreeService';
+import { listDynamicRoles } from '@/core/organizations/services/dynamicRoleService';
 import {
   isSubtreeLeaderOfUser,
   resolveLeaderDepartmentPaths,
@@ -6,6 +7,11 @@ import {
   type DeptLeadAssignment,
   type DeptMembership,
 } from '@/core/organizations/departmentLeadScope';
+import {
+  isTopExecutiveRole,
+  type GoalHierarchyActor,
+} from '../domain/mboGoalHierarchy';
+
 export type MboPickerMember = {
   id: string;
   userId: string;
@@ -23,31 +29,49 @@ export type MboPickerDepartment = {
 export type MboViewerOrgScope = {
   viewerMemberId: string | null;
   leadDepartmentPaths: string[];
+  leadDepartmentIds: string[];
   managedMemberIds: Set<string>;
   managedUserIds: Set<string>;
   isSubtreeManager: boolean;
   isSubtreeLeaderOfTarget: (targetUserId: string | null | undefined) => boolean;
+  goalActor: GoalHierarchyActor;
 };
 
 export async function loadMboViewerOrgScope(
   organizationId: string,
   viewerUserId: string | null | undefined,
 ): Promise<MboViewerOrgScope> {
+  const emptyActor: GoalHierarchyActor = {
+    isTopExecutive: false,
+    isUnitLeader: false,
+    ledDepartmentIds: [],
+    rankOrder: null,
+    roleName: null,
+  };
   const empty: MboViewerOrgScope = {
     viewerMemberId: null,
     leadDepartmentPaths: [],
+    leadDepartmentIds: [],
     managedMemberIds: new Set(),
     managedUserIds: new Set(),
     isSubtreeManager: false,
     isSubtreeLeaderOfTarget: () => false,
+    goalActor: emptyActor,
   };
   if (!organizationId || !viewerUserId) return empty;
 
-  const { nodes, members, departmentMembers } = await loadOrganizationTree(organizationId);
+  const [{ nodes, members, departmentMembers }, roles] = await Promise.all([
+    loadOrganizationTree(organizationId),
+    listDynamicRoles(organizationId).catch(() => []),
+  ]);
   const viewer = members.find((m) => m.user_id === viewerUserId);
   if (!viewer) return empty;
 
   const pathByDeptId = new Map(nodes.map((n) => [n.id, n.path]));
+  const roleById = new Map(roles.map((r) => [r.id, r]));
+  const viewerRole =
+    (viewer.organization_role_id && roleById.get(viewer.organization_role_id)) || null;
+
   const assignments: DeptLeadAssignment[] = departmentMembers.map((dm) => ({
     memberId: dm.member_id,
     departmentId: dm.department_id,
@@ -65,6 +89,9 @@ export async function loadMboViewerOrgScope(
   });
 
   const leadDepartmentPaths = resolveLeaderDepartmentPaths(viewer.id, assignments);
+  const leadDepartmentIds = assignments
+    .filter((row) => row.memberId === viewer.id && row.scopeType === 'DESCENDANTS')
+    .map((row) => row.departmentId);
   const managedMemberIds = resolveManagedMemberIds(viewer.id, assignments, memberships);
   const managedUserIds = new Set<string>();
   for (const membership of memberships) {
@@ -73,9 +100,25 @@ export async function loadMboViewerOrgScope(
     }
   }
 
+  const rankOrder =
+    typeof viewerRole?.rank_order === 'number' ? viewerRole.rank_order : null;
+  const roleName = viewerRole?.name ?? null;
+  const goalActor: GoalHierarchyActor = {
+    isTopExecutive: isTopExecutiveRole({
+      memberRole: viewer.role,
+      roleName,
+      rankOrder,
+    }),
+    isUnitLeader: leadDepartmentIds.length > 0,
+    ledDepartmentIds: leadDepartmentIds,
+    rankOrder,
+    roleName,
+  };
+
   return {
     viewerMemberId: viewer.id,
     leadDepartmentPaths,
+    leadDepartmentIds,
     managedMemberIds,
     managedUserIds,
     isSubtreeManager: leadDepartmentPaths.length > 0,
@@ -83,6 +126,7 @@ export async function loadMboViewerOrgScope(
       if (!targetUserId) return false;
       return isSubtreeLeaderOfUser(viewer.id, targetUserId, assignments, memberships);
     },
+    goalActor,
   };
 }
 

@@ -170,6 +170,7 @@ function asJson(value: Record<string, unknown>): Json {
 
 export async function createDraftRiskAssessment(input: {
   organizationId: string;
+  departmentId: string | null;
   deptCode: string;
   deptName: string;
   processName: string;
@@ -179,18 +180,17 @@ export async function createDraftRiskAssessment(input: {
   const { data: userData, error: userError } = await client.auth.getUser();
   if (userError || !userData.user) throw new Error(userError?.message || '로그인이 필요합니다.');
 
+  const deptCode = (input.deptCode || 'GEN').trim().toUpperCase();
   const docNo = generateSopDocNo(
-    input.deptCode,
-    getNextSequenceNumber(input.existingDocNos, input.deptCode)
+    deptCode,
+    getNextSequenceNumber(input.existingDocNos, deptCode)
   );
-  const body = addStep(
-    emptyDocumentBody().steps
-  );
+  const body = addStep(emptyDocumentBody().steps);
   const snapshot = buildSnapshotPayload({
     ...emptyDocumentBody(),
     steps: body,
-    deptCode: input.deptCode,
-    deptName: input.deptName,
+    deptCode,
+    deptName: input.deptName.trim() || deptCode,
     prohibitedActions: ['보호구 미착용 상태 작업 금지'],
   });
 
@@ -198,6 +198,7 @@ export async function createDraftRiskAssessment(input: {
     .from('risk_assessments')
     .insert({
       organization_id: input.organizationId,
+      department_id: input.departmentId,
       document_no: docNo,
       title: input.processName.trim(),
       process_name: input.processName.trim(),

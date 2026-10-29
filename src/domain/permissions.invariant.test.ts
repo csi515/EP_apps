@@ -92,6 +92,11 @@ const ownerUser: AccessMember = {
   role: 'owner',
 };
 
+const adminUser: AccessMember = {
+  id: 'usr_admin_01',
+  role: 'admin',
+};
+
 const gaManager: AccessMember = {
   id: 'usr_ga_01',
   role: 'staff',
@@ -142,18 +147,26 @@ const hrManagerWithTransfer: AccessMember = {
 };
 
 
-// [케이스 1] 대표 사업자(owner)는 모든 직원의 직급을 부여/회수할 수 있어야 함.
-assert.equal(canManageRoles(ownerUser), true, '사업자는 canManageRoles 참이어야 함');
-assert.equal(canManageMemberRoles(ownerUser, regularStaff), true, '사업자는 일반 직원의 직급을 관리할 수 있어야 함');
+// [케이스 1] 대표이사(owner)·관리자(admin)는 모든 직원의 직급을 부여/회수할 수 있어야 함.
+assert.equal(canManageRoles(ownerUser), true, '대표이사는 canManageRoles 참이어야 함');
+assert.equal(canManageRoles(adminUser), true, '관리자는 canManageRoles 참이어야 함');
+assert.equal(canManageMemberRoles(ownerUser, regularStaff), true, '대표이사는 일반 직원의 직급을 관리할 수 있어야 함');
+assert.equal(canManageMemberRoles(adminUser, regularStaff), true, '관리자는 일반 직원의 직급을 관리할 수 있어야 함');
 assert.doesNotThrow(
   () => assertCanAssignOrRevokeRole(ownerUser, regularStaff, { billing_invoices: true }),
-  '사업자는 직급 부여 가능'
+  '대표이사는 직급 부여 가능'
+);
+assert.doesNotThrow(
+  () => assertCanAssignOrRevokeRole(adminUser, regularStaff, { billing_invoices: true, 'roles:assign': true }),
+  '관리자는 전권으로 직급·위임 권한 부여 가능'
 );
 assert.doesNotThrow(
   () => assertCanAssignOrRevokeRole(ownerUser, regularStaff, null),
-  '사업자는 직급 회수 가능'
+  '대표이사는 직급 회수 가능'
 );
 assert.equal(canAssignOrRevokeRole(ownerUser, regularStaff), true);
+assert.equal(canAssignOrRevokeRole(adminUser, regularStaff), true);
+assert.equal(canManageMemberRoles(adminUser, ownerUser), false, '관리자도 대표이사(owner) 멤버십은 회수 불가');
 
 // [케이스 2] roles:assign 권한을 가진 총무팀 관리자는 일반 직원에게 직급을 배정/회수할 수 있어야 함.
 assert.equal(canManageRoles(gaManager), true, '총무팀 관리자는 canManageRoles 참이어야 함');
@@ -175,7 +188,7 @@ assert.throws(
   () => assertCanAssignOrRevokeRole(gaManager, ownerUser, null),
   (err: unknown) => {
     assert.ok(err instanceof Error);
-    return err.message.includes('대표 사업자의 권한은 수정하거나 회수할 수 없습니다.');
+    return err.message.includes('대표이사의 권한은 수정하거나 회수할 수 없습니다.');
   },
   '총무팀 관리자가 사업자 권한을 회수하려 할 때 42501 예외 차단 필수'
 );
@@ -183,7 +196,7 @@ assert.throws(
   () => assertCanAssignOrRevokeRole(gaManager, ownerUser, { booking: true }),
   (err: unknown) => {
     assert.ok(err instanceof Error);
-    return err.message.includes('대표 사업자의 권한은 수정하거나 회수할 수 없습니다.');
+    return err.message.includes('대표이사의 권한은 수정하거나 회수할 수 없습니다.');
   },
   '총무팀 관리자가 사업자 권한을 수정하려 할 때 42501 예외 차단 필수'
 );
@@ -224,37 +237,18 @@ assert.throws(
   '총무팀 관리자의 미보유 권한 부여 시도 차단 필수'
 );
 
-// [케이스 5] 대표 사업자(owner) 및 ownership:transfer 권한을 위임받은 인사팀 관리자의 소유권 이전 검증
-assert.equal(canTransferOwnership(ownerUser), true, '대표 사업자는 소유권 이전 권한 true');
-assert.equal(canTransferOwnership(hrManagerWithTransfer), true, 'ownership:transfer 권한 보유 인사팀은 소유권 이전 권한 true');
-assert.equal(canTransferOwnership(gaManager), false, 'ownership:transfer 없는 총무팀 관리자는 소유권 이전 권한 false');
-assert.equal(canTransferOwnership(regularStaff), false, '일반 직원은 소유권 이전 권한 false');
-assert.equal(canTransferOwnership(instructorUser), false, '강사는 소유권 이전 권한 false');
-assert.equal(canTransferOwnership(null), false, 'null/미인증자는 소유권 이전 권한 false');
-
-assert.doesNotThrow(
+// [케이스 5] 사업자 소유권 이전 기능은 제품에서 제거 — 항상 거절
+assert.equal(canTransferOwnership(ownerUser), false);
+assert.equal(canTransferOwnership(hrManagerWithTransfer), false);
+assert.equal(canTransferOwnership(gaManager), false);
+assert.equal(canTransferOwnership(regularStaff), false);
+assert.equal(canTransferOwnership(null), false);
+assert.throws(
   () => assertCanTransferOwnership(ownerUser, regularStaff),
-  '대표 사업자는 일반 직원에게 소유권 이전 검증 통과'
-);
-assert.doesNotThrow(
-  () => assertCanTransferOwnership(hrManagerWithTransfer, regularStaff),
-  'ownership:transfer 권한 보유 인사팀은 일반 직원에게 소유권 이전 대행 검증 통과'
-);
-assert.throws(
-  () => assertCanTransferOwnership(gaManager, regularStaff),
   (err: unknown) => {
     assert.ok(err instanceof Error);
-    return err.message.includes('소유권을 이전할 수 있습니다');
+    return err.message.includes('소유권 이전 기능은 제공하지 않습니다');
   },
-  '권한 없는 총무팀의 소유권 이전 시도는 예외 거절'
-);
-assert.throws(
-  () => assertCanTransferOwnership(ownerUser, ownerUser),
-  (err: unknown) => {
-    assert.ok(err instanceof Error);
-    return err.message.includes('대상 직원은 이미 대표 사업자입니다.');
-  },
-  '이미 대표 사업자인 대상에게 소유권 이전 시도는 예외 거절'
 );
 
 

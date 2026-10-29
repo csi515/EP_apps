@@ -3,6 +3,7 @@ import {
   aggregateStopHeadcounts,
   canManageShuttle,
   normalizeDriverPhoneForTel,
+  scheduleRowsToStopDrafts,
   validateRouteForm,
   validateStopsSequence,
   type ShuttleRegistration,
@@ -108,6 +109,17 @@ function run() {
   assert.equal(report[0].onboardAfter, 2);
   assert.equal(report[1].dropoffCount, 2);
   assert.equal(report[1].onboardAfter, 0);
+
+  const scheduleStops = scheduleRowsToStopDrafts([
+    { time: '05:49', stop_name: '신대 정류장', remark: '' },
+    { time: '07:05', stop_name: '회사', remark: '퇴근 17:45 출발' },
+  ]);
+  assert.equal(scheduleStops.length, 2);
+  assert.equal(scheduleStops[0].is_pickup, true);
+  assert.equal(scheduleStops[0].pickup_time, '05:49');
+  assert.equal(scheduleStops[1].is_dropoff, true);
+  assert.equal(scheduleStops[1].dropoff_time, '07:05');
+  assert.equal(validateStopsSequence(scheduleStops).isValid, true);
 
   console.log('shuttleRosterEngine.test.ts: ok');
 }

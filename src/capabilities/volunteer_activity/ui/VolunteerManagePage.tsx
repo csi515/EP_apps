@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import {
@@ -145,17 +144,9 @@ function VolunteerManageInner() {
 
   return (
     <WorkPageFrame width="hub">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-black text-slate-900">봉사활동 게시·관리</h1>
-          <p className="text-sm text-slate-500">종류와 모집 인원을 게시하고 마감할 수 있습니다.</p>
-        </div>
-        <Link
-          to="/workspace/volunteer"
-          className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
-        >
-          참여 목록 보기
-        </Link>
+      <header>
+        <h1 className="text-xl font-black text-slate-900">봉사활동 게시·관리</h1>
+        <p className="text-sm text-slate-500">종류와 모집 인원을 게시하고 마감할 수 있습니다.</p>
       </header>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">

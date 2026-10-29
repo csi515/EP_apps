@@ -3,15 +3,33 @@
  * 실행: npm run test:user-facing-error
  */
 import assert from 'node:assert/strict';
-import { classifyUserFacingError, userFacingErrorMessage } from './userFacingError';
+import {
+  USER_FACING_ERROR_MESSAGES,
+  classifyUserFacingError,
+  sanitizeErrorToastMessage,
+  userFacingErrorMessage,
+} from './userFacingError';
 
 function run() {
   assert.equal(classifyUserFacingError(new Error('failed to fetch')), 'network');
+  assert.equal(classifyUserFacingError(new TypeError('Failed to fetch')), 'network');
   assert.equal(
     classifyUserFacingError(
       new Error('Failed to fetch dynamically imported module: https://example.com/assets/x.js')
     ),
     'load_failed'
+  );
+  assert.equal(
+    sanitizeErrorToastMessage('TypeError: Failed to fetch'),
+    USER_FACING_ERROR_MESSAGES.network
+  );
+  assert.equal(
+    sanitizeErrorToastMessage('조회에 실패했습니다.'),
+    '조회에 실패했습니다.'
+  );
+  assert.equal(
+    sanitizeErrorToastMessage('Error (status code: undefined)'),
+    USER_FACING_ERROR_MESSAGES.temporary
   );
   assert.equal(classifyUserFacingError(new Error('permission denied')), 'permission');
   assert.equal(classifyUserFacingError(new Error('duplicate key')), 'conflict');

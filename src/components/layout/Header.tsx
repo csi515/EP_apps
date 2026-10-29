@@ -1,19 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetIdentity, useLogout } from "@refinedev/core";
 import {
   LogOut,
   User,
   ChevronDown,
+  Building2,
 } from "lucide-react";
 import { appBrand } from "@/core/brand";
+import { usePermissions } from "@/core/auth/usePermissions";
+import { useOptionalOrganization } from "@/core/organizations/OrganizationProvider";
+import {
+  canManageOrgStructure,
+  canManageRoles,
+  normalizeRolePermissions,
+} from "@/domain/permissions";
 
 export const Header: React.FC = () => {
   const { data: user } = useGetIdentity<{ name?: string; email?: string }>();
   const { mutate: logout } = useLogout();
+  const { isAdmin, isOwner } = usePermissions();
+  const org = useOptionalOrganization();
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   const displayName = user?.name || user?.email || "임직원";
+
+  const membership = org?.selectedMembership;
+  const accessMember = {
+    role: membership?.role ?? (isOwner ? "owner" : isAdmin ? "admin" : null),
+    permissions: normalizeRolePermissions(membership?.permissions ?? null) ?? undefined,
+    customRole: membership?.organizationRoleName
+      ? {
+          name: membership.organizationRoleName,
+          permissions: normalizeRolePermissions(membership?.permissions ?? null) ?? undefined,
+        }
+      : null,
+  };
+  const canOpenOrgAdmin =
+    canManageOrgStructure(accessMember) || canManageRoles(accessMember);
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [isAccountMenuOpen]);
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/95 px-6 backdrop-blur-sm">
@@ -28,7 +64,7 @@ export const Header: React.FC = () => {
         </Link>
       </div>
 
-      <div className="relative border-l border-slate-200 pl-3">
+      <div className="relative border-l border-slate-200 pl-3" ref={menuRef}>
         <button
           type="button"
           onClick={() => setIsAccountMenuOpen((open) => !open)}
@@ -47,7 +83,7 @@ export const Header: React.FC = () => {
         {isAccountMenuOpen ? (
           <div
             role="menu"
-            className="absolute right-0 mt-1 w-48 rounded-xl border border-slate-200 bg-white py-1 shadow-lg z-40"
+            className="absolute right-0 mt-1 w-52 rounded-xl border border-slate-200 bg-white py-1 shadow-lg z-40"
           >
             <Link
               to="/workspace/account"
@@ -58,6 +94,18 @@ export const Header: React.FC = () => {
               <User className="h-4 w-4 text-slate-400" />
               내 계정
             </Link>
+            {canOpenOrgAdmin ? (
+              <Link
+                to="/workspace/org-admin"
+                role="menuitem"
+                data-testid="header-org-admin-link"
+                className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 min-h-[44px]"
+                onClick={() => setIsAccountMenuOpen(false)}
+              >
+                <Building2 className="h-4 w-4 text-slate-400" />
+                조직 설정
+              </Link>
+            ) : null}
             <button
               type="button"
               role="menuitem"

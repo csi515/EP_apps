@@ -1,10 +1,21 @@
-import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, lazy, useMemo } from 'react';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { ClipboardCheck, FlaskConical, Microscope, Sparkles } from 'lucide-react';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
 import { canAccessRndPortal, normalizeRolePermissions } from '@/domain/permissions';
 import { AccessDeniedBanner } from '@/pages/settings/DynamicRoleSettingsPage';
-import { isRndTabEnabled, resolveRndEnabledCapabilities, type RndTab } from './rndPortalCapabilities';
+import {
+  isRndTabEnabled,
+  resolveRndEnabledCapabilities,
+  resolveRndTabFromPath,
+  RND_TAB_LABEL,
+  RND_TAB_PATH,
+  type RndTab,
+} from './rndPortalCapabilities';
+import { WorkAppShell } from '@/shared/components/layout/WorkAppShell';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const ResearchProjectManagementView = lazy(() =>
   import('@/capabilities/research_project').then((m) => ({ default: m.ResearchProjectManagementView })),
@@ -12,16 +23,53 @@ const ResearchProjectManagementView = lazy(() =>
 const PatentAssetManagementView = lazy(() =>
   import('@/capabilities/patent_ip_asset').then((m) => ({ default: m.PatentAssetManagementView })),
 );
+const MaintenanceChecklistManagementView = lazy(() =>
+  import('@/capabilities/maintenance_checklist').then((m) => ({
+    default: m.MaintenanceChecklistManagementView,
+  })),
+);
 import { RndEquipmentPortalSection } from './RndEquipmentPortalSection';
-import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
-const TAB_LABEL: Record<RndTab, string> = {
-  projects: '연구 프로젝트',
-  equipment: '연구 장비·예약',
-  patents: '특허 관리',
+const TAB_ICON: Record<RndTab, React.ReactNode> = {
+  projects: <FlaskConical className="h-4 w-4" />,
+  equipment: <Microscope className="h-4 w-4" />,
+  maintenance: <ClipboardCheck className="h-4 w-4" />,
+  patents: <Sparkles className="h-4 w-4" />,
 };
 
+const RND_TAB_ORDER: readonly RndTab[] = ['projects', 'equipment', 'maintenance', 'patents'];
+
+function RndSectionFallback({ message }: { message: string }) {
+  return <LoadingScreen message={message} />;
+}
+
+export const RndProjectsSection: React.FC = () => (
+  <Suspense fallback={<RndSectionFallback message="연구 프로젝트 로딩…" />}>
+    <ResearchProjectManagementView />
+  </Suspense>
+);
+
+export const RndEquipmentSection: React.FC = () => (
+  <Suspense fallback={<RndSectionFallback message="연구 장비 로딩…" />}>
+    <RndEquipmentPortalSection />
+  </Suspense>
+);
+
+export const RndMaintenanceSection: React.FC = () => (
+  <Suspense fallback={<RndSectionFallback message="설비 점검 로딩…" />}>
+    <MaintenanceChecklistManagementView />
+  </Suspense>
+);
+
+export const RndPatentsSection: React.FC = () => (
+  <Suspense fallback={<RndSectionFallback message="특허 관리 로딩…" />}>
+    <PatentAssetManagementView />
+  </Suspense>
+);
+
+/** 연구소 통합 포털 — WorkAppShell 사이드바로 섹션 전환 */
 export const RndPortalPage: React.FC = () => {
+  const location = useLocation();
   const { currentOrganization, activeCapabilities } = useOrganization();
   const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
   const activeUser = StorageService.getActiveUser();
@@ -42,16 +90,12 @@ export const RndPortalPage: React.FC = () => {
   );
 
   const visibleTabs = useMemo(
-    () => (Object.keys(TAB_LABEL) as RndTab[]).filter((id) => isRndTabEnabled(id, enabledCaps)),
+    () => RND_TAB_ORDER.filter((id) => isRndTabEnabled(id, enabledCaps)),
     [enabledCaps],
   );
 
-  const [tab, setTab] = useState<RndTab>('projects');
-
-  useEffect(() => {
-    if (visibleTabs.length === 0) return;
-    if (!visibleTabs.includes(tab)) setTab(visibleTabs[0]);
-  }, [visibleTabs, tab]);
+  const activeTab = resolveRndTabFromPath(location.pathname);
+  const defaultPath = visibleTabs[0] ? RND_TAB_PATH[visibleTabs[0]] : '/workspace';
 
   if (!hasPortalAccess) {
     return (
@@ -72,30 +116,26 @@ export const RndPortalPage: React.FC = () => {
     );
   }
 
+  if (location.pathname === '/rnd' || location.pathname === '/rnd/') {
+    return <Navigate to={defaultPath} replace />;
+  }
+
+  if (activeTab && !visibleTabs.includes(activeTab)) {
+    return <Navigate to={defaultPath} replace />;
+  }
+
   return (
-    <WorkPageFrame width="hub" as="main">
-      <div className="border-b border-slate-200 pb-3">
-        <h1 className="text-lg font-semibold text-slate-900">연구소 통합 포털</h1>
-        <div className="mt-3 flex gap-2 overflow-x-auto">
-          {visibleTabs.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className={`min-h-12 shrink-0 rounded-xl px-4 text-sm font-medium ${
-                tab === id ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'
-              }`}
-              onClick={() => setTab(id)}
-            >
-              {TAB_LABEL[id]}
-            </button>
-          ))}
-        </div>
-      </div>
-      <Suspense fallback={<LoadingScreen message="연구소 화면 로딩…" />}>
-        {tab === 'projects' ? <ResearchProjectManagementView /> : null}
-        {tab === 'equipment' ? <RndEquipmentPortalSection /> : null}
-        {tab === 'patents' ? <PatentAssetManagementView /> : null}
-      </Suspense>
-    </WorkPageFrame>
+    <WorkAppShell
+      title="연구소"
+      items={RND_TAB_ORDER.map((id) => ({
+        to: RND_TAB_PATH[id],
+        label: RND_TAB_LABEL[id],
+        icon: TAB_ICON[id],
+        visible: visibleTabs.includes(id),
+        end: true,
+      }))}
+    >
+      <Outlet />
+    </WorkAppShell>
   );
 };

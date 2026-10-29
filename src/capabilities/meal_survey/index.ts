@@ -7,3 +7,4 @@ export * from './ui/MealSurveyAccessGate';
 export * from './ui/MealSurveyMyView';
 export * from './ui/MealSurveyManagePage';
 export * from './ui/MealSurveySettingsPage';
+export * from './ui/MealSurveyMonthCalendar';

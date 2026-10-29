@@ -11,9 +11,9 @@ import {
   FORM_CONTROL_CLASS,
   SettingsCard,
 } from '@/shared/components/ui';
+import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import type { AcademySettings, AcademyRoomKind } from '../settingsTypes';
 import { IndustryFeatureGuidePanel } from '@/core/help';
-import { LegalLinks } from '@/core/legal';
 import {
   Settings,
   Building,
@@ -187,7 +187,7 @@ export const WorkplaceSettingsView: FC = () => {
   };
 
   return (
-    <div className="space-y-4 pb-4">
+    <WorkPageFrame width="hub">
       <PageHeader
         icon={<Settings className="w-6 h-6" />}
         iconClassName={accentIcon}
@@ -377,7 +377,7 @@ export const WorkplaceSettingsView: FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">직급 및 권한 설정</h3>
-                  <p className="text-[11px] text-slate-500">대표, 팀장, 실무자 등 직급 신설 및 세부 권한을 제어합니다</p>
+                  <p className="text-[11px] text-slate-500">대표이사·관리자 권한 위임, 직급 신설 및 세부 권한을 제어합니다</p>
                 </div>
               </div>
               <button
@@ -397,15 +397,11 @@ export const WorkplaceSettingsView: FC = () => {
             accentIcon={accentIcon}
             accentHover={accentHover}
           />
-
-          <div className="pt-2 pb-4">
-            <LegalLinks className="flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-slate-500" />
-          </div>
         </div>
       </div>
 
       <IndustryFeatureGuidePanel industry={industry} />
-    </div>
+    </WorkPageFrame>
   );
 };
 

@@ -86,15 +86,44 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
       <SopPendingApprovalStrip />
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
         <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-300 bg-slate-50 px-3 text-xs font-bold text-slate-700">
+            부서
+            <select
+              className="max-w-[12rem] bg-transparent text-sm font-bold text-slate-900"
+              aria-label="부서 필터"
+              value={workspace.departmentFilter}
+              onChange={(event) =>
+                workspace.setDepartmentFilter(event.target.value as typeof workspace.departmentFilter)
+              }
+            >
+              <option value="all">전체 ({workspace.departmentCounts.all})</option>
+              {workspace.departments.map((dept) => (
+                <option key={dept.id} value={dept.id}>
+                  {dept.name} ({workspace.departmentCounts.byId[dept.id] ?? 0})
+                </option>
+              ))}
+              {workspace.departmentCounts.unassigned > 0 ? (
+                <option value="unassigned">
+                  부서 미지정 ({workspace.departmentCounts.unassigned})
+                </option>
+              ) : null}
+            </select>
+          </label>
           <select
-            className="h-11 rounded-xl border border-slate-300 px-3 text-sm font-bold"
+            className="h-11 min-w-[14rem] rounded-xl border border-slate-300 px-3 text-sm font-bold"
+            aria-label="작업표준 문서"
             value={doc?.document_no ?? ''}
             onChange={(event) => {
-              const next = workspace.docs.find((item) => item.document_no === event.target.value);
+              const next = workspace.filteredDocs.find(
+                (item) => item.document_no === event.target.value
+              );
               if (next) void workspace.selectDoc(next.id);
             }}
           >
-            {workspace.docs.map((item) => (
+            {workspace.filteredDocs.length === 0 ? (
+              <option value="">이 부서에 문서 없음</option>
+            ) : null}
+            {workspace.filteredDocs.map((item) => (
               <option key={item.id} value={item.document_no}>
                 {item.document_no} - {item.process_name}
               </option>
@@ -158,7 +187,9 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
 
       {!doc && !workspace.loading ? (
         <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-          등록된 작업표준이 없습니다. 신규 공정 표준을 만들면 초안 단계에서 작업 단계와 위험성평가를 함께 작성합니다.
+          {workspace.docs.length === 0
+            ? '등록된 작업표준이 없습니다. 신규 공정 표준을 만들면 초안 단계에서 작업 단계와 위험성평가를 함께 작성합니다.'
+            : '선택한 부서에 해당하는 작업표준이 없습니다. 부서 필터를 「전체」로 바꾸거나 신규 문서를 등록하세요.'}
         </p>
       ) : null}
 
@@ -245,6 +276,12 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
       <SopNewDocumentModal
         open={showNew}
         existingDocNos={workspace.docs.map((item) => item.document_no)}
+        departments={workspace.departments}
+        preferredDepartmentId={
+          workspace.departmentFilter !== 'all' && workspace.departmentFilter !== 'unassigned'
+            ? workspace.departmentFilter
+            : null
+        }
         onClose={() => setShowNew(false)}
         onCreate={(input) => workspace.createDoc(input)}
       />

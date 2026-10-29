@@ -17,6 +17,7 @@ import {
 } from '../reservationService';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import { createApprovalWithChosenLine } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 interface ResourceReservationRequestModalProps {
   organizationId: string;
@@ -183,7 +184,7 @@ export const ResourceReservationRequestModal: React.FC<ResourceReservationReques
       onSuccess();
       onClose();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : '예약 신청에 실패했습니다.');
+      setErrorMessage(userFacingErrorMessage(err) || '예약 신청에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }

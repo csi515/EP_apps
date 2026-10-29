@@ -50,9 +50,22 @@ const ScheduleCalendarPage = lazy(() => import("@/capabilities/booking/pages/Sch
 const RolesPage = lazy(() => import("./pages/settings/RolesPage").then((m) => ({ default: m.RolesPage })));
 const AcceptStaffInvitePage = lazy(() => import("./pages/invite/AcceptStaffInvitePage").then((m) => ({ default: m.AcceptStaffInvitePage })));
 const OrganizationTreePage = lazy(() => import("./pages/organization/OrganizationTreePage").then((m) => ({ default: m.OrganizationTreePage })));
+const OrgAdminHubPage = lazy(() => import("./pages/workspace/OrgAdminHubPage").then((m) => ({ default: m.OrgAdminHubPage })));
 const WorkspaceResourcesPage = lazy(() => import("./pages/workspace/WorkspaceResourcesPage").then((m) => ({ default: m.WorkspaceResourcesPage })));
 const WorkspaceFeedbacksPage = lazy(() => import("./pages/workspace/WorkspaceFeedbacksPage").then((m) => ({ default: m.WorkspaceFeedbacksPage })));
 const RndPortalPage = lazy(() => import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndPortalPage })));
+const RndProjectsSection = lazy(() =>
+  import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndProjectsSection })),
+);
+const RndEquipmentSection = lazy(() =>
+  import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndEquipmentSection })),
+);
+const RndMaintenanceSection = lazy(() =>
+  import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndMaintenanceSection })),
+);
+const RndPatentsSection = lazy(() =>
+  import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndPatentsSection })),
+);
 const WorkspaceIntranetHubPage = lazy(() => import("./pages/workspace/WorkspaceIntranetHubPage").then((m) => ({ default: m.WorkspaceIntranetHubPage })));
 const WorkspaceMboPage = lazy(() => import("./pages/workspace/WorkspaceMboPage").then((m) => ({ default: m.WorkspaceMboPage })));
 const WorkspaceApprovalsPage = lazy(() => import("./pages/workspace/WorkspaceApprovalsPage").then((m) => ({ default: m.WorkspaceApprovalsPage })));
@@ -108,8 +121,6 @@ const CAPABILITY_ROUTE_PATHS = [
   "consents",
   "inventory",
   "supply-restock",
-  "facility-incident-report",
-  "facility-incidents",
   "mbo",
   "mbo-objectives",
   "mbo-projects",
@@ -212,11 +223,13 @@ const RefineApp: React.FC = () => {
           >
             <Route index element={<IndustryAppRouter />} />
             <Route path="/workspace/settings/roles" element={<DynamicRoleSettingsPage />} />
+            <Route path="/workspace/org-admin" element={<OrgAdminHubPage />} />
             <Route path="/workspace/members" element={<MemberList />} />
             <Route path="/workspace/organization" element={<OrganizationTreePage />} />
             <Route path="/workspace/intranet" element={<WorkspaceIntranetHubPage />} />
             <Route path="/workspace/resources" element={<WorkspaceResourcesPage />} />
             <Route path="/workspace/feedbacks" element={<WorkspaceFeedbacksPage />} />
+            <Route path="/workspace/grievances" element={<WorkspaceFeedbacksPage />} />
             <Route path="/workspace/mbo" element={<WorkspaceMboPage />} />
             <Route path="/workspace/approvals" element={<WorkspaceApprovalsPage />} />
             <Route path="/workspace/inventory" element={<WorkspaceInventoryPage />} />
@@ -239,7 +252,14 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/setup-wizard" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/ep-setup" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/quick" element={<Navigate to="/onboarding/ep-setup" replace />} />
-            <Route path="/rnd" element={<RndPortalPage />} />
+            <Route path="/workspace/maintenance" element={<Navigate to="/rnd/maintenance" replace />} />
+            <Route path="/rnd" element={<RndPortalPage />}>
+              <Route index element={<Navigate to="projects" replace />} />
+              <Route path="projects" element={<RndProjectsSection />} />
+              <Route path="equipment" element={<RndEquipmentSection />} />
+              <Route path="maintenance" element={<RndMaintenanceSection />} />
+              <Route path="patents" element={<RndPatentsSection />} />
+            </Route>
             <Route path="/rnd_workspace" element={<Navigate to="/rnd" replace />} />
             <Route path="/workspace" element={<IndustryAppRouter />} />
             <Route path="/workspace/:tab" element={<IndustryAppRouter />} />

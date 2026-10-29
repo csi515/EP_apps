@@ -16,6 +16,12 @@ export type RouteDraft = {
   driverName?: string | null;
   /** 담당 기사 연락처 (선택) */
   driverPhone?: string | null;
+  /** 운행 차량 번호 (선택) */
+  vehicleNumber?: string | null;
+  /** 퇴근 역순 안내 */
+  returnIsReverse?: boolean;
+  weekdayReturnTime?: string | null;
+  fridayReturnTime?: string | null;
 };
 
 /** 표시·tel 링크용: 숫자·하이픈·공백·괄호·+ 만 허용 */
@@ -100,7 +106,33 @@ export function validateRouteForm(routeDraft: RouteDraft): { isValid: boolean; e
   if (phone && !PHONE_RE.test(phone)) {
     return { isValid: false, error: '기사 연락처 형식이 올바르지 않습니다.' };
   }
+  const weekday = (routeDraft.weekdayReturnTime ?? '').trim();
+  if (weekday && !TIME_RE.test(weekday)) {
+    return { isValid: false, error: '월~목 퇴근 출발 시각 형식이 올바르지 않습니다 (HH:MM).' };
+  }
+  const friday = (routeDraft.fridayReturnTime ?? '').trim();
+  if (friday && !TIME_RE.test(friday)) {
+    return { isValid: false, error: '금요일 퇴근 출발 시각 형식이 올바르지 않습니다 (HH:MM).' };
+  }
   return { isValid: true };
+}
+
+/** 시간표형(시간·정류장·비고) 행 → 정류장 드래프트 */
+export function scheduleRowsToStopDrafts(
+  rows: Array<{ time: string; stop_name: string; remark?: string | null }>
+): ShuttleStopDraft[] {
+  return rows.map((row, index) => {
+    const time = row.time.trim();
+    const isLast = index === rows.length - 1;
+    return {
+      stop_order: index + 1,
+      stop_name: row.stop_name,
+      pickup_time: time || null,
+      dropoff_time: isLast ? time || null : null,
+      is_pickup: !isLast,
+      is_dropoff: isLast,
+    };
+  });
 }
 
 export function validateStopsSequence(stops: ShuttleStopDraft[]): { isValid: boolean; error?: string } {

@@ -189,9 +189,9 @@ export function getCallerEffectivePermissions(caller: AccessMember): Record<stri
 }
 
 /**
- * 타 직원의 직급/권한을 부여하거나 회수할 수 있는 위임 관리자 또는 사업주인지 판정.
- * 1. role === 'owner' -> true
- * 2. permissions['roles:assign'] === true 또는 customRole.permissions['roles:assign'] === true -> true
+ * 타 직원의 직급/권한을 부여하거나 회수할 수 있는지 판정.
+ * 1. admin/owner 등 전권 역할 -> true
+ * 2. permissions['roles:assign'] 등 위임 플래그 -> true
  * 3. 그 외 일반 직원 -> false
  */
 function memberHasPermissionFlag(
@@ -248,9 +248,9 @@ export function canManageOrgStructure(
 
 /**
  * 직급 부여/회수 권한 검증 및 권한 상승(Privilege Escalation) 방어 순수 검증 로직.
- * - 호출자가 owner이거나 'roles:assign' 권한을 보유하지 않으면 거절 (예외 발생)
- * - 대상이 owner인 경우 수정/회수 시도 시 예외 발생
- * - 비-owner 위임 관리자가 자신이 보유하지 않은 권한을 타인에게 부여하려 할 때 예외 발생 (권한 상승 방지)
+ * - 호출자가 전권(admin/owner)이거나 'roles:assign'을 보유하지 않으면 거절
+ * - 대상이 대표이사(owner)인 경우 수정/회수 시도 시 예외
+ * - 비-전권 위임자가 미보유 권한을 타인에게 부여하려 할 때 예외
  */
 export function assertCanAssignOrRevokeRole(
   callerMember: AccessMember,
@@ -262,11 +262,11 @@ export function assertCanAssignOrRevokeRole(
   }
 
   if (targetMember.role === 'owner') {
-    throw new Error('대표 사업자의 권한은 수정하거나 회수할 수 없습니다.');
+    throw new Error('대표이사의 권한은 수정하거나 회수할 수 없습니다.');
   }
 
-  // 권한 상승(Privilege Escalation) 방어: 위임 관리자는 본인이 보유하지 않은 권한이 포함된 직급을 타인에게 부여할 수 없음
-  if (callerMember.role !== 'owner' && newRolePermissions) {
+  // 권한 상승 방어: 전권(admin/owner)이 아닌 위임자는 미보유 권한 부여 불가
+  if (!isOmnipotentOrgRole(callerMember.role) && newRolePermissions) {
     const callerPerms = getCallerEffectivePermissions(callerMember);
     for (const [key, val] of Object.entries(newRolePermissions)) {
       if (val === true && !callerPerms[key]) {
@@ -291,9 +291,9 @@ export function canAssignOrRevokeRole(
 
 /**
  * 타 직원의 직급을 배정/회수할 수 있는지 종합 판정:
- * 1. 대상 직원이 대표 사업자(owner)인 경우 절대 불가 (false)
- * 2. 호출자가 대표 사업자(owner)인 경우 대상이 owner가 아니면 허용 (true)
- * 3. 호출자가 'roles:assign' 권한을 보유한 총무/운영 위임 관리자이고 대상이 owner가 아니면 허용 (true)
+ * 1. 대상이 대표이사(owner)면 절대 불가
+ * 2. 호출자가 전권(admin/owner)이면 대상이 owner가 아닐 때 허용
+ * 3. 호출자가 roles:assign 위임이면 대상이 owner가 아닐 때 허용
  * 4. 그 외 일반 직원 -> false
  */
 export function canManageMemberRoles(
@@ -302,60 +302,27 @@ export function canManageMemberRoles(
 ): boolean {
   if (!callerMember || !targetMember) return false;
   if (targetMember.role === 'owner') return false;
-  if (callerMember.role === 'owner') return true;
+  if (isOmnipotentOrgRole(callerMember.role)) return true;
   return canManageRoles(callerMember);
 }
 
 /**
- * 대표 사업자(CEO/Owner) 또는 위임받은 인사팀의 소유권 이전 권한 판정:
- * 1. role === 'owner' -> true
- * 2. permissions['ownership:transfer'] === true 또는 customRole.permissions['ownership:transfer'] === true -> true
- * 3. 그 외 일반 직원 -> false
+ * 사업자 소유권 이전 — 제품에서 제거됨. 항상 false.
  */
 export function canTransferOwnership(
-  callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null
+  _callerMember?: AccessMember | { role?: string | null; permissions?: any; customRole?: any } | null
 ): boolean {
-  if (!callerMember) return false;
-  if (isOmnipotentOrgRole(callerMember.role)) return true;
-
-  // Direct permissions check
-  const direct = callerMember.permissions;
-  if (direct) {
-    if (Array.isArray(direct)) {
-      if (direct.includes('ownership:transfer') || direct.includes('ownership_transfer')) return true;
-    } else if (typeof direct === 'object') {
-      const rec = direct as Record<string, unknown>;
-      if (rec['ownership:transfer'] === true || rec.ownership_transfer === true) return true;
-    }
-  }
-
-  // customRole permissions check
-  const customRolePerms = callerMember.customRole?.permissions;
-  if (customRolePerms) {
-    if (Array.isArray(customRolePerms)) {
-      if (customRolePerms.includes('ownership:transfer') || customRolePerms.includes('ownership_transfer')) return true;
-    } else if (typeof customRolePerms === 'object') {
-      const rec = customRolePerms as Record<string, unknown>;
-      if (rec['ownership:transfer'] === true || rec.ownership_transfer === true) return true;
-    }
-  }
-
   return false;
 }
 
 /**
- * 소유권 이전 실행 전 불변조건 및 권한 검증
+ * 사업자 소유권 이전 — 제품에서 제거됨. 항상 거절.
  */
 export function assertCanTransferOwnership(
-  callerMember: AccessMember,
-  targetMember: AccessMember
+  _callerMember: AccessMember,
+  _targetMember: AccessMember
 ): void {
-  if (!canTransferOwnership(callerMember)) {
-    throw new Error('권한이 없습니다: 대표 사업자(owner) 또는 대표이사 변경 권한(ownership:transfer)을 위임받은 관리자만 소유권을 이전할 수 있습니다.');
-  }
-  if (targetMember.role === 'owner') {
-    throw new Error('대상 직원은 이미 대표 사업자입니다.');
-  }
+  throw new Error('사업자 소유권 이전 기능은 제공하지 않습니다.');
 }
 
 

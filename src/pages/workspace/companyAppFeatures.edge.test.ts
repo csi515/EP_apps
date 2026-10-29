@@ -83,7 +83,8 @@ const rolesUi = readFileSync(
   'utf8'
 );
 assert.match(rolesUi, /RolePermissionMatrix/);
-assert.match(rolesUi, /roles:assign|ownership:transfer|위임/);
+assert.match(rolesUi, /roles:assign|위임/);
+assert.doesNotMatch(rolesUi, /OwnershipTransferCard|소유권 이전/);
 
 const memberList = readFileSync(join(root, 'src/pages/members/MemberList.tsx'), 'utf8');
 assert.match(memberList, /assign_role|위임|직급/);

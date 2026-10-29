@@ -132,6 +132,7 @@
     "test:login-bootstrap": "tsx src/core/accounts/loginBootstrap.contract.test.ts",
     "test:login-to-delegation": "tsx src/core/auth/loginToDelegation.flow.test.ts",
     "test:company-app-features-edge": "tsx src/pages/workspace/companyAppFeatures.edge.test.ts",
+    "test:published-company-apps": "tsx src/pages/workspace/publishedApps/catalog.contract.test.ts && tsx src/pages/workspace/publishedApps/research.contract.test.ts && tsx src/pages/workspace/publishedApps/mbo.contract.test.ts && tsx src/pages/workspace/publishedApps/shuttle.contract.test.ts && tsx src/pages/workspace/publishedApps/resources.contract.test.ts && tsx src/pages/workspace/publishedApps/sop_risk.contract.test.ts && tsx src/pages/workspace/publishedApps/grievances.contract.test.ts && tsx src/pages/workspace/publishedApps/volunteer.contract.test.ts && tsx src/pages/workspace/publishedApps/meal_survey.contract.test.ts && tsx src/pages/workspace/publishedApps/office_supply.contract.test.ts",
     "test:auth-onboarding-suite": "npm run test:auth-signup && npm run test:login-bootstrap && npm run test:org-onboarding",
     "test:login-delegation-suite": "npm run test:login-bootstrap && npm run test:login-to-delegation && npm run test:company-app-features-edge && npm run test:access-control && npm run test:ep-role-seed && npm run test:permissions-invariant && npm run test:org-access-invariant && npm run test:authorization && npm run test:permission-catalog",
     "test:org-bootstrap-edge": "tsx src/core/organizations/organizationBootstrap.edge.test.ts",

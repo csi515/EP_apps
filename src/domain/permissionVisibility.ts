@@ -11,7 +11,6 @@ const ALWAYS_VISIBLE: ReadonlySet<RolePermissionKey> = new Set([
   'members_manage',
   'roles:assign',
   'org_structure:manage',
-  'ownership:transfer',
   'policies',
 ]);
 

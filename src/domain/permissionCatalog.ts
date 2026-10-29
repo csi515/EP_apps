@@ -91,9 +91,9 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
   },
   {
     key: 'ownership:transfer',
-    label: '대표이사(CEO) 변경·소유권 이전',
+    label: '사업자 소유권 이전 (미제공)',
     group: 'hr_rbac',
-    description: '이사회/인사 전용 소유권 이전 대행',
+    description: '제품에서 제거된 권한 키. UI·위임에 노출하지 않습니다.',
   },
   {
     key: 'policies',

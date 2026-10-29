@@ -88,6 +88,7 @@ export const GrievanceListPage: React.FC = () => {
     meta: { schema: 'core' },
     sorters: [{ field: 'submitted_at', order: 'desc' }],
     pagination: { pageSize: 200 },
+    errorNotification: false,
   });
 
   const records = (query?.data?.data as AnonymousGrievanceRecord[]) || [];

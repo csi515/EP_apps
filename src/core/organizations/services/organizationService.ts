@@ -402,7 +402,7 @@ export function getRoleLabel(
 ): string {
   if (!industry) {
     const defaultLabels: Record<MemberRole, string> = {
-      owner: '대표',
+      owner: '대표이사',
       admin: '관리자',
       manager: '매니저',
       staff: '직원',
@@ -417,7 +417,8 @@ export function getRoleLabel(
 
   const dict = getTerminologyDictionary(industry);
   const labels: Record<MemberRole, string> = {
-    owner: dict.facility?.owner || getOwnerLabel(industry),
+    // 대표이사/원장 등 호칭은 업종 플러그인(getOwnerLabel)을 우선 — 관리자(admin)와 구분
+    owner: getOwnerLabel(industry) || dict.facility?.owner || '대표이사',
     admin: '관리자',
     manager: '매니저',
     staff: dict.staff?.singular || '직원',

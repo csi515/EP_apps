@@ -3,6 +3,7 @@ export { sopRiskAssessmentSetupSchema } from './setupSchema';
 export { sopRiskAssessmentResources } from './resources';
 /** @deprecated 데모 UI. 진입점은 DesktopSopRiskMatrixView만 사용한다. */
 export { DesktopSopRiskMatrixView } from './components/DesktopSopRiskMatrixView';
+export * from './domain/sopDepartmentFilter';
 export { RiskApprovalInboxView } from './components/RiskApprovalInboxView';
 export { DocumentApprovalStepper } from './components/DocumentApprovalStepper';
 export { ApprovalActionModal } from './components/ApprovalActionModal';

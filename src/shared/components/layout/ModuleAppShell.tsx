@@ -6,7 +6,8 @@ import { cn } from '@/shared/lib/utils';
 
 interface ModuleAppShellProps {
   theme: ModuleTheme;
-  sidebar: ReactNode;
+  /** 없으면 본문 full-width (EP_apps 데스크톱: 런처·헤더 내비) */
+  sidebar?: ReactNode;
   children: ReactNode;
   /** Header 위 (예: SupabaseRoleSync) */
   beforeHeader?: ReactNode;
@@ -26,11 +27,11 @@ interface ModuleAppShellProps {
 }
 
 /**
- * 모듈 공통 앱 셸 — Header + 사이드바 + 메인 (데스크톱 전용).
+ * 모듈 공통 앱 셸 — Header(+선택 사이드바) + 메인 (데스크톱 전용).
  */
 export function ModuleAppShell({
   theme,
-  sidebar,
+  sidebar = null,
   children,
   beforeHeader,
   overlays,
@@ -51,12 +52,13 @@ export function ModuleAppShell({
       {beforeHeader}
       {!omitHeader ? <Header /> : null}
       <div className="mx-auto flex min-h-0 w-full max-w-[1600px] flex-1">
-        {sidebar}
+        {sidebar ?? null}
         <main
           data-work-scroll-root={nested ? undefined : true}
           data-testid={nested ? undefined : 'app-work-main'}
           className={cn(
-            'max-w-full flex-1 p-5',
+            // 페이지 거터는 WorkPageFrame이 담당 (셸에서 p-* 중복 금지)
+            'max-w-full flex-1',
             nested ? 'min-h-0 overflow-hidden' : 'overflow-x-hidden overflow-y-auto',
           )}
         >

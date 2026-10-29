@@ -90,4 +90,21 @@ function setupTest() {
   });
 }
 
+// 6. Refine query failure "Failed to fetch" is sanitized for users
+{
+  const { provider, calls } = setupTest();
+  provider.open({
+    key: "test-6",
+    message: "Error (status code: undefined)",
+    type: "error",
+    description: "TypeError: Failed to fetch",
+  });
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, "error");
+  assert.match(calls[0].message, /네트워크/);
+  assert.equal(calls[0].title, undefined);
+  assert.doesNotMatch(calls[0].message, /Failed to fetch|TypeError/i);
+}
+
 console.log("notificationProvider.test.ts: all tests passed! (100% OK)");

@@ -1,8 +1,13 @@
 import type { NotificationProvider, OpenNotificationParams } from "@refinedev/core";
 import { showToast as defaultShowToast, type ShowToast } from "@/shared/feedback/uiFeedback";
+import { sanitizeErrorToastMessage } from "@/shared/errors/userFacingError";
 
 export interface NotificationProviderDeps {
   showToast: ShowToast;
+}
+
+function isUselessRefineErrorTitle(title: string): boolean {
+  return /error\s*\(status code|failed to fetch|typeerror/i.test(title);
 }
 
 /**
@@ -15,12 +20,24 @@ export function createNotificationProvider(
   return {
     open: ({ message, type, description }: OpenNotificationParams) => {
       const toastType = type === "progress" ? "info" : type;
+      const rawMessage = message?.trim() ?? "";
+      const rawDescription = description?.trim() ?? "";
 
-      if (description && description.trim()) {
+      if (toastType === "error") {
+        const body = sanitizeErrorToastMessage(rawDescription || rawMessage);
+        const title =
+          rawDescription && rawMessage && !isUselessRefineErrorTitle(rawMessage)
+            ? sanitizeErrorToastMessage(rawMessage)
+            : undefined;
+        deps.showToast(body, "error", title);
+        return;
+      }
+
+      if (rawDescription) {
         // When description is present, description is the detailed message and message is the title
-        deps.showToast(description.trim(), toastType, message.trim());
+        deps.showToast(rawDescription, toastType, rawMessage);
       } else {
-        deps.showToast(message.trim(), toastType);
+        deps.showToast(rawMessage, toastType);
       }
     },
 

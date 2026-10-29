@@ -19,9 +19,29 @@ export const USER_FACING_ERROR_MESSAGES: Record<UserFacingErrorKind, string> = {
 };
 
 function rawErrorText(error: unknown): string {
-  if (error instanceof Error) return error.message ?? '';
+  if (error instanceof Error) {
+    const name = error.name && error.name !== 'Error' ? `${error.name}: ` : '';
+    return `${name}${error.message ?? ''}`.trim();
+  }
   if (typeof error === 'string') return error;
   return '';
+}
+
+/** 토스트·알림용: 기술 오류만 표준 문구로 바꾸고, 의도한 한글 안내는 유지한다. */
+export function sanitizeErrorToastMessage(message: string): string {
+  const text = message.replace(/^TypeError:\s*/i, '').trim();
+  if (!text) return USER_FACING_ERROR_MESSAGES.temporary;
+  const kind = classifyUserFacingError(text);
+  if (kind === 'network' || kind === 'load_failed' || kind === 'permission' || kind === 'conflict') {
+    return USER_FACING_ERROR_MESSAGES[kind];
+  }
+  if (/postgrest|relation |column |syntax error|status code:\s*undefined/i.test(text)) {
+    return USER_FACING_ERROR_MESSAGES.temporary;
+  }
+  if (/^error\s*\(status code/i.test(text)) {
+    return USER_FACING_ERROR_MESSAGES.temporary;
+  }
+  return message.trim();
 }
 
 export function classifyUserFacingError(error: unknown): UserFacingErrorKind {
@@ -35,7 +55,9 @@ export function classifyUserFacingError(error: unknown): UserFacingErrorKind {
     return 'load_failed';
   }
   if (
-    /failed to fetch|network|offline|timeout|econnreset|load failed|net::|dns/.test(text)
+    /failed to fetch|network|offline|timeout|econnreset|load failed|net::|dns|typeerror:\s*failed/.test(
+      text
+    )
   ) {
     return 'network';
   }

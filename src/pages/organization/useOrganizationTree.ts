@@ -10,7 +10,6 @@ import {
   reassignMemberDepartment,
   renameDepartment,
   revokeMemberRoleViaRpc,
-  transferOrganizationOwnership,
   type DepartmentMemberRow,
   type OrgTreeNode,
 } from '@/core/organizations/services/organizationTreeService';
@@ -127,19 +126,6 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
     [reload],
   );
 
-  const transferOwnership = useCallback(
-    async (nextOwnerMemberId: string, reason: string) => {
-      if (!organizationId) return;
-      await transferOrganizationOwnership({
-        organizationId,
-        nextOwnerMemberId,
-        reason,
-      });
-      await reload();
-    },
-    [organizationId, reload],
-  );
-
   return {
     nodes,
     members,
@@ -154,6 +140,5 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
     assignScope,
     reassignMember,
     revokeMemberRole,
-    transferOwnership,
   };
 }

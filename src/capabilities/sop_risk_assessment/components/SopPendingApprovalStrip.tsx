@@ -14,6 +14,7 @@ import {
 } from '../services/riskAssessmentApprovalService';
 import { readDocumentBody, type OrgMemberOption } from '../domain/sopStepDocument';
 import type { ApprovalStepState } from '../domain/approvalEngine';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 type Identity = { id?: string };
 
@@ -62,7 +63,7 @@ export const SopPendingApprovalStrip: React.FC = () => {
 
   useEffect(() => {
     void reload().catch((cause) => {
-      setError(cause instanceof Error ? cause.message : '결재 대기함 조회 실패');
+      setError(userFacingErrorMessage(cause) || '결재 대기함 조회 실패');
     });
   }, [reload]);
 

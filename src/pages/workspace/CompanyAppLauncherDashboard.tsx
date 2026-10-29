@@ -9,16 +9,10 @@ import {
   HeartHandshake,
   UtensilsCrossed,
   Package,
-  Settings,
-  Shield,
   Bell,
   ChevronRight,
-  Sparkles,
   X,
   MessageSquareWarning,
-  AlertTriangle,
-  ClipboardCheck,
-  UserRound,
 } from 'lucide-react';
 import { useList, useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -26,7 +20,6 @@ import { StorageService } from '@/services/storage';
 import { getIndustryPreset } from '@/app/presets/presetRegistry';
 import {
   canAccessRndPortal,
-  canManageRoles,
   normalizeRolePermissions,
 } from '@/domain/permissions';
 import { listMyPendingApprovalLines } from '@/capabilities/sop_risk_assessment/services/riskAssessmentApprovalService';
@@ -37,7 +30,6 @@ export interface CompanyAppTile {
   id: string;
   to: string;
   label: string;
-  description: string;
   icon: React.ReactNode;
   gradient: string;
   badge?: string | number | null;
@@ -133,7 +125,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
 
   const activeUser = StorageService.getActiveUser();
   const userName = user?.name || activeUser?.name || '임직원';
-  const orgName = currentOrganization?.name || '사내 업무 포털';
 
   const userFeaturePermissions = useMemo<Record<string, boolean>>(() => {
     const raw = (activeUser as any)?.feature_permissions || {};
@@ -181,6 +172,8 @@ export const CompanyAppLauncherDashboard: React.FC<{
     queryOptions: {
       enabled: enabledCaps.includes('approval_workflow'),
     },
+    // 홈 브리핑용 — 네트워크 실패 시 Refine 기본 "Failed to fetch" 토스트 억제
+    errorNotification: false,
   });
 
   useEffect(() => {
@@ -233,7 +226,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'research',
         to: '/rnd',
         label: '연구소',
-        description: '과제·장비·특허',
         icon: <FlaskConical className={iconCls} />,
         gradient: 'from-violet-500 to-purple-600',
         requiredAnyCapability: ['research_project'],
@@ -243,7 +235,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'mbo',
         to: '/workspace/mbo',
         label: 'MBO',
-        description: '목표·마일스톤',
         icon: <Target className={iconCls} />,
         gradient: 'from-emerald-500 to-teal-600',
         requiredAnyCapability: ['mbo'],
@@ -252,7 +243,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'shuttle',
         to: '/workspace/shuttle/my',
         label: '통근 셔틀',
-        description: '탑승·노선·운행표',
         icon: <Bus className={iconCls} />,
         gradient: 'from-blue-500 to-indigo-600',
         requiredAnyCapability: ['shuttle_dispatch'],
@@ -261,7 +251,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'resources',
         to: '/workspace/resources',
         label: '공용 자원',
-        description: '차량·건강관리실 예약',
         icon: <Car className={iconCls} />,
         gradient: 'from-amber-500 to-orange-600',
         requiredAnyCapability: ['booking', 'seat_room'],
@@ -270,36 +259,17 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'sop_risk',
         to: '/workspace/sop-risk',
         label: '작업표준·위험성평가',
-        description: 'SOP 및 위험성평가',
         icon: <ShieldAlert className={iconCls} />,
         gradient: 'from-rose-500 to-red-600',
         requiredAnyCapability: ['sop_risk_assessment'],
         badge: sopPendingCount || null,
         badgeColor: 'bg-rose-500 text-white',
       },
-      {
-        id: 'facility_incident',
-        to: '/workspace/facility-incident-report',
-        label: '사고·위험 보고',
-        description: '현장 사고·아차사고',
-        icon: <AlertTriangle className={iconCls} />,
-        gradient: 'from-orange-500 to-amber-600',
-        requiredAnyCapability: ['facility_incident_report'],
-      },
-      {
-        id: 'maintenance',
-        to: '/workspace/maintenance',
-        label: '설비 점검',
-        description: '점검 체크리스트',
-        icon: <ClipboardCheck className={iconCls} />,
-        gradient: 'from-slate-500 to-zinc-700',
-        requiredAnyCapability: ['maintenance_checklist'],
-      },
+      // 설비 점검은 연구소 앱(/rnd/maintenance) 사이드바로만 진입
       {
         id: 'grievances',
         to: '/workspace/grievances',
         label: '노경 건의함',
-        description: '건의·제보',
         icon: <MessageSquareWarning className={iconCls} />,
         gradient: 'from-indigo-500 to-violet-600',
         requiredAnyCapability: ['whistleblower_grievance'],
@@ -308,7 +278,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'volunteer',
         to: '/workspace/volunteer',
         label: '봉사활동',
-        description: '모집·참여 신청',
         icon: <HeartHandshake className={iconCls} />,
         gradient: 'from-pink-500 to-rose-600',
         requiredAnyCapability: ['volunteer_activity'],
@@ -317,7 +286,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'meal_survey',
         to: '/workspace/meal-survey',
         label: '식수인원 조사',
-        description: '조·중·석 사전 표시',
         icon: <UtensilsCrossed className={iconCls} />,
         gradient: 'from-lime-500 to-green-600',
         requiredAnyCapability: ['meal_survey'],
@@ -326,53 +294,19 @@ export const CompanyAppLauncherDashboard: React.FC<{
         id: 'office_supply',
         to: '/workspace/office-supply',
         label: '사무용품 취합',
-        description: '월별 신청·부서 취합',
         icon: <Package className={iconCls} />,
         gradient: 'from-sky-500 to-blue-600',
         requiredAnyCapability: ['office_supply_request'],
       },
-      {
-        id: 'settings',
-        to: '/workspace/account',
-        label: '설정',
-        description: '내 계정·비밀번호',
-        icon: <UserRound className={iconCls} />,
-        gradient: 'from-zinc-500 to-slate-600',
-      },
-      {
-        id: 'roles',
-        to: '/workspace/settings/roles',
-        label: '직급·권한',
-        description: '역할·권한 위임 관리',
-        icon: <Shield className={iconCls} />,
-        gradient: 'from-slate-500 to-zinc-700',
-        requiresPermissionCheck: true,
-      },
-      {
-        id: 'org_settings',
-        to: '/workspace/settings',
-        label: '사업장 설정',
-        description: '조직·메뉴 표시',
-        icon: <Settings className={iconCls} />,
-        gradient: 'from-stone-500 to-neutral-700',
-        requiresPermissionCheck: true,
-      },
+      // 내 계정·조직 설정(직급·사업장)은 헤더 계정 메뉴 /org-admin 허브로만 진입
     ];
     const rndOk = canAccessRndPortal({
       role: activeUser?.role ?? null,
       permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
       customRole: activeUser?.customRole ?? null,
     });
-    const rolesOk = canManageRoles({
-      role: activeUser?.role ?? null,
-      permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
-      customRole: activeUser?.customRole ?? null,
-    });
     return all
       .filter((t) => {
-        if (t.id === 'roles' || t.id === 'org_settings') {
-          return rolesOk;
-        }
         const permOk = t.requiresPermissionCheck && t.id === 'research' ? rndOk : true;
         return tileAllowed(t, enabledCaps, permOk);
       })
@@ -419,36 +353,23 @@ export const CompanyAppLauncherDashboard: React.FC<{
         <section className="mb-8">
           <div className="flex flex-row items-center justify-between gap-3 border-b border-slate-200/80 pb-5">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
-                <Sparkles className="h-3.5 w-3.5 text-indigo-600" />
-                <span>{orgName}</span>
-              </div>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
                 안녕하세요, {userName}님
               </h1>
-              <p className="mt-1 text-sm text-slate-500">{todayStr} · 사내 업무 런처</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  🏢 {(activeUser as any)?.department || '본사'}
-                </span>
-                <span className="font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-                  👤 {(activeUser as any)?.role || (activeUser as any)?.customRole?.name || '임직원'}
-                </span>
-                {assignedRoleBadges.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1.5 ml-1">
-                    <span className="text-slate-300">|</span>
-                    <span className="text-slate-500 font-medium text-[11px]">지정 직무:</span>
-                    {assignedRoleBadges.map((badge) => (
-                      <span
-                        key={badge}
-                        className="bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-md text-[11px] border border-indigo-200 shadow-2xs"
-                      >
-                        ★ {badge}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <p className="mt-1 text-sm text-slate-500">{todayStr}</p>
+              {assignedRoleBadges.length > 0 ? (
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                  <span className="text-[11px] font-medium text-slate-500">지정 직무:</span>
+                  {assignedRoleBadges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="rounded-md border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-bold text-indigo-700 shadow-2xs"
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
 
             {pendingApprovals.length > 0 ? (
@@ -519,9 +440,6 @@ export const CompanyAppLauncherDashboard: React.FC<{
               <div className="w-full px-0.5">
                 <span className="block text-xs font-bold text-slate-900 leading-snug line-clamp-2 group-hover:text-indigo-600 transition-colors">
                   {app.label}
-                </span>
-                <span className="mt-0.5 block text-[10px] font-medium text-slate-500 line-clamp-1">
-                  {app.description}
                 </span>
               </div>
             </Link>

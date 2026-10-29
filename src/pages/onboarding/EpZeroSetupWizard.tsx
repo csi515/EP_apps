@@ -380,7 +380,7 @@ export const EpZeroSetupWizard: React.FC = () => {
                   value={roleRawText}
                   onChange={(e) => setRoleRawText(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 p-3 text-xs text-slate-800 font-mono"
-                  placeholder={'임원\n부장\n차장\n과장\n대리\n사원'}
+                  placeholder={'대표이사\n부장\n차장\n과장\n대리\n사원'}
                 />
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-150 max-h-36 overflow-y-auto space-y-1">
                   <span className="text-[10px] font-bold text-slate-400 block mb-1">위계 순서 (Rank Order):</span>

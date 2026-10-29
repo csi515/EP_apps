@@ -9,6 +9,7 @@ import {
   buildMboPlanApprovalContent,
   canSubmitMboPlanToApprovalWorkflow,
 } from '../domain/mboPlanApproval';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 type Props = {
   open: boolean;
@@ -108,7 +109,7 @@ export const MboPlanApprovalModal: React.FC<Props> = ({
       onSubmitted();
       onClose();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '결재 상신 실패');
+      setError(userFacingErrorMessage(cause) || '결재 상신 실패');
     } finally {
       setBusy(false);
     }

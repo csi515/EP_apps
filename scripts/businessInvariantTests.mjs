@@ -112,7 +112,8 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:login-bootstrap', group: 'authorization', kind: 'contract', ci: 'always', order: 55 },
   { script: 'test:login-to-delegation', group: 'authorization', kind: 'unit', ci: 'always', order: 56 },
   { script: 'test:company-app-features-edge', group: 'capability', kind: 'unit', ci: 'always', order: 57 },
-  { script: 'test:work-page-frame', group: 'platform', kind: 'contract', ci: 'always', order: 58 },
+  { script: 'test:published-company-apps', group: 'capability', kind: 'contract', ci: 'always', order: 58 },
+  { script: 'test:work-page-frame', group: 'platform', kind: 'contract', ci: 'always', order: 59 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -256,6 +257,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:mbo-monthly-checkin': 'mbo monthly period_ym checkin presence and missing list unit',
   'test:ep-role-seed': 'EP zero-setup preset permission tokens to RolePermissionMap unit',
   'test:work-page-frame': 'WorkPageFrame hub/form width tokens and sample page contract',
+  'test:published-company-apps': 'launcher published apps route/capability/error-surface contracts',
   'test:approval-engine': 'approval workflow sequential multi-step approval state machine unit',
   'test:approval-line': 'approval workflow chosen reviewer/approver line unit',
   'test:quality-inspection': 'quality inspection tolerance judgment and statistical process capability unit',

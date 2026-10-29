@@ -1,6 +1,7 @@
 export { Header } from './layout/Header';
 export { ModuleAppShell } from './layout/ModuleAppShell';
 export { ModuleSidebar } from './layout/ModuleSidebar';
+export { WorkAppShell, type WorkAppNavItem, type WorkAppShellProps } from './layout/WorkAppShell';
 export { MODULE_THEMES, type ModuleTheme } from './layout/moduleTheme';
 export { LoadingScreen } from './LoadingScreen';
 export { AppErrorBoundary } from './AppErrorBoundary';

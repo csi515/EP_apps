@@ -1,20 +1,64 @@
-import React, { useState } from 'react';
-import { formatRevisionNo, generateSopDocNo, getNextSequenceNumber, PRESET_DEPARTMENTS } from '../domain/sopNumberingAndAuditEngine';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  formatRevisionNo,
+  generateSopDocNo,
+  getNextSequenceNumber,
+  PRESET_DEPARTMENTS,
+} from '../domain/sopNumberingAndAuditEngine';
+import { deriveDepartmentCode, type SopDepartmentOption } from '../domain/sopDepartmentFilter';
 import { readDocumentBody } from '../domain/sopStepDocument';
 import type { RevisionRow } from '../services/riskAssessmentApprovalService';
 
 type NewDocProps = {
   open: boolean;
   existingDocNos: readonly string[];
+  departments: readonly SopDepartmentOption[];
+  preferredDepartmentId?: string | null;
   onClose: () => void;
-  onCreate: (input: { deptCode: string; deptName: string; processName: string }) => Promise<void>;
+  onCreate: (input: {
+    departmentId: string | null;
+    deptCode: string;
+    deptName: string;
+    processName: string;
+  }) => Promise<void>;
 };
 
-export const SopNewDocumentModal: React.FC<NewDocProps> = ({ open, existingDocNos, onClose, onCreate }) => {
-  const [deptCode, setDeptCode] = useState(PRESET_DEPARTMENTS[0]?.code ?? 'MNT');
+export const SopNewDocumentModal: React.FC<NewDocProps> = ({
+  open,
+  existingDocNos,
+  departments,
+  preferredDepartmentId = null,
+  onClose,
+  onCreate,
+}) => {
+  const options = useMemo(() => {
+    if (departments.length > 0) return departments;
+    return PRESET_DEPARTMENTS.map((item) => ({
+      id: `preset:${item.code}`,
+      name: item.name,
+      code: item.code,
+    }));
+  }, [departments]);
+
+  const [departmentId, setDepartmentId] = useState('');
   const [processName, setProcessName] = useState('');
+
+  useEffect(() => {
+    if (!open) return;
+    const preferred =
+      (preferredDepartmentId && options.find((d) => d.id === preferredDepartmentId)?.id) ||
+      options[0]?.id ||
+      '';
+    setDepartmentId(preferred);
+  }, [open, options, preferredDepartmentId]);
+
   if (!open) return null;
-  const dept = PRESET_DEPARTMENTS.find((item) => item.code === deptCode);
+
+  const selected = options.find((item) => item.id === departmentId) ?? options[0];
+  const deptCode = selected ? deriveDepartmentCode(selected) : 'GEN';
+  const deptName = selected?.name ?? deptCode;
+  const realDepartmentId =
+    selected && !selected.id.startsWith('preset:') ? selected.id : null;
   const docNoPreview = generateSopDocNo(deptCode, getNextSequenceNumber(existingDocNos, deptCode));
 
   return (
@@ -23,10 +67,11 @@ export const SopNewDocumentModal: React.FC<NewDocProps> = ({ open, existingDocNo
         className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"
         onSubmit={(event) => {
           event.preventDefault();
-          if (!processName.trim()) return;
+          if (!processName.trim() || !selected) return;
           void onCreate({
+            departmentId: realDepartmentId,
             deptCode,
-            deptName: dept?.name ?? deptCode,
+            deptName,
             processName: processName.trim(),
           })
             .then(() => {
@@ -41,16 +86,23 @@ export const SopNewDocumentModal: React.FC<NewDocProps> = ({ open, existingDocNo
           소속 부서
           <select
             className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 text-sm"
-            value={deptCode}
-            onChange={(event) => setDeptCode(event.target.value)}
+            value={departmentId}
+            onChange={(event) => setDepartmentId(event.target.value)}
+            required
           >
-            {PRESET_DEPARTMENTS.map((item) => (
-              <option key={item.code} value={item.code}>
-                [{item.code}] {item.name}
+            {options.map((item) => (
+              <option key={item.id} value={item.id}>
+                [{deriveDepartmentCode(item)}] {item.name}
               </option>
             ))}
           </select>
         </label>
+        {departments.length === 0 ? (
+          <p className="mt-2 text-xs text-amber-700">
+            조직도에 부서가 없어 예시 부서 코드를 사용합니다. 조직 설정에서 부서를 등록하면 실제 부서로
+            채번됩니다.
+          </p>
+        ) : null}
         <p className="mt-3 rounded-xl bg-indigo-50 px-3 py-2 text-sm font-black text-indigo-700">
           {docNoPreview} (최초 제정 Rev.00)
         </p>

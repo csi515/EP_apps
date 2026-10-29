@@ -11,22 +11,16 @@ const UniversalResourceCalendarView = lazy(() =>
 const TaskPipelineKanbanView = lazy(() =>
   import('@/capabilities/task_pipeline').then((m) => ({ default: m.TaskPipelineKanbanView })),
 );
-const MaintenanceChecklistManagementView = lazy(() =>
-  import('@/capabilities/maintenance_checklist').then((m) => ({
-    default: m.MaintenanceChecklistManagementView,
-  })),
-);
 
-type EquipmentTab = 'assets' | 'booking' | 'maintenance' | 'pipeline';
+type EquipmentTab = 'assets' | 'booking' | 'pipeline';
 
 const LABELS: Record<EquipmentTab, string> = {
   assets: '계측·장비 자산',
   booking: '장비·실험실 예약',
-  maintenance: '정기 점검·체크리스트',
   pipeline: '공정 파이프라인',
 };
 
-/** 연구소 포털 — 장비·공용자원 예약·공정 세그먼트 */
+/** 연구소 포털 — 장비·공용자원 예약·공정 (설비 점검은 /rnd/maintenance) */
 export const RndEquipmentPortalSection: React.FC = () => {
   const [subTab, setSubTab] = useState<EquipmentTab>('assets');
 
@@ -68,7 +62,6 @@ export const RndEquipmentPortalSection: React.FC = () => {
             />
           </div>
         ) : null}
-        {subTab === 'maintenance' ? <MaintenanceChecklistManagementView /> : null}
         {subTab === 'pipeline' ? <TaskPipelineKanbanView /> : null}
       </Suspense>
     </div>

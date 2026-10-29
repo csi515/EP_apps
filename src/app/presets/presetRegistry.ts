@@ -222,7 +222,6 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     capabilities: [
       'approval_workflow',
       'sop_risk_assessment',
-      'facility_incident_report',
       'safety_consent',
       'maintenance_checklist',
       'inventory',
@@ -251,7 +250,6 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'mbo',
       'research_project',
       'sop_risk_assessment',
-      'facility_incident_report',
       'supply_restock',
     ] as const,
     optionalCapabilities: [
@@ -272,10 +270,11 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     // 직급 추천안(편집 가능). 팀장·공장장 등 직책은 직급과 별도 — 고정값이 아님.
     roles: [
       {
-        name: '임원',
+        name: '대표이사',
         rank_order: 100,
         permissions: ['*'],
-        description: '추천 직급. 일반 직원 직급과 구분. 직책(공장장·본부장 등)은 별도 부여 가능',
+        description:
+          '조직도 최상위 직급. 시스템 관리자(admin) 계정과 별개이며, 직책(공장장·본부장 등)은 별도 부여 가능',
       },
       {
         name: '부장',
@@ -319,7 +318,12 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       grievances_named_default: true,
       org_chart_enabled: true,
       resource_types_require_approval_default: true,
-      hidden_capabilities: ['recipe_bom', 'rental_equipment', 'safety_consent'],
+      hidden_capabilities: [
+        'recipe_bom',
+        'rental_equipment',
+        'safety_consent',
+        'facility_incident_report',
+      ],
     },
     businessRules: {
       exclude_payroll: true,

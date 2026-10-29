@@ -54,7 +54,15 @@ export function buildGenericPluginManifest(definition: IndustryDefinition): Indu
     showPickupFields: false,
     levelLabel: '레벨',
     placeLabel: PLUGIN_FLAG_DEFAULTS.placeLabel,
-    ownerLabel: definition.id === 'academy' ? '원장' : '대표',
+    ownerLabel:
+      definition.id === 'academy'
+        ? '원장'
+        : definition.id === 'personal_plant_ops' ||
+            definition.id === 'personal_plant' ||
+            definition.id === 'plant_ops' ||
+            definition.id === 'ep_apps'
+          ? '대표이사'
+          : '대표',
     placeNamePlaceholder: '예: 행복 사업장',
     customerLabel: '고객',
     isAppointment: false,

@@ -67,7 +67,7 @@ async function testMemberListGuardrails() {
     () => {
       assertCanAssignOrRevokeRole(gaManagerUser as any, ownerUser as any, null);
     },
-    (err: any) => err.message.includes('대표 사업자의 권한은 수정하거나 회수할 수 없습니다.')
+    (err: any) => err.message.includes('대표이사의 권한은 수정하거나 회수할 수 없습니다.')
   );
 
   // 3. 권한 상승(Privilege Escalation) 방어:

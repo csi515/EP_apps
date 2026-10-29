@@ -18,13 +18,13 @@ import {
   normalizeRolePermissions,
   type RolePermissionMap,
 } from '@/domain/permissions';
+import { isOmnipotentOrgRole } from '@/core/auth/permissionsRole';
 import {
   getPermissionDictionaryGroups,
   listEnabledPermissionLabels,
 } from '@/domain/permissionCatalog';
 import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
-import { OwnershipTransferCard } from './OwnershipTransferCard';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type RoleRow = DynamicRoleRow;
@@ -55,7 +55,7 @@ export function FinanceRouteGate({ children }: { children: ReactNode }) {
   } catch {
     flags = null;
   }
-  if (role !== 'owner' && flags && flags.billing_invoices !== true) {
+  if (!isOmnipotentOrgRole(role) && flags && flags.billing_invoices !== true) {
     return <AccessDeniedBanner />;
   }
   return <>{children}</>;
@@ -75,9 +75,15 @@ export function DynamicRoleSettingsPage() {
   const [settingTab, setSettingTab] = useState<'org' | 'roles'>('org');
   const [dictOpen, setDictOpen] = useState(true);
 
-  const isOwner = role === 'owner';
   const activeUser = StorageService.getActiveUser();
-  const canManage = isOwner || canManageRoles(activeUser);
+  /** 관리자(admin)·대표이사(owner) 전권 또는 roles:assign 위임 */
+  const canManage =
+    isOmnipotentOrgRole(role) ||
+    canManageRoles({
+      role,
+      permissions: activeUser?.permissions ?? null,
+      customRole: activeUser?.customRole ?? null,
+    });
   const scopedCapIds = useMemo(
     () => resolveActiveCapabilityIds(activeCapabilities, hiddenCapabilities),
     [activeCapabilities, hiddenCapabilities]
@@ -179,7 +185,7 @@ export function DynamicRoleSettingsPage() {
                 위임 가능 권한 종류와 직급별 배정자를 확인할 수 있습니다.
               </p>
             </div>
-            {isOwner ? (
+            {canManage ? (
               <button
                 type="button"
                 className="min-h-11 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white"
@@ -253,7 +259,7 @@ export function DynamicRoleSettingsPage() {
                       <p className="font-bold">{roleRow.name}</p>
                       <p className="text-xs text-slate-500">배정 {assignees.length}명</p>
                     </div>
-                    {isOwner ? (
+                    {canManage ? (
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -303,7 +309,8 @@ export function DynamicRoleSettingsPage() {
                             className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-slate-800 border border-slate-200"
                           >
                             {memberDisplayName(member)}
-                            {member.role === 'owner' ? ' (사업주)' : ''}
+                            {member.role === 'owner' ? ' (대표이사)' : ''}
+                            {member.role === 'admin' ? ' (관리자)' : ''}
                           </li>
                         ))}
                       </ul>
@@ -325,7 +332,11 @@ export function DynamicRoleSettingsPage() {
                   className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-slate-100 px-3"
                 >
                   <span className="text-sm">
-                    {member.role === 'owner' ? '사업주' : memberDisplayName(member)}
+                    {member.role === 'owner'
+                      ? `${memberDisplayName(member)} (대표이사)`
+                      : member.role === 'admin'
+                        ? `${memberDisplayName(member)} (관리자)`
+                        : memberDisplayName(member)}
                   </span>
                   <select
                     className="min-h-11 rounded-lg border px-2 text-sm"
@@ -346,9 +357,6 @@ export function DynamicRoleSettingsPage() {
             </ul>
           </section>
 
-          <section className="pt-4">
-            <OwnershipTransferCard />
-          </section>
         </>
       )}
 

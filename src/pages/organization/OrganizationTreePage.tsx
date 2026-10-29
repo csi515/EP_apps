@@ -42,7 +42,6 @@ export const OrganizationTreePage: React.FC = () => {
     assignScope,
     reassignMember,
     revokeMemberRole,
-    transferOwnership,
   } = useOrganizationTree(orgId);
 
   const [name, setName] = useState('');
@@ -72,7 +71,6 @@ export const OrganizationTreePage: React.FC = () => {
 
   const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
   const enabled = isOrgChartEnabled(currentOrganization?.industry_type, settings, nodes.length > 0);
-  const isOwner = role === 'owner';
   const activeUser = StorageService.getActiveUser();
   const canManage = canManageOrgStructure({
     role,
@@ -258,7 +256,6 @@ export const OrganizationTreePage: React.FC = () => {
         {canManage ? (
           <section>
             <OrganizationGovernancePanel
-              isOwner={isOwner}
               canManage={canManage}
               nodes={sortedNodes}
               members={members}
@@ -267,7 +264,6 @@ export const OrganizationTreePage: React.FC = () => {
               selectedDepartmentId={selectedDeptId}
               onAssignScope={assignScope}
               onRevokeRole={revokeMemberRole}
-              onTransferOwnership={transferOwnership}
             />
           </section>
         ) : null}

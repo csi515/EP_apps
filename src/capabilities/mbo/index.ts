@@ -4,6 +4,7 @@ export * from './domain/mboCycle';
 export * from './domain/mboMonthlyCheckin';
 export * from './domain/workloadCapacityEngine';
 export * from './domain/mboVisibilityEngine';
+export * from './domain/mboGoalHierarchy';
 export * from './services/mboService';
 export * from './services/mboCycleService';
 export * from './resources';

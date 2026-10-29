@@ -100,7 +100,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
       case 'company':
         return <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-indigo-50 text-indigo-700">전사 목표</span>;
       case 'department':
-        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">부서 목표</span>;
+        return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">조직단위 목표</span>;
       case 'individual':
         return <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700">개인 KPI</span>;
       case 'project':

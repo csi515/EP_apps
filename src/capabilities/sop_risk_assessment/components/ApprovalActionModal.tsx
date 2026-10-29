@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { validateRejectReason } from '../domain/approvalEngine';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 type Mode = 'approve' | 'reject' | null;
 
@@ -115,7 +116,7 @@ export const ApprovalActionModal: React.FC<Props> = ({
       });
       onClose();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '승인 처리 실패');
+      setError(userFacingErrorMessage(cause) || '승인 처리 실패');
     } finally {
       setBusy(false);
     }
@@ -133,7 +134,7 @@ export const ApprovalActionModal: React.FC<Props> = ({
       await onReject(rejectReason.trim());
       onClose();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '반려 처리 실패');
+      setError(userFacingErrorMessage(cause) || '반려 처리 실패');
     } finally {
       setBusy(false);
     }

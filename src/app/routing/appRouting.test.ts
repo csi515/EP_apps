@@ -46,8 +46,6 @@ const CAPABILITY_ROUTE_PATHS = [
   "substitute-dispatch",
   "entry-pass-ticket",
   "event-contest-hub",
-  "facility-incident-report",
-  "facility-incidents",
   "nps-survey-collector",
   "nps-surveys",
   "achievement-quest-badge",

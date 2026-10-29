@@ -201,23 +201,24 @@ console.log('[test:org-onboarding] Starting Organization Onboarding & Resilience
 
 // 7. 업종별 역할 라벨 정상화(getRoleLabel & roleSectionLabel) 검증
 {
-  // 소매업(retail): 직원은 '직원', 섹션은 '직원 활동', 대표는 '대표'
+  // 미등록 업종은 personal_plant_ops로 폴백 — 대표이사 / 직원
   assert.equal(getRoleLabel('staff', 'retail'), '직원');
-  assert.equal(getRoleLabel('owner', 'retail'), '대표');
+  assert.equal(getRoleLabel('owner', 'retail'), '대표이사');
   assert.equal(roleSectionLabel('staff', 'retail'), '직원 활동');
 
-  // 미용/헤어(hair_salon): 직원은 '관리사', 대표는 '대표'
+  // 미용/헤어(hair_salon): 용어 사전 직원 호칭은 유지, owner는 플러그인 폴백(대표이사)
   assert.equal(getRoleLabel('staff', 'hair_salon'), '관리사');
-  assert.equal(getRoleLabel('owner', 'hair_salon'), '대표');
+  assert.equal(getRoleLabel('owner', 'hair_salon'), '대표이사');
   assert.equal(roleSectionLabel('staff', 'hair_salon'), '관리사 활동');
 
-  // personal_plant_ops / 미지정: 직원·대표 (학원 호칭 없음)
+  // personal_plant_ops / 미지정: 직원·대표이사 (학원 호칭 없음). 관리자는 별도.
   assert.equal(getRoleLabel('staff', 'personal_plant_ops'), '직원');
-  assert.equal(getRoleLabel('owner', 'personal_plant_ops'), '대표');
+  assert.equal(getRoleLabel('owner', 'personal_plant_ops'), '대표이사');
+  assert.equal(getRoleLabel('admin', 'personal_plant_ops'), '관리자');
   assert.equal(roleSectionLabel('staff', 'personal_plant_ops'), '직원 활동');
   assert.equal(roleSectionLabel('parent', 'personal_plant_ops'), '보호자');
   assert.equal(getRoleLabel('staff', null), '직원');
-  assert.equal(getRoleLabel('owner', null), '대표');
+  assert.equal(getRoleLabel('owner', null), '대표이사');
   assert.equal(roleSectionLabel('staff', null), '직원 활동');
 }
 

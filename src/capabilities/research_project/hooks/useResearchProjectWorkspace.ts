@@ -23,6 +23,7 @@ import {
 } from '../domain/researchProjectEngine';
 import { assembleResearchProject } from '../services/researchProjectMappers';
 import type { Database } from '@/lib/supabase/database.types';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
 
 type ProjectRow = Database['core']['Tables']['research_projects']['Row'];
 type MemberRow = Database['core']['Tables']['research_project_members']['Row'];
@@ -52,27 +53,32 @@ export function useResearchProjectWorkspace() {
     resource: 'research_projects',
     pagination: { mode: 'off' },
     queryOptions: { enabled: Boolean(orgId) },
+    errorNotification: false,
   });
   const membersQuery = useList<MemberRow>({
     resource: 'research_project_members',
     pagination: { mode: 'off' },
     queryOptions: { enabled: Boolean(orgId) },
+    errorNotification: false,
   });
   const gatesQuery = useList<GateRow>({
     resource: 'research_project_gates',
     pagination: { mode: 'off' },
     queryOptions: { enabled: Boolean(orgId) },
+    errorNotification: false,
   });
   const deliverablesQuery = useList<DeliverableRow>({
     resource: 'research_project_deliverables',
     pagination: { mode: 'off' },
     queryOptions: { enabled: Boolean(orgId) },
+    errorNotification: false,
   });
   const approvalsQuery = useList<ApprovalRow>({
     resource: 'approval_requests',
     pagination: { mode: 'off' },
     filters: [{ field: 'entity_type', operator: 'eq', value: 'research_project_gate' }],
     queryOptions: { enabled: Boolean(orgId) && hasApprovalWorkflow },
+    errorNotification: false,
   });
 
   const { mutate: createProject } = useCreate();
@@ -382,7 +388,7 @@ export function useResearchProjectWorkspace() {
         refetchAll();
         return null;
       } catch (cause) {
-        return cause instanceof Error ? cause.message : '전자결재 기안에 실패했습니다.';
+        return userFacingErrorMessage(cause) || '전자결재 기안에 실패했습니다.';
       }
     },
     [orgId, hasApprovalWorkflow, persistGate, persistProjectPatch, refetchAll]

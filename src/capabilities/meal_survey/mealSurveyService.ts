@@ -1,9 +1,12 @@
 import { getCoreClient } from '@/lib/supabase';
 import {
+  DEFAULT_CLOSED_WEEKDAYS,
   DEFAULT_MEAL_SURVEY_SETTINGS,
+  normalizeClosedWeekdays,
   type MealResponseStatus,
   type MealSlot,
   type MealSurveySettings,
+  type WeekdayIndex,
 } from './domain/mealSurveyEngine';
 
 export type MealSurveySettingsRow = {
@@ -18,6 +21,9 @@ export type MealSurveySettingsRow = {
   lunch_cutoff_prev_day?: boolean;
   dinner_cutoff_time?: string;
   dinner_cutoff_prev_day?: boolean;
+  closed_weekdays?: number[] | null;
+  closed_dates?: string[] | null;
+  open_dates?: string[] | null;
   updated_at?: string;
 };
 
@@ -36,6 +42,9 @@ export type MealSurveyOverview = {
     offer_breakfast: boolean;
     offer_lunch: boolean;
     offer_dinner: boolean;
+    closed_weekdays?: number[];
+    closed_dates?: string[];
+    open_dates?: string[];
   };
   member_count: number;
   from: string;
@@ -60,8 +69,15 @@ export type MealSurveyOverview = {
 
 function timeFromRow(value: string | undefined, fallback: string): string {
   if (!value) return fallback;
-  // TIME may come as HH:MM:SS
   return value.slice(0, 5);
+}
+
+function datesFromRow(value: string[] | null | undefined): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((d) => String(d).slice(0, 10))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+    .sort();
 }
 
 export function settingsRowToDomain(row: MealSurveySettingsRow): MealSurveySettings {
@@ -88,6 +104,11 @@ export function settingsRowToDomain(row: MealSurveySettingsRow): MealSurveySetti
     ),
     dinnerCutoffPrevDay:
       row.dinner_cutoff_prev_day ?? DEFAULT_MEAL_SURVEY_SETTINGS.dinnerCutoffPrevDay,
+    closedWeekdays: normalizeClosedWeekdays(
+      row.closed_weekdays ?? DEFAULT_CLOSED_WEEKDAYS
+    ) as WeekdayIndex[],
+    closedDates: datesFromRow(row.closed_dates),
+    openDates: datesFromRow(row.open_dates),
   };
 }
 
@@ -107,6 +128,9 @@ function normalizeSettingsRow(
     lunch_cutoff_prev_day: row.lunch_cutoff_prev_day ?? false,
     dinner_cutoff_time: timeFromRow(row.dinner_cutoff_time, '15:00'),
     dinner_cutoff_prev_day: row.dinner_cutoff_prev_day ?? false,
+    closed_weekdays: normalizeClosedWeekdays(row.closed_weekdays ?? DEFAULT_CLOSED_WEEKDAYS),
+    closed_dates: datesFromRow(row.closed_dates),
+    open_dates: datesFromRow(row.open_dates),
     updated_at: row.updated_at,
   };
 }
@@ -139,6 +163,9 @@ export async function upsertMealSurveySettings(
     p_lunch_cutoff_prev_day: settings.lunchCutoffPrevDay,
     p_dinner_cutoff_time: settings.dinnerCutoffTime,
     p_dinner_cutoff_prev_day: settings.dinnerCutoffPrevDay,
+    p_closed_weekdays: normalizeClosedWeekdays(settings.closedWeekdays),
+    p_closed_dates: settings.closedDates,
+    p_open_dates: settings.openDates,
   });
   if (error) throw new Error(error.message);
   return normalizeSettingsRow(data as MealSurveySettingsRow, organizationId);
@@ -223,7 +250,14 @@ export async function listMealSurveyOverview(
   });
   if (error) throw new Error(error.message);
   return (data ?? {
-    settings: { offer_breakfast: false, offer_lunch: true, offer_dinner: false },
+    settings: {
+      offer_breakfast: false,
+      offer_lunch: true,
+      offer_dinner: false,
+      closed_weekdays: [...DEFAULT_CLOSED_WEEKDAYS],
+      closed_dates: [],
+      open_dates: [],
+    },
     member_count: 0,
     from,
     to,

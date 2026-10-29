@@ -96,9 +96,9 @@ console.log('[test:login-to-delegation] start');
   assert.ok(preset?.roles?.length);
   const byName = Object.fromEntries(preset!.roles.map((r) => [r.name, r]));
 
-  const ceo = mapPresetPermissionTokensToRoleMap(byName['임원'].permissions);
+  const ceo = mapPresetPermissionTokensToRoleMap(byName['대표이사'].permissions);
   assert.equal(ceo['roles:assign'], true);
-  assert.equal(ceo['ownership:transfer'], true);
+  assert.equal(ceo['ownership:transfer'], false, '소유권 이전은 제품에서 제외');
   assert.equal(ceo['rnd_portal:access'], true);
   assert.equal(ceo['shuttle:manage'], true);
 
@@ -159,19 +159,15 @@ console.log('[test:login-to-delegation] start');
   assert.equal(canAssignOrRevokeRole(plain, staff, { booking: true } as RolePermissionMap), false);
 }
 
-// ── 4. 소유권 이전 위임 (ownership:transfer) ───────────────────────
+// ── 4. 소유권 이전 기능 제거 ───────────────────────────────────────
 {
   const owner = member('owner');
   const hr = member('staff', { 'ownership:transfer': true, 'members:manage': true });
-  const gaOnly = member('staff', { 'roles:assign': true, 'members:manage': true });
   const target = member('staff');
 
-  assert.equal(canTransferOwnership(owner), true);
-  assert.equal(canTransferOwnership(hr), true);
-  assert.equal(canTransferOwnership(gaOnly), false);
-  assert.doesNotThrow(() => assertCanTransferOwnership(hr, target));
-  assert.throws(() => assertCanTransferOwnership(gaOnly, target), /소유권/);
-  assert.throws(() => assertCanTransferOwnership(owner, owner), /이미 대표/);
+  assert.equal(canTransferOwnership(owner), false);
+  assert.equal(canTransferOwnership(hr), false);
+  assert.throws(() => assertCanTransferOwnership(owner, target), /소유권 이전 기능은 제공하지 않습니다/);
 }
 
 // ── 5. Refine accessControl: 위임 전/후 기능 접근 ─────────────────

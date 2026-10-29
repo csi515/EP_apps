@@ -3,44 +3,28 @@ import { useList, useCreate, useUpdate } from '@refinedev/core';
 import {
   Target,
   FolderKanban,
-  Award,
-  Layers,
-  FileText,
   X,
-  Plus,
-  Activity,
-  TrendingUp,
 } from 'lucide-react';
 import {
   canTransitionMboStatus,
-  calculateGradeFromScore,
   validateMboObjectiveWeights,
   type MboStatus,
   type MboLevel,
-  type MboEvaluationGrade,
-  type MboEvaluationType,
 } from '../domain/mboEngine';
 import {
   DEFAULT_MBO_CYCLE,
   areGoalsLocked,
-  isReviewWindowOpen,
   type MboCycleSettings,
 } from '../domain/mboCycle';
-import {
-  DEFAULT_WORKLOAD_THRESHOLDS,
-  type WorkloadThresholds,
-} from '../domain/workloadCapacityEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { MboObjectiveTreeViewer, type ObjectiveNode } from './MboObjectiveTreeViewer';
 import { MboQuarterlyReviewForm, type ProgressLogItem, type FeedbackItem } from './MboQuarterlyReviewForm';
-import { MboEvaluationMatrixView, type EvaluationItem } from './MboEvaluationMatrixView';
-import { TeamWeeklyWorkloadView } from './TeamWeeklyWorkloadView';
-import { MboYearlyCapacityForecastView } from './MboYearlyCapacityForecastView';
 import { MboCycleSettingsCard } from './MboCycleSettingsCard';
 import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
 import { MboReviseGoalModal } from './MboReviseGoalModal';
 import { MboProjectPortfolioView } from './MboProjectPortfolioView';
 import { MboPlanApprovalModal } from './MboPlanApprovalModal';
+import { MboScheduleRangePicker } from './MboScheduleRangePicker';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import { MboService } from '../services/mboService';
@@ -60,6 +44,16 @@ import {
   type MboListScope,
   type MboVisibilityType,
 } from '../domain/mboVisibilityEngine';
+import {
+  hasPrerequisiteGoals,
+  levelLabelKo,
+  listCreatableLevels,
+  listEligibleParentGoals,
+  prerequisiteLabel,
+  resolveMaxCreatableLevel,
+  validateGoalCreation,
+  type ExistingGoalRef,
+} from '../domain/mboGoalHierarchy';
 import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
@@ -73,21 +67,16 @@ import { useAuth } from '@/core/auth/AuthProvider';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const MboManagementView: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<
-    'objectives' | 'projects' | 'evaluations' | 'workload' | 'forecast'
-  >('objectives');
+  const [activeTab, setActiveTab] = useState<'objectives' | 'projects'>('objectives');
   const [projectSubView, setProjectSubView] = useState<'portfolio' | 'monthly'>('portfolio');
-  const [thresholds, setThresholds] = useState<WorkloadThresholds>(DEFAULT_WORKLOAD_THRESHOLDS);
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<string>('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectCategories, setProjectCategories] = useState<ProjectCategory[]>([]);
   const [cycleSettings, setCycleSettings] = useState<MboCycleSettings>(DEFAULT_MBO_CYCLE);
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
-  const reviewOpen = isReviewWindowOpen(cycleSettings, new Date());
 
   const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>([]);
   const [localFeedbacks, setLocalFeedbacks] = useState<FeedbackItem[]>([]);
-  const [localEvaluations, setLocalEvaluations] = useState<EvaluationItem[]>([]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
@@ -95,8 +84,10 @@ export const MboManagementView: React.FC = () => {
 
   const [newTitle, setNewTitle] = useState('');
   const [newLevel, setNewLevel] = useState<MboLevel>('individual');
+  const [newParentId, setNewParentId] = useState<string>('');
   const [newOwnerMemberId, setNewOwnerMemberId] = useState<string>('');
   const [newDept, setNewDept] = useState('');
+  const [newDepartmentId, setNewDepartmentId] = useState<string>('');
   const [newCriteria, setNewCriteria] = useState('');
   const [newVisibility, setNewVisibility] = useState<MboVisibilityType>('PRIVATE');
   const [newShareMemberIds, setNewShareMemberIds] = useState<string[]>([]);
@@ -190,23 +181,16 @@ export const MboManagementView: React.FC = () => {
     void reloadProjectCategories();
   }, [reloadProjectCategories]);
 
-  // 선택 프로젝트의 피드백·평가 hydrate (기밀 평가는 서비스+RLS 경로만)
+  // 선택 프로젝트의 피드백 hydrate
   useEffect(() => {
     const projectId = selectedProjectId;
     if (!orgId || !projectId) {
       setLocalFeedbacks([]);
-      setLocalEvaluations([]);
       return;
     }
     let cancelled = false;
-    const userId = authUser?.id || activeUser?.id || '';
-    void Promise.all([
-      MboService.listFeedbackComments(orgId, projectId),
-      MboService.listEvaluations(orgId, projectId, userId, isOrgAdmin, {
-        isSubtreeLeaderOfTarget: orgScope?.isSubtreeLeaderOfTarget,
-      }),
-    ])
-      .then(([feedbackRows, evalRows]) => {
+    void MboService.listFeedbackComments(orgId, projectId)
+      .then((feedbackRows) => {
         if (cancelled) return;
         setLocalFeedbacks(
           feedbackRows.map((row) => ({
@@ -219,31 +203,14 @@ export const MboManagementView: React.FC = () => {
             createdAt: row.created_at ? new Date(row.created_at).toLocaleTimeString() : '',
           }))
         );
-        setLocalEvaluations(
-          evalRows.map((row) => ({
-            id: row.id,
-            projectId: row.project_id,
-            targetUserName: '대상자',
-            evaluatorName: row.evaluator_name || '평가자',
-            evaluationType: (row.evaluation_type || 'manager') as MboEvaluationType,
-            score: Number(row.score ?? 0),
-            grade: (row.grade || calculateGradeFromScore(Number(row.score ?? 0))) as MboEvaluationGrade,
-            qualitativeFeedback: row.qualitative_feedback || '',
-            isConfidential: row.is_confidential ?? true,
-            createdAt: row.created_at ? new Date(row.created_at).toLocaleDateString() : '',
-          }))
-        );
       })
       .catch(() => {
-        if (!cancelled) {
-          setLocalFeedbacks([]);
-          setLocalEvaluations([]);
-        }
+        if (!cancelled) setLocalFeedbacks([]);
       });
     return () => {
       cancelled = true;
     };
-  }, [orgId, selectedProjectId, authUser?.id, activeUser?.id, isOrgAdmin, orgScope]);
+  }, [orgId, selectedProjectId]);
 
   const { query: objQuery } = useList<any>({
     resource: 'mbo_objectives',
@@ -337,6 +304,61 @@ export const MboManagementView: React.FC = () => {
     return orgMembers.filter((m) => !q || memberMatchesQuery(m.displayName, q));
   }, [orgMembers, personQuery]);
 
+  const goalActor = useMemo(
+    () =>
+      orgScope?.goalActor ?? {
+        isTopExecutive: false,
+        isUnitLeader: false,
+        ledDepartmentIds: [] as string[],
+        rankOrder: null,
+        roleName: null,
+      },
+    [orgScope?.goalActor]
+  );
+
+  const existingGoalRefs: ExistingGoalRef[] = useMemo(
+    () =>
+      objectives.map((o) => ({
+        id: o.id,
+        level: o.level,
+        parentId: o.parentId,
+        deletedAt: o.deletedAt ?? null,
+        departmentName: o.departmentName,
+      })),
+    [objectives]
+  );
+
+  const creatableLevels = useMemo(() => listCreatableLevels(goalActor), [goalActor]);
+  const maxCreatableLevel = useMemo(
+    () => resolveMaxCreatableLevel(goalActor),
+    [goalActor]
+  );
+
+  const ledDepartments = useMemo(() => {
+    const ids = new Set(goalActor.ledDepartmentIds);
+    return orgDepartments.filter((d) => ids.has(d.id));
+  }, [goalActor.ledDepartmentIds, orgDepartments]);
+
+  const eligibleParents = useMemo(
+    () => listEligibleParentGoals(newLevel, existingGoalRefs),
+    [newLevel, existingGoalRefs]
+  );
+
+  const createGate = useMemo(
+    () =>
+      validateGoalCreation({
+        actor: goalActor,
+        request: {
+          level: newLevel,
+          parentId: newLevel === 'company' ? null : newParentId || null,
+          departmentId: newDepartmentId || null,
+          departmentName: newDept.trim() || null,
+        },
+        existing: existingGoalRefs,
+      }),
+    [goalActor, newLevel, newParentId, newDepartmentId, newDept, existingGoalRefs]
+  );
+
   const logs: ProgressLogItem[] = useMemo(() => {
     if (refineLogs && refineLogs.length > 0) {
       return refineLogs.map((row: any) => ({
@@ -353,8 +375,6 @@ export const MboManagementView: React.FC = () => {
     }
     return [];
   }, [refineLogs]);
-
-  const evaluations: EvaluationItem[] = localEvaluations;
 
   const categoryById = useMemo(() => {
     const map = new Map<string, ProjectCategory>();
@@ -499,12 +519,32 @@ export const MboManagementView: React.FC = () => {
       return;
     }
 
-    const parentId =
-      selectedObjectiveId && selectedObjectiveId !== 'none' ? selectedObjectiveId : null;
+    const parentId = newLevel === 'company' ? null : newParentId || null;
+    const departmentName =
+      (newDepartmentId
+        ? orgDepartments.find((d) => d.id === newDepartmentId)?.name
+        : null) ||
+      newDept.trim() ||
+      selectedOwnerMember.departmentName ||
+      '부서';
+
+    const gate = validateGoalCreation({
+      actor: goalActor,
+      request: {
+        level: newLevel,
+        parentId,
+        departmentId: newDepartmentId || null,
+        departmentName,
+      },
+      existing: existingGoalRefs,
+    });
+    if (!gate.allowed) {
+      showToast(gate.reason ?? '이 단계의 목표를 등록할 수 없습니다.', 'warning');
+      return;
+    }
+
     const ownerName = selectedOwnerMember.displayName;
     const ownerUserId = selectedOwnerMember.userId;
-    const departmentName =
-      newDept.trim() || selectedOwnerMember.departmentName || '부서';
 
     mutateCreate(
       {
@@ -559,6 +599,8 @@ export const MboManagementView: React.FC = () => {
           setNewTitle('');
           setNewShareMemberIds([]);
           setNewVisibility('PRIVATE');
+          setNewParentId('');
+          setNewDepartmentId('');
           showToast('신규 MBO 과제와 실행 프로젝트가 등록되었습니다.', 'success');
         },
         onError: (err) => {
@@ -652,42 +694,6 @@ export const MboManagementView: React.FC = () => {
           >
             <FolderKanban className="w-3.5 h-3.5" />
             <span>진행 프로젝트</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('evaluations')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'evaluations'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Award className="w-3.5 h-3.5" />
-            <span>다면 성과평가표</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('workload')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'workload'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>주간 팀 부하</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('forecast')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'forecast'
-                ? 'bg-white text-indigo-700 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>캐퍼시티 예측</span>
           </button>
         </div>
       </div>
@@ -783,6 +789,24 @@ export const MboManagementView: React.FC = () => {
               }
               if (viewerMemberId && !newOwnerMemberId) {
                 setNewOwnerMemberId(viewerMemberId);
+              }
+              const defaultLevel = resolveMaxCreatableLevel(goalActor);
+              setNewLevel(defaultLevel);
+              const parents = listEligibleParentGoals(defaultLevel, existingGoalRefs);
+              const preferredParent =
+                (selectedObjectiveId &&
+                  parents.find((p) => p.id === selectedObjectiveId)?.id) ||
+                parents[0]?.id ||
+                '';
+              setNewParentId(defaultLevel === 'company' ? '' : preferredParent);
+              if (goalActor.ledDepartmentIds.length === 1) {
+                setNewDepartmentId(goalActor.ledDepartmentIds[0]);
+                const ledName = orgDepartments.find(
+                  (d) => d.id === goalActor.ledDepartmentIds[0]
+                )?.name;
+                if (ledName) setNewDept(ledName);
+              } else {
+                setNewDepartmentId('');
               }
               setShowCreateModal(true);
             }}
@@ -964,103 +988,10 @@ export const MboManagementView: React.FC = () => {
         </div>
       )}
 
-      {/* 탭 3: 다면 성과평가표 뷰 */}
-      {activeTab === 'evaluations' && (
-        reviewOpen && !selectedPortfolioProject?.id ? (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-            실행 프로젝트가 없습니다. 목표를 등록하면 기본 프로젝트가 생성되며, 그 프로젝트 기준으로 평가합니다.
-          </div>
-        ) : reviewOpen ? (
-          <MboEvaluationMatrixView
-            projectId={selectedPortfolioProject?.id || ''}
-            projectTitle={
-              selectedPortfolioProject?.title || selectedObjective?.title || '선택된 목표'
-            }
-            targetUserName={selectedObjective?.ownerName || '담당자'}
-            evaluations={evaluations}
-            onCreateEvaluation={async (newEval) => {
-              if (!orgId) {
-                showToast('조직 컨텍스트가 없습니다.', 'error');
-                return;
-              }
-              const projectId = selectedPortfolioProject?.id;
-              if (!projectId) {
-                showToast('평가할 실행 프로젝트를 선택해주세요.', 'warning');
-                return;
-              }
-              try {
-                const evaluatorId = authUser?.id || activeUser?.id || null;
-                await MboService.createEvaluation({
-                  organization_id: orgId,
-                  project_id: projectId,
-                  evaluator_id: evaluatorId,
-                  evaluator_name: newEval.evaluatorName,
-                  target_user_id: selectedPortfolioProject?.ownerId ?? null,
-                  evaluation_type: newEval.evaluationType,
-                  score: newEval.score,
-                  qualitative_feedback: newEval.qualitativeFeedback,
-                  is_confidential: newEval.isConfidential,
-                  grade: calculateGradeFromScore(newEval.score),
-                } as never);
-                const userId = authUser?.id || activeUser?.id || '';
-                const rows = await MboService.listEvaluations(
-                  orgId,
-                  projectId,
-                  userId,
-                  isOrgAdmin,
-                  { isSubtreeLeaderOfTarget: orgScope?.isSubtreeLeaderOfTarget },
-                );
-                setLocalEvaluations(
-                  rows.map((row) => ({
-                    id: row.id,
-                    projectId: row.project_id,
-                    targetUserName: '대상자',
-                    evaluatorName: row.evaluator_name || '평가자',
-                    evaluationType: (row.evaluation_type || 'manager') as MboEvaluationType,
-                    score: Number(row.score ?? 0),
-                    grade: (row.grade ||
-                      calculateGradeFromScore(Number(row.score ?? 0))) as MboEvaluationGrade,
-                    qualitativeFeedback: row.qualitative_feedback || '',
-                    isConfidential: row.is_confidential ?? true,
-                    createdAt: row.created_at
-                      ? new Date(row.created_at).toLocaleDateString()
-                      : '',
-                  }))
-                );
-                showToast('평가가 저장되었습니다.', 'success');
-              } catch (cause) {
-                showToast(cause instanceof Error ? cause.message : '평가 저장 실패', 'error');
-              }
-            }}
-          />
-        ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
-            <Award className="mx-auto mb-3 h-8 w-8 text-slate-400" />
-            <p className="text-base font-bold text-slate-900">평가 기간이 아닙니다</p>
-            <p className="mt-2 text-sm text-slate-500">
-              사업주가 설정한 연말 평가 기간에만 평가를 작성·제출할 수 있습니다. 월별 체크인은 연중 작성할 수 있습니다.
-            </p>
-          </div>
-        )
-      )}
-
-      {/* 탭 4: 주간 팀 부하 모니터링 */}
-      {activeTab === 'workload' && (
-        <TeamWeeklyWorkloadView
-          initialThresholds={thresholds}
-          onThresholdsChange={setThresholds}
-        />
-      )}
-
-      {/* 탭 5: 연간 캐퍼시티 예측 대사 */}
-      {activeTab === 'forecast' && (
-        <MboYearlyCapacityForecastView thresholds={thresholds} />
-      )}
-
       {/* 신규 목표 등록 모달 */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100">
+          <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl border border-slate-100">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-base font-extrabold text-slate-900">새 과제 등록</h3>
               <button
@@ -1073,18 +1004,50 @@ export const MboManagementView: React.FC = () => {
             </div>
 
             <form onSubmit={handleCreateObjective} className="space-y-3.5" data-testid="mbo-create-objective-form">
+              <div
+                className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-[11px] leading-relaxed text-indigo-950"
+                data-testid="mbo-goal-hierarchy-hint"
+              >
+                <p className="font-bold">
+                  현재 등록 가능 최고 단계: {levelLabelKo(maxCreatableLevel)}
+                  {goalActor.roleName ? ` · ${goalActor.roleName}` : ''}
+                </p>
+                <p className="mt-1 text-indigo-800/90">
+                  자기보다 상급 단계는 등록할 수 없습니다. 상위 목표가 먼저 있어야 하위 단계를 입력할 수 있습니다.
+                </p>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">목표 계층 구분</label>
                   <select
                     value={newLevel}
-                    onChange={(e) => setNewLevel(e.target.value as MboLevel)}
+                    onChange={(e) => {
+                      const next = e.target.value as MboLevel;
+                      setNewLevel(next);
+                      if (next === 'company') {
+                        setNewParentId('');
+                      } else {
+                        const parents = listEligibleParentGoals(next, existingGoalRefs);
+                        setNewParentId((prev) =>
+                          parents.some((p) => p.id === prev) ? prev : parents[0]?.id || ''
+                        );
+                      }
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                    data-testid="mbo-create-objective-level"
                   >
-                    <option value="company">전사 전략 목표</option>
-                    <option value="department">부서 핵심 목표</option>
-                    <option value="individual">개인 KPI 과제</option>
+                    {creatableLevels.map((level) => (
+                      <option key={level} value={level}>
+                        {levelLabelKo(level)}
+                      </option>
+                    ))}
                   </select>
+                  {!hasPrerequisiteGoals(newLevel, existingGoalRefs) ? (
+                    <p className="mt-1 text-[11px] font-semibold text-amber-700">
+                      {prerequisiteLabel(newLevel)}가 아직 없습니다.
+                    </p>
+                  ) : null}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">가중치 (%)</label>
@@ -1098,6 +1061,30 @@ export const MboManagementView: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {newLevel !== 'company' ? (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">상위 목표 *</label>
+                  <select
+                    value={newParentId}
+                    onChange={(e) => setNewParentId(e.target.value)}
+                    required
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                    data-testid="mbo-create-objective-parent"
+                  >
+                    <option value="">상위 목표 선택</option>
+                    {eligibleParents.map((parent) => {
+                      const title =
+                        objectives.find((o) => o.id === parent.id)?.title ?? parent.id;
+                      return (
+                        <option key={parent.id} value={parent.id}>
+                          [{levelLabelKo(parent.level)}] {title}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              ) : null}
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">목표 타이틀 *</label>
@@ -1127,14 +1114,38 @@ export const MboManagementView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">담당 부서</label>
-                  <input
-                    type="text"
-                    value={newDept}
-                    onChange={(e) => setNewDept(e.target.value)}
-                    placeholder={selectedOwnerMember?.departmentName || '부서명'}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    {newLevel === 'department' ? '대상 조직 *' : '담당 부서'}
+                  </label>
+                  {newLevel === 'department' && ledDepartments.length > 0 ? (
+                    <select
+                      value={newDepartmentId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setNewDepartmentId(id);
+                        const name = orgDepartments.find((d) => d.id === id)?.name ?? '';
+                        setNewDept(name);
+                      }}
+                      required
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                      data-testid="mbo-create-objective-department"
+                    >
+                      <option value="">리더로 맡은 조직 선택</option>
+                      {ledDepartments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={newDept}
+                      onChange={(e) => setNewDept(e.target.value)}
+                      placeholder={selectedOwnerMember?.departmentName || '부서명'}
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    />
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">책임 담당자 *</label>
@@ -1169,6 +1180,15 @@ export const MboManagementView: React.FC = () => {
                   </button>
                 ) : null}
               </div>
+
+              <MboScheduleRangePicker
+                startDate={newStartDate}
+                targetDate={newTargetDate}
+                onChange={({ startDate, targetDate }) => {
+                  setNewStartDate(startDate);
+                  setNewTargetDate(targetDate);
+                }}
+              />
 
               <div className="flex justify-end gap-2 pt-2">
                 <button

@@ -34,6 +34,8 @@ export function mapPresetPermissionTokensToRoleMap(
 
   if (tokens.includes('*')) {
     setAll(true);
+    // 소유권 이전은 제품 기능에서 제외
+    next['ownership:transfer'] = false;
     return next;
   }
 
@@ -189,12 +191,11 @@ export async function seedEpOrganizationRoles(input: {
     const matched = matchPresetRole(seed, presetRoles, i);
     const tokens = matched?.permissions ?? (i === 0 ? (['*'] as const) : (['mbo:view'] as const));
     const permissions = mapPresetPermissionTokensToRoleMap([...tokens]);
-    // 최상위 직급은 위임·소유권 이전 포함
+    // 최상위 직급은 권한 위임·구성원 관리 포함 (소유권 이전 기능은 제품에서 제외)
     if (i === 0 || tokens.includes('*')) {
       permissions['roles:assign'] = true;
       permissions['members:manage'] = true;
       permissions.members_manage = true;
-      permissions['ownership:transfer'] = true;
       permissions['rnd_portal:access'] = true;
     }
     built.push({

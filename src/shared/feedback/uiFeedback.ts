@@ -1,6 +1,9 @@
 import type { ConfirmDialogOptions } from './confirmTypes';
 import { feedbackStore } from './feedbackStore';
-import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
+import {
+  sanitizeErrorToastMessage,
+  userFacingErrorMessage,
+} from '@/shared/errors/userFacingError';
 
 export type ShowToast = (
   message: string,
@@ -36,7 +39,10 @@ export function showToast(
   type?: 'success' | 'error' | 'info' | 'warning',
   title?: string
 ) {
-  feedbackStore.showToast(message, type, title);
+  const body = type === 'error' ? sanitizeErrorToastMessage(message) : message;
+  const heading =
+    type === 'error' && title ? sanitizeErrorToastMessage(title) : title;
+  feedbackStore.showToast(body, type, heading);
 }
 
 /**

@@ -9,6 +9,9 @@ export type MealSlot = 'breakfast' | 'lunch' | 'dinner';
 export type MealResponseStatus = 'eating' | 'skipping';
 export type MealCellStatus = MealResponseStatus | null;
 
+/** JS Date.getDay() — 0=일 … 6=토. 기본 식당 휴무는 토·일 */
+export type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 export type MealSurveySettings = {
   offerBreakfast: boolean;
   offerLunch: boolean;
@@ -21,6 +24,24 @@ export type MealSurveySettings = {
   lunchCutoffPrevDay: boolean;
   dinnerCutoffTime: string;
   dinnerCutoffPrevDay: boolean;
+  /** 매주 반복 휴무 요일(기본: 토·일) */
+  closedWeekdays: WeekdayIndex[];
+  /** 요일과 별도로 지정한 휴무일(YYYY-MM-DD) */
+  closedDates: string[];
+  /** 휴무 요일이라도 식당을 여는 예외일(YYYY-MM-DD) */
+  openDates: string[];
+};
+
+export const DEFAULT_CLOSED_WEEKDAYS: WeekdayIndex[] = [0, 6];
+
+export const WEEKDAY_LABELS: Record<WeekdayIndex, string> = {
+  0: '일',
+  1: '월',
+  2: '화',
+  3: '수',
+  4: '목',
+  5: '금',
+  6: '토',
 };
 
 export const DEFAULT_MEAL_SURVEY_SETTINGS: MealSurveySettings = {
@@ -34,6 +55,9 @@ export const DEFAULT_MEAL_SURVEY_SETTINGS: MealSurveySettings = {
   lunchCutoffPrevDay: false,
   dinnerCutoffTime: '15:00',
   dinnerCutoffPrevDay: false,
+  closedWeekdays: [...DEFAULT_CLOSED_WEEKDAYS],
+  closedDates: [],
+  openDates: [],
 };
 
 export type MealDayAggregate = {
@@ -56,7 +80,101 @@ export function validateMealSurveySettings(
   if (!settings.offerBreakfast && !settings.offerLunch && !settings.offerDinner) {
     return { isValid: false, error: '조식·중식·석식 중 최소 하나는 제공해야 합니다.' };
   }
+  const weekdays = settings.closedWeekdays ?? [];
+  if (weekdays.some((d) => d < 0 || d > 6)) {
+    return { isValid: false, error: '휴무 요일 값이 올바르지 않습니다.' };
+  }
+  if (weekdays.length >= 7) {
+    return { isValid: false, error: '모든 요일을 휴무로 둘 수 없습니다. 최소 하루는 운영하세요.' };
+  }
   return { isValid: true };
+}
+
+function uniqueSortedDates(dates: readonly string[]): string[] {
+  return [...new Set(dates.filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)))].sort();
+}
+
+function uniqueWeekdays(days: readonly number[]): WeekdayIndex[] {
+  const set = new Set<WeekdayIndex>();
+  for (const d of days) {
+    if (d >= 0 && d <= 6) set.add(d as WeekdayIndex);
+  }
+  return [...set].sort((a, b) => a - b);
+}
+
+export function normalizeClosedWeekdays(
+  days: readonly number[] | null | undefined
+): WeekdayIndex[] {
+  // null/undefined → 기본 토·일. 빈 배열은 「요일 휴무 없음」의도.
+  if (days == null) return [...DEFAULT_CLOSED_WEEKDAYS];
+  return uniqueWeekdays(days);
+}
+
+/** 해당 날짜에 식당이 문을 닫는지 (예외 개장일 우선) */
+export function isCafeteriaClosedOn(
+  settings: Pick<MealSurveySettings, 'closedWeekdays' | 'closedDates' | 'openDates'>,
+  mealDate: string
+): boolean {
+  const open = new Set(settings.openDates ?? []);
+  if (open.has(mealDate)) return false;
+  const closed = new Set(settings.closedDates ?? []);
+  if (closed.has(mealDate)) return true;
+  const weekday = parseDateKey(mealDate).getDay() as WeekdayIndex;
+  const closedWeekdays = settings.closedWeekdays ?? DEFAULT_CLOSED_WEEKDAYS;
+  return closedWeekdays.includes(weekday);
+}
+
+/**
+ * 관리자 달력에서 날짜를 누르면 휴무↔운영을 토글한다.
+ * - 평소 운영일 → 휴무일(closedDates)에 추가/제거
+ * - 평소 휴무 요일 → 예외 개장(openDates)에 추가/제거
+ */
+export function toggleCafeteriaClosedDate(
+  settings: MealSurveySettings,
+  mealDate: string
+): MealSurveySettings {
+  const weekday = parseDateKey(mealDate).getDay() as WeekdayIndex;
+  const closedWeekdays = normalizeClosedWeekdays(settings.closedWeekdays);
+  const normallyClosed = closedWeekdays.includes(weekday);
+  const closedDates = new Set(settings.closedDates ?? []);
+  const openDates = new Set(settings.openDates ?? []);
+
+  if (normallyClosed) {
+    if (openDates.has(mealDate)) openDates.delete(mealDate);
+    else openDates.add(mealDate);
+  } else if (closedDates.has(mealDate)) {
+    closedDates.delete(mealDate);
+  } else {
+    closedDates.add(mealDate);
+  }
+
+  return {
+    ...settings,
+    closedWeekdays,
+    closedDates: uniqueSortedDates([...closedDates]),
+    openDates: uniqueSortedDates([...openDates]),
+  };
+}
+
+export function toggleClosedWeekday(
+  settings: MealSurveySettings,
+  weekday: WeekdayIndex
+): MealSurveySettings {
+  const set = new Set(normalizeClosedWeekdays(settings.closedWeekdays));
+  if (set.has(weekday)) set.delete(weekday);
+  else set.add(weekday);
+  return {
+    ...settings,
+    closedWeekdays: uniqueWeekdays([...set]),
+  };
+}
+
+export function listOperatingDatesInRange(
+  settings: Pick<MealSurveySettings, 'closedWeekdays' | 'closedDates' | 'openDates'>,
+  fromKey: string,
+  toKey: string
+): string[] {
+  return listDatesInRange(fromKey, toKey).filter((d) => !isCafeteriaClosedOn(settings, d));
 }
 
 export function activeMealSlots(settings: MealSurveySettings): MealSlot[] {
@@ -201,6 +319,7 @@ export function isMealSlotWritable(
   now: Date = new Date()
 ): boolean {
   if (!isMealSlotOffered(settings, mealSlot)) return false;
+  if (isCafeteriaClosedOn(settings, mealDate)) return false;
   let cutoffTime = settings.lunchCutoffTime;
   let prevDay = settings.lunchCutoffPrevDay;
   if (mealSlot === 'breakfast') {
@@ -211,4 +330,70 @@ export function isMealSlotWritable(
     prevDay = settings.dinnerCutoffPrevDay;
   }
   return now.getTime() < mealCutoffAt(mealDate, cutoffTime, prevDay).getTime();
+}
+
+/** 월간 달력 그리드(일~토). shared calendarMath 와 동일 규칙 */
+export type MealCalendarDay = {
+  date: string;
+  dayNumber: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  weekday: WeekdayIndex;
+  isClosed: boolean;
+};
+
+export function buildMealMonthGrid(
+  settings: Pick<MealSurveySettings, 'closedWeekdays' | 'closedDates' | 'openDates'>,
+  year: number,
+  monthIndex: number
+): MealCalendarDay[] {
+  const todayKey = toDateKey(new Date());
+  const first = new Date(year, monthIndex, 1);
+  const last = new Date(year, monthIndex + 1, 0);
+  const startPad = first.getDay();
+  const days: MealCalendarDay[] = [];
+
+  const prevLast = new Date(year, monthIndex, 0).getDate();
+  for (let i = startPad - 1; i >= 0; i -= 1) {
+    const dayNum = prevLast - i;
+    const d = new Date(year, monthIndex - 1, dayNum);
+    const date = toDateKey(d);
+    days.push({
+      date,
+      dayNumber: dayNum,
+      isCurrentMonth: false,
+      isToday: date === todayKey,
+      weekday: d.getDay() as WeekdayIndex,
+      isClosed: isCafeteriaClosedOn(settings, date),
+    });
+  }
+
+  for (let dayNum = 1; dayNum <= last.getDate(); dayNum += 1) {
+    const d = new Date(year, monthIndex, dayNum);
+    const date = toDateKey(d);
+    days.push({
+      date,
+      dayNumber: dayNum,
+      isCurrentMonth: true,
+      isToday: date === todayKey,
+      weekday: d.getDay() as WeekdayIndex,
+      isClosed: isCafeteriaClosedOn(settings, date),
+    });
+  }
+
+  const remaining = (7 - (days.length % 7)) % 7;
+  for (let dayNum = 1; dayNum <= remaining; dayNum += 1) {
+    const d = new Date(year, monthIndex + 1, dayNum);
+    const date = toDateKey(d);
+    days.push({
+      date,
+      dayNumber: dayNum,
+      isCurrentMonth: false,
+      isToday: date === todayKey,
+      weekday: d.getDay() as WeekdayIndex,
+      isClosed: isCafeteriaClosedOn(settings, date),
+    });
+  }
+
+  return days;
 }

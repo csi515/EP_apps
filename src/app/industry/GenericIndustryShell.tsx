@@ -87,9 +87,6 @@ const WorkerRepledgeHost = lazy(() =>
 const SupplyRestockView = lazy(() =>
   import('@/capabilities/supply_restock').then((m) => ({ default: m.SupplyRestockView }))
 );
-const FacilityIncidentReportView = lazy(() =>
-  import('@/capabilities/facility_incident_report').then((m) => ({ default: m.FacilityIncidentReportView }))
-);
 const MboManagementView = lazy(() =>
   import('@/capabilities/mbo').then((m) => ({ default: m.MboManagementView }))
 );
@@ -119,7 +116,6 @@ import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { ToastContainer, ConfirmDialog } from '@/shared/components';
 import { ExecutiveRiskDashboardWidget } from '@/shared/components/ExecutiveRiskDashboardWidget';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
-import { ModuleSidebar } from '@/shared/components/layout/ModuleSidebar';
 import { getModuleChrome } from '@/app/industry/moduleChromeRegistry';
 import {
   isCorporateChromePreset,
@@ -189,7 +185,6 @@ function GenericDashboardView({ onNavigate, enabledCaps = [] }: GenericDashboard
   const activeCustomers = allCustomers.filter((c) => c.status === 'active');
 
   const showRiskWidget =
-    enabledCaps.includes('facility_incident_report') ||
     enabledCaps.includes('sop_risk_assessment') ||
     Boolean((currentOrganization?.settings as any)?.show_risk_dashboard);
 
@@ -387,9 +382,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('supply_restock')) {
       extendedItems.push({ tab: 'supply-restock', label: '소모품 안전재고', icon: <Package className="w-4 h-4" /> });
     }
-    if (enabledCaps.includes('facility_incident_report')) {
-      extendedItems.push({ tab: 'facility-incident-report', label: '안전사고·보험대장', icon: <FileText className="w-4 h-4" /> });
-    }
     if (enabledCaps.includes('mbo')) {
       extendedItems.push({ tab: 'mbo', label: '목표관리(MBO)', icon: <Award className="w-4 h-4" /> });
     }
@@ -420,14 +412,7 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
       });
     }
 
-    sections.push({
-      title: '관리',
-      items: [
-        { tab: 'settings', label: '설정', icon: <Settings className="w-4 h-4" /> },
-        { tab: 'account', label: '내 계정', icon: <User className="w-4 h-4" /> },
-      ],
-    });
-
+    // 관리(설정·내 계정)는 헤더 계정 메뉴·조직 설정 허브로 이동 — 사이드바 섹션 없음
     return sections;
   }, [enabledCaps]);
 
@@ -467,6 +452,9 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     bookings: '/workspace/resources',
     inventory: '/workspace/inventory',
     'supply-restock': '/workspace/supply-restock',
+    maintenance: '/rnd/maintenance',
+    grievances: '/workspace/grievances',
+    'whistleblower-grievances': '/workspace/grievances',
   };
 
   const navigateCorporateTab = (tab: string) => {
@@ -587,11 +575,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     'supply-restock': () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">소모품 안전재고를 불러오는 중…</div>}>
         <SupplyRestockView />
-      </Suspense>
-    ),
-    'facility-incident-report': () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">안전사고 대장 화면을 불러오는 중…</div>}>
-        <FacilityIncidentReportView />
       </Suspense>
     ),
     mbo: () => (
@@ -775,7 +758,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
   const industryKey = currentOrganization?.industry_type || industry;
   const moduleId = resolveModuleIndustryId(industryKey);
   const moduleChrome = externalViewMap && moduleId ? getModuleChrome(moduleId) : null;
-  const ChromeSidebar = moduleChrome?.Sidebar;
   const useCorporateChrome = !externalViewMap && isCorporateChromePreset(industryKey);
 
   const body = (
@@ -792,35 +774,19 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     </>
   );
 
-  if (moduleChrome && ChromeSidebar) {
-    return (
-      <ModuleAppShell theme={moduleChrome.theme} omitHeader nested sidebar={<ChromeSidebar />}>
-        {body}
-      </ModuleAppShell>
-    );
-  }
-
-  if (useCorporateChrome) {
+  // 사이드바 없음 — 업무 이동은 런처, 계정·조직 설정은 헤더 메뉴
+  if (moduleChrome || useCorporateChrome) {
     return (
       <ModuleAppShell
-        theme="indigo"
+        theme={moduleChrome?.theme ?? 'indigo'}
         omitHeader
         nested
-        sidebar={
-          <ModuleSidebar
-            theme="indigo"
-            sections={filteredSections}
-            activeTab={activeTab}
-            onNavigate={navigateCorporateTab}
-            user={{ name: currentUser.name, roleLabel, roleBadge }}
-          />
-        }
       >
         {body}
       </ModuleAppShell>
     );
   }
 
-  return <div className="max-w-full flex-1 overflow-x-hidden p-5">{body}</div>;
+  return <div className="max-w-full flex-1 overflow-x-hidden">{body}</div>;
 };
 

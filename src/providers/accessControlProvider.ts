@@ -8,7 +8,7 @@ import type { AuthorizationGrant, AuthScopeType, Permission } from "@/core/autho
 import type { User } from "@/types";
 import { evaluateCustomPermission } from "@/core/authorization";
 import { hasStandardPermission, resolveStandardPermissionKey } from "@/core/authorization/standardPermissionKeys";
-import { canManageRoles, canTransferOwnership, evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
+import { canManageRoles, evaluateMemberAccess, isRolePermissionMap } from "@/domain/permissions";
 import { isOmnipotentOrgRole } from "@/core/auth/permissionsRole";
 
 /**
@@ -318,21 +318,14 @@ export function createAccessControlProvider(
         };
       }
 
-      // 2.4.1 Organization Ownership Transfer Check (resource: "organization", action: "transfer_ownership")
+      // 소유권 이전 기능은 제품에서 제거됨
       if (
         (resource === "organization" || resource === "organizations" || resource === "ownership") &&
         (action === "transfer_ownership" || action === "transferOwnership")
       ) {
-        const allowed = canTransferOwnership({
-          role,
-          permissions: activeUser.permissions,
-          customRole: activeUser.customRole,
-        });
         return {
-          can: allowed,
-          reason: allowed
-            ? undefined
-            : "사업장의 소유권을 이전할 권한이 없습니다. 대표 사업자(owner) 또는 대표이사 변경 권한(ownership:transfer)을 위임받은 관리자만 실행할 수 있습니다.",
+          can: false,
+          reason: "사업자 소유권 이전 기능은 제공하지 않습니다.",
         };
       }
 

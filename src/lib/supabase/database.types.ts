@@ -4688,6 +4688,10 @@ export interface Database {
           is_active: boolean;
           driver_name: string | null;
           driver_phone: string | null;
+          vehicle_number: string | null;
+          return_is_reverse: boolean;
+          weekday_return_time: string | null;
+          friday_return_time: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -4701,6 +4705,10 @@ export interface Database {
           is_active?: boolean;
           driver_name?: string | null;
           driver_phone?: string | null;
+          vehicle_number?: string | null;
+          return_is_reverse?: boolean;
+          weekday_return_time?: string | null;
+          friday_return_time?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -4716,6 +4724,7 @@ export interface Database {
           pickup_time: string | null;
           dropoff_time: string | null;
           pickup_location_detail: string | null;
+          remark: string | null;
           is_pickup: boolean;
           is_dropoff: boolean;
         };
@@ -4727,6 +4736,7 @@ export interface Database {
           pickup_time?: string | null;
           dropoff_time?: string | null;
           pickup_location_detail?: string | null;
+          remark?: string | null;
           is_pickup?: boolean;
           is_dropoff?: boolean;
         };
@@ -4810,6 +4820,9 @@ export interface Database {
           lunch_cutoff_prev_day: boolean;
           dinner_cutoff_time: string;
           dinner_cutoff_prev_day: boolean;
+          closed_weekdays: number[];
+          closed_dates: string[];
+          open_dates: string[];
           updated_at: string;
         };
         Insert: {
@@ -4824,6 +4837,9 @@ export interface Database {
           lunch_cutoff_prev_day?: boolean;
           dinner_cutoff_time?: string;
           dinner_cutoff_prev_day?: boolean;
+          closed_weekdays?: number[];
+          closed_dates?: string[];
+          open_dates?: string[];
           updated_at?: string;
         };
         Update: Partial<Database['core']['Tables']['meal_survey_settings']['Insert']>;
@@ -7038,6 +7054,9 @@ export interface Database {
           p_lunch_cutoff_prev_day?: boolean;
           p_dinner_cutoff_time?: string;
           p_dinner_cutoff_prev_day?: boolean;
+          p_closed_weekdays?: number[];
+          p_closed_dates?: string[];
+          p_open_dates?: string[];
         };
         Returns: Json;
       };

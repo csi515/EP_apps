@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/shared/lib/utils';
+import { WORK_PAGE_GUTTER_CLASS, WORK_PAGE_STACK_CLASS } from './workPageSpacing';
 
 export type WorkPageWidth = 'hub' | 'form';
 
@@ -17,7 +18,8 @@ export interface WorkPageFrameProps extends React.HTMLAttributes<HTMLElement> {
 
 /**
  * 업무 화면 공통 가로·세로 프레임.
- * ModuleAppShell main의 p-5 거터를 존중하며, 폭·섹션 간격만 담당한다.
+ * 페이지 거터(좌우·상하)와 섹션 간격·최대 폭을 담당한다.
+ * ModuleAppShell / WorkAppShell 본문에는 추가 padding을 두지 않는다.
  */
 export const WorkPageFrame: React.FC<WorkPageFrameProps> = ({
   children,
@@ -28,7 +30,13 @@ export const WorkPageFrame: React.FC<WorkPageFrameProps> = ({
 }) => (
   <Tag
     data-work-page-width={width}
-    className={cn('mx-auto w-full space-y-6 pb-6', WIDTH_CLASS[width], className)}
+    className={cn(
+      'mx-auto w-full',
+      WORK_PAGE_GUTTER_CLASS,
+      WORK_PAGE_STACK_CLASS,
+      WIDTH_CLASS[width],
+      className
+    )}
     {...rest}
   >
     {children}

@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import {
@@ -14,14 +13,12 @@ import {
   isVolunteerJoinAllowed,
   remainingVolunteerSlots,
 } from '../domain/volunteerActivityEngine';
-import { useVolunteerManageAccess } from './VolunteerAccessGate';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const VolunteerListView: React.FC = () => {
   const { currentOrganization, selectedMembership } = useOrganization();
   const orgId = currentOrganization?.id ?? '';
   const memberId = selectedMembership?.id ?? null;
-  const canManage = useVolunteerManageAccess();
 
   const [activities, setActivities] = useState<VolunteerActivityRow[]>([]);
   const [signups, setSignups] = useState<VolunteerSignupRow[]>([]);
@@ -96,21 +93,11 @@ export const VolunteerListView: React.FC = () => {
 
   return (
     <WorkPageFrame width="form">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-black text-slate-900">사내 봉사활동</h1>
-          <p className="text-sm text-slate-500">
-            참여 버튼을 눌러 의사를 표시하세요. 모집 인원이 차면 더 이상 신청할 수 없습니다.
-          </p>
-        </div>
-        {canManage ? (
-          <Link
-            to="/workspace/volunteer/manage"
-            className="min-h-11 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white"
-          >
-            게시·관리
-          </Link>
-        ) : null}
+      <header>
+        <h1 className="text-xl font-black text-slate-900">사내 봉사활동</h1>
+        <p className="text-sm text-slate-500">
+          참여 버튼을 눌러 의사를 표시하세요. 모집 인원이 차면 더 이상 신청할 수 없습니다.
+        </p>
       </header>
 
       {loading ? <p className="text-sm text-slate-400">불러오는 중…</p> : null}

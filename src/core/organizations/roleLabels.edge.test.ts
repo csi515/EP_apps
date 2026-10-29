@@ -52,7 +52,8 @@ function assertNoAcademyWording(label: string, ctx: string) {
 // personal_plant_ops
 {
   assert.equal(getRoleLabel('staff', 'personal_plant_ops'), '직원');
-  assert.equal(getRoleLabel('owner', 'personal_plant_ops'), '대표');
+  assert.equal(getRoleLabel('owner', 'personal_plant_ops'), '대표이사');
+  assert.equal(getRoleLabel('admin', 'personal_plant_ops'), '관리자');
   assertNoAcademyWording(getRoleLabel('parent', 'personal_plant_ops'), 'parent/plant');
   assert.equal(roleSectionLabel('parent', 'personal_plant_ops'), '보호자');
   assert.equal(roleSectionLabel('owner', 'personal_plant_ops'), '사업장 관리');

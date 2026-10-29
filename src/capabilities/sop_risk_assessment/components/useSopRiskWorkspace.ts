@@ -2,6 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useGetIdentity } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
+  listDepartmentMembers,
+  listDepartments,
+  type OrgTreeNode,
+} from '@/core/organizations/services/organizationTreeService';
+import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
+import {
+  countAssessmentsByDepartment,
+  deriveDepartmentCode,
+  filterAssessmentsByDepartment,
+  type SopDepartmentFilter,
+  type SopDepartmentOption,
+} from '../domain/sopDepartmentFilter';
+import {
   listApprovalLines,
   listOrgMembers,
   listRevisions,
@@ -31,13 +44,24 @@ import type { StepHazardBlock } from '../domain/sopNumberingAndAuditEngine';
 
 type Identity = { id?: string };
 
+function toDeptOption(node: OrgTreeNode): SopDepartmentOption {
+  return {
+    id: node.id,
+    name: node.name,
+    code: node.code,
+  };
+}
+
 export function useSopRiskWorkspace() {
-  const { currentOrganization, currentRole } = useOrganization();
+  const { currentOrganization, currentRole, selectedMembership } = useOrganization();
   const { data: identity } = useGetIdentity<Identity>();
   const orgId = currentOrganization?.id ?? '';
   const userId = identity?.id ?? '';
+  const memberId = selectedMembership?.id ?? null;
 
   const [docs, setDocs] = useState<RiskAssessmentRow[]>([]);
+  const [departments, setDepartments] = useState<SopDepartmentOption[]>([]);
+  const [departmentFilter, setDepartmentFilter] = useState<SopDepartmentFilter>('all');
   const [members, setMembers] = useState<OrgMemberOption[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [viewVersion, setViewVersion] = useState<number | 'live'>('live');
@@ -52,7 +76,18 @@ export function useSopRiskWorkspace() {
   const [readyId, setReadyId] = useState<string | null>(null);
   const dirtyRef = useRef(false);
   const loadedIdRef = useRef<string | null>(null);
+  const filterReadyRef = useRef(false);
   dirtyRef.current = dirty;
+
+  const filteredDocs = useMemo(
+    () => filterAssessmentsByDepartment(docs, departments, departmentFilter),
+    [docs, departments, departmentFilter]
+  );
+
+  const departmentCounts = useMemo(
+    () => countAssessmentsByDepartment(docs, departments),
+    [docs, departments]
+  );
 
   const selected = docs.find((doc) => doc.id === selectedId) ?? null;
 
@@ -78,23 +113,46 @@ export function useSopRiskWorkspace() {
     setLoading(true);
     setError(null);
     try {
-      const [nextDocs, nextMembers] = await Promise.all([
+      const [nextDocs, nextMembers, nextDepts, deptMembers] = await Promise.all([
         listRiskAssessments(orgId),
         listOrgMembers(orgId),
+        listDepartments(orgId),
+        listDepartmentMembers(orgId).catch(() => []),
       ]);
+      const deptOptions = nextDepts.map(toDeptOption);
       setDocs(nextDocs);
       setMembers(nextMembers);
-      setSelectedId((current) => current ?? nextDocs[0]?.id ?? null);
+      setDepartments(deptOptions);
+
+      if (!filterReadyRef.current) {
+        filterReadyRef.current = true;
+        const myDept = memberId
+          ? deptMembers.find((row) => row.member_id === memberId)?.department_id
+          : null;
+        if (myDept && deptOptions.some((d) => d.id === myDept)) {
+          setDepartmentFilter(myDept);
+        }
+      }
+
+      setSelectedId((current) => {
+        if (current && nextDocs.some((doc) => doc.id === current)) return current;
+        return nextDocs[0]?.id ?? null;
+      });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '문서를 불러오지 못했습니다.');
+      setError(userFacingErrorMessage(cause));
     } finally {
       setLoading(false);
     }
-  }, [orgId]);
+  }, [orgId, memberId]);
 
   useEffect(() => {
     void reloadLists();
   }, [reloadLists]);
+
+  useEffect(() => {
+    if (selectedId && filteredDocs.some((doc) => doc.id === selectedId)) return;
+    setSelectedId(filteredDocs[0]?.id ?? null);
+  }, [filteredDocs, selectedId]);
 
   useEffect(() => {
     if (!selectedId || !selected) return;
@@ -116,7 +174,7 @@ export function useSopRiskWorkspace() {
         if (!dirtyRef.current) setBody(readDocumentBody(selected.snapshot_payload));
         setReadyId(selectedId);
       } catch (cause) {
-        if (!cancelled) setError(cause instanceof Error ? cause.message : '결재선 조회 실패');
+        if (!cancelled) setError(userFacingErrorMessage(cause));
       }
     })();
     return () => {
@@ -150,13 +208,18 @@ export function useSopRiskWorkspace() {
       if (dirty && canEdit) await persist();
       setSelectedId(id);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '저장에 실패했습니다.');
+      setError(userFacingErrorMessage(cause));
     } finally {
       setBusy(false);
     }
   };
 
-  const createDoc = async (input: { deptCode: string; deptName: string; processName: string }) => {
+  const createDoc = async (input: {
+    departmentId: string | null;
+    deptCode: string;
+    deptName: string;
+    processName: string;
+  }) => {
     if (!orgId) throw new Error('사업장을 선택해 주세요.');
     setBusy(true);
     setError(null);
@@ -164,16 +227,18 @@ export function useSopRiskWorkspace() {
       if (dirty && canEdit) await persist();
       const created = await createDraftRiskAssessment({
         organizationId: orgId,
+        departmentId: input.departmentId,
         deptCode: input.deptCode,
         deptName: input.deptName,
         processName: input.processName,
         existingDocNos: docs.map((doc) => doc.document_no),
       });
       setDocs((current) => [created, ...current]);
+      if (input.departmentId) setDepartmentFilter(input.departmentId);
       setSelectedId(created.id);
       setMessage('초안이 만들어졌습니다. 작업 단계를 입력한 뒤 검토를 요청하세요.');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '문서 생성 실패');
+      setError(userFacingErrorMessage(cause));
       throw cause;
     } finally {
       setBusy(false);
@@ -187,7 +252,7 @@ export function useSopRiskWorkspace() {
       await persist();
       setMessage('초안을 저장했습니다.');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '저장에 실패했습니다.');
+      setError(userFacingErrorMessage(cause));
     } finally {
       setBusy(false);
     }
@@ -210,7 +275,7 @@ export function useSopRiskWorkspace() {
       await reloadLists();
       setSelectedId(saved.id);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '검토 요청 실패');
+      setError(userFacingErrorMessage(cause));
     } finally {
       setBusy(false);
     }
@@ -230,7 +295,7 @@ export function useSopRiskWorkspace() {
       await reloadLists();
       setSelectedId(selected.id);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '개정 발의 실패');
+      setError(userFacingErrorMessage(cause));
       throw cause;
     } finally {
       setBusy(false);
@@ -239,6 +304,12 @@ export function useSopRiskWorkspace() {
 
   return {
     docs,
+    filteredDocs,
+    departments,
+    departmentFilter,
+    setDepartmentFilter,
+    departmentCounts,
+    deriveDepartmentCode,
     members,
     selected,
     body: displayedBody,
