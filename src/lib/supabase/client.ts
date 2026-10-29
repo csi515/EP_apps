@@ -23,14 +23,21 @@ if (isProd && !hasEnvConfig) {
 const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL || defaultUrl;
 const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY || defaultKey;
 
-/** 로컬 Auth JWT를 PostgREST(Authorization)에 주입 — supabase.auth 세션과 분리 */
+/** 로컬 Auth JWT를 PostgREST(Authorization)에 주입 — anon key를 덮어쓴다 */
 function corpDomainFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   if (!isLocalAuthEnabled()) {
     return fetch(input, init);
   }
   const headers = new Headers(init?.headers);
+  // Request 객체로 호출된 경우 init.headers에 Authorization이 없을 수 있음
+  if (input instanceof Request) {
+    input.headers.forEach((value, key) => {
+      if (!headers.has(key)) headers.set(key, value);
+    });
+  }
   const token = getLocalAuthToken();
-  if (token && !headers.has('Authorization')) {
+  if (token) {
+    // supabase-js 기본 Authorization(anon key)을 로컬 JWT로 교체
     headers.set('Authorization', `Bearer ${token}`);
   }
   return fetch(input, { ...init, headers });
