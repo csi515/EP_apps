@@ -25,6 +25,14 @@ export default defineConfig({
   server: {
     port: 3000,
     host: true,
+    // supabase-js는 /rest/v1/* 를 호출하고, 사내 PostgREST는 루트 경로만 제공한다.
+    proxy: {
+      "/rest/v1": {
+        target: process.env.EP_POSTGREST_URL || "http://127.0.0.1:3001",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/rest\/v1/, "") || "/",
+      },
+    },
   },
   build: {
     rollupOptions: {

@@ -132,9 +132,10 @@ jobs:
       EP_JWT_SECRET: ep-local-dev-jwt-secret-change-me
       VITE_LOCAL_AUTH: 'true'
       VITE_CORP_DOMAIN: 'true'
-      VITE_SUPABASE_URL: http://127.0.0.1:3001
+      VITE_SUPABASE_URL: http://localhost:3000
       VITE_SUPABASE_ANON_KEY: ep-anon
       VITE_AUTH_API_BASE: /api/local-auth
+      EP_POSTGREST_URL: http://127.0.0.1:3001
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -169,7 +170,7 @@ jobs:
         env:
           VITE_LOCAL_AUTH: 'true'
           VITE_CORP_DOMAIN: 'true'
-          VITE_SUPABASE_URL: http://127.0.0.1:3001
+          VITE_SUPABASE_URL: http://localhost:3000
           VITE_SUPABASE_ANON_KEY: ep-anon
           VITE_AUTH_API_BASE: /api/local-auth
       - name: Check bundle size
