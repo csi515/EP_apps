@@ -67,8 +67,8 @@ export async function loadMboViewerOrgScope(
   const viewer = members.find((m) => m.user_id === viewerUserId);
   if (!viewer) return empty;
 
-  const pathByDeptId = new Map(nodes.map((n) => [n.id, n.path]));
-  const roleById = new Map(roles.map((r) => [r.id, r]));
+  const pathByDeptId = new Map(nodes.map((n): [string, string] => [n.id, n.path]));
+  const roleById = new Map(roles.map((r): [string, (typeof roles)[number]] => [r.id, r]));
   const viewerRole =
     (viewer.organization_role_id && roleById.get(viewer.organization_role_id)) || null;
 
@@ -158,7 +158,7 @@ export async function loadMboOrgDirectory(
     return { members: [], departments: [], viewerMemberId: null };
   }
   const { nodes, members, departmentMembers } = await loadOrganizationTree(organizationId);
-  const deptNameById = new Map(nodes.map((n) => [n.id, n.name]));
+  const deptNameById = new Map(nodes.map((n): [string, string] => [n.id, n.name]));
   const primaryDeptByMember = new Map<string, string>();
   for (const dm of departmentMembers) {
     if (!primaryDeptByMember.has(dm.member_id)) {

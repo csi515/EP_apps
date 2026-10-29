@@ -145,7 +145,9 @@ const MealSurveySettingsInner: React.FC = () => {
               interactiveHint="날짜를 누르면 휴무 ↔ 운영이 바뀝니다. 저장을 눌러 반영하세요."
               onSelectDate={(day) => {
                 if (!day.isCurrentMonth) {
-                  setCalendarAnchor(new Date(day.date.slice(0, 4), Number(day.date.slice(5, 7)) - 1, 1));
+                  setCalendarAnchor(
+                    new Date(Number(day.date.slice(0, 4)), Number(day.date.slice(5, 7)) - 1, 1),
+                  );
                 }
                 setDraft((prev) => toggleCafeteriaClosedDate(prev, day.date));
               }}

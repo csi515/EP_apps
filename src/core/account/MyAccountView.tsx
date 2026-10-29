@@ -40,10 +40,16 @@ export const MyAccountView: React.FC = () => {
 
   const permissionLabels = useMemo(() => {
     const scopedCaps = org?.activeCapabilities ?? null;
-    const rolePerms =
+    const rolePermsRaw =
       activeUser.customRole?.permissions ??
       org?.selectedMembership?.permissions ??
       null;
+    const rolePerms =
+      rolePermsRaw == null
+        ? null
+        : Array.isArray(rolePermsRaw)
+          ? Object.fromEntries(rolePermsRaw.map((key) => [key, true as const]))
+          : rolePermsRaw;
     const fromRole = listEnabledPermissionLabels(rolePerms, scopedCaps).map((item) => item.label);
 
     const featureSource =
