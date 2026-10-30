@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import {
   COMMAND_CATALOG,
   filterCommands,
+  filterCommandsByAppAccess,
   isPaletteShortcut,
   moveCommandIndex,
   type CommandItem,
@@ -46,6 +47,22 @@ assert.ok(COMMAND_CATALOG.some((i) => i.href === '/workspace/approvals'));
 assert.ok(COMMAND_CATALOG.some((i) => i.href === '/workspace/intranet'));
 assert.ok(COMMAND_CATALOG.some((i) => i.href === '/workspace/organization'));
 assert.ok(COMMAND_CATALOG.some((i) => i.href === '/rnd'));
+assert.ok(COMMAND_CATALOG.find((i) => i.id === 'menu-rnd')?.appId === 'research');
+assert.ok(COMMAND_CATALOG.find((i) => i.id === 'menu-resources')?.appId === 'resources');
+
+const staffNoAccess = filterCommandsByAppAccess(COMMAND_CATALOG, {
+  role: 'staff',
+  customRole: null,
+  feature_permissions: {},
+});
+assert.ok(!staffNoAccess.some((i) => i.id === 'menu-rnd'), 'staff without rnd blocked');
+assert.ok(staffNoAccess.some((i) => i.id === 'menu-intranet'), 'intranet always visible');
+
+const ownerAccess = filterCommandsByAppAccess(COMMAND_CATALOG, {
+  role: 'owner',
+  customRole: null,
+});
+assert.ok(ownerAccess.some((i) => i.id === 'menu-rnd'));
 
 // filter: empty / case / chosung / no match
 {
@@ -93,7 +110,7 @@ assert.ok(COMMAND_CATALOG.some((i) => i.href === '/rnd'));
     'utf8'
   );
   assert.doesNotMatch(paletteUi, /출결 패드|회원,\s*시간표/);
-  assert.match(paletteUi, /결재|조직도|공용자원/);
+  assert.match(paletteUi, /ep\.palette\.placeholder|filterCommandsByAppAccess/);
 }
 
 console.log('commandPalette.edge.test.ts: ok');

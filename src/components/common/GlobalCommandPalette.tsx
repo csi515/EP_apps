@@ -1,10 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslate } from '@refinedev/core';
+import { StorageService } from '@/services/storage';
 import {
   COMMAND_CATALOG,
   filterCommands,
+  filterCommandsByAppAccess,
   isPaletteShortcut,
   moveCommandIndex,
+  resolveCommandAccessFromStorageUser,
   type CommandItem,
 } from './commandPalette';
 import { AppDrawer } from './AppDrawer';
@@ -15,11 +19,21 @@ export function requestCommandPalette(): void {
 
 export function GlobalCommandPalette() {
   const navigate = useNavigate();
+  const translate = useTranslate();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
   const [member, setMember] = useState<CommandItem | null>(null);
-  const results = useMemo(() => filterCommands(query, COMMAND_CATALOG), [query]);
+
+  const accessibleCatalog = useMemo(() => {
+    const access = resolveCommandAccessFromStorageUser(StorageService.getActiveUser());
+    return filterCommandsByAppAccess(COMMAND_CATALOG, access).map((item) => ({
+      ...item,
+      label: item.labelKey ? translate(item.labelKey, item.label) : item.label,
+    }));
+  }, [translate, open]);
+
+  const results = useMemo(() => filterCommands(query, accessibleCatalog), [query, accessibleCatalog]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -62,7 +76,7 @@ export function GlobalCommandPalette() {
             <input
               autoFocus
               value={query}
-              placeholder="결재, 조직도, 공용자원"
+              placeholder={translate('ep.palette.placeholder')}
               className="min-h-12 w-full rounded-xl border px-3"
               onChange={(event) => setQuery(event.target.value)}
               onKeyDown={(event) => {

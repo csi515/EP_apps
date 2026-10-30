@@ -9,15 +9,9 @@ import { getRoleLabel } from '@/core/organizations/services/organizationService'
 import { listEnabledPermissionLabels } from '@/domain/permissionCatalog';
 import { PasswordChangeCard } from './PasswordChangeCard';
 
-const FEATURE_PERMISSION_LABELS: Record<string, string> = {
-  'resources:manage': '공용자원 담당',
-  'volunteer:manage': '봉사활동 담당',
-  grievances_manage: '노경·고충 담당',
-  'shuttle:manage': '통근셔틀 담당',
-  'office_supply_request:manage': '사무용품 담당',
-  'meal_survey:manage': '식수조사 담당',
-  'safety:manage': '현장 안전/SOP 담당',
-};
+import { COMPANY_APP_ACCESS_LABELS } from '@/pages/workspace/companyAppAccess';
+
+const FEATURE_PERMISSION_LABELS: Record<string, string> = COMPANY_APP_ACCESS_LABELS;
 
 /** 로그인 사용자 공통 계정 관리 (프로필·비밀번호·법적 고지) */
 export const MyAccountView: React.FC = () => {

@@ -87,6 +87,18 @@ assert.match(rolesUi, /roles:assign|위임/);
 assert.doesNotMatch(rolesUi, /OwnershipTransferCard|소유권 이전/);
 
 const memberList = readFileSync(join(root, 'src/pages/members/MemberList.tsx'), 'utf8');
-assert.match(memberList, /assign_role|위임|직급/);
+assert.match(memberList, /COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS|company_app:/);
+assert.match(memberList, /assign_role|위임|직급|MemberRoleAssignModal|MemberFeaturePermissionModal/);
+assert.match(memberList, /ep\.members\.|countGrantedCompanyAppUsage/);
+
+const accessDenied = readFileSync(
+  join(root, 'src/pages/workspace/CompanyAppAccessDeniedPage.tsx'),
+  'utf8'
+);
+assert.match(accessDenied, /ep\.access\.denied/);
+assert.doesNotMatch(
+  readFileSync(join(root, 'src/pages/workspace/CompanyAppAccessGate.tsx'), 'utf8'),
+  /Navigate|redirectTo/
+);
 
 console.log('companyAppFeatures.edge.test.ts: ok');

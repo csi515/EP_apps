@@ -39,7 +39,7 @@ assert.equal(tileAllowed({ requiredAnyCapability: ['facility_incident_report'] }
 assert.equal(
   tileAllowed({ requiredAnyCapability: ['research_project'] } as never, enabled, false),
   false,
-  'R&D tile blocked without portal access'
+  'R&D tile blocked without member app access'
 );
 
 assert.equal(plant.readinessLevel, 'basic_ui');

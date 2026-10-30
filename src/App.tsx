@@ -34,6 +34,7 @@ import { ToastContainer, ConfirmDialog, AppErrorBoundary } from "@/shared/compon
 import { LoadingScreen } from "@/shared/components/LoadingScreen";
 
 import { DynamicRoleSettingsPage } from "@/pages/settings/DynamicRoleSettingsPage";
+import { CompanyAppAccessGate } from "@/pages/workspace/CompanyAppAccessGate";
 import { Header } from "./components/layout/Header";
 import { Layout } from "./components/layout/Layout";
 import { LoginPage } from "./pages/auth/LoginPage";
@@ -225,31 +226,31 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/members" element={<MemberList />} />
             <Route path="/workspace/organization" element={<OrganizationTreePage />} />
             <Route path="/workspace/intranet" element={<WorkspaceIntranetHubPage />} />
-            <Route path="/workspace/resources" element={<WorkspaceResourcesPage />} />
-            <Route path="/workspace/feedbacks" element={<WorkspaceFeedbacksPage />} />
-            <Route path="/workspace/grievances" element={<WorkspaceFeedbacksPage />} />
-            <Route path="/workspace/mbo" element={<WorkspaceMboPage />} />
+            <Route path="/workspace/resources" element={<CompanyAppAccessGate appId="resources"><WorkspaceResourcesPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/feedbacks" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/grievances" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/mbo" element={<CompanyAppAccessGate appId="mbo"><WorkspaceMboPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/approvals" element={<WorkspaceApprovalsPage />} />
             <Route path="/workspace/inventory" element={<WorkspaceInventoryPage />} />
             <Route path="/workspace/supply-restock" element={<WorkspaceSupplyRestockPage />} />
-            <Route path="/workspace/shuttle/routes" element={<WorkspaceShuttleRoutesPage />} />
-            <Route path="/workspace/shuttle/roster" element={<WorkspaceShuttleRosterPage />} />
-            <Route path="/workspace/shuttle/my" element={<WorkspaceShuttleMyPage />} />
-            <Route path="/workspace/sop-risk" element={<WorkspaceSopRiskPage />} />
-            <Route path="/workspace/volunteer" element={<WorkspaceVolunteerListPage />} />
-            <Route path="/workspace/volunteer/manage" element={<WorkspaceVolunteerManagePage />} />
-            <Route path="/workspace/meal-survey" element={<WorkspaceMealSurveyMyPage />} />
-            <Route path="/workspace/meal-survey/manage" element={<WorkspaceMealSurveyManagePage />} />
-            <Route path="/workspace/meal-survey/settings" element={<WorkspaceMealSurveySettingsPage />} />
-            <Route path="/workspace/office-supply" element={<WorkspaceOfficeSupplyMyPage />} />
-            <Route path="/workspace/office-supply/manage" element={<WorkspaceOfficeSupplyManagePage />} />
-            <Route path="/workspace/office-supply/catalog" element={<WorkspaceOfficeSupplyCatalogPage />} />
+            <Route path="/workspace/shuttle/routes" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleRoutesPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/shuttle/roster" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleRosterPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/shuttle/my" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleMyPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/sop-risk" element={<CompanyAppAccessGate appId="sop_risk"><WorkspaceSopRiskPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/volunteer" element={<CompanyAppAccessGate appId="volunteer"><WorkspaceVolunteerListPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/volunteer/manage" element={<CompanyAppAccessGate appId="volunteer"><WorkspaceVolunteerManagePage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/meal-survey" element={<CompanyAppAccessGate appId="meal_survey"><WorkspaceMealSurveyMyPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/meal-survey/manage" element={<CompanyAppAccessGate appId="meal_survey"><WorkspaceMealSurveyManagePage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/meal-survey/settings" element={<CompanyAppAccessGate appId="meal_survey"><WorkspaceMealSurveySettingsPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/office-supply" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyMyPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/office-supply/manage" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyManagePage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/office-supply/catalog" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyCatalogPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/hazardous-substances" element={<WorkspaceHazardousSubstancesPage />} />
             <Route path="/workspace/setup-wizard" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/ep-setup" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/quick" element={<Navigate to="/onboarding/ep-setup" replace />} />
             <Route path="/workspace/maintenance" element={<Navigate to="/rnd/maintenance" replace />} />
-            <Route path="/rnd" element={<RndPortalPage />}>
+            <Route path="/rnd" element={<CompanyAppAccessGate appId="research"><RndPortalPage /></CompanyAppAccessGate>}>
               <Route index element={<Navigate to="projects" replace />} />
               <Route path="projects" element={<RndProjectsSection />} />
               <Route path="equipment" element={<RndEquipmentSection />} />

@@ -5,6 +5,7 @@ import {
 } from "@/core/terminology/dictionaries";
 import { translateTerm } from "@/core/terminology/translate";
 import type { TerminologyDictionary, TermKey } from "@/core/terminology/types";
+import { EP_APPS_MESSAGES_EN, EP_APPS_MESSAGES_KO } from "@/core/i18n/epAppsMessages";
 
 export interface I18nProviderOptions {
   /** 기본 로케일 (기본값: "ko") */
@@ -204,19 +205,26 @@ export function createI18nProvider(options: I18nProviderOptions = {}): MoaI18nPr
       return interpolate(termResolved, opts);
     }
 
-    // 4. 표준 UI 메시지 테이블 (로케일별)
+    // 4. EP_apps UX 메시지 (ep.*)
+    const epMessages =
+      currentLocale.startsWith("en") ? EP_APPS_MESSAGES_EN : EP_APPS_MESSAGES_KO;
+    if (key in epMessages) {
+      return interpolate(epMessages[key], opts);
+    }
+
+    // 5. 표준 UI 메시지 테이블 (로케일별)
     const uiMessages =
       currentLocale.startsWith("en") ? STANDARD_UI_MESSAGES_EN : STANDARD_UI_MESSAGES_KO;
     if (key in uiMessages) {
       return interpolate(uiMessages[key], opts);
     }
 
-    // 5. 기본 메시지(defaultMessage)가 있는 경우
+    // 6. 기본 메시지(defaultMessage)가 있는 경우
     if (defMsg != null && defMsg !== "") {
       return interpolate(defMsg, opts);
     }
 
-    // 6. 폴백: 원본 키 반환
+    // 7. 폴백: 원본 키 반환
     return key;
   };
 
