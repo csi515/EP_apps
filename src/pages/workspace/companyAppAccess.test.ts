@@ -59,6 +59,21 @@ assert.equal(
 assert.equal(canAccessCompanyApp('research', { role: 'owner', customRole: null }), true);
 
 assert.equal(
+  canAccessCompanyApp('app_access', {
+    role: 'staff',
+    customRole: null,
+    feature_permissions: {},
+  }),
+  true,
+  'app_access is always open to signed-in members'
+);
+assert.equal(
+  canAccessCompanyApp('app_access', null),
+  false,
+  'app_access still requires a member context'
+);
+
+assert.equal(
   canAccessCompanyApp('sop_risk', { role: 'manager', customRole: null, feature_permissions: {} }),
   true,
   'org admin (manager) sees all apps including SOP'

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Building2, Network, Settings, Shield } from 'lucide-react';
+import { Building2, KeyRound, Network, Settings, Shield } from 'lucide-react';
+import { useTranslate } from '@refinedev/core';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
 import { usePermissions } from '@/core/auth/usePermissions';
@@ -22,6 +23,7 @@ type HubCard = {
 
 /** 조직도·직급·사업장 설정 진입 허브 (권한자 전용) */
 export const OrgAdminHubPage: React.FC = () => {
+  const translate = useTranslate();
   const { isAdmin, isOwner } = usePermissions();
   const org = useOptionalOrganization();
   const membership = org?.selectedMembership;
@@ -59,6 +61,14 @@ export const OrgAdminHubPage: React.FC = () => {
       title: '직급·권한',
       description: '역할과 권한 위임을 관리합니다.',
       icon: <Shield className="h-5 w-5" />,
+      visible: canRoles,
+    },
+    {
+      id: 'app-access',
+      to: '/workspace/app-access?mode=admin',
+      title: translate('ep.staffAccess.orgHub.title'),
+      description: translate('ep.staffAccess.orgHub.description'),
+      icon: <KeyRound className="h-5 w-5" />,
       visible: canRoles,
     },
     {

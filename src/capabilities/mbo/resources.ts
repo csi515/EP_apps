@@ -34,7 +34,7 @@ export const mboResources: CapabilityResourceDefinition = {
       name: 'mbo_progress_logs',
       list: '/workspace/mbo',
       meta: {
-        label: 'MBO 월별 체크인',
+        label: 'MBO 진척 보고',
         icon: 'Activity',
         order: 193,
       },

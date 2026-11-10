@@ -14,7 +14,7 @@ const launcher = readFileSync(
   'utf8'
 );
 
-assert.equal(PUBLISHED_COMPANY_APPS.length, 9, 'published app count');
+assert.equal(PUBLISHED_COMPANY_APPS.length, 11, 'published app count');
 
 for (const app of PUBLISHED_COMPANY_APPS) {
   assert.match(launcher, new RegExp(`id:\\s*'${app.id}'`), `launcher has ${app.id}`);

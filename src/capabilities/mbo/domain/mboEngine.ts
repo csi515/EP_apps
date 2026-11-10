@@ -337,10 +337,10 @@ export function validateMboObjectiveWeights(
   const difference = 100 - totalWeight;
   const valid = totalWeight === 100;
   const message = valid
-    ? '목표 가중치 합계가 100%로 유효합니다.'
+    ? '목표 비중 합계가 100%로 유효합니다.'
     : difference > 0
-      ? `목표 가중치 합계가 100%가 되어야 합니다. (${difference}% 추가 필요, 현재: ${totalWeight}%)`
-      : `목표 가중치 합계가 100%를 초과했습니다. (${Math.abs(difference)}% 초과, 현재: ${totalWeight}%)`;
+      ? `목표 비중 합계가 100%가 되어야 합니다. (${difference}% 추가 필요, 현재: ${totalWeight}%)`
+      : `목표 비중 합계가 100%를 초과했습니다. (${Math.abs(difference)}% 초과, 현재: ${totalWeight}%)`;
 
   return { valid, totalWeight, difference, message };
 }

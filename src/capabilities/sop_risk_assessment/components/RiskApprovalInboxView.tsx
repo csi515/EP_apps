@@ -14,6 +14,7 @@ import {
 } from '../services/riskAssessmentApprovalService';
 import { readDocumentBody, type OrgMemberOption } from '../domain/sopStepDocument';
 import type { ApprovalStepState } from '../domain/approvalEngine';
+import { formatRevisionNo } from '../domain/sopNumberingAndAuditEngine';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type Identity = { id?: string };
@@ -110,8 +111,8 @@ export const RiskApprovalInboxView: React.FC = () => {
                       {doc?.title ?? line.assessment_id}
                     </h3>
                     <p className="text-sm text-slate-500">
-                      {doc?.process_name ?? '-'} · v1.
-                      {Math.max(0, (doc?.current_version ?? 1) - 1)} · {doc?.document_no}
+                      {doc?.process_name ?? '-'} ·{' '}
+                      {formatRevisionNo(Math.max(0, (doc?.current_version ?? 1) - 1))} · {doc?.document_no}
                     </p>
                   </div>
                   <div className="flex gap-2">

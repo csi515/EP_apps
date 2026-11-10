@@ -2,7 +2,7 @@ import { defineCapability } from '../_shared/capabilityTypes';
 
 export const mboCapability = defineCapability({
   id: 'mbo',
-  displayName: '목표관리(MBO) 및 실행 프로젝트',
+  displayName: '내 목표(MBO)',
   dependencies: [],
   configurable: true,
   defaultEnabled: false,

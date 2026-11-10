@@ -11,7 +11,9 @@ export type PublishedCompanyAppId =
   | 'grievances'
   | 'volunteer'
   | 'meal_survey'
-  | 'office_supply';
+  | 'office_supply'
+  | 'supply_restock'
+  | 'app_access';
 
 export type PublishedCompanyApp = {
   id: PublishedCompanyAppId;
@@ -116,6 +118,14 @@ export const PUBLISHED_COMPANY_APPS: readonly PublishedCompanyApp[] = [
     ],
   },
   {
+    id: 'supply_restock',
+    label: '소모품 안전재고',
+    path: '/workspace/supply-restock',
+    capabilities: ['supply_restock'],
+    pageRel: 'src/pages/workspace/WorkspaceSupplyRestockPage.tsx',
+    errorSurfaceRels: ['src/capabilities/supply_restock/ui/SupplyRestockView.tsx'],
+  },
+  {
     id: 'office_supply',
     label: '사무용품 취합',
     path: '/workspace/office-supply',
@@ -127,7 +137,23 @@ export const PUBLISHED_COMPANY_APPS: readonly PublishedCompanyApp[] = [
       'src/capabilities/office_supply_request/ui/OfficeSupplyCatalogPage.tsx',
     ],
   },
+  {
+    id: 'app_access',
+    label: '앱 권한',
+    path: '/workspace/app-access',
+    capabilities: ['approval_workflow'],
+    pageRel: 'src/pages/workspace/WorkspaceStaffAccessPage.tsx',
+    errorSurfaceRels: [
+      'src/pages/workspace/staffAccess/StaffAccessAppHomeView.tsx',
+      'src/pages/workspace/staffAccess/StaffAccessMemberSheet.tsx',
+    ],
+  },
 ] as const;
+
+/** 런처 배정·내 권한 그리드 대상 (앱 권한 앱 자체 제외) */
+export function listAssignablePublishedApps(): readonly PublishedCompanyApp[] {
+  return PUBLISHED_COMPANY_APPS.filter((app) => app.id !== 'app_access');
+}
 
 export function getPublishedCompanyApp(id: PublishedCompanyAppId): PublishedCompanyApp {
   const found = PUBLISHED_COMPANY_APPS.find((app) => app.id === id);

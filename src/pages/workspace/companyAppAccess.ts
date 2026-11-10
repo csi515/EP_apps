@@ -44,6 +44,7 @@ export const COMPANY_APP_ACCESS_LABELS: Record<string, string> = {
   'company_app:volunteer': '봉사활동 앱',
   'company_app:meal_survey': '식수인원 조사 앱',
   'company_app:office_supply': '사무용품 취합 앱',
+  'company_app:supply_restock': '소모품 안전재고 앱',
   resources: '공용자원 담당',
   'volunteer:manage': '봉사활동 담당',
   grievances_manage: '노경·고충 담당',
@@ -142,6 +143,12 @@ export const COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS: readonly CompanyAppFeatureA
       '소모품 신청 앱 진입',
       'office_supply'
     ),
+    buildOption(
+      companyAppAccessFeatureKey('supply_restock'),
+      '소모품 안전재고 앱 이용',
+      '안전재고·간이 발주 앱 진입',
+      'supply_restock'
+    ),
     buildOption('resources:manage', '공용자원/총무 담당', '회의실·업무차량 자원 등록 및 승인'),
     buildOption('volunteer:manage', '봉사활동 담당', '봉사 프로그램 개설 및 신청자 확정'),
     buildOption('grievances_manage', '노경 건의함 담당', '고충 건의함 열람 및 답변 등록'),
@@ -218,6 +225,10 @@ function roleGrantsCompanyApp(appId: PublishedCompanyAppId, member: AccessMember
       return canManageMealSurvey(member) || true;
     case 'office_supply':
       return canManageOfficeSupplyRequest(member) || true;
+    case 'supply_restock':
+      return canManageOfficeSupplyRequest(member) || true;
+    case 'app_access':
+      return true;
     default:
       return false;
   }
@@ -259,6 +270,8 @@ export function canAccessCompanyApp(
   input: CompanyAppAccessInput | null | undefined
 ): boolean {
   if (!input) return false;
+  // 앱 권한 앱: 로그인 멤버면 항상 진입 (직원 읽기 / 관리자 배정)
+  if (appId === 'app_access') return true;
   if (isOrgAdmin(input.role)) return true;
 
   const member: AccessMember = {

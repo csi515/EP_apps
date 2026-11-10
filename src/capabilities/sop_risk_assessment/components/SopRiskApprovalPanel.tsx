@@ -17,6 +17,7 @@ import {
 } from '../services/riskAssessmentApprovalService';
 import { shouldShowOccasionalReviewBadge, type ApprovalStepState } from '../domain/approvalEngine';
 import { readDocumentBody, validateDraftForSubmit, type OrgMemberOption } from '../domain/sopStepDocument';
+import { formatRevisionNo } from '../domain/sopNumberingAndAuditEngine';
 
 type Identity = { id?: string };
 
@@ -110,7 +111,7 @@ export const SopRiskApprovalPanel: React.FC = () => {
             className="h-12 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-bold text-amber-900"
             onClick={() => setHistoryOpen(true)}
           >
-            v1.{selected.current_version - 1} ⚠️ {selected.current_version - 1}회 개정됨
+            {formatRevisionNo(selected.current_version - 1)} ⚠️ {selected.current_version - 1}회 개정됨
           </button>
         ) : null}
       </div>
@@ -135,7 +136,7 @@ export const SopRiskApprovalPanel: React.FC = () => {
               >
                 {doc.title}
                 <span className="mt-0.5 block text-xs font-normal text-slate-500">
-                  {doc.status} · v{doc.current_version}
+                  {doc.status} · {formatRevisionNo(Math.max(0, doc.current_version - 1))}
                 </span>
               </button>
             </li>

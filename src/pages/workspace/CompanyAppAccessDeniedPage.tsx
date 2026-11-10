@@ -33,7 +33,7 @@ export function CompanyAppAccessDeniedPage({ appId }: Props): React.JSX.Element 
         </Link>
         {showAdminLink ? (
           <Link
-            to="/workspace/members"
+            to={`/workspace/app-access?app=${encodeURIComponent(appId)}&intent=grant&mode=admin`}
             className="inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700"
           >
             {translate('ep.access.denied.manageMembers')}

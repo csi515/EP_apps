@@ -72,6 +72,7 @@ const WorkspaceMboPage = lazy(() => import("./pages/workspace/WorkspaceMboPage")
 const WorkspaceApprovalsPage = lazy(() => import("./pages/workspace/WorkspaceApprovalsPage").then((m) => ({ default: m.WorkspaceApprovalsPage })));
 const WorkspaceInventoryPage = lazy(() => import("./pages/workspace/WorkspaceInventoryPage").then((m) => ({ default: m.WorkspaceInventoryPage })));
 const WorkspaceSupplyRestockPage = lazy(() => import("./pages/workspace/WorkspaceSupplyRestockPage").then((m) => ({ default: m.WorkspaceSupplyRestockPage })));
+const WorkspaceStaffAccessPage = lazy(() => import("./pages/workspace/WorkspaceStaffAccessPage").then((m) => ({ default: m.WorkspaceStaffAccessPage })));
 const WorkspaceSopRiskPage = lazy(() => import("./pages/workspace/WorkspaceSopRiskPage").then((m) => ({ default: m.WorkspaceSopRiskPage })));
 const WorkspaceShuttleMyPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleMyPage })));
 const WorkspaceShuttleRosterPage = lazy(() => import("./pages/workspace/WorkspaceShuttlePage").then((m) => ({ default: m.WorkspaceShuttleRosterPage })));
@@ -226,6 +227,7 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/members" element={<MemberList />} />
             <Route path="/workspace/organization" element={<OrganizationTreePage />} />
             <Route path="/workspace/intranet" element={<WorkspaceIntranetHubPage />} />
+            <Route path="/workspace/app-access" element={<CompanyAppAccessGate appId="app_access"><WorkspaceStaffAccessPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/resources" element={<CompanyAppAccessGate appId="resources"><WorkspaceResourcesPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/feedbacks" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/grievances" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />

@@ -88,7 +88,7 @@ assert.doesNotMatch(rolesUi, /OwnershipTransferCard|소유권 이전/);
 
 const memberList = readFileSync(join(root, 'src/pages/members/MemberList.tsx'), 'utf8');
 assert.match(memberList, /COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS|company_app:/);
-assert.match(memberList, /assign_role|위임|직급|MemberRoleAssignModal|MemberFeaturePermissionModal/);
+assert.match(memberList, /assign_role|위임|직급|MemberRoleAssignModal|app-access|buildStaffAccessPath/);
 assert.match(memberList, /ep\.members\.|countGrantedCompanyAppUsage/);
 
 const accessDenied = readFileSync(
@@ -96,6 +96,7 @@ const accessDenied = readFileSync(
   'utf8'
 );
 assert.match(accessDenied, /ep\.access\.denied/);
+assert.match(accessDenied, /\/workspace\/app-access/);
 assert.doesNotMatch(
   readFileSync(join(root, 'src/pages/workspace/CompanyAppAccessGate.tsx'), 'utf8'),
   /Navigate|redirectTo/

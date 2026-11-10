@@ -34,6 +34,7 @@ assert.equal(tileAllowed({ requiredAnyCapability: ['vehicle_shuttle'] } as never
 assert.equal(tileAllowed({ requiredAnyCapability: ['feedbacks'] } as never, enabled), false);
 assert.equal(tileAllowed({ requiredAnyCapability: ['booking', 'seat_room'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['office_supply_request'] } as never, enabled), true);
+assert.equal(tileAllowed({ requiredAnyCapability: ['supply_restock'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['shuttle_dispatch'] } as never, enabled), true);
 assert.equal(tileAllowed({ requiredAnyCapability: ['facility_incident_report'] } as never, enabled), false);
 assert.equal(

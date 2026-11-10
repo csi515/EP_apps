@@ -9,9 +9,11 @@ import {
   HeartHandshake,
   UtensilsCrossed,
   Package,
+  ClipboardList,
   Bell,
   ChevronRight,
   MessageSquareWarning,
+  KeyRound,
 } from 'lucide-react';
 import { useList, useGetIdentity, useTranslate } from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
@@ -283,6 +285,14 @@ export const CompanyAppLauncherDashboard: React.FC<{
         requiredAnyCapability: ['meal_survey'],
       },
       {
+        id: 'supply_restock',
+        to: '/workspace/supply-restock',
+        label: '소모품 안전재고',
+        icon: <ClipboardList className={iconCls} />,
+        gradient: 'from-teal-500 to-cyan-600',
+        requiredAnyCapability: ['supply_restock'],
+      },
+      {
         id: 'office_supply',
         to: '/workspace/office-supply',
         label: '사무용품 취합',
@@ -290,11 +300,22 @@ export const CompanyAppLauncherDashboard: React.FC<{
         gradient: 'from-sky-500 to-blue-600',
         requiredAnyCapability: ['office_supply_request'],
       },
+      {
+        id: 'app_access',
+        to: '/workspace/app-access',
+        label: '앱 권한',
+        icon: <KeyRound className={iconCls} />,
+        gradient: 'from-slate-600 to-slate-800',
+        requiredAnyCapability: ['approval_workflow'],
+      },
       // 내 계정·조직 설정(직급·사업장)은 헤더 계정 메뉴 /org-admin 허브로만 진입
     ];
     return all
       .filter((t) => {
-        const memberOk = canAccessCompanyApp(t.id as PublishedCompanyAppId, appAccessInput);
+        const memberOk =
+          t.id === 'app_access'
+            ? true
+            : canAccessCompanyApp(t.id as PublishedCompanyAppId, appAccessInput);
         return tileAllowed(t, enabledCaps, memberOk);
       })
       .map((t) => {
@@ -407,7 +428,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
             </p>
             {showAdminEmptyCta ? (
               <Link
-                to="/workspace/members"
+                to="/workspace/app-access"
                 className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700"
               >
                 {translate('ep.launcher.empty.adminCta')}

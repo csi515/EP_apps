@@ -8,6 +8,10 @@ import {
   type DeptMembership,
 } from '@/core/organizations/departmentLeadScope';
 import {
+  resolveImmediateSuperior,
+  type ImmediateSuperiorResult,
+} from '@/core/organizations/resolveImmediateSuperior';
+import {
   isTopExecutiveRole,
   type GoalHierarchyActor,
 } from '../domain/mboGoalHierarchy';
@@ -35,6 +39,8 @@ export type MboViewerOrgScope = {
   isSubtreeManager: boolean;
   isSubtreeLeaderOfTarget: (targetUserId: string | null | undefined) => boolean;
   goalActor: GoalHierarchyActor;
+  /** 조직도상 바로 윗 DESCENDANTS 리더 */
+  immediateSuperior: ImmediateSuperiorResult | null;
 };
 
 export async function loadMboViewerOrgScope(
@@ -57,6 +63,7 @@ export async function loadMboViewerOrgScope(
     isSubtreeManager: false,
     isSubtreeLeaderOfTarget: () => false,
     goalActor: emptyActor,
+    immediateSuperior: null,
   };
   if (!organizationId || !viewerUserId) return empty;
 
@@ -115,6 +122,32 @@ export async function loadMboViewerOrgScope(
     roleName,
   };
 
+  const immediateSuperior = resolveImmediateSuperior({
+    viewerMemberId: viewer.id,
+    departments: nodes.map((n) => ({
+      id: n.id,
+      name: n.name,
+      parentId: n.parentId,
+    })),
+    placements: departmentMembers.map((dm) => ({
+      memberId: dm.member_id,
+      departmentId: dm.department_id,
+      scopeType: dm.scope_type,
+    })),
+    members: members.map((m) => {
+      const orgRole =
+        (m.organization_role_id && roleById.get(m.organization_role_id)) ||
+        (m.custom_role_id && roleById.get(m.custom_role_id)) ||
+        null;
+      return {
+        id: m.id,
+        userId: m.user_id,
+        displayName: m.name || m.email || '멤버',
+        roleName: orgRole?.name ?? null,
+      };
+    }),
+  });
+
   return {
     viewerMemberId: viewer.id,
     leadDepartmentPaths,
@@ -127,6 +160,7 @@ export async function loadMboViewerOrgScope(
       return isSubtreeLeaderOfUser(viewer.id, targetUserId, assignments, memberships);
     },
     goalActor,
+    immediateSuperior,
   };
 }
 

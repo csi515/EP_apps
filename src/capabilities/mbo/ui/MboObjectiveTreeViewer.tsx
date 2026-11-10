@@ -134,7 +134,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
             type="button"
             disabled={goalsLocked}
             data-testid="mbo-create-objective-open"
-            title={goalsLocked ? '목표 잠금 기간에는 새 목표를 등록할 수 없습니다.' : undefined}
+            title={goalsLocked ? '목표 수정 마감 기간에는 새 목표를 등록할 수 없습니다.' : undefined}
             onClick={() => {
               if (goalsLocked) return;
               onOpenCreateModal();
@@ -181,7 +181,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                         : '비공개'}
                   </span>
                   <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded-full">
-                    가중치 {obj.weight}%
+                    비중 {obj.weight}%
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -254,7 +254,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                     <button
                       type="button"
                       disabled={goalsLocked}
-                      title={goalsLocked ? '목표 잠금 기간에는 수정할 수 없습니다.' : undefined}
+                      title={goalsLocked ? '목표 수정 마감 기간에는 수정할 수 없습니다.' : undefined}
                       onClick={() => {
                         if (goalsLocked) return;
                         onOpenRevise?.(obj.id);

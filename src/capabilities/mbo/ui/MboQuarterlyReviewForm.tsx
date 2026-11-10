@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { formatPeriodYm } from '../domain/mboMonthlyCheckin';
+import { MBO_COPY } from './mboUiCopy';
 
 export interface ProgressLogItem {
   id: string;
@@ -98,9 +99,9 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
       setLogIssues('');
       setLogNextSteps('');
       setShowLogModal(false);
-      showToast(`${periodYm} 월별 체크인이 저장되었습니다.`, 'success');
+      showToast(MBO_COPY.monthlyReportSaved(periodYm), 'success');
     } catch (cause) {
-      showToast(cause instanceof Error ? cause.message : '체크인 저장 실패', 'error');
+      showToast(cause instanceof Error ? cause.message : MBO_COPY.monthlyReportSaveFailed, 'error');
     } finally {
       setBusy(false);
     }
@@ -124,9 +125,9 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
         content: feedbackInput.trim(),
       });
       setFeedbackInput('');
-      showToast('상사 피드백이 등록되었습니다.', 'success');
+      showToast('의견이 등록되었습니다.', 'success');
     } catch (cause) {
-      showToast(cause instanceof Error ? cause.message : '피드백 저장 실패', 'error');
+      showToast(cause instanceof Error ? cause.message : '의견 저장에 실패했습니다.', 'error');
     } finally {
       setBusy(false);
     }
@@ -139,12 +140,12 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
         <div>
           <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 mb-1">
             <FolderKanban className="w-3.5 h-3.5" />
-            <span>월별 체크</span>
+            <span>{MBO_COPY.monthlyReport}</span>
           </div>
           <h2 className="text-base font-extrabold text-slate-900" data-testid="mbo-monthly-project-title">
             {projectTitle}
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">월별 진척 체크인 및 상사 피드백 루프</p>
+          <p className="text-xs text-slate-500 mt-0.5">{MBO_COPY.monthlyReportHint}</p>
         </div>
 
         <button
@@ -154,20 +155,19 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
           className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>월별 체크인 등록</span>
+          <span>{MBO_COPY.monthlyReportWrite}</span>
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* 좌측: 분기별 진행 로그 타임라인 (2열) */}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            월별 체크인 이력 ({filteredLogs.length}건)
+            {MBO_COPY.monthlyReportHistory} ({filteredLogs.length}건)
           </h3>
 
           {filteredLogs.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center text-xs text-slate-400">
-              등록된 진행 일지가 없습니다. 첫 번째 성과를 기록해보세요.
+              아직 진척 보고가 없습니다. 이번 달에 한 일을 남겨 보세요.
             </div>
           ) : (
             filteredLogs.map((log) => (
@@ -218,13 +218,13 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
         {/* 우측: 상사 피드백 & 코멘트 스레드 (1열) */}
         <div className="space-y-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-            피드백 & 코멘트 ({filteredFeedbacks.length}건)
+            상사 의견 ({filteredFeedbacks.length}건)
           </h3>
 
           <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs space-y-4">
             <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
               {filteredFeedbacks.length === 0 ? (
-                <p className="text-center py-6 text-xs text-slate-400">아직 등록된 피드백이 없습니다.</p>
+                <p className="text-center py-6 text-xs text-slate-400">아직 등록된 의견이 없습니다.</p>
               ) : (
                 filteredFeedbacks.map((fb) => (
                   <div
@@ -282,7 +282,7 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
               <textarea
                 value={feedbackInput}
                 onChange={(e) => setFeedbackInput(e.target.value)}
-                placeholder="실무자에게 전할 구체적 피드백이나 지시사항을 입력하세요..."
+                placeholder="팀원에게 전할 의견이나 요청을 적어 주세요..."
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 resize-none h-20 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
@@ -304,7 +304,7 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
       {showLogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-100">
-            <h3 className="text-base font-extrabold text-slate-900">월별 체크인 작성</h3>
+            <h3 className="text-base font-extrabold text-slate-900">{MBO_COPY.monthlyReportWrite}</h3>
             <form onSubmit={handleLogSubmit} className="space-y-3.5" data-testid="mbo-monthly-checkin-form">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">대상 월 (YYYY-MM)</label>
@@ -376,7 +376,7 @@ export const MboQuarterlyReviewForm: React.FC<MboQuarterlyReviewFormProps> = ({
                   disabled={busy}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs disabled:opacity-40"
                 >
-                  {busy ? '저장 중…' : '월별 체크인 저장'}
+                  {busy ? '저장 중…' : MBO_COPY.monthlyReportSave}
                 </button>
               </div>
             </form>

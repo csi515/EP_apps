@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { CanAccess, useTranslate } from '@refinedev/core';
 import {
   Users,
@@ -34,10 +35,9 @@ import {
   countGrantedCompanyAppUsage,
 } from '@/pages/workspace/companyAppAccess';
 import { FEATURE_OPTION_I18N } from '@/core/i18n/epAppsMessages';
-import { MemberAppAccessBulkModal } from '@/pages/members/MemberAppAccessBulkModal';
-import { MemberFeaturePermissionModal } from '@/pages/members/MemberFeaturePermissionModal';
 import { MemberRoleAssignModal } from '@/pages/members/MemberRoleAssignModal';
 import { MemberRoleRevokeConfirmModal } from '@/pages/members/MemberRoleRevokeConfirmModal';
+import { buildStaffAccessPath } from '@/pages/workspace/staffAccess/staffAccessNav';
 
 function formatAuditAction(action: string): string {
   if (action === 'ROLE_ASSIGNED') return '직급 부여';
@@ -69,9 +69,6 @@ export function MemberList(): React.JSX.Element {
   const [submitting, setSubmitting] = useState(false);
 
   const [revokeTarget, setRevokeTarget] = useState<DynamicMemberRow | null>(null);
-
-  const [featureTarget, setFeatureTarget] = useState<DynamicMemberRow | null>(null);
-  const [bulkAppAccessOpen, setBulkAppAccessOpen] = useState(false);
 
   const FEATURE_ASSIGNMENT_OPTIONS = COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS;
   const appUsageTotal = COMPANY_APP_USAGE_ASSIGNMENT_OPTIONS.length;
@@ -197,14 +194,13 @@ export function MemberList(): React.JSX.Element {
 
         <div className="flex items-center gap-2">
           <CanAccess resource="members" action="assign_role">
-            <button
-              type="button"
-              onClick={() => setBulkAppAccessOpen(true)}
+            <Link
+              to={buildStaffAccessPath({ mode: 'admin' })}
               className="flex min-h-10 items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-semibold text-indigo-800 hover:bg-indigo-100"
             >
               <Users className="h-4 w-4" />
               {translate('ep.members.bulkOpen')}
-            </button>
+            </Link>
           </CanAccess>
           <button
             type="button"
@@ -417,14 +413,16 @@ export function MemberList(): React.JSX.Element {
                             </span>
                           ) : (
                             <div className="flex items-center justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => setFeatureTarget(member)}
+                              <Link
+                                to={buildStaffAccessPath({
+                                  mode: 'admin',
+                                  memberId: member.id,
+                                })}
                                 className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-indigo-800 transition hover:bg-indigo-50"
                               >
                                 <Shield className="h-3.5 w-3.5" />
                                 {translate('ep.members.action.appPerm')}
-                              </button>
+                              </Link>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -538,25 +536,6 @@ export function MemberList(): React.JSX.Element {
         </section>
       ) : null}
 
-      {/* 앱·직무 권한 (개별) */}
-      <MemberFeaturePermissionModal
-        member={featureTarget}
-        selfUserId={activeUser?.id ?? null}
-        onClose={() => setFeatureTarget(null)}
-        onError={setError}
-        onMemberUpdated={(updated) => {
-          setFeatureTarget(updated);
-          setMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-        }}
-      />
-
-      <MemberAppAccessBulkModal
-        open={bulkAppAccessOpen}
-        members={members}
-        onClose={() => setBulkAppAccessOpen(false)}
-        onError={setError}
-        onMembersUpdated={setMembers}
-      />
     </WorkPageFrame>
   );
 }

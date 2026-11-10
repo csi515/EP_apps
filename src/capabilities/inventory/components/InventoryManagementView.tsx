@@ -67,7 +67,10 @@ export interface InventoryManagementViewProps {
   defaultItemType?: 'goods' | 'textbook' | 'consumable';
   allowedItemTypes?: ('goods' | 'textbook' | 'consumable')[];
   itemTypeLabel?: string;
+  skuColumnLabel?: string;
   showItemTypeFilter?: boolean;
+  /** true면 카페·학원 데모 품목 시드를 사용하지 않음 (현장 워크스페이스) */
+  disableDemoCatalogFallback?: boolean;
 }
 
 const DEFAULT_INVENTORY_ITEMS: (InventoryItem & { location?: WarehouseLocation })[] = [
@@ -176,7 +179,9 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
   defaultItemType,
   allowedItemTypes,
   itemTypeLabel = '품목',
+  skuColumnLabel = 'SKU',
   showItemTypeFilter = true,
+  disableDemoCatalogFallback = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'items' | 'lots' | 'audit'>('items');
   const [searchTerm, setSearchTerm] = useState('');
@@ -207,7 +212,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
       const saved = readLocalInventoryJson(STORAGE_KEY_ITEMS, LEGACY_STORAGE_KEY_ITEMS);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return DEFAULT_INVENTORY_ITEMS;
+    return disableDemoCatalogFallback ? [] : DEFAULT_INVENTORY_ITEMS;
   });
 
   const [lots, setLots] = useState<(StockLotItem & { location?: WarehouseLocation })[]>(() => {
@@ -215,7 +220,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
       const saved = readLocalInventoryJson(STORAGE_KEY_LOTS, LEGACY_STORAGE_KEY_LOTS);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return DEFAULT_LOTS;
+    return disableDemoCatalogFallback ? [] : DEFAULT_LOTS;
   });
 
   const items = useMemo(() => {
@@ -239,6 +244,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
 
   // 실사 대사표 데이터 상태
   const [auditQuantities, setAuditQuantities] = useState<Record<string, number>>(() => {
+    if (disableDemoCatalogFallback) return {};
     const init: Record<string, number> = {};
     DEFAULT_INVENTORY_ITEMS.forEach((it) => {
       init[it.id] = it.currentStock;
@@ -436,7 +442,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder={`${itemTypeLabel}명, SKU, 바코드 검색`}
+                  placeholder={`${itemTypeLabel}, ${skuColumnLabel}, 바코드 검색`}
                   className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -480,7 +486,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
-                    <th className="px-4 py-3">SKU</th>
+                    <th className="px-4 py-3">{skuColumnLabel}</th>
                     <th className="px-4 py-3">품목명</th>
                     <th className="px-4 py-3">물리적 적재 위치 (Zone / Rack / Bin)</th>
                     <th className="px-4 py-3">현재고 / 안전재고</th>
@@ -664,7 +670,9 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <tr>
-                    <th className="px-4 py-3">품목명 / SKU</th>
+                    <th className="px-4 py-3">
+                      {itemTypeLabel} / {skuColumnLabel}
+                    </th>
                     <th className="px-4 py-3">전산 현재고</th>
                     <th className="px-4 py-3">현장 실사 수량</th>
                     <th className="px-4 py-3">수량 차이</th>

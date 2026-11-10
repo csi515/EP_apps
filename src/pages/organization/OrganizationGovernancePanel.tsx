@@ -8,16 +8,16 @@ const SCOPE_OPTIONS: DepartmentScopeType[] = ['SELF_ONLY', 'DESCENDANTS', 'GLOBA
 
 export const SCOPE_LABELS: Record<DepartmentScopeType, { title: string; hint: string }> = {
   SELF_ONLY: {
-    title: '구성원 (해당 조직만)',
-    hint: '소속 조직의 구성원으로 배치됩니다. MBO는 본인 목표 중심입니다.',
+    title: ORG_CHART_COPY.scopeMember,
+    hint: '이 조직의 구성원으로 배치됩니다. MBO는 본인 목표 중심입니다.',
   },
   DESCENDANTS: {
-    title: '조직 리더 (하위 조직 포함)',
-    hint: '이 조직과 모든 하위 조직의 인원·MBO를 별도 위임 없이 관리합니다 (팀장·그룹장 등).',
+    title: ORG_CHART_COPY.scopeLeader,
+    hint: '이 조직과 하위 조직의 인원·목표를 관리합니다 (팀장·그룹장 등).',
   },
   GLOBAL: {
-    title: '전사 스코프 (임원)',
-    hint: '조직도 전체 데이터를 포괄합니다. 전사 운영과 별개로 데이터 범위만 넓힙니다.',
+    title: ORG_CHART_COPY.scopeGlobal,
+    hint: '조직도 전체 데이터를 열람합니다. 운영 전권과는 별개입니다.',
   },
 };
 
@@ -34,6 +34,8 @@ interface Props {
   departmentMembers: DepartmentMemberRow[];
   roles: DynamicRoleRow[];
   selectedDepartmentId?: string | null;
+  /** 상세 패널 안에 넣을 때 제목·회수 블록을 줄임 */
+  compact?: boolean;
   onAssignScope: (input: {
     departmentId: string;
     memberId: string;
@@ -47,9 +49,10 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
   canManage,
   nodes,
   members,
-  departmentMembers,
+  departmentMembers: _departmentMembers,
   roles,
   selectedDepartmentId,
+  compact = false,
   onAssignScope,
   onRevokeRole,
 }) => {
@@ -57,13 +60,14 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
   const [memberId, setMemberId] = useState('');
   const [customRoleId, setCustomRoleId] = useState('');
   const [scopeType, setScopeType] = useState<DepartmentScopeType>('SELF_ONLY');
+  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [showRevoke, setShowRevoke] = useState(false);
 
   React.useEffect(() => {
     if (selectedDepartmentId) setDepartmentId(selectedDepartmentId);
   }, [selectedDepartmentId]);
-  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   const staffMembers = members.filter((member) => member.role !== 'owner');
 
@@ -72,7 +76,7 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
     setMessage(null);
     try {
       await action();
-      setMessage('저장되었습니다. 권한 변경 시 재로그인이 필요할 수 있습니다.');
+      setMessage(ORG_CHART_COPY.placeSaved);
     } catch (cause) {
       setMessage(cause instanceof Error ? cause.message : '요청에 실패했습니다.');
     } finally {
@@ -80,37 +84,40 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
     }
   }
 
-  const deptMemberRows = departmentId
-    ? departmentMembers.filter((row) => row.department_id === departmentId)
-    : departmentMembers;
-
   if (!canManage) return null;
 
   return (
-    <section className="space-y-6 rounded-2xl border border-slate-200 bg-white p-4 lg:mt-0" aria-label="조직 권한 관리">
-      {message ? <p className="text-sm text-slate-600">{message}</p> : null}
+    <section
+      className={compact ? 'space-y-3' : 'space-y-6 rounded-2xl border border-slate-200 bg-white p-4'}
+      aria-label={ORG_CHART_COPY.placePeople}
+    >
+      {message ? <p className="text-xs font-medium text-slate-600">{message}</p> : null}
 
-      <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-        <h2 className="text-sm font-semibold text-slate-900">부서원 · 직급 · 스코프</h2>
-        <label className="block text-sm">
-          부서
-          <select
-            className="mt-1 min-h-11 w-full rounded-lg border px-3"
-            value={departmentId}
-            onChange={(event) => setDepartmentId(event.target.value)}
-          >
-            <option value="">선택</option>
-            {nodes.map((node) => (
-              <option key={node.id} value={node.id}>
-                {node.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm">
+      <div className={compact ? 'space-y-3' : 'space-y-3 rounded-2xl border border-slate-200 p-4'}>
+        {!compact ? (
+          <h2 className="text-sm font-semibold text-slate-900">{ORG_CHART_COPY.placePeople}</h2>
+        ) : null}
+        {!compact || !selectedDepartmentId ? (
+          <label className="block text-xs font-bold text-slate-700">
+            조직
+            <select
+              className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
+              value={departmentId}
+              onChange={(event) => setDepartmentId(event.target.value)}
+            >
+              <option value="">선택</option>
+              {nodes.map((node) => (
+                <option key={node.id} value={node.id}>
+                  {node.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        <label className="block text-xs font-bold text-slate-700">
           직원
           <select
-            className="mt-1 min-h-11 w-full rounded-lg border px-3"
+            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
             value={memberId}
             onChange={(event) => setMemberId(event.target.value)}
           >
@@ -122,14 +129,14 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             ))}
           </select>
         </label>
-        <label className="block text-sm">
-          직급 (organization_roles)
+        <label className="block text-xs font-bold text-slate-700">
+          {ORG_CHART_COPY.roleLabel}
           <select
-            className="mt-1 min-h-12 w-full rounded-lg border px-3"
+            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
             value={customRoleId}
             onChange={(event) => setCustomRoleId(event.target.value)}
           >
-            <option value="">변경 없음</option>
+            <option value="">{ORG_CHART_COPY.roleUnchanged}</option>
             {roles.map((role) => (
               <option key={role.id} value={role.id}>
                 {role.name}
@@ -137,10 +144,10 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             ))}
           </select>
         </label>
-        <label className="block text-sm">
-          <span className="font-medium text-slate-800">{ORG_CHART_COPY.scope}</span>
+        <label className="block text-xs font-bold text-slate-700">
+          {ORG_CHART_COPY.scope}
           <select
-            className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm focus:border-indigo-500 focus:outline-none"
+            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
             value={scopeType}
             onChange={(event) => setScopeType(event.target.value as DepartmentScopeType)}
           >
@@ -150,12 +157,12 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-[11px] text-indigo-600">※ {SCOPE_LABELS[scopeType].hint}</p>
+          <p className="mt-1 text-[11px] font-medium text-slate-500">{SCOPE_LABELS[scopeType].hint}</p>
         </label>
         <button
           type="button"
           disabled={busy || !departmentId || !memberId}
-          className="min-h-11 rounded-lg bg-slate-900 px-4 text-sm text-white disabled:opacity-40"
+          className="min-h-12 w-full rounded-xl bg-slate-900 px-4 text-xs font-bold text-white disabled:opacity-40"
           onClick={() =>
             void run(() =>
               onAssignScope({
@@ -167,44 +174,38 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             )
           }
         >
-          배정 (세션 갱신)
+          {ORG_CHART_COPY.placeSave}
         </button>
-        <ul className="space-y-2 text-xs text-slate-600">
-          {deptMemberRows.map((row) => {
-            const member = members.find((m) => m.id === row.member_id);
-            const roleName = roles.find((r) => r.id === row.custom_role_id)?.name;
-            return (
-              <li key={row.id} className="min-h-10 rounded-lg bg-slate-50 px-2 py-2">
-                {member ? memberLabel(member) : row.member_id.slice(0, 8)} ·{' '}
-                {SCOPE_LABELS[row.scope_type]?.title ?? row.scope_type}
-                {roleName ? ` · ${roleName}` : ''}
-              </li>
-            );
-          })}
-          {deptMemberRows.length === 0 ? (
-            <li className="text-slate-400">선택한 부서에 배정된 구성원이 없습니다.</li>
-          ) : null}
-        </ul>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-slate-200 p-4">
-        <h2 className="text-sm font-semibold text-slate-900">직급 회수</h2>
-        <p className="text-xs text-amber-700">{ORG_CHART_COPY.revokeWarn}</p>
-        <ul className="space-y-2">
-          {staffMembers.map((member) => (
-            <li key={member.id} className="flex min-h-11 items-center justify-between gap-2">
-              <span className="text-sm">{memberLabel(member)}</span>
-              <button
-                type="button"
-                className="min-h-11 rounded-lg border border-rose-300 px-3 text-sm text-rose-700"
-                disabled={busy}
-                onClick={() => setRevokeTarget(member.id)}
-              >
-                권한 회수
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className={compact ? 'space-y-2' : 'space-y-3 rounded-2xl border border-slate-200 p-4'}>
+        <button
+          type="button"
+          className="text-xs font-bold text-slate-600 underline"
+          onClick={() => setShowRevoke((v) => !v)}
+        >
+          {showRevoke ? '직급 회수 닫기' : ORG_CHART_COPY.revokeTitle}
+        </button>
+        {showRevoke ? (
+          <>
+            <p className="text-xs text-amber-800">{ORG_CHART_COPY.revokeWarn}</p>
+            <ul className="space-y-2">
+              {staffMembers.map((member) => (
+                <li key={member.id} className="flex min-h-11 items-center justify-between gap-2">
+                  <span className="text-sm">{memberLabel(member)}</span>
+                  <button
+                    type="button"
+                    className="min-h-11 rounded-xl border border-rose-200 px-3 text-xs font-bold text-rose-700"
+                    disabled={busy}
+                    onClick={() => setRevokeTarget(member.id)}
+                  >
+                    {ORG_CHART_COPY.revokeAction}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
       </div>
 
       {revokeTarget ? (
@@ -213,11 +214,11 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
             <p className="text-sm text-slate-800">{ORG_CHART_COPY.revokeWarn}</p>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" className="min-h-11 px-4" onClick={() => setRevokeTarget(null)}>
-                취소
+                {ORG_CHART_COPY.cancel}
               </button>
               <button
                 type="button"
-                className="min-h-11 rounded-lg bg-rose-700 px-4 text-white"
+                className="min-h-11 rounded-xl bg-rose-700 px-4 text-sm font-bold text-white"
                 disabled={busy}
                 onClick={() => {
                   const target = revokeTarget;
@@ -225,7 +226,7 @@ export const OrganizationGovernancePanel: React.FC<Props> = ({
                   void run(() => onRevokeRole(target));
                 }}
               >
-                회수 실행
+                {ORG_CHART_COPY.revokeConfirm}
               </button>
             </div>
           </div>

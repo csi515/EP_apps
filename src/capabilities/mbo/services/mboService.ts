@@ -120,12 +120,13 @@ export class MboService {
    * 목표 생성 (순환 참조 검증 포함)
    */
   static async createObjective(
-    payload: MboObjectiveInsert
+    payload: MboObjectiveInsert,
+    options: { bypassGoalCycleLock?: boolean } = {},
   ): Promise<MboObjectiveRow> {
     const client = getCoreClient();
     const cycle = await getMboCycleSettings(payload.organization_id);
-    if (areGoalsLocked(cycle, new Date())) {
-      throw new Error('목표 잠금 기간입니다. 새 목표를 등록할 수 없습니다.');
+    if (areGoalsLocked(cycle, new Date()) && !options.bypassGoalCycleLock) {
+      throw new Error('목표 수정 마감 기간에는 새 목표를 등록할 수 없습니다.');
     }
     if (payload.parent_id) {
       const all = await this.listObjectives(payload.organization_id);
@@ -163,7 +164,7 @@ export class MboService {
     id: string,
     organizationId: string,
     payload: MboObjectiveUpdate,
-    options: { isManager?: boolean } = {}
+    options: { isManager?: boolean; bypassGoalCycleLock?: boolean } = {}
   ): Promise<MboObjectiveRow> {
     const client = getCoreClient();
     const all = await this.listObjectives(organizationId);
@@ -193,8 +194,8 @@ export class MboService {
       payload.start_date !== undefined ||
       payload.target_date !== undefined ||
       payload.parent_id !== undefined;
-    if (goalFieldsChanging && areGoalsLocked(cycle, new Date())) {
-      throw new Error('목표 잠금 기간입니다. 목표 문장과 핵심 지표는 수정할 수 없습니다.');
+    if (goalFieldsChanging && areGoalsLocked(cycle, new Date()) && !options.bypassGoalCycleLock) {
+      throw new Error('목표 수정 마감 기간에는 목표 문구·핵심 지표를 고칠 수 없습니다.');
     }
 
     // 상태 전이 검사
@@ -248,7 +249,10 @@ export class MboService {
       rejection_reason: action === 'reject' ? rejectionReason || '관리자 반려' : null,
     };
 
-    return this.updateObjective(id, organizationId, payload, { isManager: true });
+    return this.updateObjective(id, organizationId, payload, {
+      isManager: true,
+      bypassGoalCycleLock: true,
+    });
   }
 
   /**
