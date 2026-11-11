@@ -5,13 +5,6 @@ export type LoginLocale = 'ko' | 'ja';
 export type LoginLandingCopy = {
   heroTitleLine1: string;
   heroTitleHighlight: string;
-  heroDescription: string;
-  featureApprovalTitle: string;
-  featureApprovalBody: string;
-  featureOpsTitle: string;
-  featureOpsBody: string;
-  securityRls: string;
-  securityAccount: string;
   extraLoginTitle: string;
   extraLoginBody: string;
   formTitle: string;
@@ -36,14 +29,6 @@ export type LoginLandingCopy = {
 const ko: LoginLandingCopy = {
   heroTitleLine1: '사내에서 만든 업무 앱을',
   heroTitleHighlight: '한곳에서 실행합니다',
-  heroDescription:
-    '결재, 안전·SOP, 현장 자재, 공용자원을 EP 안에서 바로 이어갑니다.',
-  featureApprovalTitle: '전자 결재',
-  featureApprovalBody: '기안·승인·반려를 한 흐름으로 처리합니다.',
-  featureOpsTitle: '현장 운영',
-  featureOpsBody: '안전·SOP, 현장 자재, 공용자원을 한 화면에서 다룹니다.',
-  securityRls: 'Row Level Security (RLS) 테넌트 격리',
-  securityAccount: '계정 탈취 방어 내장',
   extraLoginTitle: '추가 로그인이 필요합니다',
   extraLoginBody:
     '회사 EP(그룹웨어)에 이미 로그인되어 있어도, 이 업무 앱은 별도 계정입니다. 아래에서 한 번 더 로그인해야 앱을 실행할 수 있습니다.',
@@ -69,14 +54,6 @@ const ko: LoginLandingCopy = {
 const ja: LoginLandingCopy = {
   heroTitleLine1: '社内で作った業務アプリを',
   heroTitleHighlight: 'ひとつの場所で実行します',
-  heroDescription:
-    '承認、安全・SOP、現場資材、共有リソースを EP の中でそのままつなげます。',
-  featureApprovalTitle: '電子承認',
-  featureApprovalBody: '起案・承認・差戻しをひとつの流れで処理します。',
-  featureOpsTitle: '現場運営',
-  featureOpsBody: '安全・SOP、現場資材、共有リソースを一つの画面で扱います。',
-  securityRls: 'Row Level Security (RLS) テナント分離',
-  securityAccount: 'アカウント乗っ取り防御を内蔵',
   extraLoginTitle: '追加ログインが必要です',
   extraLoginBody:
     '会社の EP（グループウェア）にすでにログインしていても、この業務アプリは別アカウントです。下で再度ログインするとアプリを実行できます。',

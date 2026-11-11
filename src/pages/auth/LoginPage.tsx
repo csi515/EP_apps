@@ -4,10 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Layers,
   Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  FileCheck,
-  Warehouse,
   Info,
 } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -136,10 +132,6 @@ export const LoginPage: React.FC = () => {
               {copy.heroTitleHighlight}
             </span>
           </h1>
-          <p className="text-sm xl:text-base text-slate-400 leading-relaxed max-w-lg">
-            {language === 'ko' ? `${appBrand.description}. ` : ''}
-            {copy.heroDescription}
-          </p>
 
           <div
             data-testid="extra-login-notice-desktop"
@@ -154,43 +146,6 @@ export const LoginPage: React.FC = () => {
                 {copy.extraLoginBody}
               </p>
             </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 grid grid-cols-2 gap-4 my-8">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 mb-2.5">
-              <FileCheck className="w-4 h-4" />
-            </div>
-            <h4 className="text-xs font-bold text-slate-200 mb-1">
-              {copy.featureApprovalTitle}
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {copy.featureApprovalBody}
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-300 mb-2.5">
-              <Warehouse className="w-4 h-4" />
-            </div>
-            <h4 className="text-xs font-bold text-slate-200 mb-1">
-              {copy.featureOpsTitle}
-            </h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              {copy.featureOpsBody}
-            </p>
-          </div>
-        </div>
-
-        <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
-          <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>{copy.securityRls}</span>
-          </div>
-          <div className="flex items-center space-x-1">
-            <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-            <span>{copy.securityAccount}</span>
           </div>
         </div>
       </div>

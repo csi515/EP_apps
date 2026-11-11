@@ -10,7 +10,10 @@ import {
   dayRange,
   isCafeteriaClosedOn,
   isMealSlotWritable,
+  isDayChecked,
+  listOperatingDatesInMonth,
   listOperatingDatesInRange,
+  listWritableSlotsForDay,
   mealStatusLabel,
   monthRange,
   resolveMealCellForKitchen,
@@ -136,6 +139,44 @@ assert.deepEqual(operating, [
   '2026-10-15',
   '2026-10-16',
 ]);
+
+const octOperating = listOperatingDatesInMonth(DEFAULT_MEAL_SURVEY_SETTINGS, 2026, 9);
+assert.equal(octOperating.includes('2026-10-15'), true);
+assert.equal(octOperating.includes('2026-10-17'), false);
+assert.equal(octOperating.includes('2026-10-18'), false);
+assert.equal(octOperating[0], '2026-10-01');
+assert.equal(octOperating.at(-1), '2026-10-30');
+
+const beforeCutoff = new Date(2026, 9, 14, 8, 0, 0);
+assert.deepEqual(
+  listWritableSlotsForDay(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-15', ['lunch'], beforeCutoff),
+  ['lunch']
+);
+assert.deepEqual(
+  listWritableSlotsForDay(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-17', ['lunch'], beforeCutoff),
+  [],
+  'closed day has no writable slots'
+);
+
+assert.equal(isDayChecked({}, '2026-10-15', ['lunch']), true, 'unset counts as checked');
+assert.equal(
+  isDayChecked({ '2026-10-15|lunch': 'skipping' }, '2026-10-15', ['lunch']),
+  false
+);
+assert.equal(
+  isDayChecked({ '2026-10-15|lunch': 'eating' }, '2026-10-15', ['lunch']),
+  true
+);
+assert.equal(
+  isDayChecked(
+    { '2026-10-15|lunch': 'skipping', '2026-10-15|dinner': 'eating' },
+    '2026-10-15',
+    ['lunch', 'dinner']
+  ),
+  true,
+  'mixed → checked'
+);
+assert.equal(isDayChecked({}, '2026-10-15', []), false);
 
 assert.equal(
   isMealSlotWritable(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-17', 'lunch', new Date('2026-10-16T08:00:00')),

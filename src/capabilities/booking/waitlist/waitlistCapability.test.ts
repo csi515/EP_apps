@@ -120,7 +120,7 @@ function run() {
   assert.equal(mapped.bookingId, undefined);
   assert.equal(rpcPayloadToWaitlistResult(row).action, 'created');
 
-  const sql = readFileSync(join(here, '../../../../db/postgres/003_ep_apps.sql'), 'utf8');
+  const sql = readFileSync(join(here, '../../../../migrations/domain/003_ep_apps_tables.sql'), 'utf8');
   assert.match(sql, /CREATE TABLE core\.waitlist_entries/);
   assert.match(sql, /uq_waitlist_open_position/);
   assert.match(sql, /uq_waitlist_open_customer/);

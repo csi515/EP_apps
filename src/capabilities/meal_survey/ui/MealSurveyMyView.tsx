@@ -7,9 +7,11 @@ import {
   WEEKDAY_LABELS,
   activeMealSlots,
   cycleMealCellStatus,
-  dayRange,
   isCafeteriaClosedOn,
+  isDayChecked,
   isMealSlotWritable,
+  listOperatingDatesInMonth,
+  listWritableSlotsForDay,
   mealSlotLabel,
   mealStatusLabel,
   monthRange,
@@ -17,14 +19,14 @@ import {
   resolveMealCellForKitchen,
   responseMapKey,
   toDateKey,
-  weekRange,
   type MealCellStatus,
   type MealSlot,
   type MealSurveySettings,
   type WeekdayIndex,
 } from '../domain/mealSurveyEngine';
 import {
-  bulkSkipMealSurveyRange,
+  applyMealSurveyDatesStatus,
+  applyMealSurveyDayStatus,
   clearMealSurveyResponse,
   ensureMealSurveySettings,
   listMyMealSurveyResponses,
@@ -62,14 +64,48 @@ export const MealSurveyMyView: React.FC = () => {
   const [statusByKey, setStatusByKey] = useState<Record<string, MealCellStatus>>({});
   const [loading, setLoading] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [monthBusy, setMonthBusy] = useState(false);
 
   const range = useMemo(() => monthRange(anchor), [anchor]);
+  const year = anchor.getFullYear();
+  const monthIndex = anchor.getMonth();
   const slots = useMemo(() => (settings ? activeMealSlots(settings) : []), [settings]);
   const selectedClosed = useMemo(
     () => (settings ? isCafeteriaClosedOn(settings, selectedDate) : false),
     [settings, selectedDate]
   );
   const selectedWeekday = parseDateKey(selectedDate).getDay() as WeekdayIndex;
+
+  const operatingDates = useMemo(
+    () => (settings ? listOperatingDatesInMonth(settings, year, monthIndex) : []),
+    [settings, year, monthIndex]
+  );
+
+  const checkedDates = useMemo(() => {
+    if (!settings || slots.length === 0) return new Set<string>();
+    const now = new Date();
+    const set = new Set<string>();
+    for (const date of operatingDates) {
+      const writable = listWritableSlotsForDay(settings, date, slots, now);
+      const slotsForCheck = writable.length > 0 ? writable : slots;
+      if (isDayChecked(statusByKey, date, slotsForCheck)) {
+        set.add(date);
+      }
+    }
+    return set;
+  }, [settings, slots, operatingDates, statusByKey]);
+
+  const disabledDates = useMemo(() => {
+    if (!settings || slots.length === 0) return new Set<string>();
+    const now = new Date();
+    const set = new Set<string>();
+    for (const date of operatingDates) {
+      if (listWritableSlotsForDay(settings, date, slots, now).length === 0) {
+        set.add(date);
+      }
+    }
+    return set;
+  }, [settings, slots, operatingDates]);
 
   const reload = useCallback(async () => {
     if (!orgId || !memberId) return;
@@ -96,8 +132,15 @@ export const MealSurveyMyView: React.FC = () => {
   }, [reload]);
 
   function shiftMonth(delta: number) {
-    setAnchor((prev) => {
-      const next = new Date(prev.getFullYear(), prev.getMonth() + delta, 1);
+    setAnchor((prev) => new Date(prev.getFullYear(), prev.getMonth() + delta, 1));
+  }
+
+  function patchLocalDayStatus(mealDate: string, targetSlots: MealSlot[], status: MealCellStatus) {
+    setStatusByKey((prev) => {
+      const next = { ...prev };
+      for (const mealSlot of targetSlots) {
+        next[responseMapKey(mealDate, mealSlot)] = status;
+      }
       return next;
     });
   }
@@ -136,27 +179,72 @@ export const MealSurveyMyView: React.FC = () => {
     }
   }
 
-  async function handleBulkSkip(scope: 'day' | 'week') {
-    if (!orgId || !settings) return;
-    if (scope === 'day' && isCafeteriaClosedOn(settings, selectedDate)) {
-      showToast('선택한 날은 식당 휴무일입니다.', 'info');
+  async function handleDayToggle(mealDate: string) {
+    if (!orgId || !settings || monthBusy || busyKey) return;
+    setSelectedDate(mealDate);
+    if (isCafeteriaClosedOn(settings, mealDate)) {
+      showToast('식당 휴무일입니다.', 'info');
       return;
     }
-    const r = scope === 'day' ? dayRange(parseDateKey(selectedDate)) : weekRange(parseDateKey(selectedDate));
+    const writable = listWritableSlotsForDay(settings, mealDate, slots);
+    if (writable.length === 0) {
+      showToast('해당 날짜의 신청이 모두 마감되었습니다.', 'info');
+      return;
+    }
+    const checked = isDayChecked(statusByKey, mealDate, writable);
+    const nextStatus = checked ? 'skipping' : 'eating';
+    setBusyKey(`day:${mealDate}`);
     try {
-      const result = await bulkSkipMealSurveyRange({
+      await applyMealSurveyDayStatus({
         organizationId: orgId,
-        from: r.from,
-        to: r.to,
+        mealDate,
+        status: nextStatus,
+        slots,
+        settings,
       });
-      showToast(`불참 처리 ${result.skipped_cells}칸 반영`, 'success');
-      await reload();
+      patchLocalDayStatus(mealDate, writable, nextStatus);
     } catch (cause) {
       showErrorToast(cause);
+      await reload();
+    } finally {
+      setBusyKey(null);
     }
   }
 
-  const title = `${anchor.getFullYear()}년 ${anchor.getMonth() + 1}월`;
+  async function handleMonthApply(status: 'eating' | 'skipping') {
+    if (!orgId || !settings || monthBusy) return;
+    const dates = operatingDates.filter(
+      (d) => listWritableSlotsForDay(settings, d, slots).length > 0
+    );
+    if (dates.length === 0) {
+      showToast('변경 가능한 운영일이 없습니다.', 'info');
+      return;
+    }
+    setMonthBusy(true);
+    try {
+      const result = await applyMealSurveyDatesStatus({
+        organizationId: orgId,
+        dates,
+        status,
+        slots,
+        settings,
+      });
+      showToast(
+        status === 'eating'
+          ? `월 전체 식사 ${result.updated_days}일 · ${result.updated_cells}칸 반영`
+          : `월 전체 미식사 ${result.updated_days}일 · ${result.updated_cells}칸 반영`,
+        'success'
+      );
+      await reload();
+    } catch (cause) {
+      showErrorToast(cause);
+      await reload();
+    } finally {
+      setMonthBusy(false);
+    }
+  }
+
+  const title = `${year}년 ${monthIndex + 1}월`;
 
   return (
     <WorkPageFrame width="form">
@@ -164,26 +252,28 @@ export const MealSurveyMyView: React.FC = () => {
         <div>
           <h1 className="text-xl font-semibold text-slate-900">내 식수</h1>
           <p className="mt-1 text-sm text-slate-500">
-            달력에서 날짜를 고른 뒤 끼니를 탭하세요. 식사 → 미식사 → 미응답.
+            날짜를 탭해 체크(식사)하거나 해제(미식사)하세요. 하단에서 끼니별로도 조정할 수 있습니다.
             {settings?.defaultEating
-              ? ' 미응답은 조리 식수에 식사로 집계되니, 불참 시 미식사로 바꿔 주세요.'
+              ? ' 미응답은 조리 식수에 식사로 집계되니, 불참 시 체크를 해제해 주세요.'
               : ' 미응답은 조리 식수에 포함되지 않습니다.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
           <button
             type="button"
-            className="min-h-11 rounded-lg border border-slate-200 px-3 text-slate-700 hover:bg-slate-50"
-            onClick={() => void handleBulkSkip('day')}
+            disabled={monthBusy || loading || !settings}
+            className="min-h-11 rounded-lg border border-emerald-200 bg-emerald-50 px-3 font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+            onClick={() => void handleMonthApply('eating')}
           >
-            선택일 불참
+            월 전체 선택
           </button>
           <button
             type="button"
-            className="min-h-11 rounded-lg border border-slate-200 px-3 text-slate-700 hover:bg-slate-50"
-            onClick={() => void handleBulkSkip('week')}
+            disabled={monthBusy || loading || !settings}
+            className="min-h-11 rounded-lg border border-slate-200 px-3 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            onClick={() => void handleMonthApply('skipping')}
           >
-            이번 주 불참
+            월 전체 해제
           </button>
         </div>
       </header>
@@ -221,7 +311,7 @@ export const MealSurveyMyView: React.FC = () => {
         </button>
       </div>
 
-      <ContentFadeIn motionKey={`${anchor.getFullYear()}-${anchor.getMonth()}`} className="space-y-6">
+      <ContentFadeIn motionKey={`${year}-${monthIndex}`} className="space-y-6">
         {!settings || slots.length === 0 ? (
           <p className="text-sm text-slate-500">
             {loading ? '불러오는 중…' : '제공 중인 식사가 없습니다. 관리자에게 설정을 요청하세요.'}
@@ -230,10 +320,22 @@ export const MealSurveyMyView: React.FC = () => {
           <>
             <MealSurveyMonthCalendar
               settings={settings}
-              year={anchor.getFullYear()}
-              monthIndex={anchor.getMonth()}
+              year={year}
+              monthIndex={monthIndex}
               selectedDate={selectedDate}
-              onSelectDate={(day) => setSelectedDate(day.date)}
+              checkedDates={checkedDates}
+              disabledDates={disabledDates}
+              onSelectDate={(day) => {
+                if (!day.isCurrentMonth) return;
+                if (day.isClosed || disabledDates.has(day.date)) {
+                  setSelectedDate(day.date);
+                  if (disabledDates.has(day.date) && !day.isClosed) {
+                    showToast('해당 날짜의 신청이 모두 마감되었습니다.', 'info');
+                  }
+                  return;
+                }
+                void handleDayToggle(day.date);
+              }}
               renderDayBody={(day) => (
                 <div className="mt-auto flex flex-wrap gap-0.5">
                   {slots.map((slot) => {
@@ -264,7 +366,7 @@ export const MealSurveyMyView: React.FC = () => {
                     식당 휴무
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-500">탭하여 상태 변경</span>
+                  <span className="text-xs text-slate-500">탭하여 끼니별 상태 변경</span>
                 )}
               </div>
 
@@ -284,7 +386,7 @@ export const MealSurveyMyView: React.FC = () => {
                       <button
                         key={slot}
                         type="button"
-                        disabled={busyKey === key || !writable}
+                        disabled={busyKey === key || monthBusy || !writable}
                         onClick={() => void handleCycle(selectedDate, slot)}
                         className={statusButtonClass(
                           status === null && settings.defaultEating ? null : displayStatus,
@@ -306,14 +408,12 @@ export const MealSurveyMyView: React.FC = () => {
             </section>
 
             <p className="text-xs text-slate-500">
-              범례 · <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 align-middle" /> 식사
+              범례 · 체크 = 식사 · 해제 = 미식사 ·{' '}
+              <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 align-middle" /> 식사
               {settings.defaultEating ? '(기본 포함) ' : ' '}
               <span className="inline-block h-2 w-2 rounded-full bg-slate-400 align-middle" /> 미식사{' '}
               <span className="inline-block h-2 w-2 rounded-full bg-slate-200 align-middle" />{' '}
-              {settings.defaultEating
-                ? '미응답(조리 식수=식사)'
-                : '미응답'}{' '}
-              · 회색 칸은 휴무
+              {settings.defaultEating ? '미응답(조리 식수=식사)' : '미응답'} · 회색 칸은 휴무
             </p>
           </>
         )}

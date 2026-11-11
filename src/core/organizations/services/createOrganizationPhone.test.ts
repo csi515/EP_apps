@@ -71,7 +71,7 @@ function run() {
   const sql = readFileSync(
     join(
       here,
-      '../../../../db/postgres/002_tenant.sql'
+      '../../../../migrations/domain/002_core_tenant.sql'
     ),
     'utf8'
   );

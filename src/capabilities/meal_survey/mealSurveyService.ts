@@ -2,6 +2,7 @@ import { getCoreClient } from '@/lib/supabase';
 import {
   DEFAULT_CLOSED_WEEKDAYS,
   DEFAULT_MEAL_SURVEY_SETTINGS,
+  listWritableSlotsForDay,
   normalizeClosedWeekdays,
   type MealResponseStatus,
   type MealSlot,
@@ -235,6 +236,63 @@ export async function bulkSkipMealSurveyRange(input: {
   });
   if (error) throw new Error(error.message);
   return (data ?? { skipped_cells: 0 }) as { skipped_cells: number };
+}
+
+/** 하루의 writable 끼니를 eating|skipping 으로 통일 */
+export async function applyMealSurveyDayStatus(input: {
+  organizationId: string;
+  mealDate: string;
+  status: MealResponseStatus;
+  slots: readonly MealSlot[];
+  settings: MealSurveySettings;
+  now?: Date;
+}): Promise<{ updated_cells: number }> {
+  const writable = listWritableSlotsForDay(
+    input.settings,
+    input.mealDate,
+    input.slots,
+    input.now ?? new Date()
+  );
+  let updated = 0;
+  for (const mealSlot of writable) {
+    await upsertMealSurveyResponse({
+      organizationId: input.organizationId,
+      mealDate: input.mealDate,
+      mealSlot,
+      status: input.status,
+    });
+    updated += 1;
+  }
+  return { updated_cells: updated };
+}
+
+/** 여러 일자에 동일 상태 적용 (월 전체 선택/해제) */
+export async function applyMealSurveyDatesStatus(input: {
+  organizationId: string;
+  dates: readonly string[];
+  status: MealResponseStatus;
+  slots: readonly MealSlot[];
+  settings: MealSurveySettings;
+  now?: Date;
+}): Promise<{ updated_cells: number; updated_days: number }> {
+  let updatedCells = 0;
+  let updatedDays = 0;
+  const now = input.now ?? new Date();
+  for (const mealDate of input.dates) {
+    const result = await applyMealSurveyDayStatus({
+      organizationId: input.organizationId,
+      mealDate,
+      status: input.status,
+      slots: input.slots,
+      settings: input.settings,
+      now,
+    });
+    if (result.updated_cells > 0) {
+      updatedDays += 1;
+      updatedCells += result.updated_cells;
+    }
+  }
+  return { updated_cells: updatedCells, updated_days: updatedDays };
 }
 
 export async function listMealSurveyOverview(

@@ -36,10 +36,11 @@ assert.match(login, /copy\.formTitle|getLoginLandingCopy/);
 assert.match(copy, /LoginLocale|'ko'\s*\|\s*'ja'|getLoginLandingCopy/);
 assert.doesNotMatch(copy, /emailLabelEn|submitLabelEn|Company email|Sign in/);
 
-// 랜딩 카피가 학원 용어가 아닌지
+// 랜딩 카피가 학원 용어가 아닌지 · 필수 안내만 유지
 assert.doesNotMatch(copy, /학원|원생|수강|학부모|출결 패드/);
-assert.match(copy, /결재/);
-assert.match(copy, /현장/);
+assert.doesNotMatch(copy, /heroDescription|featureApproval|securityRls|소규모 현장용/);
+assert.doesNotMatch(login, /appBrand\.description|featureApprovalTitle|securityRls/);
+assert.match(copy, /추가 로그인이 필요합니다/);
 assert.match(copy, /임직원 로그인/);
 
 // 로그인 폼

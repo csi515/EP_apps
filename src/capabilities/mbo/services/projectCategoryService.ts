@@ -52,9 +52,9 @@ export async function listProjectCategories(
 
 export async function ensureDefaultProjectCategories(organizationId: string): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('ensure_default_project_categories' as never, {
+  const { error } = await client.rpc('ensure_default_project_categories', {
     p_org: organizationId,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }
 

@@ -177,6 +177,44 @@ export function listOperatingDatesInRange(
   return listDatesInRange(fromKey, toKey).filter((d) => !isCafeteriaClosedOn(settings, d));
 }
 
+/** year + monthIndex(0–11) 당월 식당 운영일 */
+export function listOperatingDatesInMonth(
+  settings: Pick<MealSurveySettings, 'closedWeekdays' | 'closedDates' | 'openDates'>,
+  year: number,
+  monthIndex: number
+): string[] {
+  const range = monthRange(new Date(year, monthIndex, 1));
+  return listOperatingDatesInRange(settings, range.from, range.to);
+}
+
+/** 해당일·끼니 중 마감 전(writable)인 것만 */
+export function listWritableSlotsForDay(
+  settings: MealSurveySettings,
+  mealDate: string,
+  slots: readonly MealSlot[],
+  now: Date = new Date()
+): MealSlot[] {
+  if (isCafeteriaClosedOn(settings, mealDate)) return [];
+  return slots.filter((slot) => isMealSlotWritable(settings, mealDate, slot, now));
+}
+
+/**
+ * 일자 체크 표시.
+ * writable 활성 끼니가 없으면 false.
+ * writable 끼니가 모두 skipping 이면 해제(false), 그 외(식사·미응답·혼재)면 체크(true).
+ */
+export function isDayChecked(
+  statusByKey: Readonly<Record<string, MealCellStatus>>,
+  mealDate: string,
+  writableSlots: readonly MealSlot[]
+): boolean {
+  if (writableSlots.length === 0) return false;
+  return writableSlots.some((slot) => {
+    const status = statusByKey[responseMapKey(mealDate, slot)] ?? null;
+    return status !== 'skipping';
+  });
+}
+
 export function activeMealSlots(settings: MealSurveySettings): MealSlot[] {
   const slots: MealSlot[] = [];
   if (settings.offerBreakfast) slots.push('breakfast');

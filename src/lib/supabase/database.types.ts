@@ -7183,6 +7183,10 @@ export interface Database {
         Args: { p_organization_id: string; p_campaign_id: string };
         Returns: Json;
       };
+      ensure_default_project_categories: {
+        Args: { p_org: string };
+        Returns: Json;
+      };
       join_waitlist: {
         Args: {
           p_organization_id: string;
