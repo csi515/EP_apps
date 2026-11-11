@@ -1,14 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useList, useCreate, useUpdate } from '@refinedev/core';
-import { HelpCircle, Plus, ShieldCheck, MessageSquare } from 'lucide-react';
+import { HelpCircle, Plus, ShieldCheck, MessageSquare, Search } from 'lucide-react';
 import {
-  generateTicketCode,
   hashAccessPin,
-  verifyAccessPin,
   validateGrievanceSubmission,
   generateBlindReceiptToken,
   sanitizeGrievanceSubmission,
-  getMaskedGrievanceAuthor,
   type AnonymousGrievanceRecord,
   type GrievanceCategory,
   type GrievanceVisibility,
@@ -20,6 +17,10 @@ import { useAuth } from '@/core/auth/AuthProvider';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { Pagination } from '@/shared/components/ui/Pagination';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { getCoreClient } from '@/lib/supabase';
 
 
 function resolveAccessMember(): AccessMember {
@@ -116,87 +117,123 @@ export const GrievanceListPage: React.FC = () => {
     if (page > maxPage) setPage(maxPage);
   }, [visibleRecords.length, pageSize, page]);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = validateGrievanceSubmission(title, content, pin, visibility);
     if (!val.isValid) {
       showToast(val.error || '입력 오류', 'error');
       return;
     }
-
-    const ticketCode = generateTicketCode(records.length + 1);
-    const values: Record<string, unknown> = {
-      ticket_code: ticketCode,
-      category,
-      subject_title: title.trim(),
-      incident_content: content.trim(),
-      evidence_attached: false,
-      status: 'SUBMITTED',
-      submitted_at: new Date().toISOString(),
-      visibility,
-    };
-
-    if (visibility === 'named') {
-      values.author_user_id = user?.id ?? null;
-      values.access_pin_hash = null;
-    } else {
-      values.author_user_id = null;
-      values.access_pin_hash = hashAccessPin(pin.trim());
+    if (!currentOrganization?.id) {
+      showToast('사업장이 선택되지 않았습니다.', 'error');
+      return;
     }
 
-    const sanitizedValues = sanitizeGrievanceSubmission(values);
-    const receiptToken = visibility === 'anonymous' ? generateBlindReceiptToken(ticketCode, pin.trim()) : '';
+    try {
+      const client = getCoreClient();
+      const { data: ticketData, error: ticketError } = await client.rpc(
+        'next_grievance_ticket_code' as never,
+        { p_org: currentOrganization.id } as never
+      );
+      if (ticketError) throw new Error(ticketError.message);
+      const ticketCode = String(ticketData ?? '');
+      if (!ticketCode) throw new Error('접수코드를 발급받지 못했습니다.');
 
-    createRecord(
-      { resource: 'anonymous_grievances', values: sanitizedValues, meta: { schema: 'core' } },
-      {
-        onSuccess: () => {
-          showToast(
-            visibility === 'named'
-              ? `건의가 접수되었습니다. (접수코드: ${ticketCode})`
-              : `익명 제보가 접수되었습니다. (접수코드: ${ticketCode})`,
-            'success'
-          );
-          setIsModalOpen(false);
-          if (visibility === 'anonymous') {
-            setIssuedReceipt({ ticketCode, token: receiptToken });
-          }
-          setTitle('');
-          setContent('');
-          setPin('');
-          setVisibility(defaultVisibility);
-          refetch();
-        },
-        onError: (err) => {
-          showToast(err?.message || '접수 실패', 'error');
-        },
+      const values: Record<string, unknown> = {
+        organization_id: currentOrganization.id,
+        ticket_code: ticketCode,
+        category,
+        subject_title: title.trim(),
+        incident_content: content.trim(),
+        evidence_attached: false,
+        status: 'SUBMITTED',
+        submitted_at: new Date().toISOString(),
+        visibility,
+      };
+
+      if (visibility === 'named') {
+        values.author_user_id = user?.id ?? null;
+        values.access_pin_hash = null;
+      } else {
+        values.author_user_id = null;
+        values.access_pin_hash = await hashAccessPin(pin.trim());
       }
-    );
+
+      const sanitizedValues = sanitizeGrievanceSubmission(values);
+      const receiptToken =
+        visibility === 'anonymous'
+          ? await generateBlindReceiptToken(ticketCode, pin.trim())
+          : '';
+
+      createRecord(
+        { resource: 'anonymous_grievances', values: sanitizedValues, meta: { schema: 'core' } },
+        {
+          onSuccess: () => {
+            showToast(
+              visibility === 'named'
+                ? `건의가 접수되었습니다. (접수코드: ${ticketCode})`
+                : `익명 제보가 접수되었습니다. (접수코드: ${ticketCode})`,
+              'success'
+            );
+            setIsModalOpen(false);
+            if (visibility === 'anonymous') {
+              setIssuedReceipt({ ticketCode, token: receiptToken });
+            }
+            setTitle('');
+            setContent('');
+            setPin('');
+            setVisibility(defaultVisibility);
+            refetch();
+          },
+          onError: (err) => {
+            showToast(err?.message || '접수 실패', 'error');
+          },
+        }
+      );
+    } catch (cause) {
+      showToast(cause instanceof Error ? cause.message : '접수 실패', 'error');
+    }
   };
 
-  
-  const handleInquirySubmit = (e: React.FormEvent) => {
+  const handleInquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setInquiryError('');
     setInquiryResult(null);
-
-    const found = records.find((r) => r.ticket_code === inquiryTicketCode.trim());
-    if (!found) {
-      setInquiryError('해당 접수코드의 제보를 찾을 수 없습니다.');
+    if (!currentOrganization?.id) {
+      setInquiryError('사업장이 선택되지 않았습니다.');
       return;
     }
-
-    if (found.visibility === 'named') {
-      setInquiryResult(found);
-      return;
+    try {
+      const client = getCoreClient();
+      const { data, error } = await client.rpc('inquire_anonymous_grievance' as never, {
+        p_organization_id: currentOrganization.id,
+        p_ticket_code: inquiryTicketCode.trim(),
+        p_pin: inquiryPin.trim() || null,
+      } as never);
+      if (error) {
+        setInquiryError(error.message);
+        return;
+      }
+      const payload = data as {
+        ok?: boolean;
+        error?: string;
+        grievance?: AnonymousGrievanceRecord;
+      } | null;
+      if (!payload?.ok || !payload.grievance) {
+        const code = payload?.error;
+        setInquiryError(
+          code === 'PIN_MISMATCH'
+            ? '비밀 PIN 번호가 일치하지 않습니다.'
+            : code === 'NOT_FOUND'
+              ? '해당 접수코드의 제보를 찾을 수 없습니다.'
+              : '조회에 실패했습니다.'
+        );
+        return;
+      }
+      setInquiryResult(payload.grievance);
+    } catch (cause) {
+      setInquiryError(cause instanceof Error ? cause.message : '조회 실패');
     }
-
-    if (!found.access_pin_hash || !verifyAccessPin(inquiryPin.trim(), found.access_pin_hash)) {
-      setInquiryError('비밀 PIN 번호가 일치하지 않습니다.');
-      return;
-    }
-
-    setInquiryResult(found);
   };
 
   const handleReply = (e: React.FormEvent) => {
@@ -255,110 +292,125 @@ export const GrievanceListPage: React.FC = () => {
               : '본인이 접수한 기명 건의를 확인하고, 새 건의를 작성할 수 있습니다.'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsModalOpen(true)}
-          className="flex min-h-11 items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white hover:bg-rose-700"
-        >
-          <Plus className="h-4 w-4" aria-hidden />
-          새 건의
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            leftIcon={<Search className="h-4 w-4" />}
+            onClick={() => {
+              setInquiryModalOpen(true);
+              setInquiryError('');
+              setInquiryResult(null);
+            }}
+          >
+            접수 조회
+          </Button>
+          <Button
+            variant="primary"
+            className="bg-rose-600 hover:bg-rose-700"
+            leftIcon={<Plus className="h-4 w-4" />}
+            onClick={() => setIsModalOpen(true)}
+          >
+            새 건의
+          </Button>
+        </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-slate-50 font-semibold text-slate-600">
-            <tr>
-              <th className="p-3">접수 번호</th>
-              <th className="p-3">유형</th>
-              <th className="p-3">분류</th>
-              <th className="p-3">제목</th>
-              <th className="p-3">접수일</th>
-              <th className="p-3">상태</th>
-              {isHandler ? <th className="p-3 text-right">조사 / 회신</th> : null}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {isLoading ? (
+      <ContentFadeIn motionKey={`${isHandler ? 'handler' : 'mine'}-${page}`} className="space-y-4">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-slate-50 font-semibold text-slate-600">
               <tr>
-                <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
-                  불러오는 중…
-                </td>
+                <th className="p-3">접수 번호</th>
+                <th className="p-3">유형</th>
+                <th className="p-3">분류</th>
+                <th className="p-3">제목</th>
+                <th className="p-3">접수일</th>
+                <th className="p-3">상태</th>
+                {isHandler ? <th className="p-3 text-right">조사 / 회신</th> : null}
               </tr>
-            ) : visibleRecords.length === 0 ? (
-              <tr>
-                <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
-                  접수된 건의가 없습니다.
-                </td>
-              </tr>
-            ) : (
-              pagedRecords.map((r) => (
-                <tr key={r.id} className="hover:bg-slate-50">
-                  <td className="p-3 font-mono font-bold text-rose-600">{r.ticket_code}</td>
-                  <td className="p-3 text-xs">{r.visibility === 'anonymous' ? '익명' : '기명'}</td>
-                  <td className="p-3">
-                    <span className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
-                      {getCategoryLabel(r.category)}
-                    </span>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {isLoading ? (
+                <tr>
+                  <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                    불러오는 중…
                   </td>
-                  <td className="max-w-sm truncate p-3 font-medium">{r.subject_title}</td>
-                  <td className="p-3 text-slate-500">
-                    {new Date(r.submitted_at).toLocaleDateString('ko-KR')}
-                  </td>
-                  <td className="p-3">
-                    {r.status === 'SUBMITTED' && (
-                      <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                        접수 대기
-                      </span>
-                    )}
-                    {r.status === 'UNDER_INVESTIGATION' && (
-                      <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
-                        조사 진행중
-                      </span>
-                    )}
-                    {r.status === 'RESOLVED' && (
-                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
-                        조치 완료
-                      </span>
-                    )}
-                    {r.investigation_feedback && !isHandler ? (
-                      <p className="mt-1 text-xs text-slate-500">{r.investigation_feedback}</p>
-                    ) : null}
-                  </td>
-                  {isHandler ? (
-                    <td className="p-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTicket(r);
-                          setFeedbackText(r.investigation_feedback || '');
-                          setReplyModalOpen(true);
-                        }}
-                        className="inline-flex min-h-11 items-center gap-1 rounded border px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" aria-hidden /> 회신
-                      </button>
-                    </td>
-                  ) : null}
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : visibleRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                    접수된 건의가 없습니다.
+                  </td>
+                </tr>
+              ) : (
+                pagedRecords.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50">
+                    <td className="p-3 font-mono font-bold text-rose-600">{r.ticket_code}</td>
+                    <td className="p-3 text-xs">{r.visibility === 'anonymous' ? '익명' : '기명'}</td>
+                    <td className="p-3">
+                      <span className="rounded border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                        {getCategoryLabel(r.category)}
+                      </span>
+                    </td>
+                    <td className="max-w-sm truncate p-3 font-medium">{r.subject_title}</td>
+                    <td className="p-3 text-slate-500">
+                      {new Date(r.submitted_at).toLocaleDateString('ko-KR')}
+                    </td>
+                    <td className="p-3">
+                      {r.status === 'SUBMITTED' && (
+                        <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                          접수 대기
+                        </span>
+                      )}
+                      {r.status === 'UNDER_INVESTIGATION' && (
+                        <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
+                          조사 진행중
+                        </span>
+                      )}
+                      {r.status === 'RESOLVED' && (
+                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-800">
+                          조치 완료
+                        </span>
+                      )}
+                      {r.investigation_feedback && !isHandler ? (
+                        <p className="mt-1 text-xs text-slate-500">{r.investigation_feedback}</p>
+                      ) : null}
+                    </td>
+                    {isHandler ? (
+                      <td className="p-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTicket(r);
+                            setFeedbackText(r.investigation_feedback || '');
+                            setReplyModalOpen(true);
+                          }}
+                          className="inline-flex min-h-11 items-center gap-1 rounded border px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" aria-hidden /> 회신
+                        </button>
+                      </td>
+                    ) : null}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {!isLoading && visibleRecords.length > 0 ? (
-        <Pagination
-          current={page}
-          pageSize={pageSize}
-          total={visibleRecords.length}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
-      ) : null}
+        {!isLoading && visibleRecords.length > 0 ? (
+          <Pagination
+            current={page}
+            pageSize={pageSize}
+            total={visibleRecords.length}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
+          />
+        ) : null}
+      </ContentFadeIn>
 
       {replyModalOpen && selectedTicket && isHandler ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -402,7 +454,7 @@ export const GrievanceListPage: React.FC = () => {
               <ShieldCheck className="h-5 w-5" aria-hidden />
               새 건의 작성
             </h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+            <form onSubmit={(e) => void handleCreate(e)} className="space-y-4">
               <fieldset>
                 <legend className="mb-1 text-xs font-semibold text-slate-600">접수 방식 *</legend>
                 <div className="flex gap-3">
@@ -484,6 +536,80 @@ export const GrievanceListPage: React.FC = () => {
           </div>
         </div>
       ) : null}
+
+      <Modal
+        isOpen={Boolean(issuedReceipt)}
+        onClose={() => setIssuedReceipt(null)}
+        title="익명 제보 접수증"
+        description="접수코드와 PIN을 안전한 곳에 보관하세요. 진행 상황은 «접수 조회»에서 확인할 수 있습니다."
+        footer={
+          <Button variant="primary" onClick={() => setIssuedReceipt(null)}>
+            확인
+          </Button>
+        }
+      >
+        {issuedReceipt ? (
+          <div className="space-y-2 rounded-lg bg-slate-50 p-3 text-sm">
+            <p>
+              접수코드:{' '}
+              <span className="font-mono font-bold text-rose-700">{issuedReceipt.ticketCode}</span>
+            </p>
+            <p className="break-all text-xs text-slate-500">영수증 토큰: {issuedReceipt.token}</p>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        isOpen={inquiryModalOpen}
+        onClose={() => setInquiryModalOpen(false)}
+        title="건의 접수 조회"
+        intent="form"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setInquiryModalOpen(false)}>
+              닫기
+            </Button>
+          </div>
+        }
+      >
+        <form onSubmit={(e) => void handleInquirySubmit(e)} className="space-y-3">
+          <label className="block text-xs font-semibold text-slate-600">
+            접수코드 *
+            <input
+              value={inquiryTicketCode}
+              onChange={(e) => setInquiryTicketCode(e.target.value)}
+              className="mt-1 min-h-[44px] w-full rounded-lg border px-3 text-sm font-mono"
+              placeholder="G-0001"
+              required
+            />
+          </label>
+          <label className="block text-xs font-semibold text-slate-600">
+            익명 PIN (익명 제보 시)
+            <input
+              type="password"
+              value={inquiryPin}
+              onChange={(e) => setInquiryPin(e.target.value)}
+              className="mt-1 min-h-[44px] w-full rounded-lg border px-3 font-mono text-sm tracking-widest"
+            />
+          </label>
+          {inquiryError ? <p className="text-sm text-rose-600">{inquiryError}</p> : null}
+          {inquiryResult ? (
+            <div className="space-y-1 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">
+              <p className="font-semibold text-slate-800">{inquiryResult.subject_title}</p>
+              <p className="text-xs text-slate-500">상태: {inquiryResult.status}</p>
+              <p className="whitespace-pre-wrap text-slate-600">{inquiryResult.incident_content}</p>
+              {inquiryResult.investigation_feedback ? (
+                <p className="mt-2 text-xs text-emerald-700">
+                  회신: {inquiryResult.investigation_feedback}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <Button type="submit" variant="primary">
+            조회
+          </Button>
+        </form>
+      </Modal>
     </WorkPageFrame>
   );
 };

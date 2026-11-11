@@ -10,10 +10,15 @@ import {
   type VolunteerSignupRow,
 } from '../volunteerActivityService';
 import {
+  deriveVolunteerStatusAfterCount,
   isVolunteerJoinAllowed,
   remainingVolunteerSlots,
 } from '../domain/volunteerActivityEngine';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { Button } from '@/shared/components/ui/Button';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 
 export const VolunteerListView: React.FC = () => {
   const { currentOrganization, selectedMembership } = useOrganization();
@@ -67,6 +72,17 @@ export const VolunteerListView: React.FC = () => {
     setBusyId(activityId);
     try {
       await joinVolunteerActivity(activityId);
+      // 낙관적 상태: 정원 도달 시 closed — 서버도 동일 규칙으로 반영 후 refetch
+      setActivities((prev) =>
+        prev.map((act) => {
+          if (act.id !== activityId) return act;
+          const nextCount = (signupCountByActivity.get(act.id) ?? 0) + 1;
+          return {
+            ...act,
+            status: deriveVolunteerStatusAfterCount(act.capacity, nextCount, act.status),
+          };
+        })
+      );
       showToast('참여 신청이 완료되었습니다.', 'success');
       await reload();
     } catch (cause) {
@@ -81,6 +97,16 @@ export const VolunteerListView: React.FC = () => {
     setBusyId(activityId);
     try {
       await cancelVolunteerSignup(activityId);
+      setActivities((prev) =>
+        prev.map((act) => {
+          if (act.id !== activityId) return act;
+          const nextCount = Math.max(0, (signupCountByActivity.get(act.id) ?? 0) - 1);
+          return {
+            ...act,
+            status: deriveVolunteerStatusAfterCount(act.capacity, nextCount, act.status),
+          };
+        })
+      );
       showToast('참여가 취소되었습니다.', 'success');
       await reload();
     } catch (cause) {
@@ -92,7 +118,7 @@ export const VolunteerListView: React.FC = () => {
   }
 
   return (
-    <WorkPageFrame width="form">
+    <WorkPageFrame width="form" progressActive={loading}>
       <header>
         <h1 className="text-xl font-black text-slate-900">사내 봉사활동</h1>
         <p className="text-sm text-slate-500">
@@ -100,78 +126,76 @@ export const VolunteerListView: React.FC = () => {
         </p>
       </header>
 
-      {loading ? <p className="text-sm text-slate-400">불러오는 중…</p> : null}
+      {loading ? <PageListSkeleton rows={3} /> : null}
 
-      <ul className="space-y-3">
-        {activities.length === 0 && !loading ? (
-          <li className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
-            진행 중인 봉사활동이 없습니다.
-          </li>
-        ) : null}
-        {activities.map((act) => {
-          const count = signupCountByActivity.get(act.id) ?? 0;
-          const joined = mySignupActivityIds.has(act.id);
-          const canJoin = isVolunteerJoinAllowed({
-            status: act.status,
-            capacity: act.capacity,
-            signupCount: count,
-          });
-          const remaining = remainingVolunteerSlots(act.capacity, count);
-          return (
-            <li key={act.id} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="font-bold text-slate-900">{act.title}</p>
-                  <p className="text-xs text-slate-500">
-                    {act.activity_type}
-                    {act.event_date ? ` · ${act.event_date}` : ''}
-                  </p>
-                </div>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                    act.status === 'open'
-                      ? 'bg-emerald-50 text-emerald-800'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {act.status === 'open' ? `모집중 · ${remaining}자리` : '모집마감'}
-                </span>
-              </div>
-              {act.description ? (
-                <p className="text-sm text-slate-600 whitespace-pre-wrap">{act.description}</p>
-              ) : null}
-              <p className="text-xs font-medium text-slate-500">
-                참가 {count}/{act.capacity}명
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {joined ? (
-                  <button
-                    type="button"
-                    disabled={busyId === act.id || act.status === 'cancelled'}
-                    className="min-h-11 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700 disabled:opacity-50"
-                    onClick={() => void handleCancel(act.id)}
-                  >
-                    {busyId === act.id ? '처리 중…' : '참여 취소'}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={!canJoin || !memberId || busyId === act.id}
-                    className="min-h-11 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
-                    onClick={() => void handleJoin(act.id)}
-                  >
-                    {!canJoin
-                      ? '모집 마감'
-                      : busyId === act.id
-                        ? '신청 중…'
-                        : '참여하기'}
-                  </button>
-                )}
-              </div>
+      <ContentFadeIn motionKey={loading ? 'loading' : activities.length}>
+        <ul className="space-y-3">
+          {activities.length === 0 && !loading ? (
+            <li>
+              <EmptyState title="진행 중인 봉사활동이 없습니다." />
             </li>
-          );
-        })}
-      </ul>
+          ) : null}
+          {activities.map((act) => {
+            const count = signupCountByActivity.get(act.id) ?? 0;
+            const joined = mySignupActivityIds.has(act.id);
+            const canJoin = isVolunteerJoinAllowed({
+              status: act.status,
+              capacity: act.capacity,
+              signupCount: count,
+            });
+            const remaining = remainingVolunteerSlots(act.capacity, count);
+            return (
+              <li key={act.id} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="font-bold text-slate-900">{act.title}</p>
+                    <p className="text-xs text-slate-500">
+                      {act.activity_type}
+                      {act.event_date ? ` · ${act.event_date}` : ''}
+                    </p>
+                  </div>
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                      act.status === 'open'
+                        ? 'bg-emerald-50 text-emerald-800'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {act.status === 'open' ? `모집중 · ${remaining}자리` : '모집마감'}
+                  </span>
+                </div>
+                {act.description ? (
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap">{act.description}</p>
+                ) : null}
+                <p className="text-xs font-medium text-slate-500">
+                  참가 {count}/{act.capacity}명
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {joined ? (
+                    <Button
+                      variant="outline"
+                      isLoading={busyId === act.id}
+                      disabled={act.status === 'cancelled'}
+                      onClick={() => void handleCancel(act.id)}
+                    >
+                      참여 취소
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="primary"
+                      isLoading={busyId === act.id}
+                      disabled={!canJoin || !memberId}
+                      onClick={() => void handleJoin(act.id)}
+                    >
+                      {!canJoin ? '모집 마감' : '참여하기'}
+                    </Button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </ContentFadeIn>
     </WorkPageFrame>
   );
 };

@@ -4,6 +4,7 @@ import { Building2, KeyRound, Network, Settings, Shield } from 'lucide-react';
 import { useTranslate } from '@refinedev/core';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 import { usePermissions } from '@/core/auth/usePermissions';
 import { useOptionalOrganization } from '@/core/organizations/OrganizationProvider';
 import {
@@ -83,27 +84,29 @@ export const OrgAdminHubPage: React.FC = () => {
 
   return (
     <WorkPageFrame width="hub">
-      <PageHeader
-        icon={<Building2 className="h-5 w-5" />}
-        title="조직 설정"
-        description="조직도, 직급·권한, 사업장 운영 설정에 접근합니다."
-      />
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {cards.map((card) => (
-          <Link
-            key={card.id}
-            to={card.to}
-            data-testid={`org-admin-card-${card.id}`}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-indigo-200 hover:bg-indigo-50/40 min-h-[44px]"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
-              {card.icon}
-            </div>
-            <h2 className="mt-3 text-sm font-bold text-slate-900">{card.title}</h2>
-            <p className="mt-1 text-xs text-slate-500 leading-relaxed">{card.description}</p>
-          </Link>
-        ))}
-      </div>
+      <ContentFadeIn motionKey="org-admin-hub">
+        <PageHeader
+          icon={<Building2 className="h-5 w-5" />}
+          title="조직 설정"
+          description="조직도, 직급·권한, 사업장 운영 설정에 접근합니다."
+        />
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {cards.map((card) => (
+            <Link
+              key={card.id}
+              to={card.to}
+              data-testid={`org-admin-card-${card.id}`}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-indigo-200 hover:bg-indigo-50/40 min-h-[44px] active:scale-[0.99]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+                {card.icon}
+              </div>
+              <h2 className="mt-3 text-sm font-bold text-slate-900">{card.title}</h2>
+              <p className="mt-1 text-xs text-slate-500 leading-relaxed">{card.description}</p>
+            </Link>
+          ))}
+        </div>
+      </ContentFadeIn>
     </WorkPageFrame>
   );
 };

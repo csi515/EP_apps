@@ -100,6 +100,7 @@ export async function joinVolunteerActivity(activityId: string): Promise<Record<
   return (data ?? {}) as Record<string, unknown>;
 }
 
+/** 현재 사용자 signup 취소 — RPC 인자명은 p_activity_id (구 p_signup_id 아님) */
 export async function cancelVolunteerSignup(activityId: string): Promise<Record<string, unknown>> {
   const client = getCoreClient();
   const { data, error } = await (client as any).rpc('cancel_volunteer_signup', {

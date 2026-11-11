@@ -1,13 +1,20 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, Target, User } from 'lucide-react';
+import { ChevronDown, ChevronRight, CalendarRange, Eye, Target, User } from 'lucide-react';
+import { Button } from '@/shared/components/ui/Button';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 import type { PersonObjectiveBucket } from '../domain/mboTeamBoardEngine';
 import type { MboStatus } from '../domain/mboEngine';
+import { MBO_COPY } from './mboUiCopy';
+
+export type MboTeamBoardEmptyKind = 'no_data' | 'filtered' | 'no_access';
 
 export type MboTeamObjectiveBoardProps = {
   buckets: PersonObjectiveBucket[];
   selectedObjectiveId?: string;
+  emptyKind?: MboTeamBoardEmptyKind;
   onSelectObjective: (id: string) => void;
   onOpenDetail: (id: string) => void;
+  onShowOnSchedule?: (id: string) => void;
 };
 
 function statusDot(status: MboStatus): string {
@@ -18,21 +25,26 @@ function statusDot(status: MboStatus): string {
   return 'bg-slate-400';
 }
 
+function emptyMessage(kind: MboTeamBoardEmptyKind | undefined): string {
+  if (kind === 'filtered') return MBO_COPY.emptyGoalsFiltered;
+  if (kind === 'no_access') return MBO_COPY.emptyGoalsNoAccess;
+  return MBO_COPY.emptyGoalsNoData;
+}
+
 export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
   buckets,
   selectedObjectiveId,
+  emptyKind,
   onSelectObjective,
   onOpenDetail,
+  onShowOnSchedule,
 }) => {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   if (buckets.length === 0) {
     return (
-      <div
-        className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500"
-        data-testid="mbo-team-board-empty"
-      >
-        표시할 목표가 없습니다. 필터를 조정하거나 신규 목표를 등록하세요.
+      <div data-testid="mbo-team-board-empty">
+        <EmptyState title={emptyMessage(emptyKind)} />
       </div>
     );
   }
@@ -79,32 +91,52 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
                   const selected = selectedObjectiveId === obj.id;
                   return (
                     <li key={obj.id}>
-                      <button
-                        type="button"
+                      <div
                         className={[
-                          'flex min-h-12 w-full items-center gap-2 rounded-xl px-2 py-2 text-left transition-colors',
-                          selected ? 'bg-indigo-50 ring-1 ring-indigo-200' : 'hover:bg-slate-50',
+                          'flex min-h-12 w-full items-center gap-2 rounded-xl px-2 py-2',
+                          selected ? 'bg-indigo-50 ring-1 ring-indigo-200' : '',
                         ].join(' ')}
                         style={{ paddingLeft: `${12 + obj.depth * 16}px` }}
-                        onClick={() => {
-                          onSelectObjective(obj.id);
-                          onOpenDetail(obj.id);
-                        }}
                       >
-                        <span
-                          className={`h-2 w-2 shrink-0 rounded-full ${statusDot(obj.status as MboStatus)}`}
-                        />
-                        <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                        <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900">
-                          {obj.title}
-                        </span>
-                        <span className="shrink-0 text-[10px] font-semibold text-slate-500">
-                          {obj.progressRate}%
-                        </span>
-                        <span className="hidden shrink-0 text-[10px] text-slate-400 sm:inline">
-                          ~{obj.targetDate}
-                        </span>
-                      </button>
+                        <button
+                          type="button"
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left hover:opacity-90"
+                          onClick={() => onSelectObjective(obj.id)}
+                        >
+                          <span
+                            className={`h-2 w-2 shrink-0 rounded-full ${statusDot(obj.status as MboStatus)}`}
+                          />
+                          <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                          <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900">
+                            {obj.title}
+                          </span>
+                          <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+                            {obj.progressRate}%
+                          </span>
+                        </button>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon-md"
+                            aria-label={MBO_COPY.openDetail}
+                            title={MBO_COPY.openDetail}
+                            onClick={() => onOpenDetail(obj.id)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          {onShowOnSchedule ? (
+                            <Button
+                              variant="ghost"
+                              size="icon-md"
+                              aria-label={MBO_COPY.showOnSchedule}
+                              title={MBO_COPY.showOnSchedule}
+                              onClick={() => onShowOnSchedule(obj.id)}
+                            >
+                              <CalendarRange className="h-4 w-4" />
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
                     </li>
                   );
                 })}

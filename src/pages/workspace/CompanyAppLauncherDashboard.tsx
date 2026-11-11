@@ -31,6 +31,8 @@ import { listMyPendingApprovalLines } from '@/capabilities/sop_risk_assessment/s
 import { useAuth } from '@/core/auth/AuthProvider';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 import { FEATURE_OPTION_I18N } from '@/core/i18n/epAppsMessages';
 
 export interface CompanyAppTile {
@@ -152,6 +154,34 @@ export const CompanyAppLauncherDashboard: React.FC<{
     hiddenCapabilities,
   ]);
 
+  const myUserId = authUser?.id || user?.id || '';
+
+  const { query: myPendingStepsQuery } = useList<{
+    id: string;
+    request_id: string;
+    status?: string;
+    approver_id?: string | null;
+  }>({
+    resource: 'approval_steps',
+    filters: [
+      { field: 'status', operator: 'eq', value: 'pending' },
+      { field: 'approver_id', operator: 'eq', value: myUserId },
+    ],
+    pagination: { pageSize: 50 },
+    queryOptions: {
+      enabled: Boolean(myUserId) && enabledCaps.includes('approval_workflow'),
+    },
+    errorNotification: false,
+  });
+
+  const myPendingRequestIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const step of myPendingStepsQuery?.data?.data ?? []) {
+      if (step.request_id) ids.add(step.request_id);
+    }
+    return ids;
+  }, [myPendingStepsQuery?.data?.data]);
+
   const { query: approvalsQuery } = useList<{
     id: string;
     title: string;
@@ -163,9 +193,9 @@ export const CompanyAppLauncherDashboard: React.FC<{
     resource: 'approval_requests',
     filters: [{ field: 'status', operator: 'eq', value: 'pending' }],
     sorters: [{ field: 'created_at', order: 'desc' }],
-    pagination: { pageSize: 20 },
+    pagination: { pageSize: 40 },
     queryOptions: {
-      enabled: enabledCaps.includes('approval_workflow'),
+      enabled: enabledCaps.includes('approval_workflow') && myPendingRequestIds.size > 0,
     },
     // 홈 브리핑용 — 네트워크 실패 시 Refine 기본 "Failed to fetch" 토스트 억제
     errorNotification: false,
@@ -191,7 +221,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
   }, [authUser?.id, user?.id, enabledCaps]);
 
   const pendingApprovals: PendingApprovalItem[] = useMemo(() => {
-    const rows = approvalsQuery?.data?.data ?? [];
+    const rows = (approvalsQuery?.data?.data ?? []).filter((r) => myPendingRequestIds.has(r.id));
     const workflowItems = rows.map((r) => ({
       id: r.id,
       title: r.title,
@@ -212,7 +242,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
       },
       ...workflowItems,
     ];
-  }, [approvalsQuery?.data?.data, sopPendingCount]);
+  }, [approvalsQuery?.data?.data, myPendingRequestIds, sopPendingCount]);
 
   const appTiles: CompanyAppTile[] = useMemo(() => {
     const iconCls = 'h-5 w-5 text-white drop-shadow-sm';
@@ -352,6 +382,7 @@ export const CompanyAppLauncherDashboard: React.FC<{
 
   return (
     <WorkPageFrame width="hub" data-testid="company-app-launcher" data-variant={variant}>
+      <ContentFadeIn motionKey={variant}>
       {variant === 'home' ? (
         <section className="mb-8">
           <div className="flex flex-row items-center justify-between gap-3 border-b border-slate-200/80 pb-5">
@@ -427,12 +458,14 @@ export const CompanyAppLauncherDashboard: React.FC<{
               {translate('ep.launcher.empty.body')}
             </p>
             {showAdminEmptyCta ? (
-              <Link
-                to="/workspace/app-access"
-                className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700"
+              <Button
+                variant="primary"
+                size="md"
+                className="mt-5"
+                onClick={() => navigate('/workspace/app-access')}
               >
                 {translate('ep.launcher.empty.adminCta')}
-              </Link>
+              </Button>
             ) : null}
           </div>
         ) : (
@@ -478,13 +511,9 @@ export const CompanyAppLauncherDashboard: React.FC<{
         title={translate('ep.launcher.pendingModalTitle')}
         maxWidth="md"
         footer={
-          <button
-            type="button"
-            onClick={() => setShowApprovalModal(false)}
-            className="w-full min-h-11 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
-          >
+          <Button variant="outline" className="w-full" onClick={() => setShowApprovalModal(false)}>
             {translate('ep.launcher.pendingClose')}
-          </button>
+          </Button>
         }
       >
         <ul className="space-y-2.5">
@@ -504,19 +533,23 @@ export const CompanyAppLauncherDashboard: React.FC<{
                 {translate('ep.launcher.pendingRequester', { name: item.requester })}
               </p>
               <div className="mt-3 flex justify-end">
-                <Link
-                  to={item.to}
-                  onClick={() => setShowApprovalModal(false)}
-                  className="inline-flex items-center gap-1 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700"
+                <Button
+                  variant="primary"
+                  size="sm"
+                  rightIcon={<ChevronRight className="h-3 w-3" />}
+                  onClick={() => {
+                    setShowApprovalModal(false);
+                    navigate(item.to);
+                  }}
                 >
-                  <span>{translate('ep.launcher.pendingOpen')}</span>
-                  <ChevronRight className="h-3 w-3" />
-                </Link>
+                  {translate('ep.launcher.pendingOpen')}
+                </Button>
               </div>
             </li>
           ))}
         </ul>
       </Modal>
+      </ContentFadeIn>
     </WorkPageFrame>
   );
 };

@@ -186,4 +186,49 @@ assert.equal(
   '일반 동료 직원은 PRIVATE MBO를 열람할 수 없어야 함'
 );
 
+// 5. visible 스코프: authorDepartmentPathByOwnerId + evaluatorId
+const visibleWithDeptPath = filterObjectivesForViewer(
+  [
+    {
+      ownerId: 'emp-core-1',
+      visibilityType: 'PRIVATE' as const,
+      deletedAt: null,
+      evaluatorId: null,
+    },
+    {
+      ownerId: 'emp-other',
+      visibilityType: 'PRIVATE' as const,
+      deletedAt: null,
+      evaluatorId: 'u-eval',
+    },
+  ],
+  {
+    scope: 'visible',
+    currentUserId: 'u-lead',
+    currentMemberId: 'm-lead',
+    viewerLeadDepartmentPath: '/root/dev/plat/',
+    authorDepartmentPathByOwnerId: (ownerId) =>
+      ownerId === 'emp-core-1' ? '/root/dev/plat/core/' : '/root/design/brand/',
+  },
+);
+assert.equal(visibleWithDeptPath.length, 1, '부서장 경로 하위 PRIVATE만 열람');
+assert.equal(visibleWithDeptPath[0].ownerId, 'emp-core-1');
+
+const visibleAsEvaluator = filterObjectivesForViewer(
+  [
+    {
+      ownerId: 'emp-other',
+      visibilityType: 'PRIVATE' as const,
+      deletedAt: null,
+      evaluatorId: 'u-eval',
+    },
+  ],
+  {
+    scope: 'visible',
+    currentUserId: 'u-eval',
+    currentMemberId: 'm-eval',
+  },
+);
+assert.equal(visibleAsEvaluator.length, 1, '평가자는 PRIVATE도 열람');
+
 console.log('mboVisibilityEngine.test.ts: ok');

@@ -27,4 +27,5 @@ export const CAPABILITY_LIST_VIEWS: Record<string, CapabilityListView> = {
   'whistleblower-grievances': view('whistleblower_grievance', 'GrievanceListPage', () => import('@/capabilities/whistleblower_grievance')),
   'hazardous-substances': view('hazardous_substance_msds', 'HazardousSubstanceManagementView', () => import('@/capabilities/hazardous_substance_msds')),
   'chemical-usage-logs': view('hazardous_substance_msds', 'HazardousSubstanceManagementView', () => import('@/capabilities/hazardous_substance_msds')),
+  'facility-incidents': view('facility_incident_report', 'FacilityIncidentReportView', () => import('@/capabilities/facility_incident_report')),
 };

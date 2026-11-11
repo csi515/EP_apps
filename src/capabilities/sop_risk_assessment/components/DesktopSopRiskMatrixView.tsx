@@ -11,6 +11,8 @@ import type { ApprovalStepState } from '../domain/approvalEngine';
 import type { ApprovalLineRow } from '../services/riskAssessmentApprovalService';
 import type { RejectionNote } from '../domain/sopStepDocument';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 
 function RejectionRecord({
   history,
@@ -185,12 +187,23 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
         </div>
       ) : null}
 
+      <ContentFadeIn
+        motionKey={`${workspace.departmentFilter}-${doc?.id ?? 'none'}-${live ? 'live' : workspace.viewVersion}`}
+        className="space-y-6"
+      >
       {!doc && !workspace.loading ? (
-        <p className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
-          {workspace.docs.length === 0
-            ? '등록된 작업표준이 없습니다. 신규 공정 표준을 만들면 초안 단계에서 작업 단계와 위험성평가를 함께 작성합니다.'
-            : '선택한 부서에 해당하는 작업표준이 없습니다. 부서 필터를 「전체」로 바꾸거나 신규 문서를 등록하세요.'}
-        </p>
+        <EmptyState
+          title={
+            workspace.docs.length === 0
+              ? '등록된 작업표준이 없습니다.'
+              : '선택한 부서에 해당하는 작업표준이 없습니다.'
+          }
+          description={
+            workspace.docs.length === 0
+              ? '신규 공정 표준을 만들면 초안 단계에서 작업 단계와 위험성평가를 함께 작성합니다.'
+              : '부서 필터를 「전체」로 바꾸거나 신규 문서를 등록하세요.'
+          }
+        />
       ) : null}
 
       {doc ? (
@@ -272,6 +285,7 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
           />
         </>
       ) : null}
+      </ContentFadeIn>
 
       <SopNewDocumentModal
         open={showNew}

@@ -4,11 +4,13 @@
  */
 import {
   isMboPlanApprovalEntity,
+  isPurchaseRequisitionApprovalEntity,
   isResourceReservationApprovalEntity,
   type ApprovalRequestRow,
 } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import { reviewResourceReservation } from '@/capabilities/resources/reservationService';
 import { MboService } from '@/capabilities/mbo/services/mboService';
+import { getCoreClient } from '@/lib/supabase';
 
 export async function syncApprovalLinkedEntity(input: {
   req: ApprovalRequestRow;
@@ -32,5 +34,20 @@ export async function syncApprovalLinkedEntity(input: {
       outcome === 'approved' ? 'approve' : 'reject',
       outcome === 'rejected' ? '전자결재 반려' : undefined
     );
+    return;
+  }
+
+  if (isPurchaseRequisitionApprovalEntity(req.entity_type)) {
+    const client = getCoreClient();
+    const { error } = await client
+      .from('purchase_requisitions')
+      .update({
+        status: outcome === 'approved' ? 'approved' : 'rejected',
+        approval_request_id: req.id,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', req.entity_id)
+      .eq('organization_id', organizationId);
+    if (error) throw new Error(error.message);
   }
 }

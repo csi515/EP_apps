@@ -1,8 +1,9 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslate } from '@refinedev/core';
 import { AccessDeniedBanner } from '@/pages/settings/DynamicRoleSettingsPage';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { Button } from '@/shared/components/ui/Button';
 import { StorageService } from '@/services/storage';
 import { canManageRoles } from '@/domain/permissions';
 import { getPublishedCompanyApp, type PublishedCompanyAppId } from './publishedCompanyApps';
@@ -14,6 +15,7 @@ type Props = {
 /** URL 직접 진입 시 권한 없음 — 조용한 리다이렉트 대신 안내 */
 export function CompanyAppAccessDeniedPage({ appId }: Props): React.JSX.Element {
   const translate = useTranslate();
+  const navigate = useNavigate();
   const app = getPublishedCompanyApp(appId);
   const activeUser = StorageService.getActiveUser();
   const showAdminLink = canManageRoles(activeUser);
@@ -25,19 +27,20 @@ export function CompanyAppAccessDeniedPage({ appId }: Props): React.JSX.Element 
         {translate('ep.access.denied.body', { appName: app.label })}
       </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          to="/workspace/intranet"
-          className="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-        >
+        <Button variant="outline" onClick={() => navigate('/workspace/intranet')}>
           {translate('ep.access.denied.backHub')}
-        </Link>
+        </Button>
         {showAdminLink ? (
-          <Link
-            to={`/workspace/app-access?app=${encodeURIComponent(appId)}&intent=grant&mode=admin`}
-            className="inline-flex min-h-11 items-center rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white hover:bg-indigo-700"
+          <Button
+            variant="primary"
+            onClick={() =>
+              navigate(
+                `/workspace/app-access?app=${encodeURIComponent(appId)}&intent=grant&mode=admin`,
+              )
+            }
           >
             {translate('ep.access.denied.manageMembers')}
-          </Link>
+          </Button>
         ) : null}
       </div>
     </WorkPageFrame>

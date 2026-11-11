@@ -170,6 +170,24 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     description: '연구소 통합 포털(과제·장비·특허) 진입. 일반 과제 조회와 별도',
   },
   {
+    key: 'research:read',
+    label: '연구과제 열람',
+    group: 'intranet',
+    description: '연구과제·산출물·게이트 현황 조회',
+  },
+  {
+    key: 'research:write',
+    label: '연구과제 작성',
+    group: 'intranet',
+    description: '연구과제 등록·수정·예산·산출물·관련 자료 관리',
+  },
+  {
+    key: 'research:gate:decide',
+    label: '연구 게이트 심의',
+    group: 'intranet',
+    description: '게이트 직접 승인·반려·재오픈 및 결재 상신',
+  },
+  {
     key: 'mbo:goals:read',
     label: 'MBO 목표 열람',
     group: 'intranet',

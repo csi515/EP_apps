@@ -1,7 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Circle, Search, Users } from 'lucide-react';
+import { CheckCircle2, Circle, Users } from 'lucide-react';
 import { useTranslate } from '@refinedev/core';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { Button } from '@/shared/components/ui/Button';
+import { SearchField } from '@/shared/components/ui/SearchField';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { SegmentedControl } from '@/shared/components/ui/SegmentedControl';
 import { grantMemberFeaturePermission } from '@/core/organizations/services/dynamicRoleService';
 import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRoleService';
 import {
@@ -81,9 +85,12 @@ export function StaffAccessAppHomeView({
   const filteredMembers = useMemo(() => {
     const q = memberSearch.trim().toLowerCase();
     return activeMembers.filter((m) => {
-      const has = Boolean(selectedFeature && m.feature_permissions?.[selectedFeature.key]);
-      if (listFilter === 'with' && !has) return false;
-      if (listFilter === 'without' && has) return false;
+      // tri-state: true=granted, false=denied, unset=키 없음 — denied는 enabled(with)로 취급하지 않음
+      const tri = selectedFeature
+        ? getMemberFeatureTriState(selectedFeature.key, m.feature_permissions)
+        : 'unset';
+      if (listFilter === 'with' && tri !== 'granted') return false;
+      if (listFilter === 'without' && tri !== 'unset') return false;
       if (!q) return true;
       const name = memberDisplayName(m).toLowerCase();
       return (
@@ -190,13 +197,9 @@ export function StaffAccessAppHomeView({
           </span>
         </div>
         {onSwitchToMine ? (
-          <button
-            type="button"
-            onClick={onSwitchToMine}
-            className="min-h-11 rounded-xl border border-slate-200 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
+          <Button variant="outline" size="sm" onClick={onSwitchToMine}>
             {translate('ep.staffAccess.switchToMine')}
-          </button>
+          </Button>
         ) : null}
       </div>
 
@@ -209,8 +212,8 @@ export function StaffAccessAppHomeView({
         >
           {COMPANY_APP_USAGE_ASSIGNMENT_OPTIONS.map((opt) => {
             const active = opt.key === featureKey;
-            const count = activeMembers.filter((m) =>
-              Boolean(m.feature_permissions?.[opt.key])
+            const count = activeMembers.filter(
+              (m) => getMemberFeatureTriState(opt.key, m.feature_permissions) === 'granted'
             ).length;
             return (
               <button
@@ -220,7 +223,7 @@ export function StaffAccessAppHomeView({
                 aria-selected={active}
                 disabled={busy}
                 onClick={() => setFeatureKey(opt.key)}
-                className={`min-h-11 shrink-0 snap-start rounded-xl border px-3 py-2 text-left transition-colors ${
+                className={`min-h-11 shrink-0 snap-start rounded-xl border px-3 py-2 text-left transition-all active:scale-[0.98] ${
                   active
                     ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
                     : 'border-slate-200 bg-white hover:border-slate-300'
@@ -239,76 +242,70 @@ export function StaffAccessAppHomeView({
       </div>
 
       <div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            type="search"
-            value={memberSearch}
-            disabled={busy}
-            onChange={(e) => setMemberSearch(e.target.value)}
-            placeholder={translate('ep.members.bulk.searchPlaceholder')}
-            className="min-h-11 w-full rounded-xl border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
-        </div>
+        <SearchField
+          type="search"
+          value={memberSearch}
+          disabled={busy}
+          onChange={setMemberSearch}
+          placeholder={translate('ep.members.bulk.searchPlaceholder')}
+        />
 
         <div className="mt-2 flex flex-wrap gap-2">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             disabled={busy || activeMembers.length === 0}
+            leftIcon={<Users className="h-3.5 w-3.5" />}
             onClick={() => selectIds(activeMembers.map((m) => m.id))}
-            className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 text-[11px] font-bold text-indigo-800"
           >
-            <Users className="h-3.5 w-3.5" />
             {translate('ep.members.bulk.selectAll', { count: activeMembers.length })}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             disabled={busy}
             onClick={() =>
               selectedFeature &&
               selectIds(
                 activeMembers
-                  .filter((m) => !m.feature_permissions?.[selectedFeature.key])
+                  .filter(
+                    (m) =>
+                      getMemberFeatureTriState(selectedFeature.key, m.feature_permissions) ===
+                      'unset'
+                  )
                   .map((m) => m.id)
               )
             }
-            className="min-h-9 rounded-lg border border-slate-200 px-2.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
           >
             {translate('ep.members.bulk.selectWithout')}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             disabled={busy || selectedIds.size === 0}
             onClick={() => setSelectedIds(new Set())}
-            className="min-h-9 rounded-lg px-2.5 text-[11px] font-semibold text-slate-500 hover:bg-slate-50"
           >
             {translate('ep.members.bulk.clearSelection')}
-          </button>
+          </Button>
         </div>
 
-        <div className="mt-2 flex gap-1 rounded-lg bg-slate-100 p-1">
-          {(
-            [
-              ['all', 'ep.members.bulk.filterAll'],
-              ['without', 'ep.members.bulk.filterWithout'],
-              ['with', 'ep.members.bulk.filterWith'],
-            ] as const
-          ).map(([id, labelKey]) => (
-            <button
-              key={id}
-              type="button"
-              disabled={busy}
-              onClick={() => setListFilter(id)}
-              className={`min-h-9 flex-1 rounded-md text-[11px] font-bold transition-colors ${
-                listFilter === id ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600'
-              }`}
-            >
-              {translate(labelKey)}
-            </button>
-          ))}
+        <div className="mt-2">
+          <SegmentedControl
+            fullWidth
+            value={listFilter}
+            onChange={setListFilter}
+            aria-label={translate('ep.members.bulk.stepMembers')}
+            activeClassName="bg-white text-slate-900 shadow-xs"
+            options={[
+              { value: 'all', label: translate('ep.members.bulk.filterAll') },
+              { value: 'without', label: translate('ep.members.bulk.filterWithout') },
+              { value: 'with', label: translate('ep.members.bulk.filterWith') },
+            ]}
+          />
         </div>
 
-        <ul className="mt-3 max-h-[min(52vh,480px)] space-y-1 overflow-y-auto rounded-xl border border-slate-100 bg-white p-2">
+        <ContentFadeIn motionKey={`${featureKey}-${listFilter}`} className="mt-3">
+        <ul className="max-h-[min(52vh,480px)] space-y-1 overflow-y-auto rounded-xl border border-slate-100 bg-white p-2">
           {filteredMembers.length === 0 ? (
             <li className="py-8 text-center text-xs text-slate-500">
               {translate('ep.members.bulk.emptyList')}
@@ -376,9 +373,10 @@ export function StaffAccessAppHomeView({
             })
           )}
         </ul>
+        </ContentFadeIn>
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-1 border-t border-slate-200 bg-white/95 px-1 py-3 backdrop-blur-sm">
+      <div className="sticky bottom-0 z-10 -mx-1 border-t border-slate-200 bg-white/95 px-1 py-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[11px] text-slate-500">
             {progress
@@ -392,22 +390,21 @@ export function StaffAccessAppHomeView({
                 })}
           </p>
           <div className="flex flex-wrap justify-end gap-2">
-            <button
-              type="button"
+            <Button
+              variant="destructive"
               disabled={busy || selectedIds.size === 0}
               onClick={() => void applyBulk(false)}
-              className="min-h-11 rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-bold text-rose-700 hover:bg-rose-100 disabled:opacity-50"
             >
               {translate('ep.members.bulk.revoke')}
-            </button>
-            <button
-              type="button"
-              disabled={busy || selectedIds.size === 0}
+            </Button>
+            <Button
+              variant="primary"
+              isLoading={busy}
+              disabled={selectedIds.size === 0}
               onClick={() => void applyBulk(true)}
-              className="min-h-11 rounded-xl bg-indigo-600 px-5 text-sm font-bold text-white hover:bg-indigo-700 disabled:opacity-50"
             >
-              {busy ? translate('ep.members.bulk.saving') : translate('ep.members.bulk.grant')}
-            </button>
+              {translate('ep.members.bulk.grant')}
+            </Button>
           </div>
         </div>
       </div>

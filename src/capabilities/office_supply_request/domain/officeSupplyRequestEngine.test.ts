@@ -62,6 +62,30 @@ const catalog = new Set(['a', 'b']);
 assert.equal(validateRequestLines([{ catalogItemId: 'a', quantity: 2 }], catalog).isValid, true);
 assert.equal(validateRequestLines([{ catalogItemId: 'x', quantity: 1 }], catalog).isValid, false);
 assert.equal(validateRequestLines([{ catalogItemId: 'a', quantity: 0 }], catalog).isValid, false);
+assert.equal(
+  validateRequestLines([{ catalogItemId: 'a', quantity: 3 }], catalog, {
+    unitPriceByItemId: { a: 20000 },
+    maxMonthlyBudgetPerUser: 50000,
+  }).isValid,
+  false,
+  'over budget rejected'
+);
+assert.equal(
+  validateRequestLines([{ catalogItemId: 'a', quantity: 2 }], catalog, {
+    unitPriceByItemId: { a: 20000 },
+    maxMonthlyBudgetPerUser: 50000,
+  }).isValid,
+  true,
+  'within budget ok'
+);
+assert.equal(
+  validateRequestLines([{ catalogItemId: 'a', quantity: 99 }], catalog, {
+    unitPriceByItemId: { a: 20000 },
+    maxMonthlyBudgetPerUser: null,
+  }).isValid,
+  true,
+  'no cap skips budget check'
+);
 
 assert.deepEqual(normalizeRequestLines({ a: 2, b: 0, c: -1 }), [
   { catalogItemId: 'a', quantity: 2 },

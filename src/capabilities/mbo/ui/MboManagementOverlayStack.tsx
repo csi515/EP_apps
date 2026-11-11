@@ -11,7 +11,12 @@ import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { MboCreateObjectiveModal } from './MboCreateObjectiveModal';
 import { MboObjectiveRejectModal } from './MboObjectiveRejectModal';
 import { MboObjectiveDeleteModal } from './MboObjectiveDeleteModal';
+import {
+  classifyPendingApproval,
+  MboPendingApprovalsModal,
+} from './MboPendingApprovalsModal';
 import { MboService } from '../services/mboService';
+import { canManageObjectiveOwner } from '../services/mboOrgScopeService';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { MBO_COPY } from './mboUiCopy';
 import type { MboManagementWorkspace } from '../hooks/useMboManagementWorkspace';
@@ -151,11 +156,23 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
         goalActor={w.goalActor}
         existingGoalRefs={w.existingGoalRefs}
         eligibleParents={w.eligibleParents}
-        objectives={w.objectives}
+        objectives={w.rawObjectiveRows}
         selectedOwnerMember={w.selectedOwnerMember}
         onOpenOwnerPicker={() => w.setOwnerPickerOpen(true)}
         onOpenSharePicker={() => w.setSharePickerOpen(true)}
         immediateSuperior={w.immediateSuperior}
+      />
+
+      <MboPendingApprovalsModal
+        open={w.pendingApprovalsOpen}
+        items={w.teamObjectivesForManager
+          .filter((o) => o.status === 'submitted')
+          .map((objective) => ({
+            objective,
+            kind: classifyPendingApproval(objective, w.goalsLocked),
+          }))}
+        onClose={() => w.setPendingApprovalsOpen(false)}
+        onOpenDetail={(id) => w.setDetailObjectiveId(id)}
       />
 
       {w.detailObjectiveId ? (
@@ -163,16 +180,28 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
           const detail = w.objectives.find((o) => o.id === w.detailObjectiveId);
           if (!detail) return null;
           const hasLinked = w.portfolioProjects.some((p) => p.objectiveId === detail.id);
+          const canApproveReject =
+            w.isManager &&
+            (w.isOrgAdmin ||
+              (Boolean(w.orgScope) &&
+                canManageObjectiveOwner(
+                  w.orgScope!,
+                  detail.ownerId,
+                  w.viewerUserId,
+                  w.isOrgAdmin,
+                )));
           return (
             <MboObjectiveDetailModal
               objective={detail}
               goalsLocked={w.goalsLocked}
               canOverrideGoalLock={w.canOverrideGoalLockForOwner(detail.ownerId)}
+              canApproveReject={canApproveReject}
               hasLinkedProject={hasLinked}
               onClose={() => w.setDetailObjectiveId(null)}
               onCreateProject={hasLinked ? undefined : () => void w.handleEnsureProjectForObjective(detail)}
               onOpenProjects={() => {
                 w.setDetailObjectiveId(null);
+                w.setContentPanel('schedule');
                 w.ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
               onRequestApproval={(id) => {

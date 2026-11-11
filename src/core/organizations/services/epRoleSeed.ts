@@ -60,6 +60,28 @@ export function mapPresetPermissionTokensToRoleMap(
 
   if (hasPrefix('research_project') || tokens.includes('rnd_portal:access')) {
     next['rnd_portal:access'] = true;
+    next['research:read'] = true;
+  }
+  if (
+    tokens.includes('research:write') ||
+    tokens.includes('research_project:update') ||
+    tokens.includes('research_project:write') ||
+    tokens.includes('research_project:*') ||
+    tokens.some((t) => /^research_project:(update|manage|write)\b/.test(t))
+  ) {
+    next['research:write'] = true;
+    next['research:read'] = true;
+    next['rnd_portal:access'] = true;
+  }
+  if (
+    tokens.includes('research:gate:decide') ||
+    tokens.includes('research_project:approve') ||
+    tokens.includes('research_project:*') ||
+    tokens.some((t) => /^research_project:(approve|manage)\b/.test(t))
+  ) {
+    next['research:gate:decide'] = true;
+    next['research:read'] = true;
+    next['rnd_portal:access'] = true;
   }
 
   if (hasPrefix('whistleblower_grievance') || tokens.includes('feedbacks:*')) {
@@ -197,6 +219,9 @@ export async function seedEpOrganizationRoles(input: {
       permissions['members:manage'] = true;
       permissions.members_manage = true;
       permissions['rnd_portal:access'] = true;
+      permissions['research:read'] = true;
+      permissions['research:write'] = true;
+      permissions['research:gate:decide'] = true;
     }
     built.push({
       name: seed.name,

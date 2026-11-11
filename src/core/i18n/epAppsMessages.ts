@@ -156,7 +156,8 @@ export const EP_APPS_MESSAGES_KO: Record<string, string> = {
   'ep.feature.company_app.research.label': '연구소 앱 이용',
   'ep.feature.company_app.research.desc': '연구소 포털 런처 표시 및 /rnd 진입',
   'ep.feature.company_app.mbo.label': 'MBO 앱 이용',
-  'ep.feature.company_app.mbo.desc': '목표 등록·이번 달 진척 보고 앱 진입',
+  'ep.feature.company_app.mbo.desc':
+    '런처 표시(company_app:mbo). 목표 조회는 직급 mbo:view(→mbo:goals:read)도 필요합니다.',
   'ep.feature.company_app.shuttle.label': '통근 셔틀 앱 이용',
   'ep.feature.company_app.shuttle.desc': '셔틀 신청·노선 앱 진입',
   'ep.feature.company_app.resources.label': '공용 자원 앱 이용',
@@ -353,7 +354,8 @@ export const EP_APPS_MESSAGES_EN: Record<string, string> = {
   'ep.feature.company_app.research.label': 'R&D app access',
   'ep.feature.company_app.research.desc': 'Show R&D portal and enter /rnd',
   'ep.feature.company_app.mbo.label': 'MBO app access',
-  'ep.feature.company_app.mbo.desc': 'Enter goals and monthly progress reports',
+  'ep.feature.company_app.mbo.desc':
+    'Launcher tile (company_app:mbo). Goal read also needs role mbo:view (→ mbo:goals:read).',
   'ep.feature.company_app.shuttle.label': 'Shuttle app access',
   'ep.feature.company_app.shuttle.desc': 'Enter shuttle booking & routes',
   'ep.feature.company_app.resources.label': 'Resources app access',

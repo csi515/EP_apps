@@ -30,6 +30,7 @@ import {
   type ApprovalMemberOption,
 } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 
 type Identity = { id?: string; name?: string };
 
@@ -313,6 +314,7 @@ export const SupplyRestockView: React.FC = () => {
         </div>
       </div>
 
+      <ContentFadeIn motionKey={activeTab}>
       {/* 안전재고 및 간이 발주서 (PO) */}
       {activeTab === 'restock_po' && (
         <div className="space-y-6">
@@ -577,6 +579,7 @@ export const SupplyRestockView: React.FC = () => {
           </div>
         </div>
       )}
+      </ContentFadeIn>
 
       {/* 발주서 미리보기 모달 */}
       {activePo && (

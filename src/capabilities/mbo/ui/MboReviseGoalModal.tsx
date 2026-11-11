@@ -58,7 +58,7 @@ export const MboReviseGoalModal: React.FC<Props> = ({
         }}
       >
         <header className="flex items-center justify-between">
-          <h2 className="text-base font-bold">월별 점검 및 계획 수정</h2>
+          <h2 className="text-base font-bold">목표 수치·기한 정정</h2>
           <button type="button" className="min-h-12 min-w-12" aria-label="닫기" onClick={onClose}>
             <X className="h-5 w-5" />
           </button>

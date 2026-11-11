@@ -9,13 +9,17 @@ export const shuttleDispatchSetupSchema: CapabilitySetupSchema = {
       id: 'defaultRoutes',
       label: '기본 운행 노선 목록',
       type: 'tags',
+      // 미구현·설정 무시 — UI/런타임에서 읽지 않음 (노선은 마스터 테이블로 관리)
       defaultValue: ['본사-강남역', '본사-판교역'],
+      description: '미구현·설정 무시. 실제 노선은 셔틀 노선 마스터에서 관리합니다.',
     },
     {
       id: 'enableBoardingCheck',
       label: '모바일 탑승 확인(QR/체크인) 사용',
       type: 'boolean',
-      defaultValue: true,
+      // 미구현·설정 무시 — defaultEnabled false
+      defaultValue: false,
+      description: '미구현·설정 무시. QR/체크인 탑승 확인은 아직 런타임에 연결되지 않았습니다.',
     },
   ],
 };

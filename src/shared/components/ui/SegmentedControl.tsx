@@ -42,9 +42,9 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             id={`segment-${opt.value}`}
             onClick={() => onChange(opt.value)}
-            className={`px-2 sm:px-4 py-2 text-xs font-bold rounded-lg min-h-[44px] whitespace-nowrap transition-colors ${
+            className={`px-2 sm:px-4 py-2 text-xs font-bold rounded-lg min-h-[44px] whitespace-nowrap transition-all active:scale-[0.98] ${
               fullWidth ? 'flex-1 text-center' : 'shrink-0'
-            } ${active ? activeClassName : 'text-slate-600 hover:text-slate-900'}`}
+            } ${active ? activeClassName : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'}`}
           >
             {opt.label}
           </button>

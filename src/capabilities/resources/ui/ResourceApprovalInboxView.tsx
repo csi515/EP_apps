@@ -19,6 +19,7 @@ import {
   reviewResourceReservation,
 } from '../reservationService';
 import { listResources, canUserApproveReservation } from '../resourceService';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
 
 interface ResourceApprovalInboxViewProps {
   organizationId: string;
@@ -79,10 +80,11 @@ export const ResourceApprovalInboxView: React.FC<ResourceApprovalInboxViewProps>
   }, [resources]);
 
   // 현재 사용자에게 승인 권한이 있는 대기 건만 필터링
+  // 자원 메타데이터 미매칭 건은 승인 권한 판정이 불가하므로 숨김
   const myActionableList = useMemo(() => {
     return pendingList.filter((item) => {
       const res = resourceMap.get(item.resourceId);
-      if (!res) return true; // 자원 정보 미매칭 시 안전하게 표시
+      if (!res) return false;
       return canUserApproveReservation(res, currentUser);
     });
   }, [pendingList, resourceMap, currentUser]);
@@ -169,10 +171,11 @@ export const ResourceApprovalInboxView: React.FC<ResourceApprovalInboxViewProps>
           결재 대기 목록을 불러오는 중...
         </div>
       ) : myActionableList.length === 0 ? (
-        <div className="p-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-400 text-xs">
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-          현재 검토가 필요한 예약 승인 대기 건이 없습니다.
-        </div>
+        <EmptyState
+          icon={<CheckCircle2 className="w-8 h-8" />}
+          title="승인 대기 건이 없습니다"
+          description="현재 검토가 필요한 예약 승인 대기 건이 없습니다."
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {myActionableList.map((item) => {

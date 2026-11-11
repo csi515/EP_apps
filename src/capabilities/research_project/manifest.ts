@@ -6,5 +6,5 @@ export const research_projectCapability = defineCapability({
   dependencies: ['approval_workflow'],
   configurable: true,
   defaultEnabled: false,
-  requiredPermissions: [],
+  requiredPermissions: ['research:read', 'research:write', 'research:gate:decide'],
 });

@@ -10,13 +10,14 @@ import {
   getMaskedGrievanceAuthor,
 } from './grievanceEngine';
 
-function run() {
+async function run() {
   assert.equal(generateTicketCode(42), 'G-0042');
 
   const pin = '9876';
-  const hashed = hashAccessPin(pin);
-  assert.equal(verifyAccessPin('9876', hashed), true);
-  assert.equal(verifyAccessPin('1234', hashed), false);
+  const hashed = await hashAccessPin(pin);
+  assert.equal(await verifyAccessPin('9876', hashed), true);
+  assert.equal(await verifyAccessPin('1234', hashed), false);
+  assert.match(hashed, /^[0-9a-f]{64}$/);
 
   assert.equal(
     validateGrievanceSubmission(
@@ -32,11 +33,13 @@ function run() {
     false
   );
   assert.equal(
-    validateGrievanceSubmission('제목', '내용은 충분히 길게 작성되었습니다.', '12', 'anonymous').isValid,
+    validateGrievanceSubmission('제목', '내용은 충분히 길게 작성되었습니다.', '12', 'anonymous')
+      .isValid,
     false
   );
   assert.equal(
-    validateGrievanceSubmission('기명 건의', '내용은 충분히 길게 작성되었습니다.', '', 'named').isValid,
+    validateGrievanceSubmission('기명 건의', '내용은 충분히 길게 작성되었습니다.', '', 'named')
+      .isValid,
     true
   );
 
@@ -65,19 +68,21 @@ function run() {
     true
   );
 
-  
-  // 익명성 기술 보증 (Blind Tokenization & Zero-Knowledge Sanitization)
-  const token = generateBlindReceiptToken('G-0042', '9876');
+  const token = await generateBlindReceiptToken('G-0042', '9876');
   assert.ok(token.startsWith('TKN-'), '영수증 토큰 형식 확인');
-  assert.equal(token, generateBlindReceiptToken('G-0042', '9876'), '동일 PIN에 대한 일관성 확인');
-  assert.notEqual(token, generateBlindReceiptToken('G-0042', '1234'), '다른 PIN에 대한 고유성 확인');
+  assert.equal(token, await generateBlindReceiptToken('G-0042', '9876'), '동일 PIN 일관성');
+  assert.notEqual(
+    token,
+    await generateBlindReceiptToken('G-0042', '1234'),
+    '다른 PIN 고유성'
+  );
 
   const sanitized = sanitizeGrievanceSubmission({
     ticket_code: 'G-0042',
     visibility: 'anonymous',
     author_user_id: 'secret_user_123',
   });
-  assert.equal(sanitized.author_user_id, null, '익명 제보 시 author_user_id 완벽 격리/제거');
+  assert.equal(sanitized.author_user_id, null, '익명 제보 시 author_user_id 제거');
 
   const masked = getMaskedGrievanceAuthor({ visibility: 'anonymous', author_user_id: null });
   assert.match(masked, /익명 제보자/, '감사 로그 마스킹 확인');
@@ -85,4 +90,4 @@ function run() {
   console.log('grievanceEngine.test.ts: all tests passed including blind tokenization.');
 }
 
-run();
+void run();

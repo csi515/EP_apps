@@ -179,6 +179,21 @@ export function validateStopsSequence(stops: ShuttleStopDraft[]): { isValid: boo
   return { isValid: true };
 }
 
+/**
+ * 노선 신규 활성 등록 가능 여부.
+ * 이미 해당 노선에 활성 등록된 경우(정류장만 변경)는 정원 재검사 생략.
+ * 신규·재활성 시 activeCount < capacity 이어야 한다.
+ */
+export function canActivateShuttleRegistration(
+  activeCount: number,
+  capacity: number,
+  alreadyActiveOnRoute: boolean,
+): boolean {
+  if (alreadyActiveOnRoute) return true;
+  if (!Number.isFinite(activeCount) || !Number.isFinite(capacity) || capacity <= 0) return false;
+  return activeCount < capacity;
+}
+
 export function aggregateStopHeadcounts(
   registrations: ShuttleRegistration[],
   stops: ShuttleStop[],

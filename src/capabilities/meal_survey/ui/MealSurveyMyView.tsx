@@ -14,6 +14,7 @@ import {
   mealStatusLabel,
   monthRange,
   parseDateKey,
+  resolveMealCellForKitchen,
   responseMapKey,
   toDateKey,
   weekRange,
@@ -31,6 +32,7 @@ import {
   upsertMealSurveyResponse,
 } from '../mealSurveyService';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 import { MealSurveyMonthCalendar } from './MealSurveyMonthCalendar';
 
 function statusChipClass(status: MealCellStatus): string {
@@ -163,7 +165,9 @@ export const MealSurveyMyView: React.FC = () => {
           <h1 className="text-xl font-semibold text-slate-900">내 식수</h1>
           <p className="mt-1 text-sm text-slate-500">
             달력에서 날짜를 고른 뒤 끼니를 탭하세요. 식사 → 미식사 → 미응답.
-            {settings?.defaultEating ? ' 평일 기본은 식사입니다.' : ''}
+            {settings?.defaultEating
+              ? ' 미응답은 조리 식수에 식사로 집계되니, 불참 시 미식사로 바꿔 주세요.'
+              : ' 미응답은 조리 식수에 포함되지 않습니다.'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm">
@@ -217,86 +221,103 @@ export const MealSurveyMyView: React.FC = () => {
         </button>
       </div>
 
-      {!settings || slots.length === 0 ? (
-        <p className="text-sm text-slate-500">
-          {loading ? '불러오는 중…' : '제공 중인 식사가 없습니다. 관리자에게 설정을 요청하세요.'}
-        </p>
-      ) : (
-        <>
-          <MealSurveyMonthCalendar
-            settings={settings}
-            year={anchor.getFullYear()}
-            monthIndex={anchor.getMonth()}
-            selectedDate={selectedDate}
-            onSelectDate={(day) => setSelectedDate(day.date)}
-            renderDayBody={(day) => (
-              <div className="mt-auto flex flex-wrap gap-0.5">
-                {slots.map((slot) => {
-                  const status = statusByKey[responseMapKey(day.date, slot)] ?? null;
-                  return (
-                    <span
-                      key={slot}
-                      title={`${mealSlotLabel(slot)} ${mealStatusLabel(status)}`}
-                      className={`h-1.5 w-1.5 rounded-full ${statusChipClass(status)}`}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          />
-
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-baseline justify-between gap-2">
-              <h2 className="text-sm font-semibold text-slate-900">
-                {selectedDate.slice(5).replace('-', '/')} ({WEEKDAY_LABELS[selectedWeekday]})
-              </h2>
-              {selectedClosed ? (
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                  식당 휴무
-                </span>
-              ) : (
-                <span className="text-xs text-slate-500">탭하여 상태 변경</span>
-              )}
-            </div>
-
-            {selectedClosed ? (
-              <p className="rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-600">
-                이 날은 식당을 운영하지 않습니다. 다른 운영일을 선택해 주세요.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-2 sm:flex-row">
-                {slots.map((slot) => {
-                  const key = responseMapKey(selectedDate, slot);
-                  const status = statusByKey[key] ?? null;
-                  const writable = isMealSlotWritable(settings, selectedDate, slot);
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      disabled={busyKey === key || !writable}
-                      onClick={() => void handleCycle(selectedDate, slot)}
-                      className={statusButtonClass(status, writable)}
-                    >
-                      <span className="block text-xs font-medium opacity-70">{mealSlotLabel(slot)}</span>
-                      <span>{mealStatusLabel(status)}</span>
-                      {!writable ? (
-                        <span className="mt-0.5 block text-[10px] font-normal">마감</span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          <p className="text-xs text-slate-500">
-            범례 · <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 align-middle" /> 식사{' '}
-            <span className="inline-block h-2 w-2 rounded-full bg-slate-400 align-middle" /> 미식사{' '}
-            <span className="inline-block h-2 w-2 rounded-full bg-slate-200 align-middle" /> 미응답 · 회색
-            칸은 휴무
+      <ContentFadeIn motionKey={`${anchor.getFullYear()}-${anchor.getMonth()}`} className="space-y-6">
+        {!settings || slots.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            {loading ? '불러오는 중…' : '제공 중인 식사가 없습니다. 관리자에게 설정을 요청하세요.'}
           </p>
-        </>
-      )}
+        ) : (
+          <>
+            <MealSurveyMonthCalendar
+              settings={settings}
+              year={anchor.getFullYear()}
+              monthIndex={anchor.getMonth()}
+              selectedDate={selectedDate}
+              onSelectDate={(day) => setSelectedDate(day.date)}
+              renderDayBody={(day) => (
+                <div className="mt-auto flex flex-wrap gap-0.5">
+                  {slots.map((slot) => {
+                    const stored = statusByKey[responseMapKey(day.date, slot)] ?? null;
+                    const chipStatus: MealCellStatus =
+                      resolveMealCellForKitchen(stored, settings.defaultEating) ?? null;
+                    return (
+                      <span
+                        key={slot}
+                        title={`${mealSlotLabel(slot)} ${mealStatusLabel(stored, {
+                          defaultEating: settings.defaultEating,
+                        })}`}
+                        className={`h-1.5 w-1.5 rounded-full ${statusChipClass(chipStatus)}`}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            />
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-baseline justify-between gap-2">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  {selectedDate.slice(5).replace('-', '/')} ({WEEKDAY_LABELS[selectedWeekday]})
+                </h2>
+                {selectedClosed ? (
+                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                    식당 휴무
+                  </span>
+                ) : (
+                  <span className="text-xs text-slate-500">탭하여 상태 변경</span>
+                )}
+              </div>
+
+              {selectedClosed ? (
+                <p className="rounded-xl bg-slate-50 px-3 py-4 text-sm text-slate-600">
+                  이 날은 식당을 운영하지 않습니다. 다른 운영일을 선택해 주세요.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {slots.map((slot) => {
+                    const key = responseMapKey(selectedDate, slot);
+                    const status = statusByKey[key] ?? null;
+                    const displayStatus: MealCellStatus =
+                      resolveMealCellForKitchen(status, settings.defaultEating) ?? null;
+                    const writable = isMealSlotWritable(settings, selectedDate, slot);
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        disabled={busyKey === key || !writable}
+                        onClick={() => void handleCycle(selectedDate, slot)}
+                        className={statusButtonClass(
+                          status === null && settings.defaultEating ? null : displayStatus,
+                          writable
+                        )}
+                      >
+                        <span className="block text-xs font-medium opacity-70">{mealSlotLabel(slot)}</span>
+                        <span>
+                          {mealStatusLabel(status, { defaultEating: settings.defaultEating })}
+                        </span>
+                        {!writable ? (
+                          <span className="mt-0.5 block text-[10px] font-normal">마감</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            <p className="text-xs text-slate-500">
+              범례 · <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 align-middle" /> 식사
+              {settings.defaultEating ? '(기본 포함) ' : ' '}
+              <span className="inline-block h-2 w-2 rounded-full bg-slate-400 align-middle" /> 미식사{' '}
+              <span className="inline-block h-2 w-2 rounded-full bg-slate-200 align-middle" />{' '}
+              {settings.defaultEating
+                ? '미응답(조리 식수=식사)'
+                : '미응답'}{' '}
+              · 회색 칸은 휴무
+            </p>
+          </>
+        )}
+      </ContentFadeIn>
     </WorkPageFrame>
   );
 };

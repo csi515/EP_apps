@@ -97,10 +97,28 @@ export function campaignLockReason(
   return null;
 }
 
+export type ValidateRequestLinesOptions = {
+  /** catalogItemId → 추정 단가 */
+  unitPriceByItemId?: ReadonlyMap<string, number> | Record<string, number>;
+  /** 1인당 월별 한도(원). null/undefined/≤0 이면 미검사 */
+  maxMonthlyBudgetPerUser?: number | null;
+};
+
+function unitPriceOf(
+  prices: ValidateRequestLinesOptions['unitPriceByItemId'],
+  catalogItemId: string
+): number {
+  if (!prices) return 0;
+  if (prices instanceof Map) return Number(prices.get(catalogItemId)) || 0;
+  return Number(prices[catalogItemId]) || 0;
+}
+
 export function validateRequestLines(
   lines: OfficeSupplyRequestLineInput[],
-  activeCatalogIds: ReadonlySet<string>
+  activeCatalogIds: ReadonlySet<string>,
+  options?: ValidateRequestLinesOptions
 ): { isValid: boolean; error?: string } {
+  let estimatedTotal = 0;
   for (const line of lines) {
     if (!line.catalogItemId) {
       return { isValid: false, error: '품목이 올바르지 않습니다.' };
@@ -111,6 +129,14 @@ export function validateRequestLines(
     if (!(line.quantity > 0) || !Number.isFinite(line.quantity)) {
       return { isValid: false, error: '수량은 0보다 커야 합니다.' };
     }
+    estimatedTotal += line.quantity * unitPriceOf(options?.unitPriceByItemId, line.catalogItemId);
+  }
+  const cap = options?.maxMonthlyBudgetPerUser;
+  if (cap != null && cap > 0 && estimatedTotal > cap) {
+    return {
+      isValid: false,
+      error: `월별 신청 한도(${cap.toLocaleString('ko-KR')}원)를 초과했습니다.`,
+    };
   }
   return { isValid: true };
 }

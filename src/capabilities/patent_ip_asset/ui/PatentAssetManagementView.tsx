@@ -29,11 +29,14 @@ import {
 } from '../domain/patentIpAssetEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { usePermissions } from '@/core/auth/usePermissions';
 import { usePatentWorkspace } from '../hooks/usePatentWorkspace';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 export const PatentAssetManagementView: React.FC = () => {
   const { currentOrganization } = useOrganization();
+  const { canPermission, isAdmin, isOwner } = usePermissions();
+  const canReviewOrReward = isAdmin || isOwner || canPermission('research:write');
   const { patents, isLoading, persistPatent } = usePatentWorkspace(currentOrganization?.id);
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'applied' | 'rewarded'>('all');
 
@@ -120,6 +123,10 @@ export const PatentAssetManagementView: React.FC = () => {
   // 심의 확정
   const handleConfirmReview = () => {
     if (!reviewingPatent) return;
+    if (!canReviewOrReward) {
+      showToast('특허 심의 권한이 없습니다.', 'error');
+      return;
+    }
 
     const res = conductPatentReview(reviewingPatent, {
       reviewerName: '사내 특허심의위원회',
@@ -144,6 +151,10 @@ export const PatentAssetManagementView: React.FC = () => {
   // 보상금 지급 확정
   const handleConfirmReward = () => {
     if (!rewardingPatent) return;
+    if (!canReviewOrReward) {
+      showToast('보상금 지급 권한이 없습니다.', 'error');
+      return;
+    }
     const { patent, type } = rewardingPatent;
 
     const updated = recordInventionRewardPayment(patent, type, {
@@ -392,9 +403,9 @@ export const PatentAssetManagementView: React.FC = () => {
                 </div>
               )}
 
-              {/* 하단 액션 버튼 */}
+              {/* 하단 액션 버튼 — research:write(또는 admin/owner) 없으면 읽기 전용 */}
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                {isPending && (
+                {isPending && canReviewOrReward && (
                   <button
                     type="button"
                     onClick={() => {
@@ -409,8 +420,11 @@ export const PatentAssetManagementView: React.FC = () => {
                     사내 특허 심의 진행
                   </button>
                 )}
+                {isPending && !canReviewOrReward && (
+                  <span className="text-xs text-slate-400">심의·보상 권한이 없습니다 (읽기 전용)</span>
+                )}
 
-                {isApproved && !hasAppReward && (
+                {isApproved && !hasAppReward && canReviewOrReward && (
                   <button
                     type="button"
                     onClick={() => {
@@ -422,6 +436,9 @@ export const PatentAssetManagementView: React.FC = () => {
                     <Coins className="w-3.5 h-3.5" />
                     출원 보상금 지급 처리
                   </button>
+                )}
+                {isApproved && !hasAppReward && !canReviewOrReward && (
+                  <span className="text-xs text-slate-400">보상금 지급 권한이 없습니다 (읽기 전용)</span>
                 )}
               </div>
             </div>

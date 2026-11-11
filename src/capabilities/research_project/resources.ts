@@ -33,5 +33,14 @@ export const researchProjectResources: CapabilityResourceDefinition = {
         order: 172,
       },
     },
+    {
+      name: 'research_project_links',
+      list: '/research-project-links',
+      meta: {
+        label: '연구 관련 자료',
+        icon: 'Link2',
+        order: 173,
+      },
+    },
   ],
 };

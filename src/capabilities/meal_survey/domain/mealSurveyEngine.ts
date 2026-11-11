@@ -203,9 +203,25 @@ export function mealSlotLabel(slot: MealSlot): string {
   return '석식';
 }
 
-export function mealStatusLabel(status: MealCellStatus): string {
+/**
+ * 저장값이 비어 있을 때 defaultEating 이면 표시·주방 집계용으로 식사로 본다.
+ * (DB에는 null/미응답으로 두고, 조리 식수만 eating으로 간주)
+ */
+export function resolveMealCellForKitchen(
+  status: MealCellStatus,
+  defaultEating: boolean
+): MealResponseStatus | null {
+  if (status === 'eating' || status === 'skipping') return status;
+  return defaultEating ? 'eating' : null;
+}
+
+export function mealStatusLabel(
+  status: MealCellStatus,
+  options?: { defaultEating?: boolean }
+): string {
   if (status === 'eating') return '식사';
   if (status === 'skipping') return '미식사';
+  if (options?.defaultEating) return '식사(기본)';
   return '미응답';
 }
 
@@ -259,11 +275,16 @@ export function dayRange(anchor: Date): { from: string; to: string } {
   return { from: key, to: key };
 }
 
+/**
+ * 끼니별 식수 집계.
+ * defaultEating=true 이면 미응답을 주방 식수(eating)에 포함한다.
+ */
 export function aggregateDaySlots(
   memberCount: number,
   responses: Array<{ mealDate: string; mealSlot: MealSlot; status: MealResponseStatus }>,
   slots: MealSlot[],
-  dates: string[]
+  dates: string[],
+  options?: { defaultEating?: boolean }
 ): MealDayAggregate[] {
   const map = new Map<string, { eating: number; skipping: number }>();
   for (const r of responses) {
@@ -273,20 +294,45 @@ export function aggregateDaySlots(
     else cur.skipping += 1;
     map.set(key, cur);
   }
+  const defaultEating = options?.defaultEating === true;
   const out: MealDayAggregate[] = [];
   for (const mealDate of dates) {
     for (const mealSlot of slots) {
       const cur = map.get(`${mealDate}|${mealSlot}`) ?? { eating: 0, skipping: 0 };
-      out.push({
-        mealDate,
-        mealSlot,
-        eatingCount: cur.eating,
-        skippingCount: cur.skipping,
-        unsetCount: Math.max(0, memberCount - cur.eating - cur.skipping),
-      });
+      const unset = Math.max(0, memberCount - cur.eating - cur.skipping);
+      if (defaultEating) {
+        out.push({
+          mealDate,
+          mealSlot,
+          eatingCount: cur.eating + unset,
+          skippingCount: cur.skipping,
+          unsetCount: 0,
+        });
+      } else {
+        out.push({
+          mealDate,
+          mealSlot,
+          eatingCount: cur.eating,
+          skippingCount: cur.skipping,
+          unsetCount: unset,
+        });
+      }
     }
   }
   return out;
+}
+
+/** RPC 원시 집계에 defaultEating 정책을 적용한 주방 식수 */
+export function applyDefaultEatingToDayCounts(
+  counts: { eating: number; skipping: number; unset: number },
+  defaultEating: boolean
+): { eating: number; skipping: number; unset: number } {
+  if (!defaultEating) return counts;
+  return {
+    eating: counts.eating + counts.unset,
+    skipping: counts.skipping,
+    unset: 0,
+  };
 }
 
 export function responseMapKey(mealDate: string, mealSlot: MealSlot): string {

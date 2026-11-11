@@ -73,6 +73,7 @@ const CAPABILITY_ROUTE_PATHS = [
   "retention",
   "seat-timers",
   "sop-risk",
+  "facility-incidents",
   "kds",
   "portfolio",
   "shuttle",
@@ -169,6 +170,8 @@ function runRoutingTests() {
     "workspace/office-supply/manage",
     "workspace/office-supply/catalog",
     "workspace/approvals",
+    "workspace/mbo",
+    "workspace/facility-incidents",
     // /workspace/:tab → IndustryAppRouter 탭
     "workspace/dispatch",
     "workspace/waitlist",

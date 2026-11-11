@@ -6,6 +6,7 @@ export {
   deactivateApprovalLine,
   findPendingStepForRequest,
   isMboPlanApprovalEntity,
+  isPurchaseRequisitionApprovalEntity,
   isResearchGateApprovalEntity,
   isResourceReservationApprovalEntity,
   listApprovalOrgMembers,

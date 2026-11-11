@@ -3,6 +3,7 @@ import { ApprovalWorkflowManagementView } from '@/capabilities/approval_workflow
 import type { ApprovalRequestRow } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuth } from '@/core/auth/AuthProvider';
+import { showToast } from '@/shared/feedback/uiFeedback';
 import { syncApprovalLinkedEntity } from './syncApprovalLinkedEntity';
 
 /** 페이지 계층에서 Cap 연계 동기화를 주입해 approval_workflow 역의존을 피한다. */
@@ -22,8 +23,13 @@ export const ApprovalWorkflowWithLinkedSync: React.FC = () => {
           organizationId: orgId,
           actorUserId: userId,
         });
-      } catch {
-        /* 결재 본문은 반영됨 */
+      } catch (cause) {
+        showToast(
+          cause instanceof Error
+            ? `결재는 반영됐으나 연계 동기화에 실패했습니다: ${cause.message}`
+            : '결재는 반영됐으나 연계 동기화에 실패했습니다.',
+          'warning'
+        );
       }
     },
     [orgId, userId]

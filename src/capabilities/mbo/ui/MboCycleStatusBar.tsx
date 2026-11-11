@@ -126,7 +126,7 @@ function CycleBarStrip({
               className="inline-flex min-h-11 items-center rounded-xl bg-amber-50 px-3 text-xs font-bold text-amber-900"
               onClick={onOpenPendingApprovals}
             >
-              변경 승인 대기 ({pendingChangeApprovals}건)
+              {MBO_COPY.pendingApprovalsTitle} ({pendingChangeApprovals}건)
             </button>
           ) : null}
           {canEdit ? (

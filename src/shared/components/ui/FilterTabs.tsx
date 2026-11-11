@@ -28,7 +28,7 @@ export function FilterTabs<T extends string>({
           key={tab.id}
           type="button"
           onClick={() => onChange(tab.id)}
-          className={`min-h-[36px] px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all ${
+          className={`min-h-[44px] px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all active:scale-[0.98] ${
             active === tab.id ? activeClassName : inactiveClassName
           }`}
         >

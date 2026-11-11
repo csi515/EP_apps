@@ -77,6 +77,7 @@ export const TENANT_SCOPED_RESOURCES = [
   "research_project_members",
   "research_project_deliverables",
   "research_project_gates",
+  "research_project_links",
   "mbo_progress_logs",
   "mbo_feedback_comments",
   "mbo_evaluations",

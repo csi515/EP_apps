@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   aggregateStopHeadcounts,
+  canActivateShuttleRegistration,
   canManageShuttle,
   normalizeDriverPhoneForTel,
   scheduleRowsToStopDrafts,
@@ -120,6 +121,11 @@ function run() {
   assert.equal(scheduleStops[1].is_dropoff, true);
   assert.equal(scheduleStops[1].dropoff_time, '07:05');
   assert.equal(validateStopsSequence(scheduleStops).isValid, true);
+
+  assert.equal(canActivateShuttleRegistration(44, 45, false), true);
+  assert.equal(canActivateShuttleRegistration(45, 45, false), false);
+  assert.equal(canActivateShuttleRegistration(45, 45, true), true);
+  assert.equal(canActivateShuttleRegistration(0, 0, false), false);
 
   console.log('shuttleRosterEngine.test.ts: ok');
 }

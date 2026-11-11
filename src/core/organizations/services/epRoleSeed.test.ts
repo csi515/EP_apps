@@ -14,6 +14,8 @@ const hq = mapPresetPermissionTokensToRoleMap([
   'resources:*',
 ]);
 assert.equal(hq['rnd_portal:access'], true);
+assert.equal(hq['research:write'], true);
+assert.equal(hq['research:gate:decide'], true);
 assert.equal(hq['resources:manage'], true);
 assert.equal(hq.booking, true);
 assert.equal(hq['roles:assign'], true);
@@ -27,6 +29,8 @@ const member = mapPresetPermissionTokensToRoleMap([
 ]);
 assert.equal(member.booking, true);
 assert.equal(member['rnd_portal:access'], true);
+assert.equal(member['research:read'], true);
+assert.equal(member['research:write'], false);
 assert.equal(member.grievances_manage, true);
 assert.equal(member['ownership:transfer'], false);
 assert.equal(member['roles:assign'], false, 'mbo:view alone must not grant role delegation');

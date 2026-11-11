@@ -41,6 +41,7 @@
    - `docs/EP_DEPENDENCY_RULES.md`
    - `docs/EP_DATA_CACHE_BOUNDARY.md`
    - `docs/EP_REFINE_RUNTIME.md`
+   - `docs/EP_UI_INTERACTION.md` (버튼·폼·로딩·모션; `.cursor/rules/ep-ui-interaction.mdc`)
 
 ---
 

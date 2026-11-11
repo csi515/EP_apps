@@ -95,7 +95,13 @@ export const HazardousSubstanceManagementView: React.FC = () => {
       r.storageCabinetName.includes(searchTerm)
   );
 
+  const WRITES_DISABLED = true; // INITIAL_REAGENTS 인메모리 목업 — 서버 미연동
+
   const handleCreateReagent = () => {
+    if (WRITES_DISABLED) {
+      showToast('데모 데이터(인메모리)에서는 시약 등록을 저장할 수 없습니다.', 'warning');
+      return;
+    }
     if (!newName.trim()) {
       showToast('시약명을 입력해주세요.', 'warning');
       return;
@@ -134,6 +140,19 @@ export const HazardousSubstanceManagementView: React.FC = () => {
 
   return (
     <WorkPageFrame width="hub">
+      <div
+        role="status"
+        className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950"
+      >
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+        <div>
+          <p className="font-bold">데모·인메모리 데이터입니다</p>
+          <p className="mt-0.5 text-amber-900/80">
+            화면에 표시되는 시약 목록은 INITIAL_REAGENTS 목업이며 DB에 저장되지 않습니다. 시약 등록 등 쓰기 작업은 비활성화되어 있습니다.
+          </p>
+        </div>
+      </div>
+
       {/* 상단 헤더 */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
         <div>
@@ -156,7 +175,9 @@ export const HazardousSubstanceManagementView: React.FC = () => {
           <button
             type="button"
             onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 shadow-sm"
+            disabled={WRITES_DISABLED}
+            title={WRITES_DISABLED ? '인메모리 목업에서는 등록할 수 없습니다' : undefined}
+            className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" /> 시약 등록
           </button>
@@ -383,8 +404,8 @@ export const HazardousSubstanceManagementView: React.FC = () => {
         </div>
       )}
 
-      {/* 신규 시약 등록 모달 */}
-      {createOpen && (
+      {/* 신규 시약 등록 모달 — 인메모리 목업에서는 비활성 */}
+      {createOpen && !WRITES_DISABLED && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl space-y-3">
             <h2 className="text-lg font-bold text-slate-900">신규 화학 시약 등록</h2>

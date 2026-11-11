@@ -114,6 +114,7 @@ export function useMboManagementWorkspaceState() {
   const [personQuery, setPersonQuery] = useState('');
   const [ganttCheckinOnly, setGanttCheckinOnly] = useState(false);
   const [detailObjectiveId, setDetailObjectiveId] = useState<string | null>(null);
+  const [pendingApprovalsOpen, setPendingApprovalsOpen] = useState(false);
   const [projectSheetId, setProjectSheetId] = useState<string | null>(null);
   const [monthlyCheckProjectId, setMonthlyCheckProjectId] = useState<string | null>(null);
   const [changeRequestObjectiveId, setChangeRequestObjectiveId] = useState<string | null>(null);
@@ -276,6 +277,7 @@ export function useMboManagementWorkspaceState() {
 
   return {
     detailObjectiveId, setDetailObjectiveId,
+    pendingApprovalsOpen, setPendingApprovalsOpen,
     projectSheetId, setProjectSheetId,
     monthlyCheckProjectId, setMonthlyCheckProjectId,
     managerScopeSyncedRef,

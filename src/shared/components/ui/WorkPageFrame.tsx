@@ -1,5 +1,6 @@
 import React from 'react';
 import { cn } from '@/shared/lib/utils';
+import { PageProgressBar } from './PageProgressBar';
 import { WORK_PAGE_GUTTER_CLASS, WORK_PAGE_STACK_CLASS } from './workPageSpacing';
 
 export type WorkPageWidth = 'hub' | 'form';
@@ -14,6 +15,8 @@ export interface WorkPageFrameProps extends React.HTMLAttributes<HTMLElement> {
   /** hub: 목록·허브 / form: 단건·좁은 폼 */
   width?: WorkPageWidth;
   as?: 'div' | 'main';
+  /** 허브·목록 fetch 중 상단 진행 막대 */
+  progressActive?: boolean;
 }
 
 /**
@@ -26,6 +29,7 @@ export const WorkPageFrame: React.FC<WorkPageFrameProps> = ({
   width = 'hub',
   as: Tag = 'div',
   className,
+  progressActive = false,
   ...rest
 }) => (
   <Tag
@@ -39,6 +43,7 @@ export const WorkPageFrame: React.FC<WorkPageFrameProps> = ({
     )}
     {...rest}
   >
+    <PageProgressBar active={progressActive} />
     {children}
   </Tag>
 );

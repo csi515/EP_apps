@@ -1,0 +1,68 @@
+/**
+ * 연구소(연구과제) 화면용 한글 문구.
+ * 도메인 식별자는 코드에, 사용자에게 보이는 말만 여기서 통일한다.
+ */
+
+export const RESEARCH_COPY = {
+  appTitle: '연구과제 관리',
+  appSubtitle: '칸반(기획→개발→시험→완료) · 참여 부하 · 게이트 결재 연동',
+
+  createTitle: '연구과제 등록',
+  editTitle: '연구과제 수정',
+  fieldTitle: '과제명',
+  fieldSummary: '과제 요약',
+  fieldStart: '시작일',
+  fieldEnd: '종료일',
+  fieldBudget: '계획 예산(원)',
+  fieldLead: '연구 담당자',
+  fieldCoLead: '부담당자',
+  fieldCoLeadRequired: '부담당자 (필수)',
+  pickMember: '조직 멤버 선택',
+  saveCreate: '등록',
+  saveEdit: '저장',
+  cancel: '취소',
+  created: '연구과제가 등록되었습니다.',
+  updated: '연구과제가 수정되었습니다.',
+  suspend: '보류',
+  resume: '보류 해제',
+  cancelProject: '과제 중단',
+  suspended: '과제를 보류했습니다.',
+  resumed: '과제를 다시 진행합니다.',
+  canceled: '과제를 중단했습니다.',
+  closeDetail: '상세 닫기',
+  emptyNoProjects: '등록된 연구과제가 없습니다.',
+  emptyNoProjectsHint: '과제 등록으로 추가하세요.',
+  emptyFilter: '필터에 맞는 과제가 없습니다.',
+  emptyFilterHint: '다른 상태 필터를 선택하거나 전체를 보세요.',
+  selectProject: '과제를 선택하세요.',
+  readOnlyHint: '열람 권한만 있어 수정할 수 없습니다.',
+  openApproval: '결재함에서 보기',
+  requireCoLeadError: '설정에 따라 부담당자를 지정해야 합니다.',
+
+  relatedLinksTitle: '관련 자료',
+  relatedLinksEmpty: '등록된 관련 자료가 없습니다.',
+  relatedLinksAdd: '자료 링크 추가',
+  relatedLinksTitlePlaceholder: '자료 제목 (예: 공유 드라이브, 위키)',
+  relatedLinksUrlPlaceholder: 'https://…',
+  relatedLinksSave: '등록',
+  relatedLinksCancel: '취소',
+  relatedLinksDelete: '삭제',
+  relatedLinksDeleteConfirm: '이 관련 자료를 삭제할까요?',
+  relatedLinksAdded: '관련 자료가 등록되었습니다.',
+  relatedLinksDeleted: '관련 자료를 삭제했습니다.',
+  relatedLinksInvalidUrl: 'http:// 또는 https:// URL만 사용할 수 있습니다.',
+
+  evidenceUrlLabel: '증빙/자료 링크',
+  evidenceUrlPlaceholder: 'https://… (선택)',
+  evidenceUrlUpdate: '링크 저장',
+  evidenceUrlUpdated: '산출물 링크가 저장되었습니다.',
+
+  activateDraft: '진행 시작',
+  activateDraftDone: '과제가 진행중으로 전환되었습니다.',
+  reopenRejectedGate: '반려 재오픈',
+  reopenRejectedGateDone: '게이트가 재오픈되었습니다. 다시 심의해 주세요.',
+
+  deliverableAdded: '산출물이 등록되었습니다.',
+  deliverableStatusUpdated: '산출물 상태가 변경되었습니다.',
+  persistFailed: '저장에 실패했습니다.',
+} as const;

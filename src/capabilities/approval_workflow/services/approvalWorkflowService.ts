@@ -88,6 +88,10 @@ export function isResearchGateApprovalEntity(entityType?: string | null): boolea
   return entityType === RESEARCH_GATE_ENTITY_TYPE;
 }
 
+export function isPurchaseRequisitionApprovalEntity(entityType?: string | null): boolean {
+  return entityType === 'purchase_requisition';
+}
+
 function firstRow<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;

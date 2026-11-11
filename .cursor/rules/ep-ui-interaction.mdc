@@ -1,0 +1,24 @@
+---
+description: EP_apps UI 컨트롤·모션은 shared/ui 프리미티브와 docs/EP_UI_INTERACTION.md만 사용
+globs: src/**/*.tsx,src/**/*.jsx
+alwaysApply: false
+---
+
+# EP UI 상호작용
+
+상세: `docs/EP_UI_INTERACTION.md`
+
+## 필수
+
+- 신규/수정 UI는 `@/shared/components/ui` 우선 (`Button`, `Input`, `FormField`, `FORM_CONTROL_CLASS`, `SegmentedControl`, `FilterTabs`, `SearchField`, `Modal`, `Skeleton`/`PageListSkeleton`/`InlineBusy`, `EmptyState`, `ContentFadeIn`, `PageProgressBar`).
+- raw `<button>` / 장식용 styled `<input>` / 커스텀 `fixed inset-0` 오버레이를 새로 만들지 않는다. 기존 파일은 수정하는 컨트롤부터 교체한다.
+- placeholder는 짧은 안내만. 예문·규칙은 `FormField` hint.
+- 모션은 문서 허용 표만. glow·펄스 CTA·행 stagger·커스텀 keyframes 금지. `prefers-reduced-motion` 존중.
+
+## 빠른 매핑
+
+- 제출/CTA → `Button` primary + `isLoading`
+- 취소 → outline/ghost · 삭제/반려 → destructive
+- select → `FORM_CONTROL_CLASS`
+- 탭 전환 본문 → `ContentFadeIn`
+- fetch 중 → `PageProgressBar` 또는 `InlineBusy`

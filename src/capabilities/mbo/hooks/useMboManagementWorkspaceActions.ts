@@ -1,5 +1,6 @@
 import { useCallback, type FormEvent } from 'react';
 import { canTransitionMboStatus, type MboStatus } from '../domain/mboEngine';
+import { canEditExecutionProject } from '../domain/mboTwoTierLockEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { MBO_COPY } from '../ui/mboUiCopy';
 import { MboService } from '../services/mboService';
@@ -10,6 +11,9 @@ import type { MboManagementWorkspaceState } from './useMboManagementWorkspaceSta
 import type { MboManagementObjectivesDerived } from './useMboManagementObjectivesDerived';
 import type { MboManagementDashboardDerived } from './useMboManagementDashboardDerived';
 
+function statusLabelKo(status: MboStatus): string {
+  return MBO_COPY.statusLabel[status] ?? status;
+}
 
 export function useMboManagementWorkspaceActions(
   state: MboManagementWorkspaceState,
@@ -21,7 +25,6 @@ export function useMboManagementWorkspaceActions(
   const existingGoalRefs = obj.existingGoalRefs;
   const selectedOwnerMember = state.selectedOwnerMember;
   const canManagerCreateWhileLocked = dash.canManagerCreateWhileLocked;
-  const canOverrideGoalLockForOwner = dash.canOverrideGoalLockForOwner;
   const {
     goalsLocked,
     viewerMemberId,
@@ -43,7 +46,6 @@ export function useMboManagementWorkspaceActions(
     projectQuery,
     setSelectedObjectiveId,
     setSelectedProjectId,
-    setProjectSheetId,
     changeRequestObjectiveId,
     setChangeRequestBusy,
     isManager,
@@ -73,22 +75,14 @@ export function useMboManagementWorkspaceActions(
     deleteReason,
     setDeleteGoalId,
     setDeleteReason,
-    setLocalObjectives,
     isOrgAdmin,
-    authUser,
-    activeUser,
-    showRejectModal,
-    setShowRejectModal,
-    setRejectionInput,
-    setPlanApprovalObjectiveId,
-    planApprovalObjectiveId,
     orgScope,
-    logQuery,
   } = state;
+
   const openCreateObjectiveModal = useCallback(() => {
     const canCreateWhileLocked = isManager && (isOrgAdmin || orgScope?.isSubtreeManager === true);
     if (goalsLocked && !canCreateWhileLocked) {
-      showToast('목표 잠금 기간에는 새 목표를 등록할 수 없습니다.', 'warning');
+      showToast(MBO_COPY.lockBlockCreate, 'warning');
       return;
     }
     const ownerMemberId = newOwnerMemberId || viewerMemberId || '';
@@ -128,6 +122,12 @@ export function useMboManagementWorkspaceActions(
     selectedObjectiveId,
     orgDepartments,
     orgMembers,
+    setNewOwnerMemberId,
+    setNewDepartmentId,
+    setNewDept,
+    setNewLevel,
+    setNewParentId,
+    setShowCreateModal,
   ]);
 
   const handleManagerRiskFilter = useCallback(() => {
@@ -160,19 +160,20 @@ export function useMboManagementWorkspaceActions(
         setSelectedProjectId(project.id);
         void projectQuery?.refetch?.();
         ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        showToast('실행 프로젝트가 생성되었습니다. 간트에서 일정을 조정하세요.', 'success');
+        showToast(MBO_COPY.projectCreatedHint, 'success');
       } catch (err) {
         showToast(err instanceof Error ? err.message : '프로젝트 생성 실패', 'error');
       }
     },
-    [orgId, projectQuery],
+    [orgId, projectQuery, setSelectedObjectiveId, setSelectedProjectId, ganttSectionRef],
   );
 
   const handleProjectScheduleChange = useCallback(
     async (projectId: string, range: { startDate: string; targetDate: string }) => {
       if (!orgId) return;
-      if (goalsLocked) {
-        showToast('목표 잠금 기간에는 일정을 변경할 수 없습니다.', 'warning');
+      // Level-2 실행 일정은 목표 잠금과 무관
+      if (!canEditExecutionProject()) {
+        showToast(MBO_COPY.lockBlockSchedule, 'warning');
         return;
       }
       try {
@@ -181,17 +182,22 @@ export function useMboManagementWorkspaceActions(
           target_date: range.targetDate,
         });
         void projectQuery?.refetch?.();
-        showToast('프로젝트 일정이 저장되었습니다.', 'success');
+        showToast(MBO_COPY.scheduleSaved, 'success');
       } catch (err) {
-        showToast(err instanceof Error ? err.message : '일정 저장 실패', 'error');
+        showToast(err instanceof Error ? err.message : MBO_COPY.scheduleSaveFailed, 'error');
       }
     },
-    [orgId, goalsLocked, projectQuery],
+    [orgId, projectQuery],
   );
 
   const submitGoalChangeRequest = useCallback(
     (reason: string) => {
       if (!changeRequestObjectiveId || !orgId) return;
+      const trimmed = reason.trim();
+      if (!trimmed) {
+        showToast(MBO_COPY.changeRequestNeedReason, 'warning');
+        return;
+      }
       const target = objectives.find((o) => o.id === changeRequestObjectiveId);
       if (!target) return;
       const transition = canTransitionMboStatus(target.status, 'submitted', { isManager });
@@ -206,13 +212,14 @@ export function useMboManagementWorkspaceActions(
           id: changeRequestObjectiveId,
           values: {
             status: 'submitted',
-            description: `${target.description || ''}\n\n[변경 요청] ${reason}`.trim(),
+            // description에 append하지 않음 — 사유는 rejection_reason 슬롯(변경 요청 메타)
+            rejection_reason: trimmed,
           },
         },
         {
           onSuccess: () => {
             void objQuery?.refetch?.();
-            showToast('목표 변경 승인 요청이 접수되었습니다.', 'success');
+            showToast(MBO_COPY.changeRequestAppendedHint, 'success');
             setChangeRequestObjectiveId(null);
           },
           onError: (err) => {
@@ -222,7 +229,16 @@ export function useMboManagementWorkspaceActions(
         },
       );
     },
-    [changeRequestObjectiveId, orgId, objectives, isManager, mutateUpdate, objQuery],
+    [
+      changeRequestObjectiveId,
+      orgId,
+      objectives,
+      isManager,
+      mutateUpdate,
+      objQuery,
+      setChangeRequestBusy,
+      setChangeRequestObjectiveId,
+    ],
   );
 
   const handleTransitionStatus = (id: string, targetStatus: MboStatus, reason?: string) => {
@@ -235,14 +251,15 @@ export function useMboManagementWorkspaceActions(
     });
     if (!transition.allowed) {
       showToast(
-        transition.reason || `?꾩씠?????녿뒗 ?곹깭?낅땲?? ${target.status} -> ${targetStatus}`,
+        transition.reason ||
+          MBO_COPY.transitionBlocked(statusLabelKo(target.status), statusLabelKo(targetStatus)),
         'warning',
       );
       return;
     }
 
     if (!orgId) {
-      showToast('議곗쭅 而⑦뀓?ㅽ듃媛 ?놁뒿?덈떎.', 'error');
+      showToast(MBO_COPY.noOrgContextShort, 'error');
       return;
     }
     mutateUpdate(
@@ -257,44 +274,40 @@ export function useMboManagementWorkspaceActions(
       {
         onSuccess: () => {
           void objQuery?.refetch?.();
-          showToast(`紐⑺몴 ?곹깭媛 [${targetStatus}]濡?蹂寃쎈릺?덉뒿?덈떎.`, 'success');
+          showToast(MBO_COPY.statusChanged(statusLabelKo(targetStatus)), 'success');
         },
         onError: (err) => {
-          showToast(err instanceof Error ? err.message : '?곹깭 蹂寃??ㅽ뙣', 'error');
+          showToast(err instanceof Error ? err.message : MBO_COPY.statusChangeFailed, 'error');
         },
       }
     );
   };
 
-  // ?좉퇋 紐⑺몴 ?앹꽦 ????긽 DB + 湲곕낯 ?ㅽ뻾 ?꾨줈?앺듃 ?뺣낫
-  const handleCreateObjective = (e: React.FormEvent) => {
+  const handleCreateObjective = (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
     if (!orgId) {
-      showToast('議곗쭅 而⑦뀓?ㅽ듃媛 ?놁뒿?덈떎. 濡쒓렇?맞룹“吏곸쓣 ?뺤씤?섏꽭??', 'error');
+      showToast(MBO_COPY.noOrgContext, 'error');
       return;
     }
-    if (goalsLocked) {
-      showToast('紐⑺몴 ?좉툑 湲곌컙?먮뒗 ??紐⑺몴瑜??깅줉?????놁뒿?덈떎.', 'warning');
+    if (goalsLocked && !canManagerCreateWhileLocked) {
+      showToast(MBO_COPY.lockBlockCreate, 'warning');
       return;
     }
     if (!selectedOwnerMember?.userId) {
-      showToast('?대떦?먮? 議곗쭅 硫ㅻ쾭?먯꽌 ?좏깮??二쇱꽭??', 'warning');
+      showToast(MBO_COPY.pickOwnerMember, 'warning');
       return;
     }
     if (newVisibility === 'PARTIAL' && newShareMemberIds.length === 0) {
-      showToast('?좏깮 怨듦컻????怨듭쑀 ??곸옄瑜?吏?뺥빐 二쇱꽭??', 'warning');
+      showToast(MBO_COPY.pickShareMembers, 'warning');
       return;
     }
 
     const parentId = newLevel === 'company' ? null : newParentId || null;
-    const departmentId =
-      selectedOwnerMember.departmentId || newDepartmentId || null;
+    const departmentId = selectedOwnerMember.departmentId || newDepartmentId || null;
     const departmentName =
       selectedOwnerMember.departmentName?.trim() ||
-      (departmentId
-        ? orgDepartments.find((d) => d.id === departmentId)?.name
-        : null) ||
+      (departmentId ? orgDepartments.find((d) => d.id === departmentId)?.name : null) ||
       newDept.trim() ||
       '부서';
 
@@ -309,7 +322,7 @@ export function useMboManagementWorkspaceActions(
       existing: existingGoalRefs,
     });
     if (!gate.allowed) {
-      showToast(gate.reason ?? '???④퀎??紐⑺몴瑜??깅줉?????놁뒿?덈떎.', 'warning');
+      showToast(gate.reason ?? MBO_COPY.createGoalBlocked, 'warning');
       return;
     }
 
@@ -361,7 +374,7 @@ export function useMboManagementWorkspaceActions(
               setSharesByObjective(shares);
             }
           } catch {
-            showToast('紐⑺몴????λ릱?쇰굹 ?ㅽ뻾 ?꾨줈?앺듃 ?먮룞 ?앹꽦???ㅽ뙣?덉뒿?덈떎.', 'warning');
+            showToast(MBO_COPY.createGoalProjectWarn, 'warning');
           }
           void objQuery?.refetch?.();
           void projectQuery?.refetch?.();
@@ -371,10 +384,10 @@ export function useMboManagementWorkspaceActions(
           setNewVisibility('PRIVATE');
           setNewParentId('');
           setNewDepartmentId('');
-          showToast('?좉퇋 MBO 怨쇱젣? ?ㅽ뻾 ?꾨줈?앺듃媛 ?깅줉?섏뿀?듬땲??', 'success');
+          showToast(MBO_COPY.createGoalSuccess, 'success');
         },
         onError: (err) => {
-          showToast(err instanceof Error ? err.message : '紐⑺몴 ?깅줉 ?ㅽ뙣', 'error');
+          showToast(err instanceof Error ? err.message : MBO_COPY.createGoalFailed, 'error');
         },
       }
     );
@@ -394,29 +407,37 @@ export function useMboManagementWorkspaceActions(
         const shares = await MboService.listObjectiveSharesByOrg(orgId);
         setSharesByObjective(shares);
         void objQuery?.refetch?.();
-        showToast('怨듦컻踰붿쐞媛 蹂寃쎈릺?덉뒿?덈떎.', 'success');
+        showToast(MBO_COPY.visibilityChanged, 'success');
       } catch (err) {
-        showToast(err instanceof Error ? err.message : '怨듦컻踰붿쐞 蹂寃??ㅽ뙣', 'error');
+        showToast(err instanceof Error ? err.message : MBO_COPY.visibilityChangeFailed, 'error');
       }
     },
-    [orgId, sharesByObjective, objQuery]
+    [
+      orgId,
+      sharesByObjective,
+      objQuery,
+      setSharePickerObjectiveId,
+      setNewShareMemberIds,
+      setSharePickerOpen,
+      setSharesByObjective,
+    ]
   );
 
   const handleConfirmSoftDelete = () => {
     if (!deleteGoalId || !deleteReason.trim()) {
-      showToast('??젣 ?ъ쑀瑜??낅젰??二쇱꽭??', 'warning');
+      showToast(MBO_COPY.deleteReasonRequired, 'warning');
       return;
     }
     void MboService.softDeleteObjective(deleteGoalId, deleteReason.trim())
       .then(() => {
-        showToast('怨쇱젣媛 ??젣?섏뿀怨??대젰????λ릺?덉뒿?덈떎.', 'success');
+        showToast(MBO_COPY.deleteSuccess, 'success');
         setDeleteGoalId(null);
         setDeleteReason('');
         void objQuery?.refetch?.();
         void projectQuery?.refetch?.();
       })
       .catch((err) => {
-        showToast(err instanceof Error ? err.message : '??젣 ?ㅽ뙣', 'error');
+        showToast(err instanceof Error ? err.message : MBO_COPY.deleteFailed, 'error');
       });
   };
 

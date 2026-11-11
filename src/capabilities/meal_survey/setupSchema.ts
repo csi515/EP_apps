@@ -9,7 +9,9 @@ export const mealSurveySetupSchema: CapabilitySetupSchema = {
       id: 'surveyDeadlineHour',
       label: '당일 식수 조사 마감 시각 (시)',
       type: 'number',
+      // 미구현·설정 무시 — 마감은 mealSurveyEngine 슬롯별 설정 사용
       defaultValue: 10,
+      description: '미구현·설정 무시. 마감은 식수 관리 설정의 끼니별 마감 시각을 따릅니다.',
     },
     {
       id: 'enabledMealTypes',

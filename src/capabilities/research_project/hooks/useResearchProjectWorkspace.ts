@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useCreate, useInvalidate, useList, useUpdate } from '@refinedev/core';
+import {
+  useCreate,
+  useDelete,
+  useInvalidate,
+  useList,
+  useUpdate,
+} from '@refinedev/core';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import {
   buildGateApprovalRequestValues,
@@ -11,30 +17,52 @@ import {
 } from '../domain/researchProjectApproval';
 import { createApprovalWithChosenLine } from '@/capabilities/approval_workflow/services/approvalWorkflowService';
 import {
+  activateDraftProject,
+  buildDefaultGateTitles,
   canDirectDecideGate,
   createResearchProject,
   decideGate,
   markGateSubmittedForApproval,
   projectRowPatchFromDomain,
   recordBudgetSpend,
+  reopenRejectedGate,
+  setResearchProjectLifecycleStatus,
+  updateResearchProjectMeta,
+  validateHttpUrl,
   type ResearchMember,
   type ResearchProject,
   type ResearchProjectStatus,
 } from '../domain/researchProjectEngine';
+import { readResearchProjectSettings } from '../domain/researchProjectSettings';
 import { assembleResearchProject } from '../services/researchProjectMappers';
 import type { Database } from '@/lib/supabase/database.types';
 import { userFacingErrorMessage } from '@/shared/errors/userFacingError';
+import { RESEARCH_COPY } from '../ui/researchUiCopy';
 
 type ProjectRow = Database['core']['Tables']['research_projects']['Row'];
 type MemberRow = Database['core']['Tables']['research_project_members']['Row'];
 type GateRow = Database['core']['Tables']['research_project_gates']['Row'];
 type DeliverableRow = Database['core']['Tables']['research_project_deliverables']['Row'];
+type LinkRow = Database['core']['Tables']['research_project_links']['Row'];
 type ApprovalRow = Database['core']['Tables']['approval_requests']['Row'];
+
+function looksLikeUuid(value: string | null | undefined): boolean {
+  return Boolean(
+    value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
+}
 
 export function useResearchProjectWorkspace() {
   const { currentOrganization, activeCapabilities } = useOrganization();
   const orgId = currentOrganization?.id ?? null;
   const hasApprovalWorkflow = activeCapabilities.includes('approval_workflow');
+  const runtimeSettings = useMemo(
+    () =>
+      readResearchProjectSettings(
+        (currentOrganization?.settings as Record<string, unknown> | null | undefined) ?? null
+      ),
+    [currentOrganization?.settings]
+  );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ResearchProjectStatus | 'all'>('all');
@@ -46,6 +74,7 @@ export function useResearchProjectWorkspace() {
     void invalidate({ resource: 'research_project_members', invalidates: ['list'] });
     void invalidate({ resource: 'research_project_gates', invalidates: ['list'] });
     void invalidate({ resource: 'research_project_deliverables', invalidates: ['list'] });
+    void invalidate({ resource: 'research_project_links', invalidates: ['list'] });
     void invalidate({ resource: 'approval_requests', invalidates: ['list'] });
   }, [invalidate]);
 
@@ -73,6 +102,12 @@ export function useResearchProjectWorkspace() {
     queryOptions: { enabled: Boolean(orgId) },
     errorNotification: false,
   });
+  const linksQuery = useList<LinkRow>({
+    resource: 'research_project_links',
+    pagination: { mode: 'off' },
+    queryOptions: { enabled: Boolean(orgId) },
+    errorNotification: false,
+  });
   const approvalsQuery = useList<ApprovalRow>({
     resource: 'approval_requests',
     pagination: { mode: 'off' },
@@ -83,11 +118,16 @@ export function useResearchProjectWorkspace() {
 
   const { mutate: createProject } = useCreate();
   const { mutate: createMember } = useCreate();
+  const { mutateAsync: createMemberAsync } = useCreate();
   const { mutate: createGate } = useCreate();
-  const { mutate: createDeliverable } = useCreate();
+  const { mutateAsync: createDeliverableAsync } = useCreate();
+  const { mutateAsync: createLinkAsync } = useCreate();
   const { mutate: updateProject } = useUpdate();
+  const { mutateAsync: updateProjectAsync } = useUpdate();
   const { mutate: updateGate } = useUpdate();
-  const { mutate: updateDeliverable } = useUpdate();
+  const { mutateAsync: updateDeliverableAsync } = useUpdate();
+  const { mutateAsync: deleteLinkAsync } = useDelete();
+  const { mutateAsync: deleteMemberAsync } = useDelete();
 
   const approvalById = useMemo(() => {
     const map = new Map<string, ApprovalRow>();
@@ -102,13 +142,15 @@ export function useResearchProjectWorkspace() {
     const members = membersQuery.query.data?.data ?? [];
     const gates = gatesQuery.query.data?.data ?? [];
     const deliverables = deliverablesQuery.query.data?.data ?? [];
+    const links = linksQuery.query.data?.data ?? [];
 
     return projectRows.map((row) =>
       assembleResearchProject(
         row,
         members.filter((m) => m.project_id === row.id),
         gates.filter((g) => g.project_id === row.id),
-        deliverables.filter((d) => d.project_id === row.id)
+        deliverables.filter((d) => d.project_id === row.id),
+        links.filter((l) => l.project_id === row.id)
       )
     );
   }, [
@@ -116,6 +158,7 @@ export function useResearchProjectWorkspace() {
     membersQuery.query.data?.data,
     gatesQuery.query.data?.data,
     deliverablesQuery.query.data?.data,
+    linksQuery.query.data?.data,
   ]);
 
   const filteredProjects = useMemo(
@@ -129,7 +172,8 @@ export function useResearchProjectWorkspace() {
     projectsQuery.query.isLoading ||
     membersQuery.query.isLoading ||
     gatesQuery.query.isLoading ||
-    deliverablesQuery.query.isLoading;
+    deliverablesQuery.query.isLoading ||
+    linksQuery.query.isLoading;
 
   const persistProjectPatch = useCallback(
     (project: ResearchProject) => {
@@ -214,6 +258,13 @@ export function useResearchProjectWorkspace() {
     }): Promise<{ ok: true } | { ok: false; error: string }> => {
       if (!orgId) return Promise.resolve({ ok: false, error: '사업장(organization)이 선택되지 않았습니다.' });
 
+      if (runtimeSettings.requireCoLead) {
+        const hasCoLead = params.members.some((m) => m.role === 'co_lead');
+        if (!hasCoLead) {
+          return Promise.resolve({ ok: false, error: RESEARCH_COPY.requireCoLeadError });
+        }
+      }
+
       const draft = createResearchProject({
         organizationId: orgId,
         title: params.title,
@@ -223,6 +274,7 @@ export function useResearchProjectWorkspace() {
         budgetPlanned: params.budgetPlanned,
         members: params.members,
         deliverables: [{ title: '중간 산출물', dueDate: params.endDate }],
+        gateTitles: buildDefaultGateTitles(runtimeSettings.defaultGateCount),
       });
       if (!draft.project) return Promise.resolve({ ok: false, error: draft.error || '생성 실패' });
       const project = draft.project;
@@ -255,7 +307,7 @@ export function useResearchProjectWorkspace() {
                   values: {
                     project_id: newId,
                     member_name: m.memberName,
-                    member_id: null,
+                    member_id: looksLikeUuid(m.memberId) ? m.memberId : null,
                     role: m.role,
                   },
                 });
@@ -272,7 +324,7 @@ export function useResearchProjectWorkspace() {
                 });
               }
               for (const d of project.deliverables) {
-                createDeliverable({
+                void createDeliverableAsync({
                   resource: 'research_project_deliverables',
                   values: {
                     project_id: newId,
@@ -297,14 +349,28 @@ export function useResearchProjectWorkspace() {
       createProject,
       createMember,
       createGate,
-      createDeliverable,
+      createDeliverableAsync,
       refetchAll,
+      runtimeSettings.defaultGateCount,
+      runtimeSettings.requireCoLead,
     ]
   );
 
   const recordSpendPersisted = useCallback(
     (project: ResearchProject, amount: number): string | null => {
-      const result = recordBudgetSpend(project, amount);
+      const result = recordBudgetSpend(project, amount, {
+        allowOverspend: !runtimeSettings.blockOverspend,
+      });
+      if (result.error) return result.error;
+      persistProjectPatch(result.project);
+      return null;
+    },
+    [persistProjectPatch, runtimeSettings.blockOverspend]
+  );
+
+  const activateDraftPersisted = useCallback(
+    (project: ResearchProject): string | null => {
+      const result = activateDraftProject(project);
       if (result.error) return result.error;
       persistProjectPatch(result.project);
       return null;
@@ -329,6 +395,18 @@ export function useResearchProjectWorkspace() {
         decidedByName,
         decisionNote: note,
       });
+      if (result.error) return result.error;
+      const updatedGate = result.project.gates.find((g) => g.gateOrder === gateOrder);
+      if (updatedGate) persistGate(updatedGate);
+      persistProjectPatch(result.project);
+      return null;
+    },
+    [persistGate, persistProjectPatch]
+  );
+
+  const reopenRejectedGatePersisted = useCallback(
+    (project: ResearchProject, gateOrder: number): string | null => {
+      const result = reopenRejectedGate(project, gateOrder);
       if (result.error) return result.error;
       const updatedGate = result.project.gates.find((g) => g.gateOrder === gateOrder);
       if (updatedGate) persistGate(updatedGate);
@@ -395,39 +473,222 @@ export function useResearchProjectWorkspace() {
   );
 
   const updateDeliverableStatusPersisted = useCallback(
-    (deliverableId: string, status: ResearchProject['deliverables'][number]['status']) => {
-      updateDeliverable({
-        resource: 'research_project_deliverables',
-        id: deliverableId,
-        values: { status },
-      });
+    async (
+      deliverableId: string,
+      status: ResearchProject['deliverables'][number]['status']
+    ): Promise<string | null> => {
+      try {
+        await updateDeliverableAsync({
+          resource: 'research_project_deliverables',
+          id: deliverableId,
+          values: { status },
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
     },
-    [updateDeliverable]
+    [updateDeliverableAsync, refetchAll]
+  );
+
+  const updateDeliverableEvidencePersisted = useCallback(
+    async (deliverableId: string, evidenceUrl: string | null): Promise<string | null> => {
+      if (evidenceUrl) {
+        const check = validateHttpUrl(evidenceUrl);
+        if (!check.isValid) return check.errorMessage || RESEARCH_COPY.relatedLinksInvalidUrl;
+      }
+      try {
+        await updateDeliverableAsync({
+          resource: 'research_project_deliverables',
+          id: deliverableId,
+          values: { evidence_url: evidenceUrl },
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [updateDeliverableAsync, refetchAll]
   );
 
   const addDeliverablePersisted = useCallback(
-    (projectId: string, title: string, dueDate?: string | null, evidenceUrl?: string | null) => {
-      if (!orgId) return;
-      createDeliverable({
-        resource: 'research_project_deliverables',
-        values: {
-          organization_id: orgId,
-          project_id: projectId,
-          title,
-          due_date: dueDate || null,
-          evidence_url: evidenceUrl || null,
-          status: 'planned',
-          sort_order: 10,
-        },
-      });
+    async (
+      projectId: string,
+      title: string,
+      dueDate?: string | null,
+      evidenceUrl?: string | null
+    ): Promise<string | null> => {
+      if (!orgId) return '사업장이 선택되지 않았습니다.';
+      if (evidenceUrl) {
+        const check = validateHttpUrl(evidenceUrl);
+        if (!check.isValid) return check.errorMessage || RESEARCH_COPY.relatedLinksInvalidUrl;
+      }
+      try {
+        await createDeliverableAsync({
+          resource: 'research_project_deliverables',
+          values: {
+            organization_id: orgId,
+            project_id: projectId,
+            title,
+            due_date: dueDate || null,
+            evidence_url: evidenceUrl || null,
+            status: 'planned',
+            sort_order: 10,
+          },
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
     },
-    [createDeliverable, orgId]
+    [createDeliverableAsync, orgId, refetchAll]
+  );
+
+  const addRelatedLinkPersisted = useCallback(
+    async (projectId: string, title: string, url: string): Promise<string | null> => {
+      if (!orgId) return '사업장이 선택되지 않았습니다.';
+      const check = validateHttpUrl(url);
+      if (!check.isValid) return check.errorMessage || RESEARCH_COPY.relatedLinksInvalidUrl;
+      try {
+        await createLinkAsync({
+          resource: 'research_project_links',
+          values: {
+            organization_id: orgId,
+            project_id: projectId,
+            title: title.trim(),
+            url: url.trim(),
+            sort_order: 10,
+          },
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [createLinkAsync, orgId, refetchAll]
+  );
+
+  const deleteRelatedLinkPersisted = useCallback(
+    async (linkId: string): Promise<string | null> => {
+      try {
+        await deleteLinkAsync({
+          resource: 'research_project_links',
+          id: linkId,
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [deleteLinkAsync, refetchAll]
+  );
+
+  const replaceProjectMembers = useCallback(
+    async (projectId: string, members: ResearchMember[]): Promise<string | null> => {
+      if (!orgId) return '사업장이 선택되지 않았습니다.';
+      const existing =
+        (membersQuery.query.data?.data ?? []).filter((m) => m.project_id === projectId) ?? [];
+      try {
+        for (const row of existing) {
+          await deleteMemberAsync({ resource: 'research_project_members', id: row.id });
+        }
+        for (const m of members) {
+          await createMemberAsync({
+            resource: 'research_project_members',
+            values: {
+              organization_id: orgId,
+              project_id: projectId,
+              member_name: m.memberName,
+              member_id: looksLikeUuid(m.memberId) ? m.memberId : null,
+              role: m.role,
+            },
+          });
+        }
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [orgId, membersQuery.query.data?.data, deleteMemberAsync, createMemberAsync]
+  );
+
+  const updateResearchProjectPersisted = useCallback(
+    async (
+      project: ResearchProject,
+      patch: {
+        title: string;
+        summary: string;
+        startDate: string;
+        endDate: string;
+        budgetPlanned: number;
+        members: ResearchMember[];
+      }
+    ): Promise<string | null> => {
+      if (runtimeSettings.requireCoLead && !patch.members.some((m) => m.role === 'co_lead')) {
+        return RESEARCH_COPY.requireCoLeadError;
+      }
+      const meta = updateResearchProjectMeta(project, {
+        title: patch.title,
+        summary: patch.summary,
+        startDate: patch.startDate,
+        endDate: patch.endDate,
+        budgetPlanned: patch.budgetPlanned,
+      });
+      if (meta.error) return meta.error;
+      try {
+        await updateProjectAsync({
+          resource: 'research_projects',
+          id: project.id,
+          values: projectRowPatchFromDomain(meta.project),
+        });
+        const memberErr = await replaceProjectMembers(project.id, patch.members);
+        if (memberErr) return memberErr;
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [
+      runtimeSettings.requireCoLead,
+      updateProjectAsync,
+      replaceProjectMembers,
+      refetchAll,
+    ]
+  );
+
+  const setLifecyclePersisted = useCallback(
+    async (
+      project: ResearchProject,
+      status: 'suspended' | 'canceled' | 'active'
+    ): Promise<string | null> => {
+      const result = setResearchProjectLifecycleStatus(project, status);
+      if (result.error) return result.error;
+      try {
+        await updateProjectAsync({
+          resource: 'research_projects',
+          id: project.id,
+          values: projectRowPatchFromDomain(result.project),
+        });
+        refetchAll();
+        return null;
+      } catch (cause) {
+        return userFacingErrorMessage(cause) || RESEARCH_COPY.persistFailed;
+      }
+    },
+    [updateProjectAsync, refetchAll]
   );
 
   return {
     orgId,
     isLoading,
     hasApprovalWorkflow,
+    runtimeSettings,
     filter,
     setFilter,
     projects,
@@ -437,11 +698,18 @@ export function useResearchProjectWorkspace() {
     setSelectedId,
     refetchAll,
     createResearchProjectPersisted,
+    updateResearchProjectPersisted,
+    setLifecyclePersisted,
     recordSpendPersisted,
+    activateDraftPersisted,
     directGateDecision,
+    reopenRejectedGatePersisted,
     submitGateToApproval,
     updateDeliverableStatusPersisted,
+    updateDeliverableEvidencePersisted,
     addDeliverablePersisted,
+    addRelatedLinkPersisted,
+    deleteRelatedLinkPersisted,
     syncApprovalOutcomes,
   };
 }

@@ -31,6 +31,14 @@ export const RESEARCH_STATUS_LABELS: Record<ResearchProjectStatus, string> = {
   canceled: '중단',
 };
 
+export const GATE_STATUS_LABELS: Record<GateStatus, string> = {
+  pending: '대기',
+  in_approval: '결재 중',
+  approved: '승인',
+  rejected: '반려',
+  skipped: '생략',
+};
+
 /** 칸반 컬럼(기획→개발→시험→완료) — 기존 status 매핑 */
 export const RESEARCH_KANBAN_COLUMNS: Array<{
   id: string;
@@ -44,24 +52,35 @@ export const RESEARCH_KANBAN_COLUMNS: Array<{
 ];
 
 export type MemberProjectLoad = {
+  /** organization user/member id — 있으면 이름 오타와 무관하게 집계 */
+  memberId: string | null;
   memberName: string;
   projectCount: number;
 };
 
-/** 연구원별 참여 과제 수(간단 부하) */
+/** 연구원별 참여 과제 수(간단 부하). memberId 우선, 없으면 이름 키. */
 export function buildMemberProjectLoad(
   projects: Array<{ members: ResearchMember[] }>
 ): MemberProjectLoad[] {
-  const map = new Map<string, number>();
+  const map = new Map<string, MemberProjectLoad>();
   for (const p of projects) {
     for (const m of p.members) {
       const name = m.memberName.trim() || '미배정';
-      map.set(name, (map.get(name) ?? 0) + 1);
+      const id = m.memberId?.trim() || null;
+      const key = id ? `id:${id}` : `name:${name}`;
+      const prev = map.get(key);
+      if (prev) {
+        prev.projectCount += 1;
+        if (!prev.memberName || prev.memberName === '미배정') prev.memberName = name;
+      } else {
+        map.set(key, { memberId: id, memberName: name, projectCount: 1 });
+      }
     }
   }
-  return [...map.entries()]
-    .map(([memberName, projectCount]) => ({ memberName, projectCount }))
-    .sort((a, b) => b.projectCount - a.projectCount || a.memberName.localeCompare(b.memberName, 'ko'));
+  return [...map.values()].sort(
+    (a, b) =>
+      b.projectCount - a.projectCount || a.memberName.localeCompare(b.memberName, 'ko')
+  );
 }
 
 export const MEMBER_ROLE_LABELS: Record<ResearchMemberRole, string> = {
@@ -137,6 +156,14 @@ export interface ResearchDeliverable {
   sortOrder: number;
 }
 
+/** 과제 공통 관련 자료(외부 링크) */
+export interface ResearchProjectLink {
+  id: string;
+  title: string;
+  url: string;
+  sortOrder: number;
+}
+
 export interface ResearchGate {
   id: string;
   gateOrder: number;
@@ -169,6 +196,7 @@ export interface ResearchProject {
   members: ResearchMember[];
   deliverables: ResearchDeliverable[];
   gates: ResearchGate[];
+  links: ResearchProjectLink[];
 }
 
 export function validateResearchPeriod(startDate: string, endDate: string): {
@@ -236,16 +264,21 @@ export function validateBudget(budget: ResearchBudget): {
 
 export function recordBudgetSpend(
   project: ResearchProject,
-  amount: number
+  amount: number,
+  options?: { allowOverspend?: boolean }
 ): { project: ResearchProject; error?: string } {
   if (amount <= 0) {
     return { project, error: '집행 금액은 0보다 커야 합니다.' };
   }
   const nextSpent = Number(((project.budget.spent || 0) + amount).toFixed(2));
   const nextBudget = { planned: project.budget.planned, spent: nextSpent };
-  const validation = validateBudget(nextBudget);
-  if (!validation.isValid) {
-    return { project, error: validation.errorMessage };
+  if (!options?.allowOverspend) {
+    const validation = validateBudget(nextBudget);
+    if (!validation.isValid) {
+      return { project, error: validation.errorMessage };
+    }
+  } else if (nextSpent < 0 || project.budget.planned < 0) {
+    return { project, error: '예산 금액은 0 이상이어야 합니다.' };
   }
   return {
     project: {
@@ -290,6 +323,166 @@ export function getCurrentGate(gates: ResearchGate[]): ResearchGate | null {
 /** 로컬 직접 승인(결재 미연동) 가능 여부 */
 export function canDirectDecideGate(gate: ResearchGate): boolean {
   return gate.status === 'pending' && !gate.approvalRequestId;
+}
+
+/** 반려된 게이트를 재심의 가능하도록 되돌릴 수 있는지 */
+export function canReopenRejectedGate(gate: ResearchGate): boolean {
+  return gate.status === 'rejected';
+}
+
+/**
+ * 반려 게이트를 pending으로 재오픈.
+ * 결재 연결·심의 이력을 초기화해 직접 승인 또는 재상신할 수 있게 한다.
+ */
+export function reopenRejectedGate(
+  project: ResearchProject,
+  gateOrder: number
+): { project: ResearchProject; error?: string } {
+  const target = project.gates.find((g) => g.gateOrder === gateOrder);
+  if (!target) {
+    return { project, error: `${gateOrder}차 게이트를 찾을 수 없습니다.` };
+  }
+  if (!canReopenRejectedGate(target)) {
+    return { project, error: '반려된 게이트만 재오픈할 수 있습니다.' };
+  }
+  const guard = canDecideGate(project.gates, gateOrder);
+  if (!guard.allowed) {
+    return { project, error: guard.reason };
+  }
+
+  const gates = project.gates.map((g) =>
+    g.gateOrder === gateOrder
+      ? {
+          ...g,
+          status: 'pending' as GateStatus,
+          approvalRequestId: null,
+          decidedByName: null,
+          decidedAt: null,
+          decisionNote: null,
+        }
+      : g
+  );
+
+  return {
+    project: {
+      ...project,
+      gates,
+      status: 'gate_review',
+    },
+  };
+}
+
+/** 초안(draft) 과제를 진행중(active)으로 전환 */
+export function activateDraftProject(
+  project: ResearchProject
+): { project: ResearchProject; error?: string } {
+  if (project.status !== 'draft') {
+    return { project, error: '초안 상태의 과제만 진행으로 전환할 수 있습니다.' };
+  }
+  return {
+    project: {
+      ...project,
+      status: 'active',
+    },
+  };
+}
+
+const EDITABLE_META_STATUSES: ResearchProjectStatus[] = [
+  'draft',
+  'active',
+  'gate_review',
+  'suspended',
+];
+
+/** 과제 메타(제목·기간·예산·요약) 수정 */
+export function updateResearchProjectMeta(
+  project: ResearchProject,
+  patch: {
+    title?: string;
+    summary?: string | null;
+    startDate?: string;
+    endDate?: string;
+    budgetPlanned?: number;
+  }
+): { project: ResearchProject; error?: string } {
+  if (!EDITABLE_META_STATUSES.includes(project.status)) {
+    return { project, error: '완료·중단된 과제는 수정할 수 없습니다.' };
+  }
+  const title = patch.title !== undefined ? patch.title.trim() : project.title;
+  if (title.length < 2) {
+    return { project, error: '과제명은 2자 이상 필수입니다.' };
+  }
+  const startDate = patch.startDate ?? project.startDate;
+  const endDate = patch.endDate ?? project.endDate;
+  const period = validateResearchPeriod(startDate, endDate);
+  if (!period.isValid) {
+    return { project, error: period.errorMessage };
+  }
+  const planned =
+    patch.budgetPlanned !== undefined ? Number(patch.budgetPlanned) || 0 : project.budget.planned;
+  const budget = validateBudget({ planned, spent: project.budget.spent });
+  if (!budget.isValid) {
+    return { project, error: budget.errorMessage };
+  }
+  return {
+    project: {
+      ...project,
+      title,
+      summary:
+        patch.summary !== undefined
+          ? patch.summary?.trim() || null
+          : project.summary,
+      startDate,
+      endDate,
+      budget: { planned, spent: project.budget.spent },
+    },
+  };
+}
+
+/** 보류·중단·재개 */
+export function setResearchProjectLifecycleStatus(
+  project: ResearchProject,
+  status: 'suspended' | 'canceled' | 'active'
+): { project: ResearchProject; error?: string } {
+  if (status === 'active') {
+    if (project.status !== 'suspended' && project.status !== 'draft') {
+      return { project, error: '보류·초안 과제만 진행으로 전환할 수 있습니다.' };
+    }
+    return { project: { ...project, status: 'active' } };
+  }
+  if (status === 'suspended') {
+    if (project.status !== 'active' && project.status !== 'gate_review') {
+      return { project, error: '진행·심의 중 과제만 보류할 수 있습니다.' };
+    }
+    return { project: { ...project, status: 'suspended' } };
+  }
+  if (project.status === 'completed' || project.status === 'canceled') {
+    return { project, error: '이미 종료된 과제입니다.' };
+  }
+  return { project: { ...project, status: 'canceled' } };
+}
+
+/** 기본 게이트 제목 N개 생성 */
+export function buildDefaultGateTitles(count: number): string[] {
+  const n = Math.min(10, Math.max(1, Math.floor(count) || 3));
+  return Array.from({ length: n }, (_, idx) => `${idx + 1}차 게이트`);
+}
+
+/** 관련 자료·산출물 증거 URL: http(s)만 허용 */
+export function validateHttpUrl(url: string): { isValid: boolean; errorMessage?: string } {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return { isValid: false, errorMessage: 'URL을 입력해 주세요.' };
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return { isValid: false, errorMessage: 'http:// 또는 https:// URL만 사용할 수 있습니다.' };
+    }
+    return { isValid: true };
+  } catch {
+    return { isValid: false, errorMessage: '올바른 URL 형식이 아닙니다.' };
+  }
 }
 
 export function canDecideGate(gates: ResearchGate[], gateOrder: number): {
@@ -442,7 +635,7 @@ export function createResearchProject(params: {
     code: params.code?.trim() || null,
     title: params.title.trim(),
     summary: params.summary?.trim() || null,
-    status: 'active',
+    status: 'draft',
     categoryId: params.categoryId ?? null,
     startDate: params.startDate,
     endDate: params.endDate,
@@ -454,6 +647,7 @@ export function createResearchProject(params: {
     })),
     deliverables,
     gates,
+    links: [],
   };
 
   return { project };
@@ -489,13 +683,23 @@ export function markGateSubmittedForApproval(
 }
 
 export function projectRowPatchFromDomain(project: ResearchProject): {
+  title: string;
+  summary: string | null;
   status: ResearchProjectStatus;
+  start_date: string;
+  end_date: string;
   progress_rate: number;
+  budget_planned: number;
   budget_spent: number;
 } {
   return {
+    title: project.title,
+    summary: project.summary ?? null,
     status: project.status,
+    start_date: project.startDate,
+    end_date: project.endDate,
     progress_rate: project.progressRate,
+    budget_planned: project.budget.planned,
     budget_spent: project.budget.spent,
   };
 }

@@ -116,6 +116,7 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'leave-management': ['leave_management'],
   'hazardous-substances': ['hazardous_substance_msds'],
   'chemical-usage-logs': ['hazardous_substance_msds'],
+  'facility-incidents': ['facility_incident_report'],
   'electronic-lab-notebooks': ['electronic_lab_notebook'],
   'lab-notebook-signatures': ['electronic_lab_notebook'],
   'vehicle-mileage-logs': ['vehicle_mileage_log'],

@@ -22,6 +22,8 @@ export type MboPickerMember = {
   displayName: string;
   departmentId?: string | null;
   departmentName?: string;
+  /** 조직도 부서 path (공개범위·부서장 열람용) */
+  departmentPath?: string | null;
 };
 
 export type MboPickerDepartment = {
@@ -193,6 +195,7 @@ export async function loadMboOrgDirectory(
   }
   const { nodes, members, departmentMembers } = await loadOrganizationTree(organizationId);
   const deptNameById = new Map(nodes.map((n): [string, string] => [n.id, n.name]));
+  const deptPathById = new Map(nodes.map((n): [string, string] => [n.id, n.path]));
   const primaryDeptByMember = new Map<string, string>();
   for (const dm of departmentMembers) {
     if (!primaryDeptByMember.has(dm.member_id)) {
@@ -209,6 +212,7 @@ export async function loadMboOrgDirectory(
         displayName: m.name || m.email || '멤버',
         departmentId,
         departmentName: departmentId ? deptNameById.get(departmentId) : undefined,
+        departmentPath: departmentId ? deptPathById.get(departmentId) ?? null : null,
       };
     });
   const departments: MboPickerDepartment[] = nodes.map((n) => ({

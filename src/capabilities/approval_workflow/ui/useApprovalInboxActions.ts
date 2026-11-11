@@ -7,6 +7,7 @@ import {
   createApprovalWithChosenLine,
   findPendingStepForRequest,
   isMboPlanApprovalEntity,
+  isPurchaseRequisitionApprovalEntity,
   isResearchGateApprovalEntity,
   isResourceReservationApprovalEntity,
   processApprovalStepAtomic,
@@ -65,6 +66,9 @@ export function useApprovalInboxActions(input: {
       }
       if (req && isResourceReservationApprovalEntity(req.entity_type)) {
         void invalidate({ resource: 'room_reservations', invalidates: ['list'] });
+      }
+      if (req && isPurchaseRequisitionApprovalEntity(req.entity_type)) {
+        void invalidate({ resource: 'purchase_requisitions', invalidates: ['list'] });
       }
       input.refetchSteps?.();
       input.refetch();

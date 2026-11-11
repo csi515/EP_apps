@@ -4,6 +4,9 @@ import { useTranslate } from '@refinedev/core';
 import { KeyRound } from 'lucide-react';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { Button } from '@/shared/components/ui/Button';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { StorageService } from '@/services/storage';
 import { canManageRoles } from '@/domain/permissions';
@@ -73,7 +76,11 @@ export const WorkspaceStaffAccessPage: React.FC = () => {
   }
 
   return (
-    <WorkPageFrame width="hub" data-testid="workspace-staff-access">
+    <WorkPageFrame
+      width="hub"
+      data-testid="workspace-staff-access"
+      progressActive={canManage && loading}
+    >
       <PageHeader
         icon={<KeyRound className="h-5 w-5" />}
         title={translate('ep.staffAccess.title')}
@@ -86,57 +93,51 @@ export const WorkspaceStaffAccessPage: React.FC = () => {
           className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
         >
           {error}
-          <button
-            type="button"
-            className="ml-2 underline"
-            onClick={() => setError(null)}
-          >
+          <Button variant="ghost" size="sm" className="ml-2" onClick={() => setError(null)}>
             ×
-          </button>
+          </Button>
         </div>
       ) : null}
 
       <div className="mt-4">
-        {viewMode === 'mine' || !canManage ? (
-          <StaffAccessMyLauncherView
-            accessInput={accessInput}
-            canManage={canManage}
-            onSwitchToAdmin={() => {
-              setModeOverride('admin');
-              goNav({ mode: 'admin', memberId: null });
-            }}
-          />
-        ) : (
-          <>
-            {loading ? (
-              <p className="text-sm text-slate-500">…</p>
-            ) : (
-              <StaffAccessAppHomeView
-                members={members}
-                initialAppId={nav.appId}
-                intentGrant={nav.intent === 'grant'}
-                onError={setError}
-                onMembersUpdated={setMembers}
-                onOpenMember={(memberId, appId) => {
-                  goNav({ memberId, appId, mode: 'admin' });
-                }}
-                onSwitchToMine={() => {
-                  setModeOverride('mine');
-                  goNav({ mode: 'mine', memberId: null });
-                }}
-              />
-            )}
-            <div className="mt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={() => void reload()}
-                className="min-h-9 text-xs font-semibold text-slate-500 hover:text-slate-800"
-              >
-                {translate('ep.members.refresh')}
-              </button>
-            </div>
-          </>
-        )}
+        <ContentFadeIn motionKey={viewMode}>
+          {viewMode === 'mine' || !canManage ? (
+            <StaffAccessMyLauncherView
+              accessInput={accessInput}
+              canManage={canManage}
+              onSwitchToAdmin={() => {
+                setModeOverride('admin');
+                goNav({ mode: 'admin', memberId: null });
+              }}
+            />
+          ) : (
+            <>
+              {loading ? (
+                <PageListSkeleton rows={4} message={translate('ep.members.refresh')} />
+              ) : (
+                <StaffAccessAppHomeView
+                  members={members}
+                  initialAppId={nav.appId}
+                  intentGrant={nav.intent === 'grant'}
+                  onError={setError}
+                  onMembersUpdated={setMembers}
+                  onOpenMember={(memberId, appId) => {
+                    goNav({ memberId, appId, mode: 'admin' });
+                  }}
+                  onSwitchToMine={() => {
+                    setModeOverride('mine');
+                    goNav({ mode: 'mine', memberId: null });
+                  }}
+                />
+              )}
+              <div className="mt-2 flex justify-end">
+                <Button variant="ghost" size="sm" onClick={() => void reload()}>
+                  {translate('ep.members.refresh')}
+                </Button>
+              </div>
+            </>
+          )}
+        </ContentFadeIn>
       </div>
 
       <StaffAccessMemberSheet

@@ -7,6 +7,7 @@ import {
   isValidYearMonth,
   toYearMonth,
 } from '../domain/officeSupplyRequestEngine';
+import { readOfficeSupplyRequestSettings } from '../domain/officeSupplyRequestSettings';
 import {
   campaignRowToDomain,
   closeCampaign,
@@ -27,22 +28,31 @@ function toLocalDatetimeValue(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function defaultDeadlineForMonth(yearMonth: string): string {
+/** setupSchema monthlyCutoffDay 기준 해당 월 기본 마감(18:00) */
+function defaultDeadlineForMonth(yearMonth: string, monthlyCutoffDay: number): string {
   const [y, m] = yearMonth.split('-').map(Number);
-  // 해당 월 10일 18:00 기본
-  const d = new Date(y, (m ?? 1) - 1, 10, 18, 0, 0);
+  const lastDay = new Date(y, m ?? 1, 0).getDate();
+  const day = Math.min(Math.max(1, Math.floor(monthlyCutoffDay)), lastDay);
+  const d = new Date(y, (m ?? 1) - 1, day, 18, 0, 0);
   return d.toISOString();
 }
 
 const ManageInner: React.FC = () => {
   const { currentOrganization } = useOrganization();
   const orgId = currentOrganization?.id ?? '';
+  const runtimeSettings = useMemo(
+    () =>
+      readOfficeSupplyRequestSettings(
+        (currentOrganization?.settings as Record<string, unknown> | null | undefined) ?? null
+      ),
+    [currentOrganization?.settings]
+  );
 
   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [yearMonth, setYearMonth] = useState(() => toYearMonth());
   const [deadlineLocal, setDeadlineLocal] = useState(() =>
-    toLocalDatetimeValue(defaultDeadlineForMonth(toYearMonth()))
+    toLocalDatetimeValue(defaultDeadlineForMonth(toYearMonth(), 25))
   );
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
@@ -74,6 +84,14 @@ const ManageInner: React.FC = () => {
   useEffect(() => {
     void reloadCampaigns();
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps -- 초기 로드
+
+  // 신규 캠페인 작성 중일 때만 setupSchema 마감일을 기본값으로 반영
+  useEffect(() => {
+    if (selectedId) return;
+    setDeadlineLocal(
+      toLocalDatetimeValue(defaultDeadlineForMonth(yearMonth, runtimeSettings.monthlyCutoffDay))
+    );
+  }, [runtimeSettings.monthlyCutoffDay, selectedId, yearMonth]);
 
   const reloadAggregate = useCallback(async () => {
     if (!orgId || !selectedId) {
@@ -187,7 +205,11 @@ const ManageInner: React.FC = () => {
               onChange={(e) => {
                 setYearMonth(e.target.value);
                 if (isValidYearMonth(e.target.value)) {
-                  setDeadlineLocal(toLocalDatetimeValue(defaultDeadlineForMonth(e.target.value)));
+                  setDeadlineLocal(
+                    toLocalDatetimeValue(
+                      defaultDeadlineForMonth(e.target.value, runtimeSettings.monthlyCutoffDay)
+                    )
+                  );
                 }
               }}
               placeholder="2026-10"

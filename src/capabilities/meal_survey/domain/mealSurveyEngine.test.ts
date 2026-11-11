@@ -3,6 +3,7 @@ import {
   DEFAULT_MEAL_SURVEY_SETTINGS,
   activeMealSlots,
   aggregateDaySlots,
+  applyDefaultEatingToDayCounts,
   buildMealMonthGrid,
   canManageMealSurveyActivity,
   cycleMealCellStatus,
@@ -10,7 +11,9 @@ import {
   isCafeteriaClosedOn,
   isMealSlotWritable,
   listOperatingDatesInRange,
+  mealStatusLabel,
   monthRange,
+  resolveMealCellForKitchen,
   toggleCafeteriaClosedDate,
   toggleClosedWeekday,
   validateMealSurveySettings,
@@ -73,6 +76,29 @@ const agg = aggregateDaySlots(
 assert.equal(agg[0].eatingCount, 1);
 assert.equal(agg[0].skippingCount, 1);
 assert.equal(agg[0].unsetCount, 1);
+
+const aggDefaultEating = aggregateDaySlots(
+  3,
+  [
+    { mealDate: '2026-10-15', mealSlot: 'lunch', status: 'eating' },
+    { mealDate: '2026-10-15', mealSlot: 'lunch', status: 'skipping' },
+  ],
+  ['lunch'],
+  ['2026-10-15'],
+  { defaultEating: true }
+);
+assert.equal(aggDefaultEating[0].eatingCount, 2, 'unset counted as eating');
+assert.equal(aggDefaultEating[0].skippingCount, 1);
+assert.equal(aggDefaultEating[0].unsetCount, 0);
+
+assert.deepEqual(
+  applyDefaultEatingToDayCounts({ eating: 1, skipping: 1, unset: 1 }, true),
+  { eating: 2, skipping: 1, unset: 0 }
+);
+assert.equal(resolveMealCellForKitchen(null, true), 'eating');
+assert.equal(resolveMealCellForKitchen(null, false), null);
+assert.equal(mealStatusLabel(null, { defaultEating: true }), '식사(기본)');
+assert.equal(mealStatusLabel(null), '미응답');
 
 // 기본 토·일 휴무
 assert.equal(isCafeteriaClosedOn(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-17'), true); // Sat

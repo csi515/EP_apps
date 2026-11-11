@@ -5179,6 +5179,37 @@ export interface Database {
           },
         ];
       };
+      research_project_links: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          title: string;
+          url: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          title: string;
+          url: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['research_project_links']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'research_project_links_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'research_projects';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       mbo_projects: {
         Row: {
           id: string;

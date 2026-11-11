@@ -90,6 +90,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
       revisionCount: row.revision_count ?? row.revision ?? 1,
       targetValue: row.target_value ?? row.weight ?? null,
       rejectionReason: row.rejection_reason,
+      evaluatorId: row.evaluator_id ?? null,
       ownerId: row.owner_id ?? null,
       visibilityType: (row.visibility_type || 'PRIVATE') as MboVisibilityType,
       sharedMemberIds: sharesByObjective.get(row.id) ?? [],
@@ -110,6 +111,14 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     }));
   }, [refineObjectives, localObjectives, sharesByObjective]);
 
+  const authorDepartmentPathByOwnerId = useCallback(
+    (ownerId: string | null | undefined): string | null => {
+      if (!ownerId) return null;
+      return orgMembers.find((m) => m.userId === ownerId)?.departmentPath ?? null;
+    },
+    [orgMembers],
+  );
+
   const objectives: ObjectiveNode[] = useMemo(() => {
     let filtered = filterObjectivesForViewer(rawObjectiveRows, {
       scope: listScope,
@@ -118,6 +127,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
       isOwnerOrAdmin: isOrgAdmin,
       managedUserIds: orgScope?.managedUserIds,
       viewerLeadDepartmentPath: orgScope?.leadDepartmentPaths[0] ?? null,
+      authorDepartmentPathByOwnerId,
       ownerFilterId: ownerFilterId || null,
     });
     const q = personQuery.trim();
@@ -136,6 +146,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     viewerMemberId,
     orgScope,
     isOrgAdmin,
+    authorDepartmentPathByOwnerId,
     ownerFilterId,
     personQuery,
     selectedMemberUserIds,
@@ -150,9 +161,10 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
         isOwnerOrAdmin: isOrgAdmin,
         managedUserIds: orgScope?.managedUserIds,
         viewerLeadDepartmentPath: orgScope?.leadDepartmentPaths[0] ?? null,
+        authorDepartmentPathByOwnerId,
         ownerFilterId: null,
       }),
-    [rawObjectiveRows, viewerUserId, viewerMemberId, orgScope, isOrgAdmin],
+    [rawObjectiveRows, viewerUserId, viewerMemberId, orgScope, isOrgAdmin, authorDepartmentPathByOwnerId],
   );
 
   const personFilterOptions = useMemo(() => {
@@ -172,16 +184,17 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     [orgScope?.goalActor]
   );
 
+  // 상위 목표 refs는 필터된 목록이 아니라 raw 전체 기준 (스코프 밖 전사 목표 포함)
   const existingGoalRefs: ExistingGoalRef[] = useMemo(
     () =>
-      objectives.map((o) => ({
+      rawObjectiveRows.map((o) => ({
         id: o.id,
         level: o.level,
         parentId: o.parentId,
         deletedAt: o.deletedAt ?? null,
         departmentName: o.departmentName,
       })),
-    [objectives]
+    [rawObjectiveRows]
   );
 
   const creatableLevels = useMemo(() => listCreatableLevels(goalActor), [goalActor]);

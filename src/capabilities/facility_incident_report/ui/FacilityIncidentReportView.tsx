@@ -4,10 +4,12 @@ import {
   evaluateIncidentSeverity,
   renderIncidentReportSvg,
   formatIncidentNotificationText,
+  transitionIncidentStatus,
   type IncidentReportItem,
   type IncidentSeverity,
   type IncidentStatus,
 } from '../domain/incidentReportEngine';
+import { showToast } from '@/shared/feedback/uiFeedback';
 
 export const FacilityIncidentReportView: React.FC = () => {
   const [selectedIncident, setSelectedIncident] = useState<IncidentReportItem | null>(null);
@@ -86,22 +88,68 @@ export const FacilityIncidentReportView: React.FC = () => {
     );
   };
 
-  const handleStatusChange = (reportId: string, nextStatus: IncidentStatus) => {
+  const handleStatusChange = (report: IncidentReportItem, nextStatus: IncidentStatus) => {
+    let insuranceClaimNumber = report.insuranceClaimNumber?.trim() || undefined;
+    let preventativeAction = report.preventativeAction?.trim() || undefined;
+
+    if (nextStatus === 'insurance_processing' && !insuranceClaimNumber) {
+      const input = window.prompt('보험 처리로 변경하려면 보험 접수 번호를 입력하세요.');
+      if (!input?.trim()) {
+        showToast('보험 접수 번호가 필요합니다.', 'warning');
+        return;
+      }
+      insuranceClaimNumber = input.trim();
+    }
+
+    if (nextStatus === 'resolved' && !preventativeAction) {
+      const input = window.prompt('종결 처리 시 재발 방지 대책을 입력하세요.');
+      if (!input?.trim()) {
+        showToast('재발 방지 대책이 필요합니다.', 'warning');
+        return;
+      }
+      preventativeAction = input.trim();
+    }
+
+    const check = transitionIncidentStatus(report.status, nextStatus, {
+      insuranceClaimNumber,
+      preventativeAction,
+    });
+    if (!check.valid) {
+      showToast(check.reason || '허용되지 않는 상태 전이입니다.', 'error');
+      return;
+    }
+
     updateReport(
       {
         resource: 'facility_incident_reports',
-        id: reportId,
+        id: report.id,
         values: {
           status: nextStatus,
+          ...(insuranceClaimNumber
+            ? {
+                insurance_claim_number: insuranceClaimNumber,
+                insurance_claimed: true,
+              }
+            : {}),
+          ...(preventativeAction ? { preventative_action: preventativeAction } : {}),
           updated_at: new Date().toISOString(),
         },
       },
       {
         onSuccess: () => {
           query?.refetch();
-          if (selectedIncident && selectedIncident.id === reportId) {
-            setSelectedIncident({ ...selectedIncident, status: nextStatus });
+          if (selectedIncident && selectedIncident.id === report.id) {
+            setSelectedIncident({
+              ...selectedIncident,
+              status: nextStatus,
+              insuranceClaimNumber: insuranceClaimNumber ?? selectedIncident.insuranceClaimNumber,
+              insuranceClaimed: insuranceClaimNumber ? true : selectedIncident.insuranceClaimed,
+              preventativeAction: preventativeAction ?? selectedIncident.preventativeAction,
+            });
           }
+        },
+        onError: () => {
+          showToast('상태 변경 저장에 실패했습니다.', 'error');
         },
       }
     );
@@ -310,19 +358,22 @@ export const FacilityIncidentReportView: React.FC = () => {
               <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b', marginBottom: '8px' }}>상태 변경</div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
-                  onClick={() => handleStatusChange(selectedIncident.id, 'investigating')}
+                  type="button"
+                  onClick={() => handleStatusChange(selectedIncident, 'investigating')}
                   style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
                 >
                   조사 중
                 </button>
                 <button
-                  onClick={() => handleStatusChange(selectedIncident.id, 'insurance_processing')}
+                  type="button"
+                  onClick={() => handleStatusChange(selectedIncident, 'insurance_processing')}
                   style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', border: '1px solid #cbd5e1', cursor: 'pointer' }}
                 >
                   보험 접수
                 </button>
                 <button
-                  onClick={() => handleStatusChange(selectedIncident.id, 'resolved')}
+                  type="button"
+                  onClick={() => handleStatusChange(selectedIncident, 'resolved')}
                   style={{ flex: 1, padding: '6px', fontSize: '12px', borderRadius: '6px', background: '#16a34a', color: '#fff', border: 'none', cursor: 'pointer' }}
                 >
                   종결 처리

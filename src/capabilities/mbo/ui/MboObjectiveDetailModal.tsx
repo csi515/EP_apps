@@ -19,6 +19,8 @@ export type MboObjectiveDetailModalProps = {
   objective: ObjectiveNode;
   goalsLocked: boolean;
   canOverrideGoalLock?: boolean;
+  /** 승인·반려 버튼 표시 (부서장 + 해당 owner 관리 가능) */
+  canApproveReject?: boolean;
   hasLinkedProject: boolean;
   onClose: () => void;
   onCreateProject?: () => void;
@@ -78,6 +80,7 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
   objective,
   goalsLocked,
   canOverrideGoalLock = false,
+  canApproveReject = false,
   hasLinkedProject,
   onClose,
   onCreateProject,
@@ -245,12 +248,13 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
                 승인 요청
               </button>
             ) : null}
-            {objective.status === 'submitted' ? (
+            {objective.status === 'submitted' && canApproveReject ? (
               <>
                 <button
                   type="button"
                   onClick={() => onApprove(objective.id)}
                   className="inline-flex min-h-12 items-center gap-1 rounded-lg bg-emerald-50 px-3 text-[11px] font-bold text-emerald-700"
+                  data-testid="mbo-detail-approve"
                 >
                   <CheckCircle2 className="h-3 w-3" />
                   승인
@@ -259,6 +263,7 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
                   type="button"
                   onClick={() => onOpenRejectModal(objective.id)}
                   className="min-h-12 rounded-lg bg-rose-50 px-3 text-[11px] font-bold text-rose-700"
+                  data-testid="mbo-detail-reject"
                 >
                   반려
                 </button>

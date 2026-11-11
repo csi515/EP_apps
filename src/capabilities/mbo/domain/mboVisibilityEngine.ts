@@ -116,6 +116,7 @@ export function filterObjectivesForViewer<
   T extends {
     ownerId?: string | null;
     authorId?: string | null;
+    evaluatorId?: string | null;
     visibilityType?: MboVisibilityType | null;
     sharedMemberIds?: readonly string[];
     deletedAt?: string | null;
@@ -153,6 +154,7 @@ export function filterObjectivesForViewer<
     return canViewMboGoal(
       {
         authorId: ownerId || '',
+        evaluatorId: row.evaluatorId ?? null,
         visibilityType,
         sharedMemberIds: row.sharedMemberIds,
         authorDepartmentPath: opts.authorDepartmentPathByOwnerId?.(ownerId) ?? null,

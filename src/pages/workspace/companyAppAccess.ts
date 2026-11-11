@@ -98,7 +98,7 @@ export const COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS: readonly CompanyAppFeatureA
     buildOption(
       companyAppAccessFeatureKey('mbo'),
       'MBO 앱 이용',
-      'MBO 목표·월별 체크 앱 진입',
+      '런처 표시(company_app:mbo). 목표 조회는 직급 mbo:view(→mbo:goals:read)도 필요합니다.',
       'mbo'
     ),
     buildOption(

@@ -35,25 +35,32 @@ export function generateTicketCode(seq: number): string {
   return `G-${String(seq).padStart(4, '0')}`;
 }
 
-export function hashAccessPin(pin: string): string {
-  let hash = 0;
-  for (let i = 0; i < pin.length; i++) {
-    const char = pin.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return Math.abs(hash).toString(16).toUpperCase();
+const GRIEVANCE_PIN_PREFIX = 'ep_grievance_v1:';
+
+/** DB `core.grievance_pin_hash` 와 동일 (SHA-256 hex). */
+export async function hashAccessPin(pin: string): Promise<string> {
+  const payload = `${GRIEVANCE_PIN_PREFIX}${pin.trim()}`;
+  const bytes = new TextEncoder().encode(payload);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
-export function verifyAccessPin(rawPin: string, storedHash: string): boolean {
-  return hashAccessPin(rawPin) === storedHash;
+export async function verifyAccessPin(rawPin: string, storedHash: string): Promise<boolean> {
+  const next = await hashAccessPin(rawPin);
+  return next === storedHash;
 }
 
 /**
  * 단방향 암호화 블라인드 토큰 생성
  * DB 상에서 작성자 User ID를 완전히 격리(Nullify)하고, 작성자 본인만 고유 영수증 토큰으로 조회 가능하도록 보증합니다.
  */
-export function generateBlindReceiptToken(ticketCode: string, pin: string, salt = 'ep_whistleblower_salt'): string {
+export async function generateBlindReceiptToken(
+  ticketCode: string,
+  pin: string,
+  salt = 'ep_whistleblower_salt'
+): Promise<string> {
   const combined = `${ticketCode}:${pin.trim()}:${salt}`;
   let hash1 = 5381;
   let hash2 = 52711;
@@ -64,7 +71,8 @@ export function generateBlindReceiptToken(ticketCode: string, pin: string, salt 
   }
   const hex1 = Math.abs(hash1).toString(16).padStart(8, '0').toUpperCase().slice(0, 4);
   const hex2 = Math.abs(hash2).toString(16).padStart(8, '0').toUpperCase().slice(0, 4);
-  const hex3 = hashAccessPin(pin + ticketCode).padStart(8, '0').slice(0, 4);
+  const pinDigest = await hashAccessPin(`${pin}${ticketCode}`);
+  const hex3 = pinDigest.slice(0, 4).toUpperCase();
   return `TKN-${hex1}-${hex2}-${hex3}`;
 }
 

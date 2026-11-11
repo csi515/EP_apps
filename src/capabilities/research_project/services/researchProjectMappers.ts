@@ -4,12 +4,18 @@ import type {
   ResearchGate,
   ResearchMember,
   ResearchProject,
+  ResearchProjectLink,
 } from '../domain/researchProjectEngine';
 
 type ProjectRow = Database['core']['Tables']['research_projects']['Row'];
 type MemberRow = Database['core']['Tables']['research_project_members']['Row'];
 type GateRow = Database['core']['Tables']['research_project_gates']['Row'];
 type DeliverableRow = Database['core']['Tables']['research_project_deliverables']['Row'];
+type LinkRow = Database['core']['Tables']['research_project_links']['Row'];
+
+function looksLikeUuid(value: string | null | undefined): boolean {
+  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value));
+}
 
 export function mapMemberRow(row: MemberRow): ResearchMember {
   return {
@@ -44,11 +50,21 @@ export function mapDeliverableRow(row: DeliverableRow): ResearchDeliverable {
   };
 }
 
+export function mapLinkRow(row: LinkRow): ResearchProjectLink {
+  return {
+    id: row.id,
+    title: row.title,
+    url: row.url,
+    sortOrder: row.sort_order,
+  };
+}
+
 export function assembleResearchProject(
   row: ProjectRow,
   members: MemberRow[],
   gates: GateRow[],
-  deliverables: DeliverableRow[]
+  deliverables: DeliverableRow[],
+  links: LinkRow[] = []
 ): ResearchProject {
   return {
     id: row.id,
@@ -70,6 +86,7 @@ export function assembleResearchProject(
     deliverables: deliverables
       .map(mapDeliverableRow)
       .sort((a, b) => a.sortOrder - b.sortOrder),
+    links: links.map(mapLinkRow).sort((a, b) => a.sortOrder - b.sortOrder),
   };
 }
 
@@ -100,7 +117,7 @@ export function memberInsertFromDomain(
   return {
     organization_id: organizationId,
     project_id: projectId,
-    member_id: member.memberId.startsWith('local-') ? null : member.memberId,
+    member_id: looksLikeUuid(member.memberId) ? member.memberId : null,
     member_name: member.memberName,
     role: member.role,
   };

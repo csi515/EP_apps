@@ -26,7 +26,10 @@ assert.equal(isVolunteerJoinAllowed({ status: 'closed', capacity: 3, signupCount
 
 assert.equal(remainingVolunteerSlots(10, 7), 3);
 assert.equal(deriveVolunteerStatusAfterCount(5, 5, 'open'), 'closed');
+assert.equal(deriveVolunteerStatusAfterCount(5, 6, 'open'), 'closed');
 assert.equal(deriveVolunteerStatusAfterCount(5, 4, 'closed'), 'open');
 assert.equal(deriveVolunteerStatusAfterCount(5, 4, 'cancelled'), 'cancelled');
+assert.equal(deriveVolunteerStatusAfterCount(1, 1, 'open'), 'closed');
+assert.equal(deriveVolunteerStatusAfterCount(1, 0, 'closed'), 'open');
 
 console.log('volunteerActivityEngine.test.ts: ok');

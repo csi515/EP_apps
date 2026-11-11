@@ -10,6 +10,7 @@ import {
   toYearMonth,
   validateRequestLines,
 } from '../domain/officeSupplyRequestEngine';
+import { readOfficeSupplyRequestSettings } from '../domain/officeSupplyRequestSettings';
 import {
   campaignRowToDomain,
   catalogRowToDomain,
@@ -20,12 +21,22 @@ import {
 } from '../officeSupplyRequestService';
 import { useOfficeSupplyManageAccess } from './OfficeSupplyAccessGate';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { Button } from '@/shared/components/ui/Button';
+import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 
 export const OfficeSupplyMyView: React.FC = () => {
   const { currentOrganization, selectedMembership } = useOrganization();
   const orgId = currentOrganization?.id ?? '';
   const memberId = selectedMembership?.id ?? null;
   const canManage = useOfficeSupplyManageAccess();
+  const runtimeSettings = useMemo(
+    () =>
+      readOfficeSupplyRequestSettings(
+        (currentOrganization?.settings as Record<string, unknown> | null | undefined) ?? null
+      ),
+    [currentOrganization?.settings]
+  );
 
   const [yearMonth, setYearMonth] = useState(() => toYearMonth());
   const [catalog, setCatalog] = useState<ReturnType<typeof catalogRowToDomain>[]>([]);
@@ -80,7 +91,14 @@ export const OfficeSupplyMyView: React.FC = () => {
   async function handleSave() {
     if (!orgId || !campaign || !writable) return;
     const lines = normalizeRequestLines(qtyByItem);
-    const check = validateRequestLines(lines, new Set(catalog.map((c) => c.id)));
+    const unitPriceByItemId: Record<string, number> = {};
+    for (const item of catalog) {
+      unitPriceByItemId[item.id] = item.estimatedUnitPrice;
+    }
+    const check = validateRequestLines(lines, new Set(catalog.map((c) => c.id)), {
+      unitPriceByItemId,
+      maxMonthlyBudgetPerUser: runtimeSettings.maxMonthlyBudgetPerUser,
+    });
     if (!check.isValid) {
       showToast(check.error ?? '입력을 확인하세요.', 'error');
       return;
@@ -102,30 +120,30 @@ export const OfficeSupplyMyView: React.FC = () => {
   }
 
   return (
-    <WorkPageFrame width="form">
+    <WorkPageFrame width="form" progressActive={loading}>
       <header>
         <h1 className="text-xl font-semibold text-slate-900">사무용품 신청</h1>
         <p className="mt-1 text-sm text-slate-500">월별 구매 희망 품목과 수량을 입력하세요.</p>
       </header>
 
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="min-h-11 rounded-lg border border-slate-200 px-3 text-sm"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setYearMonth((ym) => shiftYearMonth(ym, -1))}
         >
           이전 달
-        </button>
+        </Button>
         <span className="min-w-[7rem] text-center text-base font-semibold text-slate-900">
           {yearMonth}
         </span>
-        <button
-          type="button"
-          className="min-h-11 rounded-lg border border-slate-200 px-3 text-sm"
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => setYearMonth((ym) => shiftYearMonth(ym, 1))}
         >
           다음 달
-        </button>
+        </Button>
       </div>
 
       {!campaign ? (
@@ -173,44 +191,48 @@ export const OfficeSupplyMyView: React.FC = () => {
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-500">불러오는 중…</p>
-      ) : catalog.length === 0 ? (
-        <p className="text-sm text-slate-500">구매 가능 품목이 없습니다.</p>
+        <PageListSkeleton rows={3} />
       ) : (
-        <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
-          {catalog.map((item) => (
-            <li key={item.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-slate-900">{item.name}</p>
-                <p className="text-xs text-slate-500">
-                  단위 {item.unit}
-                  {item.estimatedUnitPrice > 0
-                    ? ` · 추정 ${item.estimatedUnitPrice.toLocaleString('ko-KR')}원`
-                    : null}
-                </p>
-              </div>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <span className="sr-only">{item.name} 수량</span>
-                <input
-                  type="number"
-                  min={0}
-                  step="1"
-                  disabled={!writable}
-                  className="h-11 w-24 rounded-lg border border-slate-200 px-2 text-right disabled:bg-slate-50"
-                  value={qtyByItem[item.id] ?? 0}
-                  onChange={(e) => {
-                    const v = Number(e.target.value);
-                    setQtyByItem((prev) => ({
-                      ...prev,
-                      [item.id]: Number.isFinite(v) ? Math.max(0, v) : 0,
-                    }));
-                  }}
-                />
-                <span className="text-slate-500">{item.unit}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
+        <ContentFadeIn motionKey={yearMonth}>
+          {catalog.length === 0 ? (
+            <p className="text-sm text-slate-500">구매 가능 품목이 없습니다.</p>
+          ) : (
+            <ul className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+              {catalog.map((item) => (
+                <li key={item.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-slate-900">{item.name}</p>
+                    <p className="text-xs text-slate-500">
+                      단위 {item.unit}
+                      {item.estimatedUnitPrice > 0
+                        ? ` · 추정 ${item.estimatedUnitPrice.toLocaleString('ko-KR')}원`
+                        : null}
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                    <span className="sr-only">{item.name} 수량</span>
+                    <input
+                      type="number"
+                      min={0}
+                      step="1"
+                      disabled={!writable}
+                      className="h-11 w-24 rounded-lg border border-slate-200 px-2 text-right disabled:bg-slate-50"
+                      value={qtyByItem[item.id] ?? 0}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        setQtyByItem((prev) => ({
+                          ...prev,
+                          [item.id]: Number.isFinite(v) ? Math.max(0, v) : 0,
+                        }));
+                      }}
+                    />
+                    <span className="text-slate-500">{item.unit}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ContentFadeIn>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -219,15 +241,20 @@ export const OfficeSupplyMyView: React.FC = () => {
           <span className="font-semibold text-slate-900">
             {estimatedTotal.toLocaleString('ko-KR')}원
           </span>
+          {runtimeSettings.maxMonthlyBudgetPerUser != null ? (
+            <span className="ml-2 text-slate-500">
+              / 한도 {runtimeSettings.maxMonthlyBudgetPerUser.toLocaleString('ko-KR')}원
+            </span>
+          ) : null}
         </p>
-        <button
-          type="button"
-          disabled={!writable || saving || !campaign}
+        <Button
+          variant="primary"
+          isLoading={saving}
+          disabled={!writable || !campaign}
           onClick={() => void handleSave()}
-          className="min-h-11 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {saving ? '저장 중…' : writable ? '신청 저장' : '마감됨'}
-        </button>
+          {writable ? '신청 저장' : '마감됨'}
+        </Button>
       </div>
     </WorkPageFrame>
   );

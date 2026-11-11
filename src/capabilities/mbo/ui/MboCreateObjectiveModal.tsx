@@ -1,5 +1,4 @@
 import React from 'react';
-import { X } from 'lucide-react';
 import type { MboLevel } from '../domain/mboEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import {
@@ -12,6 +11,10 @@ import {
 } from '../domain/mboGoalHierarchy';
 import type { ImmediateSuperiorResult } from '@/core/organizations/resolveImmediateSuperior';
 import type { MboPickerMember } from '../services/mboOrgScopeService';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { FormField, FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
+import { Input } from '@/shared/components/ui/Input';
 import { MboImmediateSuperiorBar } from './MboImmediateSuperiorBar';
 import { MboScheduleRangePicker } from './MboScheduleRangePicker';
 import { MBO_COPY } from './mboUiCopy';
@@ -80,186 +83,211 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
   onOpenSharePicker,
   immediateSuperior,
 }) => {
-  if (!open) return null;
+  const weightHint = (() => {
+    const ownerId = selectedOwnerMember?.userId;
+    const siblingTotal = objectives
+      .filter((o) => !o.deletedAt && (!ownerId || o.ownerId === ownerId))
+      .reduce((sum, o) => sum + (o.weight || 0), 0);
+    const projected = siblingTotal + (Number.isFinite(newWeight) ? newWeight : 0);
+    const diff = 100 - projected;
+    if (diff === 0) return undefined;
+    return MBO_COPY.weightInvalid(projected, diff);
+  })();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs">
-      <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl border border-slate-100">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <h3 className="text-base font-extrabold text-slate-900">{MBO_COPY.createGoalModal}</h3>
-          <button type="button" onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100">
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={MBO_COPY.createGoalModal}
+      maxWidth="lg"
+      intent="form"
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            취소
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            form="mbo-create-objective-form"
+            data-testid="mbo-create-objective-submit"
+          >
+            등록 완료
+          </Button>
+        </div>
+      }
+    >
+      <MboImmediateSuperiorBar result={immediateSuperior} />
+
+      <form
+        id="mbo-create-objective-form"
+        onSubmit={onSubmit}
+        className="mt-3 space-y-3.5"
+        data-testid="mbo-create-objective-form"
+      >
+        <div
+          className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-[11px] leading-relaxed text-indigo-950"
+          data-testid="mbo-goal-hierarchy-hint"
+        >
+          <p className="font-bold">
+            {MBO_COPY.levelHintTitle(levelLabelKo(maxCreatableLevel))}
+            {goalActor.roleName ? ` · ${goalActor.roleName}` : ''}
+          </p>
+          <p className="mt-1 text-indigo-800/90">{MBO_COPY.levelHintBody}</p>
         </div>
 
-        <MboImmediateSuperiorBar result={immediateSuperior} />
-
-        <form onSubmit={onSubmit} className="space-y-3.5" data-testid="mbo-create-objective-form">
-          <div
-            className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-[11px] leading-relaxed text-indigo-950"
-            data-testid="mbo-goal-hierarchy-hint"
+        <div className="grid grid-cols-2 gap-3">
+          <FormField
+            label={MBO_COPY.levelSelect}
+            htmlFor="mbo-create-level"
+            hint={
+              !hasPrerequisiteGoals(newLevel, existingGoalRefs)
+                ? `${prerequisiteLabel(newLevel)}가 아직 없습니다.`
+                : undefined
+            }
           >
-            <p className="font-bold">
-              {MBO_COPY.levelHintTitle(levelLabelKo(maxCreatableLevel))}
-              {goalActor.roleName ? ` · ${goalActor.roleName}` : ''}
-            </p>
-            <p className="mt-1 text-indigo-800/90">{MBO_COPY.levelHintBody}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">{MBO_COPY.levelSelect}</label>
-              <select
-                value={newLevel}
-                onChange={(e) => {
-                  const next = e.target.value as MboLevel;
-                  onLevelChange(next);
-                  if (next === 'company') {
-                    onParentIdChange('');
-                  } else {
-                    const parents = listEligibleParentGoals(next, existingGoalRefs);
-                    onParentIdChange(
-                      parents.some((p) => p.id === newParentId) ? newParentId : parents[0]?.id || ''
-                    );
-                  }
-                }}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
-                data-testid="mbo-create-objective-level"
-              >
-                {creatableLevels.map((level) => (
-                  <option key={level} value={level}>
-                    {levelLabelKo(level)}
-                  </option>
-                ))}
-              </select>
-              {!hasPrerequisiteGoals(newLevel, existingGoalRefs) ? (
-                <p className="mt-1 text-[11px] font-semibold text-amber-700">
-                  {prerequisiteLabel(newLevel)}가 아직 없습니다.
-                </p>
-              ) : null}
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">{MBO_COPY.weightLabel}</label>
-              <input
-                type="number"
-                min="1"
-                max="100"
-                value={newWeight}
-                onChange={(e) => onWeightChange(Number(e.target.value))}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
-              />
-            </div>
-          </div>
-
-          {newLevel !== 'company' ? (
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">상위 목표 *</label>
-              <select
-                value={newParentId}
-                onChange={(e) => onParentIdChange(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
-                data-testid="mbo-create-objective-parent"
-              >
-                <option value="">상위 목표 선택</option>
-                {eligibleParents.map((parent) => {
-                  const title = objectives.find((o) => o.id === parent.id)?.title ?? parent.id;
-                  return (
-                    <option key={parent.id} value={parent.id}>
-                      [{levelLabelKo(parent.level)}] {title}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-          ) : null}
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">목표 타이틀 *</label>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={(e) => onTitleChange(e.target.value)}
-              placeholder={MBO_COPY.createGoalTitlePlaceholder}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-              data-testid="mbo-create-objective-title"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">핵심 성공 기준 (KPI) *</label>
-            <input
-              type="text"
-              value={newCriteria}
-              onChange={(e) => onCriteriaChange(e.target.value)}
-              placeholder={MBO_COPY.createGoalCriteriaPlaceholder}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-              data-testid="mbo-create-objective-criteria"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">{MBO_COPY.ownerPickerLabel} *</label>
-            <button
-              type="button"
-              onClick={onOpenOwnerPicker}
-              className="w-full min-h-12 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-left"
-            >
-              {selectedOwnerMember?.displayName || MBO_COPY.ownerPickerPlaceholder}
-            </button>
-            {selectedOwnerMember?.departmentName ? (
-              <p className="mt-1 text-[11px] font-semibold text-slate-500">
-                {MBO_COPY.ownerDepartmentLine(selectedOwnerMember.departmentName)}
-              </p>
-            ) : selectedOwnerMember ? (
-              <p className="mt-1 text-[11px] font-semibold text-amber-700">조직도에 부서 정보가 없습니다.</p>
-            ) : null}
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">공개범위</label>
             <select
-              value={newVisibility}
-              onChange={(e) => onVisibilityChange(e.target.value as MboVisibilityType)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+              id="mbo-create-level"
+              value={newLevel}
+              onChange={(e) => {
+                const next = e.target.value as MboLevel;
+                onLevelChange(next);
+                if (next === 'company') {
+                  onParentIdChange('');
+                } else {
+                  const parents = listEligibleParentGoals(next, existingGoalRefs);
+                  onParentIdChange(
+                    parents.some((p) => p.id === newParentId) ? newParentId : parents[0]?.id || ''
+                  );
+                }
+              }}
+              className={FORM_CONTROL_CLASS}
+              data-testid="mbo-create-objective-level"
             >
-              <option value="PRIVATE">비공개 (본인·부서장·관리자)</option>
-              <option value="PUBLIC">전체 공개 (조직 멤버)</option>
-              <option value="PARTIAL">선택 공개</option>
+              {creatableLevels.map((level) => (
+                <option key={level} value={level}>
+                  {levelLabelKo(level)}
+                </option>
+              ))}
             </select>
-            {newVisibility === 'PARTIAL' ? (
-              <button
-                type="button"
-                className="mt-2 min-h-12 w-full rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-xs font-bold text-indigo-800"
-                onClick={onOpenSharePicker}
-              >
-                공유 대상 {newShareMemberIds.length}명 선택
-              </button>
-            ) : null}
-          </div>
+          </FormField>
+          <FormField label={MBO_COPY.weightLabel} htmlFor="mbo-create-weight" hint={weightHint}>
+            <Input
+              id="mbo-create-weight"
+              type="number"
+              min={1}
+              max={100}
+              value={newWeight}
+              onChange={(e) => onWeightChange(Number(e.target.value))}
+              inputSize="md"
+            />
+          </FormField>
+        </div>
 
-          <MboScheduleRangePicker
-            startDate={newStartDate}
-            targetDate={newTargetDate}
-            onChange={onScheduleChange}
-          />
-
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="min-h-12 px-4 text-xs font-semibold text-slate-500">
-              취소
-            </button>
-            <button
-              type="submit"
-              data-testid="mbo-create-objective-submit"
-              className="min-h-12 rounded-xl bg-indigo-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-indigo-700"
+        {newLevel !== 'company' ? (
+          <FormField label="상위 목표" htmlFor="mbo-create-parent" required>
+            <select
+              id="mbo-create-parent"
+              value={newParentId}
+              onChange={(e) => onParentIdChange(e.target.value)}
+              required
+              className={FORM_CONTROL_CLASS}
+              data-testid="mbo-create-objective-parent"
             >
-              등록 완료
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <option value="">상위 목표 선택</option>
+              {eligibleParents.map((parent) => {
+                const title = objectives.find((o) => o.id === parent.id)?.title ?? parent.id;
+                return (
+                  <option key={parent.id} value={parent.id}>
+                    [{levelLabelKo(parent.level)}] {title}
+                  </option>
+                );
+              })}
+            </select>
+          </FormField>
+        ) : null}
+
+        <FormField
+          label="목표 타이틀"
+          htmlFor="mbo-create-title"
+          required
+          hint={MBO_COPY.createGoalTitleHint}
+        >
+          <Input
+            id="mbo-create-title"
+            value={newTitle}
+            onChange={(e) => onTitleChange(e.target.value)}
+            placeholder={MBO_COPY.createGoalTitlePlaceholder}
+            data-testid="mbo-create-objective-title"
+            required
+          />
+        </FormField>
+
+        <FormField
+          label="핵심 성공 기준 (KPI)"
+          htmlFor="mbo-create-criteria"
+          required
+          hint={MBO_COPY.createGoalCriteriaHint}
+        >
+          <Input
+            id="mbo-create-criteria"
+            value={newCriteria}
+            onChange={(e) => onCriteriaChange(e.target.value)}
+            placeholder={MBO_COPY.createGoalCriteriaPlaceholder}
+            data-testid="mbo-create-objective-criteria"
+            required
+          />
+        </FormField>
+
+        <FormField label={MBO_COPY.ownerPickerLabel} required>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full justify-start font-semibold"
+            onClick={onOpenOwnerPicker}
+          >
+            {selectedOwnerMember?.displayName || MBO_COPY.ownerPickerPlaceholder}
+          </Button>
+          {selectedOwnerMember?.departmentName ? (
+            <p className="mt-1 text-[11px] font-semibold text-slate-500">
+              {MBO_COPY.ownerDepartmentLine(selectedOwnerMember.departmentName)}
+            </p>
+          ) : selectedOwnerMember ? (
+            <p className="mt-1 text-[11px] font-semibold text-amber-700">
+              조직도에 부서 정보가 없습니다.
+            </p>
+          ) : null}
+        </FormField>
+
+        <FormField label="공개범위" htmlFor="mbo-create-visibility">
+          <select
+            id="mbo-create-visibility"
+            value={newVisibility}
+            onChange={(e) => onVisibilityChange(e.target.value as MboVisibilityType)}
+            className={FORM_CONTROL_CLASS}
+          >
+            <option value="PRIVATE">비공개 (본인·부서장·관리자)</option>
+            <option value="PUBLIC">전체 공개 (조직 멤버)</option>
+            <option value="PARTIAL">선택 공개</option>
+          </select>
+          {newVisibility === 'PARTIAL' ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-2 w-full"
+              onClick={onOpenSharePicker}
+            >
+              공유 대상 {newShareMemberIds.length}명 선택
+            </Button>
+          ) : null}
+        </FormField>
+
+        <MboScheduleRangePicker
+          startDate={newStartDate}
+          targetDate={newTargetDate}
+          onChange={onScheduleChange}
+        />
+      </form>
+    </Modal>
   );
 };

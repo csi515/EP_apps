@@ -36,6 +36,7 @@ export interface ObjectiveNode {
   revisionCount?: number;
   targetValue?: number | null;
   rejectionReason?: string;
+  evaluatorId?: string | null;
   visibilityType?: MboVisibilityType;
   sharedMemberIds?: string[];
   deletedAt?: string | null;
@@ -265,7 +266,7 @@ export const MboObjectiveTreeViewer: React.FC<MboObjectiveTreeViewerProps> = ({
                           : 'bg-amber-50 text-amber-800'
                       }`}
                     >
-                      월별 점검·수정
+                      수치·기한 정정
                     </button>
                   )}
                   <button

@@ -7,6 +7,7 @@ import {
   DEFAULT_MEAL_SURVEY_SETTINGS,
   WEEKDAY_LABELS,
   activeMealSlots,
+  applyDefaultEatingToDayCounts,
   isCafeteriaClosedOn,
   mealSlotLabel,
   mealStatusLabel,
@@ -86,15 +87,22 @@ const MealSurveyManageInner: React.FC = () => {
 
   const dayMap = useMemo(() => {
     const map = new Map<string, { eating: number; skipping: number; unset: number }>();
+    const defaultEating = settings.defaultEating;
     for (const d of overview?.days ?? []) {
-      map.set(responseMapKey(d.meal_date, d.meal_slot), {
-        eating: d.eating_count,
-        skipping: d.skipping_count,
-        unset: d.unset_count,
-      });
+      map.set(
+        responseMapKey(d.meal_date, d.meal_slot),
+        applyDefaultEatingToDayCounts(
+          {
+            eating: d.eating_count,
+            skipping: d.skipping_count,
+            unset: d.unset_count,
+          },
+          defaultEating
+        )
+      );
     }
     return map;
-  }, [overview]);
+  }, [overview, settings.defaultEating]);
 
   function memberStatus(memberId: string, mealDate: string, slot: MealSlot) {
     const member = overview?.members.find((m) => m.member_id === memberId);
@@ -114,6 +122,9 @@ const MealSurveyManageInner: React.FC = () => {
         <p className="mt-1 text-sm text-slate-500">
           달력에서 운영일을 고르면 확정 식수를 볼 수 있습니다. 대상{' '}
           {overview?.member_count ?? '—'}명
+          {settings.defaultEating
+            ? ' · 미응답은 식사로 집계합니다.'
+            : ' · 미응답은 식수에 넣지 않습니다.'}
         </p>
       </header>
 
@@ -229,7 +240,10 @@ const MealSurveyManageInner: React.FC = () => {
                         </td>
                         {slots.map((slot) => (
                           <td key={slot} className="px-3 py-2 text-slate-600">
-                            {mealStatusLabel(memberStatus(member.member_id, selectedDate, slot))}
+                            {mealStatusLabel(
+                              memberStatus(member.member_id, selectedDate, slot),
+                              { defaultEating: settings.defaultEating }
+                            )}
                           </td>
                         ))}
                       </tr>
