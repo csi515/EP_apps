@@ -60,6 +60,7 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:org-context-resolve', group: 'organization', kind: 'unit', ci: 'suite', order: 3 },
   { script: 'test:org-selection', group: 'organization', kind: 'unit', ci: 'suite', order: 4 },
   { script: 'test:persist-policy', group: 'persistence', kind: 'unit', ci: 'always', order: 5 },
+  { script: 'test:storage-context', group: 'persistence', kind: 'unit', ci: 'always', order: 65 },
   { script: 'test:persist-schedules', group: 'persistence', kind: 'unit', ci: 'always', order: 6 },
   { script: 'test:pending-mutations', group: 'persistence', kind: 'unit', ci: 'always', order: 7 },
   { script: 'test:create-sale-atomic', group: 'commerce', kind: 'unit', ci: 'always', order: 8 },

@@ -29,6 +29,8 @@ dist-ssr
 
 # Local auth DB files (Docker volume / PGlite data dir)
 data/
+.local-pg/
+.tools/
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal

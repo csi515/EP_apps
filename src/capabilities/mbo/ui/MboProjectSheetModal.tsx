@@ -35,7 +35,7 @@ export function MboProjectSheetModal({
       maxWidth="lg"
       description={`${project.ownerName} · 진척 ${project.progressRate}%`}
     >
-      <div className="space-y-4 text-sm">
+      <div className="space-y-4 text-sm" data-testid="mbo-project-sheet">
         {missingMonthly ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
             {MBO_COPY.monthlyReportMissing}
@@ -70,6 +70,7 @@ export function MboProjectSheetModal({
               type="button"
               className="min-h-12 flex-1 rounded-xl bg-indigo-600 text-xs font-bold text-white"
               onClick={onOpenMonthlyCheck}
+              data-testid="mbo-project-sheet-monthly-open"
             >
               {MBO_COPY.monthlyReportWrite}
             </button>
