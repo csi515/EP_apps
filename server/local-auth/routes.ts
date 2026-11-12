@@ -51,7 +51,7 @@ async function resolveUserFromToken(token: string | null): Promise<LocalAuthUser
   const tokenHash = hashSessionToken(token);
   const bySession = await pool.query<LocalAuthUserRow>(
     `
-    SELECT u.id, u.email, u.full_name, u.password_hash, u.is_active, u.must_change_password
+    SELECT u.id, u.email, u.login_id, u.full_name, u.password_hash, u.is_active, u.must_change_password
     FROM app.sessions s
     JOIN app.users u ON u.id = s.user_id
     WHERE s.token_hash = $1
@@ -67,7 +67,7 @@ async function resolveUserFromToken(token: string | null): Promise<LocalAuthUser
   if (!jwt) return null;
   const byJwt = await pool.query<LocalAuthUserRow>(
     `
-    SELECT id, email, full_name, password_hash, is_active, must_change_password
+    SELECT id, email, login_id, full_name, password_hash, is_active, must_change_password
     FROM app.users
     WHERE id = $1::uuid AND is_active = TRUE
   `,
@@ -80,9 +80,51 @@ function toPublicUser(row: LocalAuthUserRow & { must_change_password?: boolean |
   return {
     id: row.id,
     email: row.email,
+    login_id: row.login_id ?? row.email,
     full_name: row.full_name,
     must_change_password: Boolean(row.must_change_password),
   };
+}
+
+async function assertCanManageMembers(
+  userId: string,
+  organizationId: string
+): Promise<{ ok: true; role: string } | { ok: false; status: number; error: string }> {
+  const pool = await getLocalAuthPool();
+  const row = await pool.query<{
+    role: string;
+    feature_permissions: unknown;
+    role_permissions: unknown;
+  }>(
+    `
+    SELECT m.role::text AS role,
+           m.feature_permissions,
+           r.permissions AS role_permissions
+    FROM core.organization_members m
+    LEFT JOIN core.organization_roles r ON r.id = m.organization_role_id
+    WHERE m.user_id = $1::uuid
+      AND m.organization_id = $2::uuid
+      AND m.deleted_at IS NULL
+      AND m.is_active = TRUE
+  `,
+    [userId, organizationId]
+  );
+  const member = row.rows[0];
+  if (!member) return { ok: false, status: 403, error: '조직 멤버가 아닙니다.' };
+  if (member.role === 'owner' || member.role === 'admin') {
+    return { ok: true, role: member.role };
+  }
+  const feature = parseJsonObject(member.feature_permissions);
+  const rolePerms = parseJsonObject(member.role_permissions);
+  const allowed =
+    feature['members:manage'] === true ||
+    feature.members_manage === true ||
+    rolePerms['members:manage'] === true ||
+    rolePerms.members_manage === true;
+  if (!allowed) {
+    return { ok: false, status: 403, error: '임직원 등록·관리 권한이 없습니다.' };
+  }
+  return { ok: true, role: member.role };
 }
 
 async function listMemberships(userId: string): Promise<LocalMembershipRow[]> {
@@ -196,6 +238,18 @@ function matchMemberFeaturePath(pathname: string): { memberId: string } | null {
   return { memberId: decodeURIComponent(m[1]!) };
 }
 
+function matchMemberPasswordPath(pathname: string): { memberId: string } | null {
+  const m = /^\/members\/([^/]+)\/password\/?$/.exec(pathname);
+  if (!m) return null;
+  return { memberId: decodeURIComponent(m[1]!) };
+}
+
+function matchMemberActivePath(pathname: string): { memberId: string } | null {
+  const m = /^\/members\/([^/]+)\/active\/?$/.exec(pathname);
+  if (!m) return null;
+  return { memberId: decodeURIComponent(m[1]!) };
+}
+
 function matchOrgMembersPath(pathname: string): { orgId: string } | null {
   const m = /^\/organizations\/([^/]+)\/members\/?$/.exec(pathname);
   if (!m) return null;
@@ -231,34 +285,37 @@ export async function handleLocalAuthRequest(
 
     if (method === 'POST' && pathname === '/login') {
       const body = await readJson(req);
-      const email = String(body.email ?? '')
+      const loginId = String(body.login_id ?? body.email ?? '')
         .trim()
         .toLowerCase();
       const password = String(body.password ?? '');
-      const rateKey = `${ip}:${email || 'unknown'}`;
+      const rateKey = `${ip}:${loginId || 'unknown'}`;
       if (isLoginRateLimited(rateKey)) {
         const pool = await getLocalAuthPool();
         await writeAuthAudit(pool, {
           eventType: 'login_rate_limited',
-          detail: { email },
+          detail: { login_id: loginId },
           ip,
         });
         sendJson(res, 429, { error: '로그인 시도가 너무 많습니다. 잠시 후 다시 시도해 주세요.' });
         return;
       }
-      if (!email || !password) {
-        sendJson(res, 400, { error: '이메일과 비밀번호를 입력해 주세요.' });
+      if (!loginId || !password) {
+        sendJson(res, 400, { error: '아이디와 비밀번호를 입력해 주세요.' });
         return;
       }
 
       const pool = await getLocalAuthPool();
       const userRes = await pool.query<LocalAuthUserRow>(
         `
-        SELECT id, email, full_name, password_hash, is_active, must_change_password
+        SELECT id, email, login_id, full_name, password_hash, is_active, must_change_password
         FROM app.users
-        WHERE LOWER(email) = LOWER($1)
+        WHERE LOWER(login_id) = LOWER($1)
+           OR (email IS NOT NULL AND LOWER(email) = LOWER($1))
+        ORDER BY CASE WHEN LOWER(login_id) = LOWER($1) THEN 0 ELSE 1 END
+        LIMIT 1
       `,
-        [email]
+        [loginId]
       );
       const user = userRes.rows[0];
 
@@ -266,17 +323,17 @@ export async function handleLocalAuthRequest(
         await writeAuthAudit(pool, {
           eventType: 'login_failed',
           targetUserId: user?.id ?? null,
-          detail: { email },
+          detail: { login_id: loginId },
           ip,
         });
-        sendJson(res, 401, { error: '이메일 또는 비밀번호가 올바르지 않습니다.' });
+        sendJson(res, 401, { error: '아이디 또는 비밀번호가 올바르지 않습니다.' });
         return;
       }
 
       clearLoginRateLimit(rateKey);
       const jwt = signAccessJwt({
         userId: user.id,
-        email: user.email,
+        email: user.email ?? user.login_id ?? loginId,
         fullName: user.full_name ?? undefined,
         expiresInSeconds: getJwtTtlSeconds(),
       });
@@ -296,7 +353,7 @@ export async function handleLocalAuthRequest(
       await writeAuthAudit(pool, {
         eventType: 'login_success',
         actorUserId: user.id,
-        detail: { email },
+        detail: { login_id: loginId },
         ip,
       });
 
@@ -337,7 +394,7 @@ export async function handleLocalAuthRequest(
       }
       const pool = await getLocalAuthPool();
       const full = await pool.query<LocalAuthUserRow>(
-        `SELECT id, email, full_name, password_hash, is_active, must_change_password FROM app.users WHERE id = $1::uuid`,
+        `SELECT id, email, login_id, full_name, password_hash, is_active, must_change_password FROM app.users WHERE id = $1::uuid`,
         [user.id]
       );
       sendJson(res, 200, {
@@ -666,16 +723,35 @@ export async function handleLocalAuthRequest(
         role: string;
         organization_role_id: string | null;
         feature_permissions: unknown;
-        email: string;
-        full_name: string;
+        is_active: boolean | number;
+        email: string | null;
+        login_id: string;
+        full_name: string | null;
+        department_id: string | null;
+        department_name: string | null;
+        department_path: string | null;
+        scope_type: string | null;
       }>(
         `
-        SELECT m.id, m.user_id, m.role, m.organization_role_id, m.feature_permissions,
-               u.email, u.full_name
+        SELECT m.id, m.user_id, m.role::text AS role, m.organization_role_id, m.feature_permissions,
+               m.is_active, u.email, u.login_id, u.full_name,
+               dm.department_id, d.name AS department_name, d.path AS department_path, dm.scope_type
         FROM core.organization_members m
         JOIN app.users u ON u.id = m.user_id
-        WHERE m.organization_id = $1
-        ORDER BY u.full_name ASC
+        LEFT JOIN LATERAL (
+          SELECT dm2.department_id, dm2.scope_type
+          FROM core.department_members dm2
+          WHERE dm2.member_id = m.id AND dm2.organization_id = m.organization_id
+          ORDER BY CASE dm2.scope_type
+            WHEN 'DESCENDANTS' THEN 0
+            WHEN 'GLOBAL' THEN 1
+            ELSE 2
+          END
+          LIMIT 1
+        ) dm ON TRUE
+        LEFT JOIN core.departments d ON d.id = dm.department_id
+        WHERE m.organization_id = $1 AND m.deleted_at IS NULL
+        ORDER BY COALESCE(u.full_name, u.login_id) ASC
       `,
         [orgMembersPath.orgId]
       );
@@ -687,9 +763,163 @@ export async function handleLocalAuthRequest(
           organization_role_id: r.organization_role_id,
           feature_permissions: parseJsonObject(r.feature_permissions),
           email: r.email,
+          login_id: r.login_id,
           name: r.full_name,
-          is_active: true,
+          is_active: r.is_active !== false,
+          department_id: r.department_id,
+          department_name: r.department_name,
+          department_path: r.department_path,
+          department_scope_type: r.scope_type,
         })),
+      });
+      return;
+    }
+
+    if (orgMembersPath && method === 'POST') {
+      const user = await requireUser(req, res);
+      if (!user) return;
+      const gate = await assertCanManageMembers(user.id, orgMembersPath.orgId);
+      if (!gate.ok) {
+        sendJson(res, gate.status, { error: gate.error });
+        return;
+      }
+      const body = await readJson(req);
+      const loginId = String(body.login_id ?? '')
+        .trim()
+        .toLowerCase();
+      const password = String(body.password ?? '');
+      const fullName = String(body.full_name ?? '').trim();
+      const baseRole = String(body.base_role ?? 'staff').trim() || 'staff';
+      const organizationRoleIdRaw = body.organization_role_id;
+      const organizationRoleId =
+        organizationRoleIdRaw === null ||
+        organizationRoleIdRaw === undefined ||
+        organizationRoleIdRaw === ''
+          ? null
+          : String(organizationRoleIdRaw);
+      const departmentIdRaw = body.department_id;
+      const departmentId =
+        departmentIdRaw === null || departmentIdRaw === undefined || departmentIdRaw === ''
+          ? null
+          : String(departmentIdRaw);
+      const scopeType = String(body.scope_type ?? 'SELF_ONLY').trim() || 'SELF_ONLY';
+
+      if (loginId.length < 2) {
+        sendJson(res, 400, { error: '아이디는 2자 이상이어야 합니다.' });
+        return;
+      }
+      if (password.length < 8) {
+        sendJson(res, 400, { error: '비밀번호는 8자 이상이어야 합니다.' });
+        return;
+      }
+      if (baseRole === 'owner') {
+        sendJson(res, 400, { error: '대표이사(owner) 역할은 직접 발급할 수 없습니다.' });
+        return;
+      }
+      if (!['staff', 'manager', 'admin'].includes(baseRole)) {
+        sendJson(res, 400, { error: '기본 역할이 올바르지 않습니다.' });
+        return;
+      }
+      if (!['GLOBAL', 'DESCENDANTS', 'SELF_ONLY'].includes(scopeType)) {
+        sendJson(res, 400, { error: '잘못된 부서 스코프입니다.' });
+        return;
+      }
+
+      const pool = await getLocalAuthPool();
+      const exists = await pool.query<{ id: string }>(
+        `
+        SELECT id FROM app.users
+        WHERE LOWER(login_id) = LOWER($1)
+           OR (email IS NOT NULL AND LOWER(email) = LOWER($1))
+      `,
+        [loginId]
+      );
+      if (exists.rows[0]) {
+        sendJson(res, 409, { error: '이미 사용 중인 아이디입니다.' });
+        return;
+      }
+      if (organizationRoleId) {
+        const roleOk = await pool.query<{ id: string }>(
+          `SELECT id FROM core.organization_roles WHERE id = $1 AND tenant_id = $2`,
+          [organizationRoleId, orgMembersPath.orgId]
+        );
+        if (!roleOk.rows[0]) {
+          sendJson(res, 400, { error: '유효하지 않은 직급입니다.' });
+          return;
+        }
+      }
+      if (departmentId) {
+        const deptOk = await pool.query<{ id: string }>(
+          `SELECT id FROM core.departments WHERE id = $1 AND organization_id = $2`,
+          [departmentId, orgMembersPath.orgId]
+        );
+        if (!deptOk.rows[0]) {
+          sendJson(res, 400, { error: '유효하지 않은 부서입니다.' });
+          return;
+        }
+      }
+
+      const userId = randomUUID();
+      const staffId = randomUUID();
+      const memberId = randomUUID();
+      const passwordHash = hashPassword(password);
+
+      await pool.query(
+        `
+        INSERT INTO app.users (id, login_id, email, password_hash, full_name, must_change_password, is_active)
+        VALUES ($1::uuid, $2, NULL, $3, $4, TRUE, TRUE)
+      `,
+        [userId, loginId, passwordHash, fullName || null]
+      );
+      await pool.query(
+        `
+        INSERT INTO core.staff (id, organization_id, user_id, name, email, status, department_id)
+        VALUES ($1::uuid, $2::uuid, $3::uuid, $4, NULL, 'active', $5::uuid)
+      `,
+        [staffId, orgMembersPath.orgId, userId, fullName || loginId, departmentId]
+      );
+      await pool.query(
+        `
+        INSERT INTO core.organization_members (
+          id, organization_id, user_id, role, staff_id, organization_role_id, is_active, feature_permissions
+        )
+        VALUES ($1::uuid, $2::uuid, $3::uuid, $4::core.member_role, $5::uuid, $6::uuid, TRUE, '{}'::jsonb)
+      `,
+        [memberId, orgMembersPath.orgId, userId, baseRole, staffId, organizationRoleId]
+      );
+      if (departmentId) {
+        await pool.query(
+          `
+          INSERT INTO core.department_members (organization_id, department_id, member_id, scope_type)
+          VALUES ($1::uuid, $2::uuid, $3::uuid, $4)
+          ON CONFLICT (department_id, member_id) DO UPDATE SET scope_type = EXCLUDED.scope_type
+        `,
+          [orgMembersPath.orgId, departmentId, memberId, scopeType]
+        );
+      }
+      await writeAuthAudit(pool, {
+        eventType: 'member_provisioned',
+        actorUserId: user.id,
+        targetUserId: userId,
+        organizationId: orgMembersPath.orgId,
+        detail: {
+          login_id: loginId,
+          member_id: memberId,
+          staff_id: staffId,
+          base_role: baseRole,
+          organization_role_id: organizationRoleId,
+          department_id: departmentId,
+        },
+        ip,
+      });
+
+      sendJson(res, 201, {
+        user_id: userId,
+        member_id: memberId,
+        staff_id: staffId,
+        login_id: loginId,
+        full_name: fullName || null,
+        must_change_password: true,
       });
       return;
     }
@@ -742,6 +972,110 @@ export async function handleLocalAuthRequest(
         ip,
       });
       sendJson(res, 200, { ok: true, assigned_role_id: roleId });
+      return;
+    }
+
+    const passwordPath = matchMemberPasswordPath(pathname);
+    if (passwordPath && method === 'POST') {
+      const user = await requireUser(req, res);
+      if (!user) return;
+      const body = await readJson(req);
+      const newPassword = String(body.password ?? body.new_password ?? '');
+      if (newPassword.length < 8) {
+        sendJson(res, 400, { error: '비밀번호는 8자 이상이어야 합니다.' });
+        return;
+      }
+      const pool = await getLocalAuthPool();
+      const target = await pool.query<{
+        organization_id: string;
+        user_id: string;
+        role: string;
+      }>(
+        `SELECT organization_id, user_id, role::text AS role FROM core.organization_members WHERE id = $1 AND deleted_at IS NULL`,
+        [passwordPath.memberId]
+      );
+      if (!target.rows[0]) {
+        sendJson(res, 404, { error: '멤버를 찾을 수 없습니다.' });
+        return;
+      }
+      const gate = await assertCanManageMembers(user.id, target.rows[0].organization_id);
+      if (!gate.ok) {
+        sendJson(res, gate.status, { error: gate.error });
+        return;
+      }
+      if (target.rows[0].role === 'owner') {
+        sendJson(res, 403, { error: '대표이사의 비밀번호는 이 경로로 재설정할 수 없습니다.' });
+        return;
+      }
+      await pool.query(
+        `
+        UPDATE app.users
+        SET password_hash = $1, must_change_password = TRUE
+        WHERE id = $2::uuid
+      `,
+        [hashPassword(newPassword), target.rows[0].user_id]
+      );
+      await writeAuthAudit(pool, {
+        eventType: 'password_reset_by_admin',
+        actorUserId: user.id,
+        targetUserId: target.rows[0].user_id,
+        organizationId: target.rows[0].organization_id,
+        detail: { member_id: passwordPath.memberId },
+        ip,
+      });
+      sendJson(res, 200, { ok: true, must_change_password: true });
+      return;
+    }
+
+    const activePath = matchMemberActivePath(pathname);
+    if (activePath && method === 'POST') {
+      const user = await requireUser(req, res);
+      if (!user) return;
+      const body = await readJson(req);
+      const isActive = body.is_active !== false && body.is_active !== 'false';
+      const pool = await getLocalAuthPool();
+      const target = await pool.query<{
+        organization_id: string;
+        user_id: string;
+        role: string;
+      }>(
+        `SELECT organization_id, user_id, role::text AS role FROM core.organization_members WHERE id = $1 AND deleted_at IS NULL`,
+        [activePath.memberId]
+      );
+      if (!target.rows[0]) {
+        sendJson(res, 404, { error: '멤버를 찾을 수 없습니다.' });
+        return;
+      }
+      const gate = await assertCanManageMembers(user.id, target.rows[0].organization_id);
+      if (!gate.ok) {
+        sendJson(res, gate.status, { error: gate.error });
+        return;
+      }
+      if (target.rows[0].role === 'owner') {
+        sendJson(res, 403, { error: '대표이사는 비활성화할 수 없습니다.' });
+        return;
+      }
+      if (target.rows[0].user_id === user.id) {
+        sendJson(res, 400, { error: '본인 계정은 비활성화할 수 없습니다.' });
+        return;
+      }
+      await pool.query(
+        `UPDATE core.organization_members SET is_active = $1 WHERE id = $2`,
+        [isActive, activePath.memberId]
+      );
+      await pool.query(`UPDATE app.users SET is_active = $1 WHERE id = $2::uuid`, [
+        isActive,
+        target.rows[0].user_id,
+      ]);
+      await writeAuthAudit(pool, {
+        eventType: isActive ? 'member_reactivated' : 'member_deactivated',
+        actorUserId: user.id,
+        targetUserId: target.rows[0].user_id,
+        organizationId: target.rows[0].organization_id,
+        detail: { member_id: activePath.memberId, is_active: isActive },
+        ip,
+      });
+      sendJson(res, 200, { ok: true, is_active: isActive });
       return;
     }
 

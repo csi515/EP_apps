@@ -4,8 +4,10 @@ const TOKEN_KEY = 'ep_local_auth_token';
 
 type LocalPublicUser = {
   id: string;
-  email: string;
+  email: string | null;
+  login_id?: string | null;
   full_name: string;
+  must_change_password?: boolean;
 };
 
 type AuthListener = (session: Session | null) => void;
@@ -30,13 +32,18 @@ export function setLocalAuthToken(token: string | null): void {
 }
 
 export function buildLocalUser(user: LocalPublicUser): User {
+  const loginId = user.login_id ?? user.email ?? '';
   return {
     id: user.id,
-    email: user.email,
+    email: user.email ?? loginId,
     aud: 'authenticated',
     role: 'authenticated',
     app_metadata: { provider: 'local', providers: ['local'] },
-    user_metadata: { full_name: user.full_name },
+    user_metadata: {
+      full_name: user.full_name,
+      login_id: loginId,
+      must_change_password: Boolean(user.must_change_password),
+    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     identities: [],

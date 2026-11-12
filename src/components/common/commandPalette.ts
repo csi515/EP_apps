@@ -54,6 +54,14 @@ export const COMMAND_CATALOG: CommandItem[] = [
     href: '/workspace/approvals',
   },
   {
+    id: 'menu-members',
+    label: '임직원·권한',
+    labelKey: 'ep.palette.menu.members',
+    chosung: 'ㅇㅈㅇㄱㅎ',
+    group: 'menu',
+    href: '/workspace/members',
+  },
+  {
     id: 'menu-org',
     label: '조직도·직급',
     labelKey: 'ep.palette.menu.org',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CanAccess, useTranslate } from '@refinedev/core';
 import {
@@ -8,41 +8,55 @@ import {
   ShieldAlert,
   UserX,
   RefreshCw,
-  Search,
-  CheckCircle2,
-  AlertTriangle,
-  X,
+  UserPlus,
+  Network,
+  KeyRound,
 } from 'lucide-react';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { PageHeader } from '@/shared/components/ui/PageHeader';
+import { SearchField } from '@/shared/components/ui/SearchField';
+import { SegmentedControl } from '@/shared/components/ui/SegmentedControl';
+import { Button } from '@/shared/components/ui/Button';
+import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
 import {
-  listDynamicRoles,
-  listRoleMembers,
   assignOrganizationRole,
   type DynamicMemberRow,
-  type DynamicRoleRow,
 } from '@/core/organizations/services/dynamicRoleService';
 import { listAuditLogs } from '@/core/audit';
 import type { AuditLog } from '@/core/audit/types';
 import { StorageService } from '@/services/storage';
-import { canManageRoles } from '@/domain/permissions';
+import {
+  canApproveMemberJoins,
+  canManageOrgStructure,
+  canManageRoles,
+  normalizeRolePermissions,
+} from '@/domain/permissions';
 import { isOrgAdmin } from '@/core/auth/permissionsRole';
 import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
-import {
-  COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS,
-  COMPANY_APP_USAGE_ASSIGNMENT_OPTIONS,
-  countGrantedCompanyAppUsage,
-} from '@/pages/workspace/companyAppAccess';
-import { FEATURE_OPTION_I18N } from '@/core/i18n/epAppsMessages';
 import { MemberRoleAssignModal } from '@/pages/members/MemberRoleAssignModal';
 import { MemberRoleRevokeConfirmModal } from '@/pages/members/MemberRoleRevokeConfirmModal';
-import { buildStaffAccessPath } from '@/pages/workspace/staffAccess/staffAccessNav';
+import { MemberProvisionModal } from '@/pages/members/MemberProvisionModal';
+import { useOrgMembersDirectory } from '@/pages/members/useOrgMembersDirectory';
+import { StaffAccessMemberSheet } from '@/pages/workspace/staffAccess/StaffAccessMemberSheet';
+import { StaffAccessAppHomeView } from '@/pages/workspace/staffAccess/StaffAccessAppHomeView';
+import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
+import { listEnabledPermissionLabels } from '@/domain/permissionCatalog';
+import type { AdminMemberDirectoryRow } from '@/core/organizations/services/orgMemberAdminService';
+import { summarizeMemberEffectiveAccess } from '@/core/organizations/services/orgMemberAdminService';
+
+type HubTab = 'list' | 'org' | 'apps' | 'roles';
 
 function formatAuditAction(action: string): string {
   if (action === 'ROLE_ASSIGNED') return '직급 부여';
   if (action === 'ROLE_REVOKED') return '권한 회수';
   return action;
+}
+
+function memberLabel(member: DynamicMemberRow): string {
+  return member.name || member.login_id || member.email || `사원 (${member.user_id.slice(0, 8)})`;
 }
 
 export function MemberList(): React.JSX.Element {
@@ -55,85 +69,81 @@ export function MemberList(): React.JSX.Element {
     [activeCapabilities, hiddenCapabilities]
   );
 
-  const [members, setMembers] = useState<DynamicMemberRow[]>([]);
-  const [roles, setRoles] = useState<DynamicRoleRow[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const activeUser = StorageService.getActiveUser();
+  const accessMember = {
+    role: activeUser?.role ?? callerRole,
+    permissions: normalizeRolePermissions(activeUser?.customRole?.permissions ?? null) ?? undefined,
+    customRole: activeUser?.customRole ?? null,
+  };
+  const canManage = canManageRoles(accessMember);
+  const canProvision = canApproveMemberJoins(accessMember) || canManage;
+  const canStructure = canManageOrgStructure(accessMember);
+  const canViewRoleAudit = callerRole === 'owner' || canManage;
+
+  const { members, setMembers, roles, loading, error, setError, reload } = useOrgMembersDirectory({
+    orgId,
+    enabled: Boolean(orgId),
+  });
+  const tree = useOrganizationTree(orgId || null);
+
+  const [hubTab, setHubTab] = useState<HubTab>('list');
   const [search, setSearch] = useState('');
+  const [sheetMemberId, setSheetMemberId] = useState<string | null>(null);
+  const [provisionOpen, setProvisionOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [roleAuditLogs, setRoleAuditLogs] = useState<AuditLog[]>([]);
 
   const [assignTarget, setAssignTarget] = useState<DynamicMemberRow | null>(null);
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
-  const [assignReason, setAssignReason] = useState<string>('');
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [assignReason, setAssignReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
   const [revokeTarget, setRevokeTarget] = useState<DynamicMemberRow | null>(null);
 
-  const FEATURE_ASSIGNMENT_OPTIONS = COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS;
-  const appUsageTotal = COMPANY_APP_USAGE_ASSIGNMENT_OPTIONS.length;
-
-  const activeUser = StorageService.getActiveUser();
-  const canViewRoleAudit =
-    callerRole === 'owner' || canManageRoles(activeUser);
-
-  async function loadData() {
-    if (!orgId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const [fetchedRoles, fetchedMembers] = await Promise.all([
-        listDynamicRoles(orgId),
-        listRoleMembers(orgId),
-      ]);
-      setRoles(fetchedRoles);
-      setMembers(fetchedMembers);
-
-      if (canViewRoleAudit) {
-        try {
-          const logs = await listAuditLogs({
-            organizationId: orgId,
-            entityType: 'permissions',
-            limit: 20,
-          });
-          setRoleAuditLogs(
-            logs.filter(
-              (log) =>
-                log.action === 'ROLE_ASSIGNED' ||
-                log.action === 'ROLE_REVOKED' ||
-                log.action === 'role_changed' ||
-                log.action === 'granted' ||
-                log.action === 'revoked'
-            )
-          );
-        } catch {
-          setRoleAuditLogs([]);
-        }
-      } else {
-        setRoleAuditLogs([]);
-      }
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '데이터 조회 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
-    void loadData();
-  }, [orgId]);
+    if (!orgId || !canViewRoleAudit) {
+      setRoleAuditLogs([]);
+      return;
+    }
+    void listAuditLogs({
+      organizationId: orgId,
+      entityType: 'permissions',
+      limit: 20,
+    })
+      .then((logs) =>
+        setRoleAuditLogs(
+          logs.filter(
+            (log) =>
+              log.action === 'ROLE_ASSIGNED' ||
+              log.action === 'ROLE_REVOKED' ||
+              log.action === 'role_changed' ||
+              log.action === 'granted' ||
+              log.action === 'revoked'
+          )
+        )
+      )
+      .catch(() => setRoleAuditLogs([]));
+  }, [orgId, canViewRoleAudit, members.length]);
 
   const filteredMembers = useMemo(() => {
     if (!search.trim()) return members;
     const q = search.trim().toLowerCase();
     return members.filter((m) => {
-      const idMatch = m.user_id.toLowerCase().includes(q);
-      const emailMatch = m.email?.toLowerCase().includes(q);
-      const nameMatch = m.name?.toLowerCase().includes(q);
       const roleName = roles.find((r) => r.id === m.organization_role_id)?.name.toLowerCase() ?? '';
-      return idMatch || emailMatch || nameMatch || roleName.includes(q);
+      return (
+        m.user_id.toLowerCase().includes(q) ||
+        m.email?.toLowerCase().includes(q) ||
+        m.login_id?.toLowerCase().includes(q) ||
+        m.name?.toLowerCase().includes(q) ||
+        m.department_name?.toLowerCase().includes(q) ||
+        roleName.includes(q)
+      );
     });
   }, [members, roles, search]);
+
+  const sheetMember = useMemo(
+    () => members.find((m) => m.id === sheetMemberId) ?? null,
+    [members, sheetMemberId]
+  );
 
   async function handleAssignRole() {
     if (!assignTarget) return;
@@ -145,11 +155,11 @@ export function MemberList(): React.JSX.Element {
         selectedRoleId || null,
         assignReason.trim() || '총무/운영 위임 관리자 직급 부여'
       );
-      setSuccessMessage(`${assignTarget.name || assignTarget.user_id.slice(0, 8)} 님의 직급이 성공적으로 부여되었습니다.`);
+      setSuccessMessage(`${memberLabel(assignTarget)} 님에게 직급이 부여되었습니다.`);
       setAssignTarget(null);
       setSelectedRoleId('');
       setAssignReason('');
-      await loadData();
+      await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '직급 부여 처리에 실패했습니다.');
     } finally {
@@ -162,14 +172,10 @@ export function MemberList(): React.JSX.Element {
     setSubmitting(true);
     setError(null);
     try {
-      await assignOrganizationRole(
-        revokeTarget.id,
-        null,
-        '권한 회수 (기본 사원으로 강등 및 세션 즉시 만료)'
-      );
-      setSuccessMessage(`${revokeTarget.name || revokeTarget.user_id.slice(0, 8)} 님의 권한이 회수되었으며 세션이 즉시 만료되었습니다.`);
+      await assignOrganizationRole(revokeTarget.id, null, '권한 회수 (기본 사원으로 강등)');
+      setSuccessMessage(`${memberLabel(revokeTarget)} 님의 권한이 회수되었습니다.`);
       setRevokeTarget(null);
-      await loadData();
+      await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '권한 회수 처리에 실패했습니다.');
     } finally {
@@ -177,288 +183,461 @@ export function MemberList(): React.JSX.Element {
     }
   }
 
+  function handleMemberUpdated(updated: DynamicMemberRow) {
+    setMembers((prev) =>
+      prev.map((m) => {
+        if (m.id !== updated.id) return m;
+        const role = roles.find((r) => r.id === updated.organization_role_id);
+        const merged: AdminMemberDirectoryRow = {
+          ...m,
+          ...updated,
+          roleName: role?.name ?? m.roleName ?? null,
+          appSummary: summarizeMemberEffectiveAccess(updated, role),
+        };
+        return merged;
+      })
+    );
+  }
+
+  const tabOptions = [
+    { value: 'list' as const, label: '목록' },
+    { value: 'org' as const, label: '조직 배치' },
+    { value: 'apps' as const, label: '앱 이용' },
+    { value: 'roles' as const, label: '직급·RBAC' },
+  ];
+
   return (
-    <WorkPageFrame width="hub" data-testid="member-list-page">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <Users className="h-6 w-6 text-slate-800" />
-            <h1 className="text-2xl font-black text-slate-900">{translate('ep.members.title')}</h1>
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
-              {translate('ep.members.count', { count: members.length })}
-            </span>
+    <WorkPageFrame width="hub" data-testid="member-list-page" progressActive={loading}>
+      <PageHeader
+        icon={<Users className="h-5 w-5" />}
+        title={translate('ep.members.title')}
+        description={translate('ep.members.subtitle')}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {canProvision ? (
+              <Button
+                type="button"
+                onClick={() => setProvisionOpen(true)}
+                data-testid="member-provision-open"
+              >
+                <UserPlus className="mr-1.5 h-4 w-4" />
+                임직원 등록
+              </Button>
+            ) : null}
+            <Button type="button" variant="outline" onClick={() => void reload()} disabled={loading}>
+              <RefreshCw className={`mr-1.5 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              {translate('ep.members.refresh')}
+            </Button>
           </div>
-          <p className="mt-1 text-sm text-slate-500">{translate('ep.members.subtitle')}</p>
-          <p className="mt-1 text-[11px] text-slate-500">{translate('ep.members.adminAppHint')}</p>
-        </div>
+        }
+      />
+      <p className="mt-1 text-[11px] text-slate-500">{translate('ep.members.adminAppHint')}</p>
+      <p className="mt-1 text-xs font-semibold text-slate-600">
+        {translate('ep.members.count', { count: members.length })}
+      </p>
 
-        <div className="flex items-center gap-2">
-          <CanAccess resource="members" action="assign_role">
-            <Link
-              to={buildStaffAccessPath({ mode: 'admin' })}
-              className="flex min-h-10 items-center gap-1.5 rounded-xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-semibold text-indigo-800 hover:bg-indigo-100"
-            >
-              <Users className="h-4 w-4" />
-              {translate('ep.members.bulkOpen')}
-            </Link>
-          </CanAccess>
-          <button
-            type="button"
-            onClick={() => void loadData()}
-            disabled={loading}
-            className="flex min-h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            {translate('ep.members.refresh')}
-          </button>
-        </div>
-      </header>
+      <div className="mt-4">
+        <SegmentedControl
+          value={hubTab}
+          onChange={setHubTab}
+          options={tabOptions}
+          aria-label="임직원 관리 탭"
+        />
+      </div>
 
-      {/* 상태 알림 배너 */}
       {error ? (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+          className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800"
         >
-          <AlertTriangle className="h-5 w-5 shrink-0 text-rose-600" />
-          <div className="flex-1">
-            <p className="font-bold">오류 안내</p>
-            <p className="mt-0.5">{error}</p>
-          </div>
-          <button type="button" onClick={() => setError(null)} className="text-rose-500 hover:text-rose-700">
-            <X className="h-4 w-4" />
-          </button>
+          {error}
+          <Button variant="ghost" size="sm" className="ml-2" onClick={() => setError(null)}>
+            ×
+          </Button>
         </div>
       ) : null}
 
       {successMessage ? (
         <div
           role="status"
-          className="flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+          className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"
         >
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-          <div className="flex-1">
-            <p className="font-bold">처리 완료</p>
-            <p className="mt-0.5">{successMessage}</p>
-          </div>
-          <button type="button" onClick={() => setSuccessMessage(null)} className="text-emerald-500 hover:text-emerald-700">
-            <X className="h-4 w-4" />
-          </button>
+          {successMessage}
+          <Button variant="ghost" size="sm" className="ml-2" onClick={() => setSuccessMessage(null)}>
+            ×
+          </Button>
         </div>
       ) : null}
 
-      {/* 검색 바 */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={translate('ep.members.searchPlaceholder')}
-          className="min-h-11 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-        />
-      </div>
-
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-600">
-              <tr>
-                <th className="px-5 py-3.5">{translate('ep.members.col.employee')}</th>
-                <th className="px-5 py-3.5">{translate('ep.members.col.baseRole')}</th>
-                <th className="px-5 py-3.5">{translate('ep.members.col.assignedRole')}</th>
-                <th className="px-5 py-3.5">{translate('ep.members.col.appAccess')}</th>
-                <th className="px-5 py-3.5">{translate('ep.members.col.status')}</th>
-                <th className="px-5 py-3.5 text-right">{translate('ep.members.col.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredMembers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    {loading ? '직원 목록을 불러오는 중입니다...' : '검색 결과가 없습니다.'}
-                  </td>
-                </tr>
+      <div className="mt-4">
+        <ContentFadeIn motionKey={hubTab}>
+          {hubTab === 'list' ? (
+            <div className="space-y-3">
+              <SearchField
+                value={search}
+                onChange={setSearch}
+                placeholder={translate('ep.members.searchPlaceholder')}
+              />
+              {loading && members.length === 0 ? (
+                <PageListSkeleton rows={5} message={translate('ep.members.refresh')} />
               ) : (
-                filteredMembers.map((member) => {
-                  const assignedRole = roles.find((r) => r.id === member.organization_role_id);
-                  const isOwner = member.role === 'owner';
-                  const appGrantCount = countGrantedCompanyAppUsage(member.feature_permissions);
-
-                  return (
-                    <tr key={member.id} className="transition-colors hover:bg-slate-50/60">
-                      {/* 직원 정보 */}
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 font-bold text-slate-700">
-                            {(member.name || member.email || member.user_id)[0].toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">
-                              {member.name || member.email || `사원 (${member.user_id.slice(0, 8)})`}
-                            </p>
-                            <p className="text-xs text-slate-400 font-mono">
-                              ID: {member.user_id.slice(0, 13)}...
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 기본 역할 */}
-                      <td className="px-5 py-4">
-                        {isOwner ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800">
-                            <Shield className="h-3 w-3" />
-                            대표이사
-                          </span>
-                        ) : member.role === 'admin' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-bold text-purple-800">
-                            관리자
-                          </span>
-                        ) : member.role === 'instructor' ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-bold text-sky-800">
-                            강사
-                          </span>
+                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead className="border-b border-slate-200 bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-600">
+                        <tr>
+                          <th className="px-4 py-3">{translate('ep.members.col.employee')}</th>
+                          <th className="px-4 py-3">소속</th>
+                          <th className="px-4 py-3">{translate('ep.members.col.assignedRole')}</th>
+                          <th className="px-4 py-3">{translate('ep.members.col.appAccess')}</th>
+                          <th className="px-4 py-3">{translate('ep.members.col.status')}</th>
+                          <th className="px-4 py-3 text-right">{translate('ep.members.col.actions')}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredMembers.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-slate-400">
+                              검색 결과가 없습니다.
+                            </td>
+                          </tr>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
-                            일반 직원
-                          </span>
-                        )}
-                      </td>
-
-                      {/* 배정 직급 */}
-                      <td className="px-5 py-4">
-                        {assignedRole ? (
-                          <div className="space-y-1">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">
-                              <ShieldCheck className="h-3 w-3 text-indigo-600" />
-                              {assignedRole.name}
-                            </span>
-                            <span className="block text-[11px] text-slate-400">
-                              {assignedRole.description || '지정 직급'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
-                            미배정 (기본 사원)
-                          </span>
-                        )}
-                        {member.feature_permissions && (
-                          <div className="mt-1.5 flex flex-wrap gap-1">
-                            {Object.entries(member.feature_permissions)
-                              .filter(([, enabled]) => Boolean(enabled))
-                              .map(([k]) => {
-                                const opt = FEATURE_ASSIGNMENT_OPTIONS.find((f) => f.key === k);
-                                if (!opt) return null;
-                                const chip = FEATURE_OPTION_I18N[k];
-                                return (
-                                  <span
-                                    key={k}
-                                    className="inline-flex items-center rounded-md border border-indigo-200/60 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700"
+                          filteredMembers.map((member) => {
+                            const isOwner = member.role === 'owner';
+                            return (
+                              <tr key={member.id} className="transition-colors hover:bg-slate-50/60">
+                                <td className="px-4 py-3">
+                                  <button
+                                    type="button"
+                                    className="text-left"
+                                    onClick={() => setSheetMemberId(member.id)}
                                   >
-                                    {chip
-                                      ? translate(chip.chipKey, opt.label)
-                                      : translate(opt.chipKey, opt.label)}
-                                  </span>
-                                );
-                              })}
-                          </div>
+                                    <p className="font-bold text-slate-900">{memberLabel(member)}</p>
+                                    <p className="font-mono text-[11px] text-slate-500">
+                                      {member.login_id || member.email || member.user_id.slice(0, 13)}
+                                    </p>
+                                  </button>
+                                </td>
+                                <td className="px-4 py-3 text-xs font-semibold text-slate-700">
+                                  {member.department_name || (
+                                    <span className="text-slate-400">미배치</span>
+                                  )}
+                                  {member.department_scope_type === 'DESCENDANTS' ? (
+                                    <span className="mt-0.5 block text-[10px] font-bold text-indigo-600">
+                                      리더
+                                    </span>
+                                  ) : null}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {member.roleName ? (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">
+                                      <ShieldCheck className="h-3 w-3" />
+                                      {member.roleName}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs text-slate-400">미배정</span>
+                                  )}
+                                  <p className="mt-0.5 text-[10px] text-slate-500">
+                                    {isOwner
+                                      ? '대표이사'
+                                      : member.role === 'admin'
+                                        ? '관리자'
+                                        : member.role === 'manager'
+                                          ? '매니저'
+                                          : '일반 직원'}
+                                  </p>
+                                </td>
+                                <td className="px-4 py-3">
+                                  {isOrgAdmin(member.role) ? (
+                                    <span className="text-xs font-bold text-slate-700">
+                                      {translate('ep.members.appAccessAdmin')}
+                                    </span>
+                                  ) : (
+                                    <span className="text-xs font-semibold text-slate-700">
+                                      {translate('ep.members.appAccessCount', {
+                                        n: member.appSummary.granted,
+                                        total: member.appSummary.total,
+                                      })}
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {member.is_active !== false ? (
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                      활성
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                                      비활성
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  <CanAccess
+                                    resource="members"
+                                    action="assign_role"
+                                    fallback={
+                                      <span className="text-xs font-medium text-slate-400">조회 전용</span>
+                                    }
+                                  >
+                                    {isOwner ? (
+                                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400">
+                                        <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
+                                        보호
+                                      </span>
+                                    ) : (
+                                      <div className="flex items-center justify-end gap-2">
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="outline"
+                                          onClick={() => setSheetMemberId(member.id)}
+                                        >
+                                          <Shield className="mr-1 h-3.5 w-3.5" />
+                                          {translate('ep.members.action.appPerm')}
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          onClick={() => {
+                                            setAssignTarget(member);
+                                            setSelectedRoleId(member.organization_role_id ?? '');
+                                            setAssignReason('');
+                                          }}
+                                        >
+                                          {member.organization_role_id
+                                            ? translate('ep.members.action.changeRole')
+                                            : translate('ep.members.action.assignRole')}
+                                        </Button>
+                                        {member.organization_role_id ? (
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setRevokeTarget(member)}
+                                          >
+                                            <UserX className="h-3.5 w-3.5 text-rose-600" />
+                                          </Button>
+                                        ) : null}
+                                      </div>
+                                    )}
+                                  </CanAccess>
+                                </td>
+                              </tr>
+                            );
+                          })
                         )}
-                      </td>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
-                      <td className="px-5 py-4">
-                        {isOrgAdmin(member.role) ? (
-                          <span className="text-xs font-bold text-slate-700">
-                            {translate('ep.members.appAccessAdmin')}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-semibold text-slate-700">
-                            {translate('ep.members.appAccessCount', {
-                              n: appGrantCount,
-                              total: appUsageTotal,
-                            })}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4">
-                        {member.is_active !== false ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            활성
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
-                            <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                            비활성
-                          </span>
-                        )}
-                      </td>
-
-                      {/* 권한 관리 액션 (Refine CanAccess 가드 적용) */}
-                      <td className="px-5 py-4 text-right">
-                        <CanAccess
-                          resource="members"
-                          action="assign_role"
-                          fallback={
-                            <span className="text-xs font-medium text-slate-400">
-                              조회 전용 (수정 권한 없음)
-                            </span>
-                          }
-                        >
-                          {isOwner ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400">
-                              <ShieldAlert className="h-3.5 w-3.5 text-amber-500" />
-                              사업자 보호 (변경 불가)
-                            </span>
-                          ) : (
-                            <div className="flex items-center justify-end gap-2">
-                              <Link
-                                to={buildStaffAccessPath({
-                                  mode: 'admin',
-                                  memberId: member.id,
-                                })}
-                                className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3 py-1.5 text-xs font-bold text-indigo-800 transition hover:bg-indigo-50"
-                              >
-                                <Shield className="h-3.5 w-3.5" />
-                                {translate('ep.members.action.appPerm')}
-                              </Link>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAssignTarget(member);
-                                  setSelectedRoleId(member.organization_role_id ?? '');
-                                  setAssignReason('');
-                                }}
-                                className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
-                              >
-                                {member.organization_role_id
-                                  ? translate('ep.members.action.changeRole')
-                                  : translate('ep.members.action.assignRole')}
-                              </button>
-
-                              {member.organization_role_id ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setRevokeTarget(member)}
-                                  className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/50 px-3 py-1.5 text-xs font-bold text-rose-700 transition hover:bg-rose-100"
-                                >
-                                  <UserX className="h-3.5 w-3.5 text-rose-600" />
-                                  {translate('ep.members.action.revoke')}
-                                </button>
+              {canViewRoleAudit ? (
+                <section
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs"
+                  data-testid="role-delegation-audit"
+                >
+                  <h2 className="text-base font-bold text-slate-900">최근 직급 부여·회수 이력</h2>
+                  {roleAuditLogs.length === 0 ? (
+                    <p className="mt-3 text-sm text-slate-400">최근 이력이 없습니다.</p>
+                  ) : (
+                    <ul className="mt-3 divide-y divide-slate-100">
+                      {roleAuditLogs.map((log) => {
+                        const after = log.afterData ?? {};
+                        const targetId =
+                          typeof after.target_member_id === 'string'
+                            ? after.target_member_id
+                            : log.entityId;
+                        const targetMember = members.find((m) => m.id === targetId);
+                        const roleId =
+                          typeof after.assigned_role_id === 'string' ? after.assigned_role_id : null;
+                        const roleName = roleId
+                          ? roles.find((r) => r.id === roleId)?.name
+                          : null;
+                        return (
+                          <li key={log.id} className="py-2.5 text-sm">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
+                                {formatAuditAction(log.action)}
+                              </span>
+                              <span className="font-semibold text-slate-900">
+                                {targetMember ? memberLabel(targetMember) : '대상 미상'}
+                              </span>
+                              {roleName ? (
+                                <span className="text-xs text-indigo-700">→ {roleName}</span>
                               ) : null}
                             </div>
-                          )}
-                        </CanAccess>
-                      </td>
-                    </tr>
-                  );
-                })
+                            <p className="mt-0.5 text-[11px] text-slate-500">
+                              {new Date(log.createdAt).toLocaleString('ko-KR')}
+                            </p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </section>
+              ) : null}
+            </div>
+          ) : null}
+
+          {hubTab === 'org' ? (
+            <div className="space-y-3" data-testid="members-hub-org-tab">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900">조직 배치</h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      부서 {tree.nodes.length}개 · 배치 {tree.departmentMembers.length}건
+                    </p>
+                  </div>
+                  <Link
+                    to="/workspace/organization"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-indigo-600 px-3 text-xs font-bold text-white"
+                  >
+                    <Network className="h-4 w-4" />
+                    {canStructure ? '조직도에서 편집' : '조직도 보기'}
+                  </Link>
+                </div>
+                <ul className="mt-4 max-h-80 space-y-2 overflow-y-auto">
+                  {tree.nodes.length === 0 ? (
+                    <li className="text-sm text-slate-400">등록된 부서가 없습니다.</li>
+                  ) : (
+                    [...tree.nodes]
+                      .sort((a, b) => a.path.localeCompare(b.path))
+                      .map((node) => {
+                        const placed = tree.departmentMembers.filter(
+                          (dm) => dm.department_id === node.id
+                        ).length;
+                        return (
+                          <li
+                            key={node.id}
+                            className="flex items-center justify-between rounded-xl border border-slate-100 px-3 py-2 text-sm"
+                          >
+                            <span className="font-semibold text-slate-800">
+                              {node.unitKind ? `${node.unitKind} · ` : ''}
+                              {node.name}
+                            </span>
+                            <span className="text-xs text-slate-500">{placed}명</span>
+                          </li>
+                        );
+                      })
+                  )}
+                </ul>
+              </div>
+              <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
+                소속이 비어 있는 임직원은 목록 탭에서 확인한 뒤, 조직도에서 배치하세요.
+                {!canStructure
+                  ? ' (조직도 편집 권한이 없으면 조회만 가능합니다.)'
+                  : ''}
+              </div>
+            </div>
+          ) : null}
+
+          {hubTab === 'apps' ? (
+            <div data-testid="members-hub-apps-tab">
+              {loading ? (
+                <PageListSkeleton rows={4} />
+              ) : (
+                <StaffAccessAppHomeView
+                  members={members}
+                  onError={setError}
+                  onMembersUpdated={(updater) => {
+                    setMembers((prev) => {
+                      const asDyn = updater(prev);
+                      return asDyn.map((row) => {
+                        const role = roles.find((r) => r.id === row.organization_role_id);
+                        return {
+                          ...(row as AdminMemberDirectoryRow),
+                          roleName:
+                            (row as AdminMemberDirectoryRow).roleName ?? role?.name ?? null,
+                          appSummary:
+                            (row as AdminMemberDirectoryRow).appSummary ??
+                            summarizeMemberEffectiveAccess(row, role),
+                        };
+                      });
+                    });
+                  }}
+                  onOpenMember={(memberId) => {
+                    setSheetMemberId(memberId);
+                  }}
+                />
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          ) : null}
+
+          {hubTab === 'roles' ? (
+            <div className="space-y-4" data-testid="members-hub-roles-tab">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">직급 템플릿</h2>
+                  <p className="text-xs text-slate-500">
+                    직급별 위임 권한은 설정 화면에서 편집합니다.
+                  </p>
+                </div>
+                <Link
+                  to="/workspace/settings/roles"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-slate-900 px-3 text-xs font-bold text-white"
+                >
+                  <KeyRound className="h-4 w-4" />
+                  직급·권한 설정
+                </Link>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {roles.map((role) => {
+                  const labels = listEnabledPermissionLabels(role.permissions, scopedCapIds);
+                  const assigneeCount = members.filter(
+                    (m) => m.organization_role_id === role.id
+                  ).length;
+                  return (
+                    <div
+                      key={role.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs"
+                    >
+                      <p className="font-bold text-slate-900">{role.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">배정 {assigneeCount}명</p>
+                      <ul className="mt-2 space-y-0.5">
+                        {labels.slice(0, 6).map((item) => (
+                          <li key={item.key} className="text-[11px] text-slate-600">
+                            · {item.label}
+                          </li>
+                        ))}
+                        {labels.length > 6 ? (
+                          <li className="text-[11px] text-slate-400">외 {labels.length - 6}개</li>
+                        ) : null}
+                        {labels.length === 0 ? (
+                          <li className="text-[11px] text-slate-400">위임 권한 없음</li>
+                        ) : null}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </ContentFadeIn>
       </div>
+
+      <StaffAccessMemberSheet
+        member={canManage ? sheetMember : null}
+        selfUserId={activeUser?.id ?? null}
+        onClose={() => setSheetMemberId(null)}
+        onError={setError}
+        onMemberUpdated={handleMemberUpdated}
+      />
+
+      <MemberProvisionModal
+        open={provisionOpen}
+        organizationId={orgId}
+        roles={roles}
+        departments={tree.nodes}
+        onClose={() => setProvisionOpen(false)}
+        onProvisioned={() => {
+          void reload();
+        }}
+      />
 
       <MemberRoleAssignModal
         member={assignTarget}
@@ -479,64 +658,6 @@ export function MemberList(): React.JSX.Element {
         onClose={() => setRevokeTarget(null)}
         onConfirm={() => void handleRevokeRole()}
       />
-
-      {canViewRoleAudit ? (
-        <section
-          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs"
-          data-testid="role-delegation-audit"
-        >
-          <h2 className="text-base font-bold text-slate-900">최근 직급 부여·회수 이력</h2>
-          <p className="mt-1 text-xs text-slate-500">
-            누구에게 어떤 직급이 부여·회수되었는지 최근 기록을 확인합니다.
-          </p>
-          {roleAuditLogs.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-400">최근 이력이 없습니다.</p>
-          ) : (
-            <ul className="mt-3 divide-y divide-slate-100">
-              {roleAuditLogs.map((log) => {
-                const after = log.afterData ?? {};
-                const targetId =
-                  typeof after.target_member_id === 'string'
-                    ? after.target_member_id
-                    : log.entityId;
-                const targetMember = members.find((m) => m.id === targetId);
-                const roleId =
-                  typeof after.assigned_role_id === 'string' ? after.assigned_role_id : null;
-                const roleName = roleId
-                  ? roles.find((r) => r.id === roleId)?.name
-                  : null;
-                const reason =
-                  typeof after.reason === 'string' && after.reason.trim()
-                    ? after.reason
-                    : null;
-                return (
-                  <li key={log.id} className="py-2.5 text-sm">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
-                        {formatAuditAction(log.action)}
-                      </span>
-                      <span className="font-semibold text-slate-900">
-                        {targetMember?.name ||
-                          targetMember?.email ||
-                          (targetId ? `${String(targetId).slice(0, 8)}…` : '대상 미상')}
-                      </span>
-                      {roleName ? (
-                        <span className="text-xs text-indigo-700">→ {roleName}</span>
-                      ) : null}
-                    </div>
-                    <p className="mt-0.5 text-[11px] text-slate-500">
-                      {new Date(log.createdAt).toLocaleString('ko-KR')}
-                      {reason ? ` · ${reason}` : ''}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-      ) : null}
-
     </WorkPageFrame>
   );
 }
-

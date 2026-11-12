@@ -72,7 +72,18 @@ export const WorkspaceStaffAccessPage: React.FC = () => {
   }
 
   function handleMemberUpdated(updated: DynamicMemberRow) {
-    setMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === updated.id
+          ? {
+              ...m,
+              ...updated,
+              roleName: m.roleName,
+              appSummary: m.appSummary,
+            }
+          : m
+      )
+    );
   }
 
   return (
@@ -120,7 +131,22 @@ export const WorkspaceStaffAccessPage: React.FC = () => {
                   initialAppId={nav.appId}
                   intentGrant={nav.intent === 'grant'}
                   onError={setError}
-                  onMembersUpdated={setMembers}
+                  onMembersUpdated={(updater) => {
+                    setMembers((prev) =>
+                      updater(prev).map((row) => {
+                        const existing = prev.find((m) => m.id === row.id);
+                        return {
+                          ...row,
+                          roleName: existing?.roleName ?? null,
+                          appSummary: existing?.appSummary ?? {
+                            granted: 0,
+                            total: 0,
+                            byApp: [],
+                          },
+                        };
+                      })
+                    );
+                  }}
                   onOpenMember={(memberId, appId) => {
                     goNav({ memberId, appId, mode: 'admin' });
                   }}

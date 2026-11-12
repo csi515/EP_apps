@@ -74,9 +74,17 @@ async function withSearchPath(client: Queryable): Promise<void> {
 
 async function upsertUser(
   client: Queryable,
-  account: { userId: string; email: string; password: string; fullName: string }
+  account: {
+    userId: string;
+    email?: string | null;
+    loginId?: string | null;
+    password: string;
+    fullName: string;
+  }
 ): Promise<void> {
   const passwordHash = hashPassword(account.password);
+  const email = account.email?.trim() ? account.email.trim().toLowerCase() : null;
+  const loginId = (account.loginId?.trim() || email || account.userId).toLowerCase();
   const byId = await client.query<{ id: string }>(
     `SELECT id FROM app.users WHERE id = $1::uuid`,
     [account.userId]
@@ -85,36 +93,40 @@ async function upsertUser(
     await client.query(
       `
       UPDATE app.users
-      SET email = $1, password_hash = $2, full_name = $3, is_active = TRUE
-      WHERE id = $4::uuid
+      SET email = $1, login_id = $2, password_hash = $3, full_name = $4, is_active = TRUE
+      WHERE id = $5::uuid
     `,
-      [account.email, passwordHash, account.fullName, account.userId]
+      [email, loginId, passwordHash, account.fullName, account.userId]
     );
     return;
   }
 
-  const byEmail = await client.query<{ id: string }>(
-    `SELECT id FROM app.users WHERE LOWER(email) = LOWER($1)`,
-    [account.email]
+  const byLogin = await client.query<{ id: string }>(
+    `
+    SELECT id FROM app.users
+    WHERE LOWER(login_id) = LOWER($1)
+       OR ($2::text IS NOT NULL AND email IS NOT NULL AND LOWER(email) = LOWER($2))
+  `,
+    [loginId, email]
   );
-  if (byEmail.rows[0] && byEmail.rows[0].id !== account.userId) {
+  if (byLogin.rows[0] && byLogin.rows[0].id !== account.userId) {
     await client.query(
       `
       UPDATE app.users
-      SET password_hash = $1, full_name = $2, is_active = TRUE
-      WHERE id = $3::uuid
+      SET password_hash = $1, full_name = $2, login_id = $3, email = COALESCE($4, email), is_active = TRUE
+      WHERE id = $5::uuid
     `,
-      [passwordHash, account.fullName, byEmail.rows[0].id]
+      [passwordHash, account.fullName, loginId, email, byLogin.rows[0].id]
     );
     return;
   }
 
   await client.query(
     `
-    INSERT INTO app.users (id, email, password_hash, full_name, is_active)
-    VALUES ($1::uuid, $2, $3, $4, TRUE)
+    INSERT INTO app.users (id, email, login_id, password_hash, full_name, is_active)
+    VALUES ($1::uuid, $2, $3, $4, $5, TRUE)
   `,
-    [account.userId, account.email, passwordHash, account.fullName]
+    [account.userId, email, loginId, passwordHash, account.fullName]
   );
 }
 
@@ -255,11 +267,24 @@ async function upsertOrgRole(
 
 async function resolveUserIdByEmail(
   client: Queryable,
-  email: string
+  email: string | null | undefined
 ): Promise<string | null> {
+  if (!email?.trim()) return null;
   const row = await client.query<{ id: string }>(
     `SELECT id FROM app.users WHERE LOWER(email) = LOWER($1)`,
     [email]
+  );
+  return row.rows[0]?.id ?? null;
+}
+
+async function resolveUserIdByLoginId(
+  client: Queryable,
+  loginId: string | null | undefined
+): Promise<string | null> {
+  if (!loginId?.trim()) return null;
+  const row = await client.query<{ id: string }>(
+    `SELECT id FROM app.users WHERE LOWER(login_id) = LOWER($1)`,
+    [loginId]
   );
   return row.rows[0]?.id ?? null;
 }
@@ -309,10 +334,14 @@ export async function ensureLocalAuthSeeds(client?: Queryable): Promise<void> {
       await upsertUser(c, {
         userId: account.userId,
         email: account.email,
+        loginId: account.loginId ?? account.email,
         password: account.password,
         fullName: account.fullName,
       });
-      const userId = (await resolveUserIdByEmail(c, account.email)) ?? account.userId;
+      const userId =
+        (await resolveUserIdByLoginId(c, account.loginId ?? account.email)) ??
+        (await resolveUserIdByEmail(c, account.email)) ??
+        account.userId;
       await upsertMembership(c, {
         membershipId: account.membershipId,
         organizationId: LOCAL_AUTH_ORG.organizationId,
@@ -324,11 +353,14 @@ export async function ensureLocalAuthSeeds(client?: Queryable): Promise<void> {
         await upsertUser(c, {
           userId: alias.userId,
           email: alias.email,
+          loginId: alias.loginId ?? alias.email,
           password: account.password,
           fullName: `${account.fullName} (alias)`,
         });
         const resolvedAliasId =
-          (await resolveUserIdByEmail(c, alias.email)) ?? alias.userId;
+          (await resolveUserIdByLoginId(c, alias.loginId ?? alias.email)) ??
+          (await resolveUserIdByEmail(c, alias.email)) ??
+          alias.userId;
         await upsertMembership(c, {
           membershipId: alias.membershipId,
           organizationId: LOCAL_AUTH_ORG.organizationId,
@@ -504,7 +536,8 @@ export { hashSessionToken };
 
 export type LocalAuthUserRow = {
   id: string;
-  email: string;
+  email: string | null;
+  login_id?: string | null;
   full_name: string | null;
   password_hash: string;
   is_active: boolean | number;

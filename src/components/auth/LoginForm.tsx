@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Mail,
+  User,
   Lock,
   ArrowRight,
   RefreshCw,
@@ -123,13 +123,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-              <Mail className="w-4 h-4" />
+              <User className="w-4 h-4" />
             </div>
             <input
               id="login-email"
               data-testid="input-email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}

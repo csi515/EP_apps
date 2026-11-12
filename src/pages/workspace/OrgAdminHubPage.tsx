@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Building2, KeyRound, Network, Settings, Shield } from 'lucide-react';
+import { Building2, KeyRound, Network, Settings, Shield, Users } from 'lucide-react';
 import { useTranslate } from '@refinedev/core';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { PageHeader } from '@/shared/components/ui/PageHeader';
@@ -48,6 +48,14 @@ export const OrgAdminHubPage: React.FC = () => {
   }
 
   const cards: HubCard[] = [
+    {
+      id: 'members',
+      to: '/workspace/members',
+      title: '임직원·권한',
+      description: '계정 발급, 소속, 앱 이용, 직급을 한곳에서 관리합니다.',
+      icon: <Users className="h-5 w-5" />,
+      visible: canRoles || canStructure,
+    },
     {
       id: 'org-tree',
       to: '/workspace/organization',

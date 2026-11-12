@@ -17,9 +17,11 @@ export interface SignUpParams {
 }
 
 export interface SignInParams {
+  /** 로그인 아이디(문자열). 레거시 호환으로 email 필드명도 허용 */
   email: string;
   password: string;
   rememberMe?: boolean;
+  loginId?: string;
 }
 
 /** 앱 origin / 배포 URL 기준 redirect */
@@ -64,17 +66,18 @@ export async function signUp({
   return { user: data.user, session: data.session };
 }
 
-export async function signIn({ email, password, rememberMe }: SignInParams): Promise<Session> {
+export async function signIn({ email, password, rememberMe, loginId }: SignInParams): Promise<Session> {
   if (rememberMe !== undefined) {
     setAuthStoragePreference(rememberMe);
   }
 
+  const loginKey = (loginId ?? email).trim();
   if (isLocalAuthEnabled()) {
-    return localSignIn(email, password);
+    return localSignIn(loginKey, password);
   }
 
   const { data, error } = await getCoreClient().auth.signInWithPassword({
-    email,
+    email: loginKey,
     password,
   });
 

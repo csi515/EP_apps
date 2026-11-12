@@ -119,9 +119,10 @@ export const EP_APPS_MESSAGES_KO: Record<string, string> = {
   'ep.members.bulk.failGeneric': '일괄 권한 변경에 실패했습니다.',
 
   // Member list
-  'ep.members.title': '사원 및 권한 관리',
+  'ep.members.title': '임직원·권한',
   'ep.members.count': '총 {{count}}명',
-  'ep.members.subtitle': '사내 직원의 직급과 세부 업무 권한을 관리합니다.',
+  'ep.members.subtitle': '계정 발급, 소속 조직, 앱 이용, 직급·권한을 관리합니다.',
+  'ep.palette.menu.members': '임직원·권한',
   'ep.members.adminAppHint':
     '조직 관리자(owner·admin·manager)는 앱 이용 설정과 무관하게 모든 켜진 앱을 볼 수 있습니다.',
   'ep.members.bulkOpen': '앱 이용 권한 일괄',
@@ -319,9 +320,10 @@ export const EP_APPS_MESSAGES_EN: Record<string, string> = {
     '{{failed}} of {{total}} failed. First error: {{reason}}',
   'ep.members.bulk.failGeneric': 'Bulk permission update failed.',
 
-  'ep.members.title': 'Members & permissions',
+  'ep.members.title': 'People & access',
   'ep.members.count': '{{count}} members',
-  'ep.members.subtitle': 'Manage ranks and app/duty permissions.',
+  'ep.members.subtitle': 'Provision accounts, org placement, apps, and ranks.',
+  'ep.palette.menu.members': 'People & access',
   'ep.members.adminAppHint':
     'Org admins see all enabled apps regardless of individual app-access settings.',
   'ep.members.bulkOpen': 'Bulk app access',

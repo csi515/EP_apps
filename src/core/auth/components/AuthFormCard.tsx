@@ -1,5 +1,5 @@
 import React, { useState, type FormEvent } from 'react';
-import { Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Lock, User } from 'lucide-react';
 import { LegalModal } from '@/core/legal';
 import type { AuthMode } from '../hooks/useAuthForm';
 
@@ -107,15 +107,16 @@ export function AuthFormCard({
         )}
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">이메일 계정</label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">아이디</label>
           <div className="relative">
-            <Mail className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <User className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
-              type="email"
+              type="text"
               required
+              autoComplete="username"
               value={email}
               onChange={(e) => onEmailChange(e.target.value)}
-              placeholder="director@example.com"
+              placeholder="사번 또는 로그인 아이디"
               className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
             />
           </div>
@@ -195,8 +196,8 @@ export function AuthFormCard({
           className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 min-h-[44px]"
         >
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {mode === 'login' && '이메일로 로그인'}
-          {mode === 'signup' && '이메일로 가입하기'}
+          {mode === 'login' && '로그인'}
+          {mode === 'signup' && '가입하기'}
           {mode === 'forgot' && '재설정 링크 보내기'}
         </button>
       </form>

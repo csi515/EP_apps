@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  listDynamicRoles,
-  listRoleMembers,
-  type DynamicMemberRow,
-  type DynamicRoleRow,
-} from '@/core/organizations/services/dynamicRoleService';
+  loadOrgMembersAdminDirectory,
+  type AdminMemberDirectoryRow,
+} from '@/core/organizations/services/orgMemberAdminService';
+import type { DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
 
 type Options = {
   orgId: string;
@@ -12,9 +11,9 @@ type Options = {
   enabled?: boolean;
 };
 
-/** 조직 멤버·직급 목록 (MemberList / 앱 권한 공유) */
+/** 조직 멤버·직급·부서·앱 요약 (MemberList / 앱 권한 공유) */
 export function useOrgMembersDirectory({ orgId, enabled = true }: Options) {
-  const [members, setMembers] = useState<DynamicMemberRow[]>([]);
+  const [members, setMembers] = useState<AdminMemberDirectoryRow[]>([]);
   const [roles, setRoles] = useState<DynamicRoleRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,12 +23,9 @@ export function useOrgMembersDirectory({ orgId, enabled = true }: Options) {
     setLoading(true);
     setError(null);
     try {
-      const [fetchedRoles, fetchedMembers] = await Promise.all([
-        listDynamicRoles(orgId),
-        listRoleMembers(orgId),
-      ]);
-      setRoles(fetchedRoles);
-      setMembers(fetchedMembers);
+      const directory = await loadOrgMembersAdminDirectory(orgId);
+      setRoles(directory.roles);
+      setMembers(directory.members);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '데이터 조회 중 오류가 발생했습니다.');
     } finally {

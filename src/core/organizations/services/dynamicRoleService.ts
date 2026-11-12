@@ -30,9 +30,14 @@ export type DynamicMemberRow = {
   custom_role_id?: string | null;
   is_active?: boolean;
   joined_at?: string;
-  email?: string;
+  email?: string | null;
+  login_id?: string | null;
   name?: string;
   feature_permissions?: Record<string, boolean>;
+  department_id?: string | null;
+  department_name?: string | null;
+  department_path?: string | null;
+  department_scope_type?: string | null;
 };
 
 export async function listDynamicRoles(organizationId: string): Promise<DynamicRoleRow[]> {
@@ -66,9 +71,14 @@ export async function listRoleMembers(organizationId: string): Promise<DynamicMe
       role: m.role,
       organization_role_id: m.organization_role_id,
       feature_permissions: m.feature_permissions,
-      email: m.email,
+      email: m.email ?? null,
+      login_id: m.login_id ?? null,
       name: m.name,
       is_active: m.is_active !== false,
+      department_id: m.department_id ?? null,
+      department_name: m.department_name ?? null,
+      department_path: m.department_path ?? null,
+      department_scope_type: m.department_scope_type ?? null,
     }));
   }
 

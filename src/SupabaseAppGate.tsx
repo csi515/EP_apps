@@ -6,6 +6,7 @@ import { StorageHydrator } from '@/StorageHydrator';
 import { LoadingScreen } from '@/shared/components/LoadingScreen';
 import { OwnerOperationStoppedView } from '@/core/organizations/OwnerOperationStoppedView';
 import { PendingStaffInviteGate } from '@/core/staff/components/PendingStaffInviteGate';
+import { MustChangePasswordGate } from '@/core/auth/components/MustChangePasswordGate';
 
 // 워크스페이스는 인증 후 역할에 맞을 때만 로드 (로그인 입구와 번들 분리).
 const LazyIndustryAppRouter = lazy(() =>
@@ -35,7 +36,7 @@ const NoOrganizationMembershipView: FC = () => {
       <div className="space-y-1 max-w-sm">
         <p className="text-sm font-semibold text-slate-800">소속 사업장이 없습니다</p>
         <p className="text-xs text-slate-500 leading-relaxed">
-          관리자에게 임직원 초대를 요청한 뒤 다시 로그인해 주세요.
+          관리자에게 로그인 아이디 발급을 요청한 뒤 다시 로그인해 주세요.
         </p>
         {organizationsError ? (
           <p className="text-xs text-rose-600 mt-2">{organizationsError}</p>
@@ -127,13 +128,15 @@ export const SupabaseAppGate: FC<SupabaseAppGateProps> = ({ children }) => {
   }
 
   return (
-    <StorageHydrator
-      organizationId={currentOrganization.id}
-      industryType={currentOrganization.industry_type}
-    >
-      <PendingStaffInviteGate />
-      {children ?? <IndustryAppRouter />}
-    </StorageHydrator>
+    <MustChangePasswordGate>
+      <StorageHydrator
+        organizationId={currentOrganization.id}
+        industryType={currentOrganization.industry_type}
+      >
+        <PendingStaffInviteGate />
+        {children ?? <IndustryAppRouter />}
+      </StorageHydrator>
+    </MustChangePasswordGate>
   );
 };
 

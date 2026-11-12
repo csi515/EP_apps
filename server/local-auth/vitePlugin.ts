@@ -21,17 +21,19 @@ export function localAuthPlugin(): Plugin {
           const count = await pool.query<{ c: string }>(
             `SELECT COUNT(*)::text AS c FROM app.users`
           );
-          const emails = [
-            ...LOCAL_AUTH_ROLE_ACCOUNTS.map((a) => a.email),
+          const logins = [
+            ...LOCAL_AUTH_ROLE_ACCOUNTS.map((a) => a.loginId ?? a.email),
             ...LOCAL_PERMISSION_PROFILES.slice(0, 3).map((p) => p.email),
-          ].join(', ');
+          ]
+            .filter(Boolean)
+            .join(', ');
           const target =
             getLocalAuthDriver() === 'pglite'
               ? 'pglite(embedded)'
               : getLocalAuthDatabaseUrl();
           console.info(
             `[local-auth] ${pool.driver} ready (${target}) ` +
-              `${count.rows[0]?.c ?? 0} users. e.g. ${emails}, …`
+              `${count.rows[0]?.c ?? 0} users. e.g. ${logins}, …`
           );
         })
         .catch((err) => {

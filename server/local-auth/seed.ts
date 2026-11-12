@@ -12,12 +12,15 @@ export type LocalAuthRoleAccount = {
   role: 'owner' | 'admin' | 'manager' | 'staff';
   userId: string;
   membershipId: string;
-  email: string;
-  /** 동일 역할로 로그인 가능한 추가 이메일 */
+  /** 로그인 아이디 (문자열). 없으면 email 을 login_id 로 사용 */
+  loginId?: string;
+  email: string | null;
+  /** 동일 역할로 로그인 가능한 추가 계정 */
   aliases: ReadonlyArray<{
     userId: string;
     membershipId: string;
-    email: string;
+    loginId?: string;
+    email: string | null;
   }>;
   password: string;
   fullName: string;
@@ -46,11 +49,12 @@ export const LOCAL_AUTH_ROLE_ACCOUNTS: readonly LocalAuthRoleAccount[] = [
     role: 'admin',
     userId: '11111111-1111-4111-8111-111111111112',
     membershipId: '33333333-3333-4333-8333-333333333334',
-    email: 'admin@ep.local',
+    loginId: 'pmcmadmin',
+    email: null,
     aliases: [],
-    password: 'EpTest123!',
-    fullName: 'EP 관리자(admin)',
-    expectedRoleHints: ['관리자', 'admin'],
+    password: 'Pmcm1234!',
+    fullName: 'PMCM 관리자',
+    expectedRoleHints: ['관리자', 'admin', 'pmcmadmin'],
   },
   {
     role: 'manager',

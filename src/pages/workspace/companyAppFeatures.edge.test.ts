@@ -87,9 +87,9 @@ assert.match(rolesUi, /roles:assign|위임/);
 assert.doesNotMatch(rolesUi, /OwnershipTransferCard|소유권 이전/);
 
 const memberList = readFileSync(join(root, 'src/pages/members/MemberList.tsx'), 'utf8');
-assert.match(memberList, /COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS|company_app:/);
-assert.match(memberList, /assign_role|위임|직급|MemberRoleAssignModal|app-access|buildStaffAccessPath/);
-assert.match(memberList, /ep\.members\.|countGrantedCompanyAppUsage/);
+assert.match(memberList, /StaffAccessAppHomeView|StaffAccessMemberSheet|appSummary/);
+assert.match(memberList, /assign_role|위임|직급|MemberRoleAssignModal|MemberProvisionModal|StaffAccessMemberSheet/);
+assert.match(memberList, /ep\.members\.|MemberProvisionModal/);
 
 const accessDenied = readFileSync(
   join(root, 'src/pages/workspace/CompanyAppAccessDeniedPage.tsx'),

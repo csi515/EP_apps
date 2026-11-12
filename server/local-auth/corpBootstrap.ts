@@ -13,7 +13,9 @@ type Queryable = {
 };
 
 export type CorpBootstrapConfig = {
-  ownerEmail: string;
+  /** 로그인 아이디 (문자열). 미지정 시 ownerEmail 사용 */
+  ownerLoginId?: string;
+  ownerEmail: string | null;
   ownerPassword: string;
   ownerFullName: string;
   organizationName: string;
@@ -29,8 +31,17 @@ function requireEnv(name: string): string {
 }
 
 export function readCorpBootstrapConfigFromEnv(): CorpBootstrapConfig {
+  const loginId =
+    process.env.EP_CORP_OWNER_LOGIN_ID?.trim() ||
+    process.env.EP_CORP_OWNER_EMAIL?.trim() ||
+    '';
+  if (!loginId) {
+    throw new Error('사내 부트스트랩에 EP_CORP_OWNER_LOGIN_ID 또는 EP_CORP_OWNER_EMAIL이 필요합니다.');
+  }
+  const emailRaw = process.env.EP_CORP_OWNER_EMAIL?.trim() || null;
   return {
-    ownerEmail: requireEnv('EP_CORP_OWNER_EMAIL').toLowerCase(),
+    ownerLoginId: loginId.toLowerCase(),
+    ownerEmail: emailRaw && emailRaw.includes('@') ? emailRaw.toLowerCase() : null,
     ownerPassword: requireEnv('EP_CORP_OWNER_PASSWORD'),
     ownerFullName: process.env.EP_CORP_OWNER_NAME?.trim() || '조직 소유자',
     organizationName: process.env.EP_CORP_ORG_NAME?.trim() || '사내 조직',
@@ -46,13 +57,23 @@ export async function ensureCorpBootstrap(
   client: Queryable,
   config: CorpBootstrapConfig
 ): Promise<{ created: boolean; organizationId: string; ownerUserId: string }> {
-  if (/@ep\.local$/i.test(config.ownerEmail)) {
+  const loginId = (config.ownerLoginId || config.ownerEmail || '').trim().toLowerCase();
+  if (!loginId) {
+    throw new Error('사내 부트스트랩에 로그인 아이디가 필요합니다.');
+  }
+  if (config.ownerEmail && /@ep\.local$/i.test(config.ownerEmail)) {
     throw new Error('사내 부트스트랩에 *@ep.local 계정은 사용할 수 없습니다.');
   }
 
   const existingUser = await client.query<{ id: string }>(
-    `SELECT id FROM app.users WHERE LOWER(email) = LOWER($1)`,
-    [config.ownerEmail]
+    `
+    SELECT id FROM app.users
+    WHERE LOWER(login_id) = LOWER($1)
+       OR ($2::text IS NOT NULL AND email IS NOT NULL AND LOWER(email) = LOWER($2))
+    ORDER BY CASE WHEN LOWER(login_id) = LOWER($1) THEN 0 ELSE 1 END
+    LIMIT 1
+  `,
+    [loginId, config.ownerEmail]
   );
 
   let ownerUserId = existingUser.rows[0]?.id;
@@ -63,19 +84,34 @@ export async function ensureCorpBootstrap(
     ownerUserId = randomUUID();
     await client.query(
       `
-      INSERT INTO app.users (id, email, password_hash, full_name, is_active, must_change_password)
-      VALUES ($1::uuid, $2, $3, $4, TRUE, $5)
+      INSERT INTO app.users (id, email, login_id, password_hash, full_name, is_active, must_change_password)
+      VALUES ($1::uuid, $2, $3, $4, $5, TRUE, $6)
     `,
-      [ownerUserId, config.ownerEmail, passwordHash, config.ownerFullName, mustChange]
+      [
+        ownerUserId,
+        config.ownerEmail,
+        loginId,
+        passwordHash,
+        config.ownerFullName,
+        mustChange,
+      ]
     );
   } else {
     await client.query(
       `
       UPDATE app.users
-      SET full_name = $1, is_active = TRUE, must_change_password = $2
-      WHERE id = $3::uuid
+      SET full_name = $1, login_id = $2, email = COALESCE($3, email),
+          password_hash = $4, is_active = TRUE, must_change_password = $5
+      WHERE id = $6::uuid
     `,
-      [config.ownerFullName, mustChange, ownerUserId]
+      [
+        config.ownerFullName,
+        loginId,
+        config.ownerEmail,
+        passwordHash,
+        mustChange,
+        ownerUserId,
+      ]
     );
   }
 

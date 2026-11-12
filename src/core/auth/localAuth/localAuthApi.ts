@@ -14,7 +14,8 @@ const API_BASE =
 
 type LocalUserDto = {
   id: string;
-  email: string;
+  email: string | null;
+  login_id?: string | null;
   full_name: string;
   must_change_password?: boolean;
 };
@@ -53,9 +54,14 @@ export type LocalOrgMemberDto = {
   role: string;
   organization_role_id: string | null;
   feature_permissions: Record<string, boolean>;
-  email?: string;
+  email?: string | null;
+  login_id?: string | null;
   name?: string;
   is_active?: boolean;
+  department_id?: string | null;
+  department_name?: string | null;
+  department_path?: string | null;
+  department_scope_type?: string | null;
 };
 
 async function apiFetch<T>(
@@ -101,14 +107,14 @@ async function syncSupabaseJwt(accessToken: string | null, _expiresIn = 14 * 24 
   }
 }
 
-export async function localSignIn(email: string, password: string): Promise<Session> {
+export async function localSignIn(loginId: string, password: string): Promise<Session> {
   const data = await apiFetch<{
     access_token: string;
     user: LocalUserDto;
     expires_in: number;
   }>('/login', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ login_id: loginId.trim(), password }),
     token: null,
   });
 
@@ -117,6 +123,66 @@ export async function localSignIn(email: string, password: string): Promise<Sess
   const session = buildLocalSession(data.access_token, data.user, data.expires_in);
   notifyLocalAuthListeners(session);
   return session;
+}
+
+export type LocalProvisionMemberInput = {
+  organizationId: string;
+  loginId: string;
+  password: string;
+  fullName: string;
+  baseRole?: 'staff' | 'manager' | 'admin';
+  organizationRoleId?: string | null;
+  departmentId?: string | null;
+  scopeType?: 'SELF_ONLY' | 'DESCENDANTS' | 'GLOBAL';
+};
+
+export type LocalProvisionMemberResult = {
+  user_id: string;
+  member_id: string;
+  staff_id: string;
+  login_id: string;
+  full_name: string | null;
+  must_change_password: boolean;
+};
+
+export async function localProvisionOrgMember(
+  input: LocalProvisionMemberInput
+): Promise<LocalProvisionMemberResult> {
+  return apiFetch<LocalProvisionMemberResult>(
+    `/organizations/${encodeURIComponent(input.organizationId)}/members`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        login_id: input.loginId.trim().toLowerCase(),
+        password: input.password,
+        full_name: input.fullName.trim(),
+        base_role: input.baseRole ?? 'staff',
+        organization_role_id: input.organizationRoleId ?? null,
+        department_id: input.departmentId ?? null,
+        scope_type: input.scopeType ?? 'SELF_ONLY',
+      }),
+    }
+  );
+}
+
+export async function localResetMemberPassword(
+  memberId: string,
+  password: string
+): Promise<void> {
+  await apiFetch(`/members/${encodeURIComponent(memberId)}/password`, {
+    method: 'POST',
+    body: JSON.stringify({ password }),
+  });
+}
+
+export async function localSetMemberActive(
+  memberId: string,
+  isActive: boolean
+): Promise<void> {
+  await apiFetch(`/members/${encodeURIComponent(memberId)}/active`, {
+    method: 'POST',
+    body: JSON.stringify({ is_active: isActive }),
+  });
 }
 
 export async function localGetSession(): Promise<Session | null> {
