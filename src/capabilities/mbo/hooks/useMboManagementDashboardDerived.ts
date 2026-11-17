@@ -1,9 +1,5 @@
-import { useMemo, useCallback, useEffect } from 'react';
-import {
-  validateMboObjectiveWeights,
-  type MboStatus,
-  type MboLevel,
-} from '../domain/mboEngine';
+import { useMemo, useCallback } from 'react';
+import { validateMboObjectiveWeights } from '../domain/mboEngine';
 import {
   buildTeamMemberChips,
   computeManagerKpis,
@@ -15,27 +11,46 @@ import {
   countPendingGoalApprovals,
 } from '../domain/mboTwoTierLockEngine';
 import { buildPersonObjectiveBuckets } from '../domain/mboTeamBoardEngine';
-import type { PortfolioProject } from '../domain/projectPortfolioEngine';
-import type { ProjectCategory } from '../domain/projectCategoryEngine';
+import {
+  buildOrgAlignedObjectiveTree,
+  listUpstreamVisibleGoals,
+  resolveAlignmentContext,
+  type OrgAlignedObjective,
+} from '../domain/mboOrgAlignedTreeEngine';
 import { canManageObjectiveOwner } from '../services/mboOrgScopeService';
-import { formatPeriodYm, listMissingMonthlyCheckins } from '../domain/mboMonthlyCheckin';
 import {
   filterObjectivesForViewer,
-  memberMatchesQuery,
-  type MboVisibilityType,
 } from '../domain/mboVisibilityEngine';
-import {
-  listCreatableLevels,
-  listEligibleParentGoals,
-  resolveMaxCreatableLevel,
-  validateGoalCreation,
-  type ExistingGoalRef,
-} from '../domain/mboGoalHierarchy';
-import type { ProgressLogItem } from '../ui/MboQuarterlyReviewForm';
-import type { ObjectiveNode } from '../ui/MboObjectiveTreeViewer';
 import type { MboManagementWorkspaceState } from './useMboManagementWorkspaceState';
-
 import type { MboManagementObjectivesDerived } from './useMboManagementObjectivesDerived';
+
+function toAligned(o: {
+  id: string;
+  parentId: string | null;
+  level: OrgAlignedObjective['level'];
+  title: string;
+  ownerId?: string | null;
+  ownerName: string;
+  departmentName?: string | null;
+  departmentId?: string | null;
+  progressRate: number;
+  weight: number;
+  status: string;
+}): OrgAlignedObjective {
+  return {
+    id: o.id,
+    parentId: o.parentId,
+    level: o.level,
+    title: o.title,
+    ownerId: o.ownerId ?? null,
+    ownerName: o.ownerName,
+    departmentName: o.departmentName,
+    departmentId: o.departmentId,
+    progressRate: o.progressRate,
+    weight: o.weight,
+    status: o.status,
+  };
+}
 
 export function useMboManagementDashboardDerived(
   state: MboManagementWorkspaceState,
@@ -51,15 +66,14 @@ export function useMboManagementDashboardDerived(
     isOrgAdmin,
     isManager,
     viewerUserId,
+    viewerMemberId,
     ownerFilterId,
     selectedMemberUserIds,
     ganttRiskOnly,
-    setGanttRiskOnly,
     ganttCheckinOnly,
-    setGanttCheckinOnly,
     orgMembers,
-    ganttSectionRef,
   } = state;
+  const rawObjectiveRows = obj.rawObjectiveRows;
   const teamBoardBuckets = useMemo(
     () =>
       buildPersonObjectiveBuckets(
@@ -219,6 +233,68 @@ export function useMboManagementDashboardDerived(
     return validateMboObjectiveWeights(subset);
   }, [objectives, ownerFilterId, viewerUserId]);
 
+  const viewerMember = useMemo(
+    () => orgMembers.find((m) => m.userId === viewerUserId) ?? null,
+    [orgMembers, viewerUserId]
+  );
+
+  /** 열람 가능(visible) 전체 — 정렬 스트립·상위 블록용 */
+  const visibleAlignedObjectives = useMemo(() => {
+    const rows = filterObjectivesForViewer(rawObjectiveRows, {
+      scope: 'visible',
+      currentUserId: viewerUserId,
+      currentMemberId: viewerMemberId ?? orgScope?.viewerMemberId,
+      isOwnerOrAdmin: isOrgAdmin,
+      managedUserIds: orgScope?.managedUserIds,
+      viewerLeadDepartmentPath: orgScope?.leadDepartmentPaths[0] ?? null,
+      authorDepartmentPathByOwnerId: (ownerId) =>
+        orgMembers.find((m) => m.userId === ownerId)?.departmentPath ?? null,
+      ownerFilterId: null,
+    });
+    return rows.map(toAligned);
+  }, [
+    rawObjectiveRows,
+    viewerUserId,
+    viewerMemberId,
+    orgScope,
+    isOrgAdmin,
+    orgMembers,
+  ]);
+
+  const alignmentContext = useMemo(
+    () =>
+      resolveAlignmentContext({
+        visibleObjectives: visibleAlignedObjectives,
+        viewerUserId,
+        viewerDepartmentId: viewerMember?.departmentId ?? null,
+        viewerDepartmentName: viewerMember?.departmentName ?? null,
+      }),
+    [visibleAlignedObjectives, viewerUserId, viewerMember]
+  );
+
+  const orgAlignedRows = useMemo(
+    () => buildOrgAlignedObjectiveTree(objectives.map(toAligned)),
+    [objectives]
+  );
+
+  const upstreamGoals = useMemo(
+    () =>
+      listUpstreamVisibleGoals({
+        visibleObjectives: visibleAlignedObjectives,
+        managedUserIds: [...(orgScope?.managedUserIds ?? [])],
+        viewerUserId,
+      }),
+    [visibleAlignedObjectives, orgScope?.managedUserIds, viewerUserId]
+  );
+
+  const hasUpstreamPublicGoals = useMemo(
+    () =>
+      visibleAlignedObjectives.some(
+        (o) => o.level === 'company' || o.level === 'department'
+      ),
+    [visibleAlignedObjectives]
+  );
+
   return {
     teamBoardBuckets,
     teamUserIds,
@@ -232,6 +308,10 @@ export function useMboManagementDashboardDerived(
     pendingChangeApprovals,
     hubSummary,
     weightValidation,
+    alignmentContext,
+    orgAlignedRows,
+    upstreamGoals,
+    hasUpstreamPublicGoals,
   };
 }
 

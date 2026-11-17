@@ -2,6 +2,7 @@ import React from 'react';
 import type { MboLevel } from '../domain/mboEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import {
+  defaultVisibilityForLevel,
   hasPrerequisiteGoals,
   levelLabelKo,
   listEligibleParentGoals,
@@ -20,6 +21,8 @@ import { MboScheduleRangePicker } from './MboScheduleRangePicker';
 import { MBO_COPY } from './mboUiCopy';
 import type { ObjectiveNode } from './MboObjectiveTreeViewer';
 
+type DeptOption = { id: string; name: string };
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -30,6 +33,9 @@ type Props = {
   onWeightChange: (n: number) => void;
   newParentId: string;
   onParentIdChange: (id: string) => void;
+  newDepartmentId: string;
+  onDepartmentIdChange: (id: string, name: string) => void;
+  departmentOptions: DeptOption[];
   newTitle: string;
   onTitleChange: (v: string) => void;
   newCriteria: string;
@@ -45,6 +51,7 @@ type Props = {
   goalActor: GoalHierarchyActor;
   existingGoalRefs: ExistingGoalRef[];
   eligibleParents: ExistingGoalRef[];
+  createGate: { allowed: boolean; reason?: string };
   objectives: ObjectiveNode[];
   selectedOwnerMember: MboPickerMember | null;
   onOpenOwnerPicker: () => void;
@@ -62,6 +69,9 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
   onWeightChange,
   newParentId,
   onParentIdChange,
+  newDepartmentId,
+  onDepartmentIdChange,
+  departmentOptions,
   newTitle,
   onTitleChange,
   newCriteria,
@@ -77,6 +87,7 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
   goalActor,
   existingGoalRefs,
   eligibleParents,
+  createGate,
   objectives,
   selectedOwnerMember,
   onOpenOwnerPicker,
@@ -94,6 +105,8 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
     return MBO_COPY.weightInvalid(projected, diff);
   })();
 
+  const submitBlocked = !createGate.allowed;
+
   return (
     <Modal
       isOpen={open}
@@ -102,18 +115,29 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
       maxWidth="lg"
       intent="form"
       footer={
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose}>
-            취소
-          </Button>
-          <Button
-            variant="primary"
-            type="submit"
-            form="mbo-create-objective-form"
-            data-testid="mbo-create-objective-submit"
-          >
-            등록 완료
-          </Button>
+        <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end">
+          {submitBlocked ? (
+            <p
+              className="flex-1 text-[11px] font-semibold text-amber-700"
+              data-testid="mbo-create-gate-reason"
+            >
+              {createGate.reason ?? MBO_COPY.createGoalBlocked}
+            </p>
+          ) : null}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose}>
+              취소
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+              form="mbo-create-objective-form"
+              data-testid="mbo-create-objective-submit"
+              disabled={submitBlocked}
+            >
+              등록 완료
+            </Button>
+          </div>
         </div>
       }
     >
@@ -152,6 +176,7 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
               onChange={(e) => {
                 const next = e.target.value as MboLevel;
                 onLevelChange(next);
+                onVisibilityChange(defaultVisibilityForLevel(next));
                 if (next === 'company') {
                   onParentIdChange('');
                 } else {
@@ -203,6 +228,30 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
                   </option>
                 );
               })}
+            </select>
+          </FormField>
+        ) : null}
+
+        {newLevel === 'department' ? (
+          <FormField label="대상 조직" htmlFor="mbo-create-department" required>
+            <select
+              id="mbo-create-department"
+              value={newDepartmentId}
+              onChange={(e) => {
+                const id = e.target.value;
+                const name = departmentOptions.find((d) => d.id === id)?.name ?? '';
+                onDepartmentIdChange(id, name);
+              }}
+              required
+              className={FORM_CONTROL_CLASS}
+              data-testid="mbo-create-objective-department"
+            >
+              <option value="">조직 선택</option>
+              {departmentOptions.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
             </select>
           </FormField>
         ) : null}

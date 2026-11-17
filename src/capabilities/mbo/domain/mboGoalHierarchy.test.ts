@@ -56,7 +56,8 @@ const companyOnly: ExistingGoalRef[] = [
   { id: 'c1', level: 'company', parentId: null },
 ];
 assert.equal(hasPrerequisiteGoals('department', companyOnly), true);
-assert.equal(hasPrerequisiteGoals('individual', companyOnly), true);
+// 개인 KPI는 조직단위 목표 선행 필수 (회사만으로는 불가)
+assert.equal(hasPrerequisiteGoals('individual', companyOnly), false);
 
 // 그룹장이 전사 목표를 쓰려 하면 거부
 const denyCompany = validateGoalCreation({
@@ -88,6 +89,26 @@ const okGroup = validateGoalCreation({
 });
 assert.equal(okGroup.allowed, true);
 
+// 대표이사도 조직단위 목표에 departmentId 필수
+const denyCeoNoDept = validateGoalCreation({
+  actor: ceo,
+  request: { level: 'department', parentId: 'c1' },
+  existing: companyOnly,
+});
+assert.equal(denyCeoNoDept.allowed, false);
+assert.match(String(denyCeoNoDept.reason), /조직/);
+
+const okCeoDept = validateGoalCreation({
+  actor: ceo,
+  request: {
+    level: 'department',
+    parentId: 'c1',
+    departmentId: 'dept-any',
+  },
+  existing: companyOnly,
+});
+assert.equal(okCeoDept.allowed, true);
+
 // 다른 그룹 목표 거부
 const denyOtherGroup = validateGoalCreation({
   actor: groupLead,
@@ -101,13 +122,13 @@ const denyOtherGroup = validateGoalCreation({
 assert.equal(denyOtherGroup.allowed, false);
 assert.match(String(denyOtherGroup.reason), /리더로 맡은/);
 
-// 개인 KPI는 상위 목표 부모 필수
-const denyIndNoParent = validateGoalCreation({
+// 개인 KPI는 상위 목표 부모 필수 — 회사만 있으면 선행 거부
+const denyIndNoDeptPrereq = validateGoalCreation({
   actor: staff,
-  request: { level: 'individual', parentId: null },
+  request: { level: 'individual', parentId: 'c1' },
   existing: companyOnly,
 });
-assert.equal(denyIndNoParent.allowed, false);
+assert.equal(denyIndNoDeptPrereq.allowed, false);
 
 const withDept: ExistingGoalRef[] = [
   ...companyOnly,
@@ -120,6 +141,15 @@ const okInd = validateGoalCreation({
 });
 assert.equal(okInd.allowed, true);
 
+// 개인 → 회사 직결 거부
+const denyIndUnderCompany = validateGoalCreation({
+  actor: staff,
+  request: { level: 'individual', parentId: 'c1' },
+  existing: withDept,
+});
+assert.equal(denyIndUnderCompany.allowed, false);
+assert.match(String(denyIndUnderCompany.reason), /조직단위/);
+
 // 부모 단계가 같거나 낮으면 거부
 const denyPeerParent = validateGoalCreation({
   actor: staff,
@@ -131,8 +161,12 @@ const denyPeerParent = validateGoalCreation({
 });
 assert.equal(denyPeerParent.allowed, false);
 
-const parents = listEligibleParentGoals('individual', withDept);
-assert.equal(parents.length, 2);
-assert.ok(parents.every((p) => p.level === 'company' || p.level === 'department'));
+const parentsInd = listEligibleParentGoals('individual', withDept);
+assert.equal(parentsInd.length, 1);
+assert.ok(parentsInd.every((p) => p.level === 'department'));
+
+const parentsDept = listEligibleParentGoals('department', withDept);
+assert.equal(parentsDept.length, 1);
+assert.ok(parentsDept.every((p) => p.level === 'company'));
 
 console.log('mboGoalHierarchy.test.ts: ok');

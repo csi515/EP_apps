@@ -7,6 +7,7 @@ import {
 } from './db';
 import { LOCAL_AUTH_ROLE_ACCOUNTS } from './seed';
 import { LOCAL_PERMISSION_PROFILES } from './permissionProfiles';
+import { RND_DEMO_LEAD_LOGIN } from './rndDemoSeed';
 
 /**
  * Vite 개발 서버에 /api/local-auth 미들웨어를 붙입니다.
@@ -22,6 +23,7 @@ export function localAuthPlugin(): Plugin {
             `SELECT COUNT(*)::text AS c FROM app.users`
           );
           const logins = [
+            RND_DEMO_LEAD_LOGIN,
             ...LOCAL_AUTH_ROLE_ACCOUNTS.map((a) => a.loginId ?? a.email),
             ...LOCAL_PERMISSION_PROFILES.slice(0, 3).map((p) => p.email),
           ]
@@ -33,7 +35,7 @@ export function localAuthPlugin(): Plugin {
               : getLocalAuthDatabaseUrl();
           console.info(
             `[local-auth] ${pool.driver} ready (${target}) ` +
-              `${count.rows[0]?.c ?? 0} users. e.g. ${logins}, …`
+              `${count.rows[0]?.c ?? 0} users. demo ${RND_DEMO_LEAD_LOGIN}. e.g. ${logins}, …`
           );
         })
         .catch((err) => {

@@ -21,6 +21,7 @@ export interface ObjectiveNode {
   parentId: string | null;
   level: MboLevel;
   departmentName: string;
+  departmentId?: string | null;
   ownerName: string;
   ownerId?: string | null;
   title: string;

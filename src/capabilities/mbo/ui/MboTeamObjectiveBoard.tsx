@@ -3,7 +3,8 @@ import { ChevronDown, ChevronRight, CalendarRange, Eye, Target, User } from 'luc
 import { Button } from '@/shared/components/ui/Button';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import type { PersonObjectiveBucket } from '../domain/mboTeamBoardEngine';
-import type { MboStatus } from '../domain/mboEngine';
+import type { MboLevel, MboStatus } from '../domain/mboEngine';
+import { levelLabelKo } from '../domain/mboGoalHierarchy';
 import { MBO_COPY } from './mboUiCopy';
 
 export type MboTeamBoardEmptyKind = 'no_data' | 'filtered' | 'no_access';
@@ -12,6 +13,8 @@ export type MboTeamObjectiveBoardProps = {
   buckets: PersonObjectiveBucket[];
   selectedObjectiveId?: string;
   emptyKind?: MboTeamBoardEmptyKind;
+  emptyActionLabel?: string;
+  onEmptyAction?: () => void;
   onSelectObjective: (id: string) => void;
   onOpenDetail: (id: string) => void;
   onShowOnSchedule?: (id: string) => void;
@@ -35,6 +38,8 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
   buckets,
   selectedObjectiveId,
   emptyKind,
+  emptyActionLabel,
+  onEmptyAction,
   onSelectObjective,
   onOpenDetail,
   onShowOnSchedule,
@@ -43,8 +48,15 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
 
   if (buckets.length === 0) {
     return (
-      <div data-testid="mbo-team-board-empty">
-        <EmptyState title={emptyMessage(emptyKind)} />
+      <div className="space-y-3" data-testid="mbo-team-board-empty">
+        <EmptyState title={emptyMessage(emptyKind)} description={MBO_COPY.cascadeEmptyHint} />
+        {emptyActionLabel && onEmptyAction ? (
+          <div className="flex justify-center">
+            <Button variant="secondary" onClick={onEmptyAction} data-testid="mbo-see-upstream-person">
+              {emptyActionLabel}
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -105,8 +117,15 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
                         >
                           <span
                             className={`h-2 w-2 shrink-0 rounded-full ${statusDot(obj.status as MboStatus)}`}
+                            aria-label={
+                              MBO_COPY.statusLabel[obj.status] ?? obj.status
+                            }
+                            title={MBO_COPY.statusLabel[obj.status] ?? obj.status}
                           />
                           <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                          <span className="shrink-0 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">
+                            {levelLabelKo(obj.level as MboLevel)}
+                          </span>
                           <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900">
                             {obj.title}
                           </span>

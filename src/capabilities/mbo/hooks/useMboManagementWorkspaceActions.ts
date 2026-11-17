@@ -103,6 +103,9 @@ export function useMboManagementWorkspaceActions(
     }
     const defaultLevel = resolveMaxCreatableLevel(goalActor);
     setNewLevel(defaultLevel);
+    setNewVisibility(
+      defaultLevel === 'company' || defaultLevel === 'department' ? 'PUBLIC' : 'PRIVATE'
+    );
     const parents = listEligibleParentGoals(defaultLevel, existingGoalRefs);
     const preferredParent =
       (selectedObjectiveId && parents.find((p) => p.id === selectedObjectiveId)?.id) ||
@@ -126,6 +129,7 @@ export function useMboManagementWorkspaceActions(
     setNewDepartmentId,
     setNewDept,
     setNewLevel,
+    setNewVisibility,
     setNewParentId,
     setShowCreateModal,
   ]);
@@ -329,6 +333,10 @@ export function useMboManagementWorkspaceActions(
     const ownerName = selectedOwnerMember.displayName;
     const ownerUserId = selectedOwnerMember.userId;
 
+    const visibility =
+      newVisibility ||
+      (newLevel === 'company' || newLevel === 'department' ? 'PUBLIC' : 'PRIVATE');
+
     mutateCreate(
       {
         resource: 'mbo_objectives',
@@ -336,7 +344,8 @@ export function useMboManagementWorkspaceActions(
           organization_id: orgId,
           parent_id: parentId,
           level: newLevel,
-          department_name: departmentName,
+          department_id: newLevel === 'department' ? departmentId : null,
+          department_name: newLevel === 'company' ? null : departmentName,
           owner_id: ownerUserId,
           owner_name: ownerName,
           title: newTitle.trim(),
@@ -347,7 +356,7 @@ export function useMboManagementWorkspaceActions(
           progress_rate: 0,
           status: 'draft',
           target_value: newWeight,
-          visibility_type: newVisibility,
+          visibility_type: visibility,
         },
       },
       {
@@ -355,7 +364,7 @@ export function useMboManagementWorkspaceActions(
           const createdId = (result as { data?: { id?: string } })?.data?.id;
           try {
             if (createdId) {
-              if (newVisibility === 'PARTIAL') {
+              if (visibility === 'PARTIAL') {
                 await MboService.replaceGoalShares(orgId, createdId, newShareMemberIds);
               }
               const project = await MboService.ensureDefaultProject(orgId, {

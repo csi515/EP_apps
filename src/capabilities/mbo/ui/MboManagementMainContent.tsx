@@ -8,6 +8,8 @@ import { MboCycleStatusBar } from './MboCycleStatusBar';
 import { MboManagerKpiStrip } from './MboManagerKpiStrip';
 import { MboTeamMemberChips } from './MboTeamMemberChips';
 import { MboTeamObjectiveBoard } from './MboTeamObjectiveBoard';
+import { MboOrgAlignedBoard } from './MboOrgAlignedBoard';
+import { MboAlignmentContextStrip } from './MboAlignmentContextStrip';
 import { MboHierarchyGanttView } from './MboHierarchyGanttView';
 import { memberMatchesQuery } from '../domain/mboVisibilityEngine';
 import { MBO_COPY } from './mboUiCopy';
@@ -59,6 +61,13 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     reloadProjectCategories,
     contentPanel,
     setContentPanel,
+    goalViewMode,
+    setGoalViewMode,
+    setListScope,
+    alignmentContext,
+    orgAlignedRows,
+    hasUpstreamPublicGoals,
+    listScope,
   } = ws;
 
   const managerTeamMode = isManager && dashboardView !== 'mine';
@@ -94,6 +103,17 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
         isManager={isManager}
         pendingChangeApprovals={pendingChangeApprovals}
         onOpenPendingApprovals={() => setPendingApprovalsOpen(true)}
+      />
+
+      <MboAlignmentContextStrip
+        context={alignmentContext}
+        onSelectObjective={(id) => {
+          if (!isManager) setListScope('visible');
+          setGoalViewMode('org');
+          setContentPanel('goals');
+          setSelectedObjectiveId(id);
+          setDetailObjectiveId(id);
+        }}
       />
 
       <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs">
@@ -143,13 +163,15 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
         <MboContentPanelSwitch
           contentPanel={contentPanel}
           onChange={setContentPanel}
+          goalViewMode={goalViewMode}
+          onGoalViewModeChange={setGoalViewMode}
           showWeightHint={managerTeamMode && !weightValidation.valid && contentPanel === 'goals'}
           weightHint={MBO_COPY.weightInvalid(weightValidation.totalWeight, weightValidation.difference)}
         />
       </div>
 
       <section ref={ganttSectionRef} className="min-h-[200px]" data-testid="mbo-main-panel">
-        <ContentFadeIn motionKey={contentPanel}>
+        <ContentFadeIn motionKey={`${contentPanel}-${goalViewMode}`}>
           {contentPanel === 'schedule' ? (
             <div className="space-y-2">
               {showMissingBanner ? (
@@ -178,6 +200,41 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
                 onOpenObjectiveDetail={(id) => setDetailObjectiveId(id)}
               />
             </div>
+          ) : goalViewMode === 'org' ? (
+            <MboOrgAlignedBoard
+              rows={orgAlignedRows}
+              selectedObjectiveId={selectedObjectiveId}
+              emptyKind={
+                orgAlignedRows.length === 0 &&
+                (personQuery.trim() || selectedMemberUserIds.length > 0)
+                  ? 'filtered'
+                  : orgAlignedRows.length === 0
+                    ? listScope === 'mine' && hasUpstreamPublicGoals
+                      ? 'no_access'
+                      : 'no_data'
+                    : undefined
+              }
+              emptyActionLabel={
+                !isManager && listScope === 'mine' && hasUpstreamPublicGoals
+                  ? MBO_COPY.emptyGoalsSeeUpstream
+                  : undefined
+              }
+              onEmptyAction={
+                !isManager && listScope === 'mine' && hasUpstreamPublicGoals
+                  ? () => {
+                      setListScope('visible');
+                      setGoalViewMode('org');
+                      setContentPanel('goals');
+                    }
+                  : undefined
+              }
+              onSelectObjective={(id) => setSelectedObjectiveId(id)}
+              onShowOnSchedule={(id) => {
+                setSelectedObjectiveId(id);
+                setContentPanel('schedule');
+              }}
+              onOpenDetail={(id) => setDetailObjectiveId(id)}
+            />
           ) : (
             <MboTeamObjectiveBoard
               buckets={teamBoardBuckets}
@@ -187,8 +244,24 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
                 (personQuery.trim() || selectedMemberUserIds.length > 0)
                   ? 'filtered'
                   : teamBoardBuckets.length === 0
-                    ? 'no_data'
+                    ? !isManager && listScope === 'mine' && hasUpstreamPublicGoals
+                      ? 'no_access'
+                      : 'no_data'
                     : undefined
+              }
+              emptyActionLabel={
+                !isManager && listScope === 'mine' && hasUpstreamPublicGoals
+                  ? MBO_COPY.emptyGoalsSeeUpstream
+                  : undefined
+              }
+              onEmptyAction={
+                !isManager && listScope === 'mine' && hasUpstreamPublicGoals
+                  ? () => {
+                      setListScope('visible');
+                      setGoalViewMode('org');
+                      setContentPanel('goals');
+                    }
+                  : undefined
               }
               onSelectObjective={(id) => setSelectedObjectiveId(id)}
               onShowOnSchedule={(id) => {
@@ -233,8 +306,8 @@ const MboDashboardToolbar: React.FC<Props> = ({ ws }) => {
           onChange={(v) => setListScope(v)}
           activeClassName="bg-white text-indigo-700 shadow-xs"
           options={[
-            { value: 'mine', label: MBO_COPY.tabMine },
             { value: 'visible', label: MBO_COPY.tabShared },
+            { value: 'mine', label: MBO_COPY.tabMine },
           ]}
         />
       )}
@@ -255,26 +328,45 @@ const MboDashboardToolbar: React.FC<Props> = ({ ws }) => {
 function MboContentPanelSwitch({
   contentPanel,
   onChange,
+  goalViewMode,
+  onGoalViewModeChange,
   showWeightHint,
   weightHint,
 }: {
   contentPanel: MboContentPanel;
   onChange: (panel: MboContentPanel) => void;
+  goalViewMode: 'person' | 'org';
+  onGoalViewModeChange: (mode: 'person' | 'org') => void;
   showWeightHint: boolean;
   weightHint: string;
 }) {
   return (
     <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
-      <div data-testid="mbo-content-panel">
-        <SegmentedControl
-          value={contentPanel}
-          onChange={onChange}
-          activeClassName="bg-white text-indigo-700 shadow-xs"
-          options={[
-            { value: 'schedule', label: MBO_COPY.panelSchedule },
-            { value: 'goals', label: MBO_COPY.panelGoals },
-          ]}
-        />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div data-testid="mbo-content-panel">
+          <SegmentedControl
+            value={contentPanel}
+            onChange={onChange}
+            activeClassName="bg-white text-indigo-700 shadow-xs"
+            options={[
+              { value: 'schedule', label: MBO_COPY.panelSchedule },
+              { value: 'goals', label: MBO_COPY.panelGoals },
+            ]}
+          />
+        </div>
+        {contentPanel === 'goals' ? (
+          <div data-testid="mbo-goal-view-mode">
+            <SegmentedControl
+              value={goalViewMode}
+              onChange={onGoalViewModeChange}
+              activeClassName="bg-white text-indigo-700 shadow-xs"
+              options={[
+                { value: 'org', label: MBO_COPY.viewModeOrg },
+                { value: 'person', label: MBO_COPY.viewModePerson },
+              ]}
+            />
+          </div>
+        ) : null}
       </div>
       {showWeightHint ? (
         <p className="text-[11px] font-semibold text-amber-800">{weightHint}</p>

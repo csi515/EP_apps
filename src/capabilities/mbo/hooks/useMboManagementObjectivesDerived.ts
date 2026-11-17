@@ -17,9 +17,9 @@ import {
 import { buildPersonObjectiveBuckets } from '../domain/mboTeamBoardEngine';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
-import { canManageObjectiveOwner } from '../services/mboOrgScopeService';
 import { formatPeriodYm, listMissingMonthlyCheckins } from '../domain/mboMonthlyCheckin';
 import {
+  canViewMboGoal,
   filterObjectivesForViewer,
   memberMatchesQuery,
   type MboVisibilityType,
@@ -76,6 +76,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
       parentId: row.parent_id,
       level: row.level as MboLevel,
       departmentName: row.department_name || '부서',
+      departmentId: row.department_id ?? null,
       ownerName: row.owner_name || '담당자',
       title: row.title,
       description: row.description || '',
@@ -192,6 +193,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
         level: o.level,
         parentId: o.parentId,
         deletedAt: o.deletedAt ?? null,
+        departmentId: o.departmentId ?? null,
         departmentName: o.departmentName,
       })),
     [rawObjectiveRows]
@@ -208,9 +210,21 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     return orgDepartments.filter((d) => ids.has(d.id));
   }, [goalActor.ledDepartmentIds, orgDepartments]);
 
+  /** 조직단위 목표용 선택 목록 — 리더는 맡은 조직, 대표는 전체 */
+  const departmentOptionsForCreate = useMemo(() => {
+    if (goalActor.isTopExecutive) return orgDepartments;
+    if (ledDepartments.length > 0) return ledDepartments;
+    return orgDepartments;
+  }, [goalActor.isTopExecutive, ledDepartments, orgDepartments]);
+
   const eligibleParents = useMemo(
     () => listEligibleParentGoals(newLevel, existingGoalRefs),
     [newLevel, existingGoalRefs]
+  );
+
+  const createOwnerMember = useMemo(
+    () => orgMembers.find((m) => m.id === newOwnerMemberId) ?? null,
+    [orgMembers, newOwnerMemberId]
   );
 
   const createGate = useMemo(
@@ -220,12 +234,22 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
         request: {
           level: newLevel,
           parentId: newLevel === 'company' ? null : newParentId || null,
-          departmentId: newDepartmentId || null,
-          departmentName: newDept.trim() || null,
+          departmentId:
+            createOwnerMember?.departmentId || newDepartmentId || null,
+          departmentName:
+            createOwnerMember?.departmentName?.trim() || newDept.trim() || null,
         },
         existing: existingGoalRefs,
       }),
-    [goalActor, newLevel, newParentId, newDepartmentId, newDept, existingGoalRefs]
+    [
+      goalActor,
+      newLevel,
+      newParentId,
+      newDepartmentId,
+      newDept,
+      existingGoalRefs,
+      createOwnerMember,
+    ]
   );
 
   const logs: ProgressLogItem[] = useMemo(() => {
@@ -272,13 +296,43 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
           categoryColor: cat?.color ?? null,
         };
       });
-      if (isOrgAdmin || !orgScope) return mapped;
-      return mapped.filter((proj) =>
-        canManageObjectiveOwner(orgScope, proj.ownerId, viewerUserId, isOrgAdmin),
-      );
+      // 목표 열람 가능하면 연결된 실행 프로젝트도 일정표에 표시 (가시성 정합)
+      if (isOrgAdmin) return mapped;
+      const objById = new Map(rawObjectiveRows.map((o) => [o.id, o]));
+      return mapped.filter((proj) => {
+        if (!proj.objectiveId) {
+          return proj.ownerId === viewerUserId;
+        }
+        const obj = objById.get(proj.objectiveId);
+        if (!obj) return proj.ownerId === viewerUserId;
+        return canViewMboGoal(
+          {
+            authorId: obj.ownerId || '',
+            evaluatorId: obj.evaluatorId ?? null,
+            visibilityType: obj.visibilityType ?? 'PRIVATE',
+            sharedMemberIds: obj.sharedMemberIds,
+            authorDepartmentPath: authorDepartmentPathByOwnerId(obj.ownerId),
+          },
+          viewerMemberId ?? orgScope?.viewerMemberId,
+          viewerUserId,
+          {
+            isOwnerOrAdmin: isOrgAdmin,
+            viewerLeadDepartmentPath: orgScope?.leadDepartmentPaths[0] ?? null,
+          }
+        );
+      });
     }
     return [];
-  }, [refineProjects, categoryById, orgScope, isOrgAdmin, viewerUserId]);
+  }, [
+    refineProjects,
+    categoryById,
+    orgScope,
+    isOrgAdmin,
+    viewerUserId,
+    viewerMemberId,
+    rawObjectiveRows,
+    authorDepartmentPathByOwnerId,
+  ]);
 
   const currentPeriodYm = formatPeriodYm();
   const missingMonthlyProjectIds = useMemo(
@@ -348,6 +402,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     creatableLevels,
     maxCreatableLevel,
     ledDepartments,
+    departmentOptionsForCreate,
     eligibleParents,
     createGate,
     logs,

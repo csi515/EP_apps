@@ -105,9 +105,12 @@ export function useMboManagementWorkspaceState() {
   const [historyGoalId, setHistoryGoalId] = useState<string | null>(null);
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
   const [planApprovalObjectiveId, setPlanApprovalObjectiveId] = useState<string | null>(null);
-    const [listScope, setListScope] = useState<MboListScope>('mine');
+  /** 직원 기본: 회사·팀 목표(visible) — 스트립·조직 트리와 동일 데이터 */
+  const [listScope, setListScope] = useState<MboListScope>('visible');
   const [dashboardView, setDashboardView] = useState<MboDashboardView>('mine');
   const [contentPanel, setContentPanel] = useState<MboContentPanel>('goals');
+  /** 목표 목록: 사람별 | 목표 트리(parent_id) — 기본 조직 정렬 */
+  const [goalViewMode, setGoalViewMode] = useState<'person' | 'org'>('org');
   const [ownerFilterId, setOwnerFilterId] = useState<string>('');
   const [selectedMemberUserIds, setSelectedMemberUserIds] = useState<string[]>([]);
   const [ganttRiskOnly, setGanttRiskOnly] = useState(false);
@@ -140,7 +143,8 @@ export function useMboManagementWorkspaceState() {
     if (isManager && !managerScopeSyncedRef.current) {
       setListScope('team');
       setDashboardView('team_overview');
-      setContentPanel('schedule');
+      setContentPanel('goals');
+      setGoalViewMode('org');
       managerScopeSyncedRef.current = true;
     }
   }, [isManager]);
@@ -151,10 +155,11 @@ export function useMboManagementWorkspaceState() {
       setSelectedMemberUserIds([]);
       setOwnerFilterId('');
       setContentPanel('goals');
+      setGoalViewMode('org');
     } else if (dashboardView === 'team_overview') {
       setListScope('team');
       setOwnerFilterId('');
-      setContentPanel('schedule');
+      // 팀 운영에서도 목표 목록·조직 정렬을 유지 (일정표로 강제하지 않음)
     } else {
       setListScope('team');
     }
@@ -310,6 +315,7 @@ export function useMboManagementWorkspaceState() {
     listScope, setListScope,
     dashboardView, setDashboardView,
     contentPanel, setContentPanel,
+    goalViewMode, setGoalViewMode,
     ownerFilterId, setOwnerFilterId,
     selectedMemberUserIds, setSelectedMemberUserIds,
     ganttRiskOnly, setGanttRiskOnly,

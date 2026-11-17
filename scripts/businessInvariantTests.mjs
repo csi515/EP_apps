@@ -123,6 +123,8 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:mbo-gantt', group: 'capability', kind: 'unit', ci: 'always', order: 62 },
   { script: 'test:mbo-manager-dashboard', group: 'capability', kind: 'unit', ci: 'always', order: 63 },
   { script: 'test:mbo-two-tier-lock', group: 'capability', kind: 'unit', ci: 'always', order: 64 },
+  { script: 'test:mbo-goal-hierarchy', group: 'capability', kind: 'unit', ci: 'always', order: 641 },
+  { script: 'test:mbo-org-aligned', group: 'capability', kind: 'unit', ci: 'always', order: 642 },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -265,6 +267,8 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:mbo-plan-approval': 'mbo plan require_plan_approval gate and approval_workflow content unit',
   'test:mbo-monthly-checkin': 'mbo monthly period_ym checkin presence and missing list unit',
   'test:mbo-team-board': 'mbo person-grouped objective board flatten hierarchy unit',
+  'test:mbo-goal-hierarchy': 'mbo strict company→department→individual cascade unit',
+  'test:mbo-org-aligned': 'mbo org-aligned objective tree and alignment context unit',
   'test:mbo-gantt': 'mbo project gantt bar percent and date range unit',
   'test:mbo-manager-dashboard': 'mbo manager dashboard KPI and team member chips unit',
   'test:mbo-two-tier-lock': 'mbo two-tier lock strict goal vs flexible execution unit',

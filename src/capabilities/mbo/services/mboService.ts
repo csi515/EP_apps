@@ -21,6 +21,7 @@ import { areGoalsLocked, isReviewWindowOpen } from '../domain/mboCycle';
 import { formatPeriodYm, isValidPeriodYm } from '../domain/mboMonthlyCheckin';
 import { getMboCycleSettings } from './mboCycleService';
 import type { MboRevisionChangeKind, MboVisibilityType } from '../domain/mboVisibilityEngine';
+import { defaultVisibilityForLevel } from '../domain/mboGoalHierarchy';
 
 /** database.types 반영 전 로컬 확장 (011_mbo_visibility_audit) */
 export type MboObjectiveRow = Database['core']['Tables']['mbo_objectives']['Row'] & {
@@ -148,7 +149,9 @@ export class MboService {
         progress_rate: payload.progress_rate ?? 0,
         weight: payload.weight ?? 100,
         revision: 1,
-        visibility_type: payload.visibility_type || 'PRIVATE',
+        visibility_type:
+          payload.visibility_type ||
+          defaultVisibilityForLevel((payload.level as MboLevel) || 'individual'),
       } as never)
       .select()
       .single();

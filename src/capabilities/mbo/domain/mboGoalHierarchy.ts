@@ -77,7 +77,7 @@ function isActiveGoal(goal: ExistingGoalRef): boolean {
   return !goal.deletedAt;
 }
 
-/** 상위 계층 목표가 이미 등록되어 있는지 */
+/** 상위 계층 목표가 이미 등록되어 있는지 (엄격 하향: 개인은 조직단위 선행 필수) */
 export function hasPrerequisiteGoals(
   level: MboLevel,
   existing: readonly ExistingGoalRef[]
@@ -87,13 +87,13 @@ export function hasPrerequisiteGoals(
   if (level === 'department') {
     return active.some((g) => g.level === 'company');
   }
-  // individual / project: 전사 또는 부서(조직단위) 목표가 선행되어야 함
-  return active.some((g) => g.level === 'company' || g.level === 'department');
+  // individual / project: 조직단위(부서·팀) 목표가 반드시 선행
+  return active.some((g) => g.level === 'department');
 }
 
 export function prerequisiteLabel(level: MboLevel): string {
   if (level === 'department') return '전사(대표이사) 목표';
-  if (level === 'individual' || level === 'project') return '상위(전사·조직단위) 목표';
+  if (level === 'individual' || level === 'project') return '조직단위(실·그룹·팀) 목표';
   return '';
 }
 
@@ -110,6 +110,14 @@ export function levelLabelKo(level: MboLevel): string {
     default:
       return level;
   }
+}
+
+/** company/department 는 조직 정렬용으로 기본 공개, individual 은 비공개 */
+export function defaultVisibilityForLevel(
+  level: MboLevel
+): 'PUBLIC' | 'PRIVATE' {
+  if (level === 'company' || level === 'department') return 'PUBLIC';
+  return 'PRIVATE';
 }
 
 /**
@@ -157,19 +165,21 @@ export function validateGoalCreation(input: {
         reason: '조직단위 목표는 해당 실·그룹·팀의 리더만 등록할 수 있습니다.',
       };
     }
-    if (actor.ledDepartmentIds.length > 0) {
-      if (!request.departmentId) {
-        return {
-          allowed: false,
-          reason: '목표를 설정할 조직(실·그룹·팀)을 선택하세요.',
-        };
-      }
-      if (!actor.ledDepartmentIds.includes(request.departmentId)) {
-        return {
-          allowed: false,
-          reason: '본인이 리더로 맡은 조직의 목표만 설정할 수 있습니다.',
-        };
-      }
+    if (!request.departmentId) {
+      return {
+        allowed: false,
+        reason: '목표를 설정할 조직(실·그룹·팀)을 선택하세요.',
+      };
+    }
+    if (
+      actor.ledDepartmentIds.length > 0 &&
+      !actor.ledDepartmentIds.includes(request.departmentId) &&
+      !actor.isTopExecutive
+    ) {
+      return {
+        allowed: false,
+        reason: '본인이 리더로 맡은 조직의 목표만 설정할 수 있습니다.',
+      };
     }
   }
 
@@ -193,16 +203,36 @@ export function validateGoalCreation(input: {
     };
   }
 
+  // 개인 KPI는 조직단위 목표 아래에만 연결
+  if (request.level === 'individual' && parent.level !== 'department') {
+    return {
+      allowed: false,
+      reason: '개인 KPI는 조직단위(실·그룹·팀) 목표 아래에만 등록할 수 있습니다.',
+    };
+  }
+
+  // 조직단위 목표는 전사 목표 아래에만 연결
+  if (request.level === 'department' && parent.level !== 'company') {
+    return {
+      allowed: false,
+      reason: '조직단위 목표는 전사 목표 아래에만 등록할 수 있습니다.',
+    };
+  }
+
   return { allowed: true };
 }
 
-/** 등록 폼에서 부모로 고를 수 있는 상위 목표 */
+/** 등록 폼에서 부모로 고를 수 있는 상위 목표 (엄격 1단 하향) */
 export function listEligibleParentGoals(
   childLevel: MboLevel,
   existing: readonly ExistingGoalRef[]
 ): ExistingGoalRef[] {
-  const childRank = MBO_LEVEL_RANK[childLevel];
-  return existing.filter(
-    (g) => isActiveGoal(g) && MBO_LEVEL_RANK[g.level] < childRank
-  );
+  const active = existing.filter(isActiveGoal);
+  if (childLevel === 'department') {
+    return active.filter((g) => g.level === 'company');
+  }
+  if (childLevel === 'individual' || childLevel === 'project') {
+    return active.filter((g) => g.level === 'department');
+  }
+  return [];
 }

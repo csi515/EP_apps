@@ -9,9 +9,9 @@ export const MBO_COPY = {
   appSubtitle: '목표를 등록하고, 이번 달 진척을 남기고, 일정을 확인합니다.',
   appSubtitleManager: '팀 진척·일정·승인을 한곳에서 확인합니다.',
 
-  tabTeam: '팀',
+  tabTeam: '팀 운영',
   tabMine: '내 목표',
-  tabShared: '공유받은 목표',
+  tabShared: '회사·팀 목표',
 
   sectionGoalsMine: '내 목표',
   sectionGoalsTeam: '팀 목표',
@@ -132,8 +132,21 @@ export const MBO_COPY = {
   chipReportMissing: '이번 달 미보고',
 
   levelHintTitle: (level: string) => `지금 등록할 수 있는 최고 단계: ${level}`,
-  levelHintBody: '자기보다 윗단계 목표는 등록할 수 없습니다. 상위 목표가 먼저 있어야 합니다.',
+  levelHintBody:
+    '회사 → 조직(실·그룹·팀) → 개인 순서로 내려갑니다. 자기보다 윗단계 목표는 등록할 수 없고, 상위 목표가 먼저 있어야 합니다.',
   levelSelect: '목표 단계',
+  viewModePerson: '사람별',
+  viewModeOrg: '목표 트리',
+  alignmentStripTitle: '회사 → 팀 → 내 목표',
+  alignmentCompany: '전사 목표',
+  alignmentDept: '조직·팀 목표',
+  alignmentMine: '내 KPI',
+  alignmentEmpty: '아직 열람 가능한 목표가 없습니다.',
+  alignmentEmptyHint: '회사·팀 목표 탭에서 공개된 목표를 확인하세요.',
+  upstreamGoalsTitle: '상위 목표',
+  upstreamGoalsHint: '대표이사·상위 조직에서 공개한 목표입니다.',
+  emptyGoalsSeeUpstream: '회사·팀 목표 보기',
+  cascadeEmptyHint: '상위 목표가 공개되면 여기에 정렬되어 보입니다.',
 
   superiorFound: (who: string) => `내 상급자 · ${who}`,
   superiorNone: '내 상급자 · 조직도에 아직 지정되지 않음',

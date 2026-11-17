@@ -161,6 +161,7 @@ export type LocalPermissionProfile = {
 const PRESET_RANKS: {
   slug: string;
   name: string;
+  rankOrder: number;
   tokens: readonly string[];
   memberRole: LocalPermissionProfile['memberRole'];
   email: string;
@@ -170,6 +171,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-ceo',
     name: '임원',
+    rankOrder: 100,
     tokens: ['*'],
     memberRole: 'owner',
     email: 'ceo@ep.local',
@@ -178,6 +180,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-hq',
     name: '부장',
+    rankOrder: 200,
     tokens: [
       'approval_workflow:*',
       'mbo:*',
@@ -192,6 +195,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-center',
     name: '차장',
+    rankOrder: 300,
     tokens: [
       'approval_workflow:*',
       'mbo:*',
@@ -205,6 +209,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-teamlead',
     name: '과장',
+    rankOrder: 400,
     tokens: [
       'approval_workflow:submit',
       'approval_workflow:view',
@@ -218,6 +223,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-cell',
     name: '대리',
+    rankOrder: 500,
     tokens: ['task_pipeline:update', 'mbo:view', 'approval_workflow:submit'],
     memberRole: 'staff',
     email: 'cell@ep.local',
@@ -226,6 +232,7 @@ const PRESET_RANKS: {
   {
     slug: 'rank-member',
     name: '사원',
+    rankOrder: 900,
     tokens: [
       'booking:book',
       'whistleblower_grievance:create',
@@ -437,10 +444,15 @@ export const LOCAL_PERMISSION_PROFILES: readonly LocalPermissionProfile[] = [
   ...buildSpecialProfiles(),
 ];
 
-export const LOCAL_ORG_ROLE_DEFS = LOCAL_PERMISSION_PROFILES.filter((p) => p.orgRoleId && p.orgRoleName).map(
-  (p) => ({
-    id: p.orgRoleId!,
-    name: p.orgRoleName!,
-    permissions: p.permissions,
-  })
+const RANK_ORDER_BY_NAME: Record<string, number> = Object.fromEntries(
+  PRESET_RANKS.map((r) => [r.name, r.rankOrder])
 );
+
+export const LOCAL_ORG_ROLE_DEFS = LOCAL_PERMISSION_PROFILES.filter(
+  (p) => p.orgRoleId && p.orgRoleName
+).map((p) => ({
+  id: p.orgRoleId!,
+  name: p.orgRoleName!,
+  permissions: p.permissions,
+  rankOrder: RANK_ORDER_BY_NAME[p.orgRoleName!] ?? 100,
+}));

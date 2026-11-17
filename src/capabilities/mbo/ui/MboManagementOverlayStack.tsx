@@ -138,6 +138,12 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
         onWeightChange={w.setNewWeight}
         newParentId={w.newParentId}
         onParentIdChange={w.setNewParentId}
+        newDepartmentId={w.newDepartmentId}
+        onDepartmentIdChange={(id, name) => {
+          w.setNewDepartmentId(id);
+          w.setNewDept(name);
+        }}
+        departmentOptions={w.departmentOptionsForCreate}
         newTitle={w.newTitle}
         onTitleChange={w.setNewTitle}
         newCriteria={w.newCriteria}
@@ -156,6 +162,7 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
         goalActor={w.goalActor}
         existingGoalRefs={w.existingGoalRefs}
         eligibleParents={w.eligibleParents}
+        createGate={w.createGate}
         objectives={w.rawObjectiveRows}
         selectedOwnerMember={w.selectedOwnerMember}
         onOpenOwnerPicker={() => w.setOwnerPickerOpen(true)}

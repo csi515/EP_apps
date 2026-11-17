@@ -14,6 +14,7 @@ import {
   readCorpBootstrapConfigFromEnv,
 } from './corpBootstrap';
 import { hashSessionToken } from './jwt';
+import { seedRndDemoPack } from './rndDemoSeed';
 
 const { Pool } = pg;
 
@@ -376,6 +377,7 @@ export async function ensureLocalAuthSeeds(client?: Queryable): Promise<void> {
         organizationId: LOCAL_AUTH_ORG.organizationId,
         name: roleDef.name,
         permissions: roleDef.permissions,
+        rankOrder: roleDef.rankOrder,
       });
     }
 
@@ -396,6 +398,8 @@ export async function ensureLocalAuthSeeds(client?: Queryable): Promise<void> {
         featurePermissions: profile.featurePermissions,
       });
     }
+
+    await seedRndDemoPack(c);
 
     await c.query('COMMIT');
   } catch (err) {
