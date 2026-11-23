@@ -1,0 +1,36 @@
+/* frappe-gantt package exports에 style만 있어 Vite deep import 대신 상대경로로 로드 */
+@import '../../../../node_modules/frappe-gantt/dist/frappe-gantt.css';
+
+/* Frappe Gantt — 사내 일정표용 절제된 톤 */
+.mbo-frappe-gantt-host {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  background: #fff;
+}
+
+.mbo-frappe-gantt-host .gantt-container {
+  font-family: inherit;
+}
+
+.mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-objective .bar {
+  opacity: 0.75;
+}
+
+.mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-project .bar {
+  opacity: 1;
+}
+
+.mbo-frappe-gantt-host .grid-header,
+.mbo-frappe-gantt-host .lower-text,
+.mbo-frappe-gantt-host .upper-text {
+  fill: #64748b;
+  font-weight: 500;
+}
+
+.mbo-frappe-gantt-host .today-button {
+  border-radius: 0.25rem;
+  border-color: #cbd5e1;
+  color: #334155;
+  font-weight: 600;
+}

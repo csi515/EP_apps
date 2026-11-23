@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
+import { FORM_CONTROL_CLASS, FormField } from '@/shared/components/ui/FormField';
 
 type Props = {
   open: boolean;
@@ -18,8 +20,7 @@ export function MboGoalChangeRequestModal({
   busy = false,
 }: Props) {
   const [reason, setReason] = useState('');
-
-  if (!open) return null;
+  const canSubmit = reason.trim().length >= 8;
 
   return (
     <Modal
@@ -27,61 +28,41 @@ export function MboGoalChangeRequestModal({
       onClose={onClose}
       title="목표 변경 승인 요청"
       maxWidth="md"
+      intent="form"
+      dirty={Boolean(reason.trim())}
       description="지금은 목표를 바로 고칠 수 없습니다. 부서장 승인 후 반영됩니다."
+      footer={
+        <div className="flex w-full gap-2">
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            취소
+          </Button>
+          <Button
+            variant="primary"
+            className="flex-1"
+            isLoading={busy}
+            disabled={!canSubmit}
+            onClick={() => {
+              if (!canSubmit) return;
+              onSubmit(reason.trim());
+            }}
+          >
+            승인 요청 보내기
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-3 text-sm">
-        <p className="font-bold text-slate-900">{objectiveTitle}</p>
-        <label className="block text-xs font-bold text-slate-700">
-          변경 사유 (필수)
+        <p className="font-medium text-slate-900">{objectiveTitle}</p>
+        <FormField label="변경 사유 (필수)" htmlFor="mbo-goal-change-reason">
           <textarea
-            className="mt-1 min-h-28 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold"
+            id="mbo-goal-change-reason"
+            className={`${FORM_CONTROL_CLASS} min-h-28 resize-none`}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="변경이 필요한 배경을 적어 주세요."
           />
-        </label>
-        <ActionButtons
-          busy={busy}
-          onClose={onClose}
-          onSubmit={() => {
-            if (reason.trim().length < 8) return;
-            onSubmit(reason.trim());
-          }}
-          disabled={reason.trim().length < 8}
-        />
+        </FormField>
       </div>
     </Modal>
-  );
-}
-
-function ActionButtons({
-  busy,
-  onClose,
-  onSubmit,
-  disabled,
-}: {
-  busy: boolean;
-  onClose: () => void;
-  onSubmit: () => void;
-  disabled: boolean;
-}) {
-  return (
-    <div className="flex gap-2 pt-1">
-      <button
-        type="button"
-        className="min-h-12 flex-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-700"
-        onClick={onClose}
-      >
-        취소
-      </button>
-      <button
-        type="button"
-        disabled={disabled || busy}
-        className="min-h-12 flex-1 rounded-xl bg-indigo-600 text-xs font-bold text-white disabled:opacity-40"
-        onClick={onSubmit}
-      >
-        승인 요청 보내기
-      </button>
-    </div>
   );
 }

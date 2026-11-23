@@ -1,25 +1,22 @@
 import React from 'react';
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Send,
-  X,
-} from 'lucide-react';
-import type { MboStatus, MboLevel } from '../domain/mboEngine';
+import { AlertTriangle, CheckCircle2, Send } from 'lucide-react';
+import { Button } from '@/shared/components/ui/Button';
+import { Modal } from '@/shared/components/ui/Modal';
+import { FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
+import type { MboStatus } from '../domain/mboEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import type { ObjectiveNode } from './MboObjectiveTreeViewer';
 import {
-  goalLockStatusEmoji,
   goalLockStatusLabel,
   resolveMboGoalLockView,
 } from '../domain/mboTwoTierLockEngine';
+import { levelLabelKo } from '../domain/mboGoalHierarchy';
 import { MBO_COPY } from './mboUiCopy';
 
 export type MboObjectiveDetailModalProps = {
   objective: ObjectiveNode;
   goalsLocked: boolean;
   canOverrideGoalLock?: boolean;
-  /** 승인·반려 버튼 표시 (부서장 + 해당 owner 관리 가능) */
   canApproveReject?: boolean;
   hasLinkedProject: boolean;
   onClose: () => void;
@@ -42,38 +39,14 @@ function statusBadge(status: MboStatus) {
     approved: 'bg-blue-50 text-blue-700',
     rejected: 'bg-rose-50 text-rose-700',
     in_progress: 'bg-emerald-50 text-emerald-700',
-    completed: 'bg-purple-50 text-purple-700',
+    completed: 'bg-slate-100 text-slate-700',
     canceled: 'bg-slate-200 text-slate-500',
   };
-  const label: Record<MboStatus, string> = {
-    draft: '작성 중',
-    submitted: '승인 요청',
-    approved: '승인 완료',
-    rejected: '반려됨',
-    in_progress: '실행 중',
-    completed: '목표 달성',
-    canceled: '취소',
-  };
   return (
-    <span className={`rounded px-2 py-0.5 text-[10px] font-bold ${map[status]}`}>
-      {label[status]}
+    <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${map[status]}`}>
+      {MBO_COPY.statusLabel[status] ?? status}
     </span>
   );
-}
-
-function levelLabel(level: MboLevel): string {
-  switch (level) {
-    case 'company':
-      return '전사 목표';
-    case 'department':
-      return '조직단위 목표';
-    case 'individual':
-      return '개인 KPI';
-    case 'project':
-      return '프로젝트';
-    default:
-      return level;
-  }
 }
 
 export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = ({
@@ -97,98 +70,32 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
   const lockView = resolveMboGoalLockView(objective.status, goalsLocked, canOverrideGoalLock);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      data-testid="mbo-objective-detail-modal"
-    >
-      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-slate-100 bg-white p-5 shadow-2xl sm:rounded-3xl">
-        <div className="mb-4 flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-          <div>
-            <p className="text-[11px] font-bold text-slate-500">
-              {levelLabel(objective.level)} · {objective.departmentName} · {objective.ownerName}
-            </p>
-            <h3 className="mt-1 text-base font-extrabold text-slate-900">{objective.title}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-11 min-w-11 rounded-xl p-2 text-slate-400 hover:bg-slate-100"
-            aria-label="닫기"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="space-y-3 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            {statusBadge(objective.status)}
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 font-bold text-slate-600">
-              {MBO_COPY.weightShort(objective.weight)}
-            </span>
-            <span className="font-bold text-slate-800">진척 {objective.progressRate}%</span>
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 font-bold text-amber-900">
-              {goalLockStatusEmoji(lockView.lockStatus)} {goalLockStatusLabel(lockView.lockStatus)}
-            </span>
-          </div>
-          {lockView.managerOverrideActive ? (
-            <p className="rounded-lg bg-indigo-50 px-2 py-1 text-[11px] font-semibold text-indigo-900">
-              부서장 권한: 잠금 기간에도 이 목표(팀원 소유)를 직접 수정·승인할 수 있습니다.
-            </p>
-          ) : lockView.isStrictLocked ? (
-            <p className="text-[11px] font-semibold text-slate-600">
-              지금은 목표 문구·비중을 직접 고칠 수 없습니다. 일정과 진척 보고는 언제든 수정할 수 있습니다.
-            </p>
-          ) : null}
-
-          {objective.description ? (
-            <p className="leading-relaxed text-slate-600">{objective.description}</p>
-          ) : null}
-
-          <div className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <span className="font-bold text-slate-700">핵심 성공 기준</span>
-            <p className="mt-1 text-slate-600">{objective.successCriteria}</p>
-          </div>
-
-          <p className="text-slate-500">
-            기한 <span className="font-semibold text-slate-800">{objective.startDate}</span> ~{' '}
-            <span className="font-semibold text-slate-800">{objective.targetDate}</span>
-          </p>
-
-          {objective.status === 'rejected' && objective.rejectionReason ? (
-            <div className="flex gap-2 rounded-xl border border-rose-100 bg-rose-50 p-2.5 text-rose-800">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>반려 사유: {objective.rejectionReason}</span>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="mt-4 space-y-2 border-t border-slate-100 pt-4">
+    <Modal
+      isOpen
+      onClose={onClose}
+      title={objective.title}
+      maxWidth="lg"
+      description={`${levelLabelKo(objective.level)} · ${objective.departmentName} · ${objective.ownerName}`}
+      footer={
+        <div className="flex w-full flex-col gap-2">
           {!hasLinkedProject && onCreateProject ? (
-            <button
-              type="button"
-              className="min-h-12 w-full rounded-xl bg-indigo-600 text-xs font-bold text-white hover:bg-indigo-700"
+            <Button
+              variant="primary"
               onClick={onCreateProject}
               data-testid="mbo-create-project-from-objective"
             >
-              실행 프로젝트 만들기
-            </button>
+              {MBO_COPY.ganttCreateProject}
+            </Button>
           ) : null}
           {hasLinkedProject && onOpenProjects ? (
-            <button
-              type="button"
-              className="min-h-12 w-full rounded-xl border border-indigo-200 bg-indigo-50 text-xs font-bold text-indigo-800"
-              onClick={onOpenProjects}
-            >
+            <Button variant="secondary" onClick={onOpenProjects}>
               {MBO_COPY.openScheduleAndReport}
-            </button>
+            </Button>
           ) : null}
-
           <div className="flex flex-wrap gap-2">
             {onChangeVisibility ? (
               <select
-                className="min-h-12 flex-1 rounded-lg border border-slate-200 bg-white px-2 text-[11px] font-bold text-slate-700"
+                className={`${FORM_CONTROL_CLASS} min-h-11 flex-1 text-[11px] font-semibold`}
                 value={objective.visibilityType || 'PRIVATE'}
                 aria-label="공개범위"
                 onChange={(e) =>
@@ -201,77 +108,99 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
               </select>
             ) : null}
             {lockView.isStrictLocked && onRequestGoalChange ? (
-              <button
-                type="button"
-                onClick={() => onRequestGoalChange(objective.id)}
-                className="min-h-12 rounded-lg bg-amber-50 px-3 text-[11px] font-bold text-amber-800"
-              >
+              <Button variant="outline" size="sm" onClick={() => onRequestGoalChange(objective.id)}>
                 목표 변경 승인 요청
-              </button>
+              </Button>
             ) : onOpenRevise ? (
-              <button
-                type="button"
-                onClick={() => onOpenRevise(objective.id)}
-                className="min-h-12 rounded-lg bg-amber-50 px-3 text-[11px] font-bold text-amber-800"
-              >
+              <Button variant="outline" size="sm" onClick={() => onOpenRevise(objective.id)}>
                 목표 수정
-              </button>
+              </Button>
             ) : null}
             {onOpenRevisionHistory ? (
-              <button
-                type="button"
-                onClick={() => onOpenRevisionHistory(objective.id)}
-                className="min-h-12 rounded-lg bg-slate-100 px-3 text-[11px] font-bold text-slate-700"
-              >
+              <Button variant="ghost" size="sm" onClick={() => onOpenRevisionHistory(objective.id)}>
                 이력
-              </button>
+              </Button>
             ) : null}
             {onOpenDelete ? (
-              <button
-                type="button"
-                onClick={() => onOpenDelete(objective.id)}
-                className="min-h-12 rounded-lg bg-rose-50 px-3 text-[11px] font-bold text-rose-700"
-              >
+              <Button variant="destructive" size="sm" onClick={() => onOpenDelete(objective.id)}>
                 삭제
-              </button>
+              </Button>
             ) : null}
           </div>
-
           <div className="flex flex-wrap gap-2">
             {objective.status === 'draft' ? (
-              <button
-                type="button"
-                onClick={() => onRequestApproval(objective.id)}
-                className="inline-flex min-h-12 items-center gap-1 rounded-lg bg-blue-50 px-3 text-[11px] font-bold text-blue-700"
-              >
-                <Send className="h-3 w-3" />
+              <Button variant="secondary" size="sm" onClick={() => onRequestApproval(objective.id)}>
+                <Send className="h-3.5 w-3.5" />
                 승인 요청
-              </button>
+              </Button>
             ) : null}
             {objective.status === 'submitted' && canApproveReject ? (
               <>
-                <button
-                  type="button"
+                <Button
+                  variant="success"
+                  size="sm"
                   onClick={() => onApprove(objective.id)}
-                  className="inline-flex min-h-12 items-center gap-1 rounded-lg bg-emerald-50 px-3 text-[11px] font-bold text-emerald-700"
                   data-testid="mbo-detail-approve"
                 >
-                  <CheckCircle2 className="h-3 w-3" />
+                  <CheckCircle2 className="h-3.5 w-3.5" />
                   승인
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
                   onClick={() => onOpenRejectModal(objective.id)}
-                  className="min-h-12 rounded-lg bg-rose-50 px-3 text-[11px] font-bold text-rose-700"
                   data-testid="mbo-detail-reject"
                 >
                   반려
-                </button>
+                </Button>
               </>
             ) : null}
           </div>
         </div>
+      }
+    >
+      <div className="space-y-3 text-xs" data-testid="mbo-objective-detail-modal">
+        <div className="flex flex-wrap items-center gap-2">
+          {statusBadge(objective.status)}
+          <span className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+            {MBO_COPY.weightShort(objective.weight)}
+          </span>
+          <span className="font-semibold text-slate-800">진척 {objective.progressRate}%</span>
+          <span className="rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-900">
+            {goalLockStatusLabel(lockView.lockStatus)}
+          </span>
+        </div>
+        {lockView.managerOverrideActive ? (
+          <p className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-800">
+            부서장 권한: 잠금 기간에도 이 목표(팀원 소유)를 직접 수정·승인할 수 있습니다.
+          </p>
+        ) : lockView.isStrictLocked ? (
+          <p className="text-[11px] font-semibold text-slate-600">
+            지금은 목표 문구·비중을 직접 고칠 수 없습니다. 일정과 진척 보고는 언제든 수정할 수 있습니다.
+          </p>
+        ) : null}
+
+        {objective.description ? (
+          <p className="leading-relaxed text-slate-600">{objective.description}</p>
+        ) : null}
+
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <span className="font-semibold text-slate-700">핵심 성공 기준</span>
+          <p className="mt-1 text-slate-600">{objective.successCriteria}</p>
+        </div>
+
+        <p className="text-slate-500">
+          기한 <span className="font-semibold text-slate-800">{objective.startDate}</span> ~{' '}
+          <span className="font-semibold text-slate-800">{objective.targetDate}</span>
+        </p>
+
+        {objective.status === 'rejected' && objective.rejectionReason ? (
+          <div className="flex gap-2 rounded-lg border border-rose-100 bg-rose-50 p-2.5 text-rose-800">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>반려 사유: {objective.rejectionReason}</span>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </Modal>
   );
 };

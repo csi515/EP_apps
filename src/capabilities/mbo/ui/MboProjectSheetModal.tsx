@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import { MboScheduleRangePicker } from './MboScheduleRangePicker';
@@ -34,6 +35,23 @@ export function MboProjectSheetModal({
       title={project.title}
       maxWidth="lg"
       description={`${project.ownerName} · 진척 ${project.progressRate}%`}
+      footer={
+        <div className="flex w-full flex-col gap-2 sm:flex-row">
+          {onOpenMonthlyCheck ? (
+            <Button
+              variant="primary"
+              className="flex-1"
+              onClick={onOpenMonthlyCheck}
+              data-testid="mbo-project-sheet-monthly-open"
+            >
+              {MBO_COPY.monthlyReportWrite}
+            </Button>
+          ) : null}
+          <Button variant="outline" className="flex-1" onClick={onClose}>
+            닫기
+          </Button>
+        </div>
+      }
     >
       <div className="space-y-4 text-sm" data-testid="mbo-project-sheet">
         {missingMonthly ? (
@@ -44,14 +62,14 @@ export function MboProjectSheetModal({
 
         <p className="text-slate-600">
           기간{' '}
-          <span className="font-bold text-slate-900">
+          <span className="font-semibold text-slate-900">
             {project.startDate} ~ {project.targetDate}
           </span>
         </p>
 
         {goalsLocked ? (
-          <p className="rounded-lg bg-indigo-50 px-2 py-1 text-[10px] font-semibold text-indigo-900">
-            목표 문구는 수정 마감이어도, 일정과 진척 보고는 언제든 고칠 수 있습니다.
+          <p className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-800">
+            {MBO_COPY.scheduleAlwaysEditable}
           </p>
         ) : null}
         {scheduleEditable ? (
@@ -63,26 +81,6 @@ export function MboProjectSheetModal({
         ) : (
           <p className="text-xs text-slate-500">일정을 변경할 수 없습니다.</p>
         )}
-
-        <div className="flex flex-col gap-2 sm:flex-row">
-          {onOpenMonthlyCheck ? (
-            <button
-              type="button"
-              className="min-h-12 flex-1 rounded-xl bg-indigo-600 text-xs font-bold text-white"
-              onClick={onOpenMonthlyCheck}
-              data-testid="mbo-project-sheet-monthly-open"
-            >
-              {MBO_COPY.monthlyReportWrite}
-            </button>
-          ) : null}
-          <button
-            type="button"
-            className="min-h-12 flex-1 rounded-xl border border-slate-200 text-xs font-bold text-slate-700"
-            onClick={onClose}
-          >
-            닫기
-          </button>
-        </div>
       </div>
     </Modal>
   );

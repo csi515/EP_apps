@@ -11,6 +11,7 @@ import { MboTeamObjectiveBoard } from './MboTeamObjectiveBoard';
 import { MboOrgAlignedBoard } from './MboOrgAlignedBoard';
 import { MboAlignmentContextStrip } from './MboAlignmentContextStrip';
 import { MboHierarchyGanttView } from './MboHierarchyGanttView';
+import { MboUsageSteps } from './MboUsageSteps';
 import { memberMatchesQuery } from '../domain/mboVisibilityEngine';
 import { MBO_COPY } from './mboUiCopy';
 import type { MboManagementWorkspace } from '../hooks/useMboManagementWorkspace';
@@ -78,12 +79,14 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     !ganttCheckinOnly &&
     contentPanel === 'schedule';
 
+  const segmentActive = 'bg-slate-800 text-white shadow-none';
+
   return (
-    <div className="space-y-4">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="space-y-3">
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">{pageTitle}</h1>
-          <p className="mt-1 text-xs text-slate-500">{pageSubtitle}</p>
+          <h1 className="text-xl font-semibold text-slate-900 sm:text-2xl">{pageTitle}</h1>
+          <p className="mt-0.5 text-xs text-slate-500">{pageSubtitle}</p>
         </div>
         <Button
           variant="primary"
@@ -95,6 +98,14 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
           {MBO_COPY.createGoal}
         </Button>
       </header>
+
+      <MboUsageSteps
+        contentPanel={contentPanel}
+        createDisabled={goalsLocked && !canManagerCreateWhileLocked}
+        onCreateGoal={openCreateObjectiveModal}
+        onSelectSchedule={() => setContentPanel('schedule')}
+        onSelectGoals={() => setContentPanel('goals')}
+      />
 
       <MboCycleStatusBar
         organizationId={orgId}
@@ -116,8 +127,8 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
         }}
       />
 
-      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xs">
-        <MboDashboardToolbar ws={ws} />
+      <div className="space-y-2.5 border-t border-slate-200 pt-3">
+        <MboDashboardToolbar ws={ws} segmentActive={segmentActive} />
 
         {managerTeamMode ? (
           <>
@@ -144,7 +155,7 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
         )}
 
         {(ganttRiskOnly || ganttCheckinOnly) && managerTeamMode ? (
-          <p className="text-xs font-semibold text-indigo-800">
+          <p className="text-xs font-medium text-slate-700">
             {ganttRiskOnly ? MBO_COPY.filterDelayed : MBO_COPY.filterMissingReport}
             <Button
               variant="ghost"
@@ -165,6 +176,7 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
           onChange={setContentPanel}
           goalViewMode={goalViewMode}
           onGoalViewModeChange={setGoalViewMode}
+          segmentActive={segmentActive}
           showWeightHint={managerTeamMode && !weightValidation.valid && contentPanel === 'goals'}
           weightHint={MBO_COPY.weightInvalid(weightValidation.totalWeight, weightValidation.difference)}
         />
@@ -217,7 +229,10 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
               emptyActionLabel={
                 !isManager && listScope === 'mine' && hasUpstreamPublicGoals
                   ? MBO_COPY.emptyGoalsSeeUpstream
-                  : undefined
+                  : orgAlignedRows.length === 0 &&
+                      !(personQuery.trim() || selectedMemberUserIds.length > 0)
+                    ? MBO_COPY.createGoal
+                    : undefined
               }
               onEmptyAction={
                 !isManager && listScope === 'mine' && hasUpstreamPublicGoals
@@ -226,7 +241,10 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
                       setGoalViewMode('org');
                       setContentPanel('goals');
                     }
-                  : undefined
+                  : orgAlignedRows.length === 0 &&
+                      !(personQuery.trim() || selectedMemberUserIds.length > 0)
+                    ? openCreateObjectiveModal
+                    : undefined
               }
               onSelectObjective={(id) => setSelectedObjectiveId(id)}
               onShowOnSchedule={(id) => {
@@ -252,7 +270,10 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
               emptyActionLabel={
                 !isManager && listScope === 'mine' && hasUpstreamPublicGoals
                   ? MBO_COPY.emptyGoalsSeeUpstream
-                  : undefined
+                  : teamBoardBuckets.length === 0 &&
+                      !(personQuery.trim() || selectedMemberUserIds.length > 0)
+                    ? MBO_COPY.createGoal
+                    : undefined
               }
               onEmptyAction={
                 !isManager && listScope === 'mine' && hasUpstreamPublicGoals
@@ -261,7 +282,10 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
                       setGoalViewMode('org');
                       setContentPanel('goals');
                     }
-                  : undefined
+                  : teamBoardBuckets.length === 0 &&
+                      !(personQuery.trim() || selectedMemberUserIds.length > 0)
+                    ? openCreateObjectiveModal
+                    : undefined
               }
               onSelectObjective={(id) => setSelectedObjectiveId(id)}
               onShowOnSchedule={(id) => {
@@ -277,7 +301,10 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
   );
 };
 
-const MboDashboardToolbar: React.FC<Props> = ({ ws }) => {
+const MboDashboardToolbar: React.FC<Props & { segmentActive: string }> = ({
+  ws,
+  segmentActive,
+}) => {
   const {
     isManager,
     dashboardView,
@@ -289,31 +316,34 @@ const MboDashboardToolbar: React.FC<Props> = ({ ws }) => {
   } = ws;
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
-      {isManager ? (
-        <SegmentedControl
-          value={dashboardView === 'mine' ? 'mine' : 'team_overview'}
-          onChange={(v) => setDashboardView(v)}
-          activeClassName="bg-white text-indigo-700 shadow-xs"
-          options={[
-            { value: 'team_overview', label: MBO_COPY.tabTeam },
-            { value: 'mine', label: MBO_COPY.tabMine },
-          ]}
-        />
-      ) : (
-        <SegmentedControl
-          value={listScope === 'visible' ? 'visible' : 'mine'}
-          onChange={(v) => setListScope(v)}
-          activeClassName="bg-white text-indigo-700 shadow-xs"
-          options={[
-            { value: 'visible', label: MBO_COPY.tabShared },
-            { value: 'mine', label: MBO_COPY.tabMine },
-          ]}
-        />
-      )}
+    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
+      <div className="flex flex-col gap-1">
+        <span className="text-[11px] font-semibold text-slate-500">{MBO_COPY.scopeLabel}</span>
+        {isManager ? (
+          <SegmentedControl
+            value={dashboardView === 'mine' ? 'mine' : 'team_overview'}
+            onChange={(v) => setDashboardView(v)}
+            activeClassName={segmentActive}
+            options={[
+              { value: 'team_overview', label: MBO_COPY.tabTeam },
+              { value: 'mine', label: MBO_COPY.tabMine },
+            ]}
+          />
+        ) : (
+          <SegmentedControl
+            value={listScope === 'visible' ? 'visible' : 'mine'}
+            onChange={(v) => setListScope(v)}
+            activeClassName={segmentActive}
+            options={[
+              { value: 'visible', label: MBO_COPY.tabShared },
+              { value: 'mine', label: MBO_COPY.tabMine },
+            ]}
+          />
+        )}
+      </div>
       {isManager && dashboardView !== 'mine' ? (
-        <div className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs font-bold text-slate-600">
-          <span>{MBO_COPY.searchMember}</span>
+        <div className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs font-medium text-slate-600">
+          <span className="text-[11px] font-semibold text-slate-500">{MBO_COPY.searchMember}</span>
           <SearchField
             value={personQuery}
             onChange={setPersonQuery}
@@ -330,6 +360,7 @@ function MboContentPanelSwitch({
   onChange,
   goalViewMode,
   onGoalViewModeChange,
+  segmentActive,
   showWeightHint,
   weightHint,
 }: {
@@ -337,40 +368,49 @@ function MboContentPanelSwitch({
   onChange: (panel: MboContentPanel) => void;
   goalViewMode: 'person' | 'org';
   onGoalViewModeChange: (mode: 'person' | 'org') => void;
+  segmentActive: string;
   showWeightHint: boolean;
   weightHint: string;
 }) {
+  const panelHint =
+    contentPanel === 'schedule' ? MBO_COPY.panelScheduleHint : MBO_COPY.panelGoalsHint;
+
   return (
-    <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-        <div data-testid="mbo-content-panel">
-          <SegmentedControl
-            value={contentPanel}
-            onChange={onChange}
-            activeClassName="bg-white text-indigo-700 shadow-xs"
-            options={[
-              { value: 'schedule', label: MBO_COPY.panelSchedule },
-              { value: 'goals', label: MBO_COPY.panelGoals },
-            ]}
-          />
-        </div>
-        {contentPanel === 'goals' ? (
-          <div data-testid="mbo-goal-view-mode">
+    <div className="space-y-2 border-t border-slate-200 pt-2.5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+          <div className="flex flex-col gap-1" data-testid="mbo-content-panel">
+            <span className="text-[11px] font-semibold text-slate-500">{MBO_COPY.panelLabel}</span>
             <SegmentedControl
-              value={goalViewMode}
-              onChange={onGoalViewModeChange}
-              activeClassName="bg-white text-indigo-700 shadow-xs"
+              value={contentPanel}
+              onChange={onChange}
+              activeClassName={segmentActive}
               options={[
-                { value: 'org', label: MBO_COPY.viewModeOrg },
-                { value: 'person', label: MBO_COPY.viewModePerson },
+                { value: 'schedule', label: MBO_COPY.panelSchedule },
+                { value: 'goals', label: MBO_COPY.panelGoals },
               ]}
             />
           </div>
+          {contentPanel === 'goals' ? (
+            <div className="flex flex-col gap-1" data-testid="mbo-goal-view-mode">
+              <span className="text-[11px] font-semibold text-slate-500">{MBO_COPY.viewModeLabel}</span>
+              <SegmentedControl
+                value={goalViewMode}
+                onChange={onGoalViewModeChange}
+                activeClassName={segmentActive}
+                options={[
+                  { value: 'org', label: MBO_COPY.viewModeOrg },
+                  { value: 'person', label: MBO_COPY.viewModePerson },
+                ]}
+              />
+            </div>
+          ) : null}
+        </div>
+        {showWeightHint ? (
+          <p className="text-[11px] font-medium text-amber-800">{weightHint}</p>
         ) : null}
       </div>
-      {showWeightHint ? (
-        <p className="text-[11px] font-semibold text-amber-800">{weightHint}</p>
-      ) : null}
+      <p className="text-[11px] leading-relaxed text-slate-500">{panelHint}</p>
     </div>
   );
 }
@@ -378,17 +418,18 @@ function MboContentPanelSwitch({
 const MboHubSummaryCards: React.FC<{
   hubSummary: { mineCount: number; mineAvg: number; missingMonthly: number };
 }> = ({ hubSummary }) => (
-  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3" data-testid="mbo-hub-summary">
+  <div
+    className={`flex flex-wrap gap-x-6 gap-y-2 border-y border-slate-200 py-2.5 ${uiMotion.PROGRESS_WIDTH}`}
+    data-testid="mbo-hub-summary"
+  >
     {[
       { label: MBO_COPY.hubMineCount, value: hubSummary.mineCount },
       { label: MBO_COPY.hubMineAvg, value: `${hubSummary.mineAvg}%` },
       { label: MBO_COPY.hubMissingReport, value: hubSummary.missingMonthly },
-    ].map((card) => (
-      <div key={card.label} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <div className="text-[11px] font-semibold text-slate-500">{card.label}</div>
-        <div className={`mt-1 text-xl font-black text-slate-900 ${uiMotion.PROGRESS_WIDTH}`}>
-          {card.value}
-        </div>
+    ].map((item) => (
+      <div key={item.label} className="min-w-[5.5rem]">
+        <p className="text-[11px] font-semibold text-slate-500">{item.label}</p>
+        <p className="text-lg font-semibold tabular-nums text-slate-900">{item.value}</p>
       </div>
     ))}
   </div>

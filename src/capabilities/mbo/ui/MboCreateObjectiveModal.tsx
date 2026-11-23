@@ -150,14 +150,14 @@ export const MboCreateObjectiveModal: React.FC<Props> = ({
         data-testid="mbo-create-objective-form"
       >
         <div
-          className="rounded-xl border border-indigo-100 bg-indigo-50/70 px-3 py-2.5 text-[11px] leading-relaxed text-indigo-950"
+          className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] leading-relaxed text-slate-800"
           data-testid="mbo-goal-hierarchy-hint"
         >
           <p className="font-bold">
             {MBO_COPY.levelHintTitle(levelLabelKo(maxCreatableLevel))}
             {goalActor.roleName ? ` · ${goalActor.roleName}` : ''}
           </p>
-          <p className="mt-1 text-indigo-800/90">{MBO_COPY.levelHintBody}</p>
+          <p className="mt-1 text-slate-600">{MBO_COPY.levelHintBody}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { Button } from '@/shared/components/ui/Button';
+import { Modal } from '@/shared/components/ui/Modal';
+import { FORM_CONTROL_CLASS, FormField } from '@/shared/components/ui/FormField';
 import {
   createApprovalWithChosenLine,
   listApprovalOrgMembers,
@@ -59,8 +61,6 @@ export const MboPlanApprovalModal: React.FC<Props> = ({
       .catch(() => setMembers([]));
   }, [open, organizationId, hasApprovalWorkflow]);
 
-  if (!open) return null;
-
   const guard = canSubmitMboPlanToApprovalWorkflow({
     requirePlanApproval,
     hasApprovalWorkflow,
@@ -116,26 +116,37 @@ export const MboPlanApprovalModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-bold text-slate-900">MBO 계획 결재 상신</h3>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400">
-            <X className="h-5 w-5" />
-          </button>
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title="계획 결재 상신"
+      maxWidth="md"
+      description={objectiveTitle}
+      intent="form"
+      dirty={Boolean(reviewerId || approverId)}
+      footer={
+        <div className="flex w-full justify-end gap-2">
+          <Button variant="ghost" onClick={onClose}>
+            취소
+          </Button>
+          <Button variant="primary" isLoading={busy} onClick={() => void handleConfirm()}>
+            상신
+          </Button>
         </div>
-        <p className="mb-3 text-xs text-slate-600">{objectiveTitle}</p>
+      }
+    >
+      <div className="space-y-3">
         {error ? (
-          <p className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>
+          <p className="rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</p>
         ) : null}
         {requirePlanApproval && hasApprovalWorkflow ? (
-          <div className="mb-4 grid gap-3">
-            <label className="block text-xs font-bold text-slate-700">
-              검토자
+          <div className="grid gap-3">
+            <FormField label="검토자" htmlFor="mbo-plan-reviewer">
               <select
+                id="mbo-plan-reviewer"
                 value={reviewerId}
                 onChange={(e) => setReviewerId(e.target.value)}
-                className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                className={FORM_CONTROL_CLASS}
               >
                 <option value="">선택</option>
                 {members.map((m) => (
@@ -144,13 +155,13 @@ export const MboPlanApprovalModal: React.FC<Props> = ({
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="block text-xs font-bold text-slate-700">
-              최종 승인자
+            </FormField>
+            <FormField label="최종 승인자" htmlFor="mbo-plan-approver">
               <select
+                id="mbo-plan-approver"
                 value={approverId}
                 onChange={(e) => setApproverId(e.target.value)}
-                className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-3 text-sm"
+                className={FORM_CONTROL_CLASS}
               >
                 <option value="">선택</option>
                 {members.map((m) => (
@@ -159,31 +170,14 @@ export const MboPlanApprovalModal: React.FC<Props> = ({
                   </option>
                 ))}
               </select>
-            </label>
+            </FormField>
           </div>
         ) : (
-          <p className="mb-4 text-xs text-slate-500">
+          <p className="text-xs text-slate-500">
             계획 승인 필수가 아니거나 전자결재가 비활성이라 로컬 제출로 진행합니다.
           </p>
         )}
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-11 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-700"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void handleConfirm()}
-            className="h-11 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white disabled:opacity-50"
-          >
-            {busy ? '상신 중…' : '상신'}
-          </button>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 };

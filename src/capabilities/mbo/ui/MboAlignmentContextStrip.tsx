@@ -29,18 +29,18 @@ function Slot({
       type="button"
       disabled={!enabled}
       onClick={() => id && onSelect?.(id)}
-      className="min-h-11 min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-left transition enabled:hover:border-indigo-200 enabled:hover:bg-indigo-50/50 disabled:cursor-default disabled:opacity-80"
+      className="min-h-11 min-w-0 flex-1 border-b border-slate-200 px-1 py-2 text-left last:border-b-0 enabled:hover:bg-slate-50 disabled:cursor-default sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-3"
       data-testid={`mbo-align-slot-${label}`}
       aria-label={enabled ? `${label}: ${title}` : `${label}: ${MBO_COPY.alignmentEmpty}`}
     >
-      <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-0.5 truncate text-xs font-bold text-slate-900">
+      <p className="text-[11px] font-medium text-slate-500">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-medium text-slate-900">
         {title ?? MBO_COPY.alignmentEmpty}
       </p>
       {owner ? (
-        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-500">{owner}</p>
+        <p className="mt-0.5 truncate text-[10px] font-medium text-slate-500">{owner}</p>
       ) : !enabled && emptyHint ? (
-        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-400">{emptyHint}</p>
+        <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">{emptyHint}</p>
       ) : null}
     </button>
   );
@@ -52,12 +52,15 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
 }) => {
   return (
     <section
-      className="space-y-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3"
+      className="border border-slate-200 bg-white"
       data-testid="mbo-alignment-strip"
       aria-label={MBO_COPY.alignmentStripTitle}
     >
-      <p className="text-[11px] font-bold text-indigo-950">{MBO_COPY.alignmentStripTitle}</p>
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-b border-slate-200 px-3 py-2">
+        <p className="text-[11px] font-semibold text-slate-700">{MBO_COPY.alignmentStripTitle}</p>
+        <p className="text-[10px] font-medium text-slate-500">{MBO_COPY.alignmentStripHint}</p>
+      </div>
+      <div className="flex flex-col sm:flex-row">
         <Slot
           label={MBO_COPY.alignmentCompany}
           title={context.company?.title ?? null}

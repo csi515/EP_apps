@@ -26,10 +26,10 @@ export function MboImmediateSuperiorBar({ result }: Props) {
 
   return (
     <div
-      className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-xs font-semibold text-slate-700"
+      className="flex items-center gap-2 border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700"
       data-testid="mbo-immediate-superior"
     >
-      <UserRound className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+      <UserRound className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
       <span>{lineFor(result)}</span>
     </div>
   );

@@ -153,8 +153,8 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
         onPointerCancel={endDrag}
-        className={`relative grid h-14 cursor-ew-resize select-none grid-cols-12 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 touch-none ${
-          dragging ? 'ring-2 ring-indigo-400' : ''
+        className={`relative grid h-14 cursor-ew-resize select-none grid-cols-12 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 touch-none ${
+          dragging ? 'ring-2 ring-slate-400' : ''
         }`}
       >
         {MONTH_LABELS.map((label, index) => {
@@ -165,9 +165,9 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
           return (
             <div
               key={label}
-              className={`relative flex items-end justify-center border-r border-slate-200/80 pb-1.5 text-[10px] font-bold last:border-r-0 ${
-                inRange ? 'bg-indigo-500/90 text-white' : 'text-slate-500'
-              } ${isEdge ? 'bg-indigo-600 text-white' : ''}`}
+              className={`relative flex items-end justify-center border-r border-slate-200/80 pb-1.5 text-[10px] font-semibold last:border-r-0 ${
+                inRange ? 'bg-slate-600/90 text-white' : 'text-slate-500'
+              } ${isEdge ? 'bg-slate-800 text-white' : ''}`}
             >
               {label}월
             </div>

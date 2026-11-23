@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CalendarClock, ChevronDown, Settings2 } from 'lucide-react';
+import { Button } from '@/shared/components/ui/Button';
 import {
   areGoalsLocked,
   DEFAULT_MBO_CYCLE,
@@ -109,68 +110,42 @@ function CycleBarStrip({
 
   return (
     <div
-      className="rounded-2xl border border-slate-200 bg-white p-3"
+      className="border border-slate-200 bg-white"
       data-testid="mbo-cycle-status-bar"
     >
-      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <CalendarClock className="h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
-          <StatusChip tone="slate">{lockLabel}</StatusChip>
-          <StatusChip tone={locked ? 'amber' : 'slate'}>{lockSummary}</StatusChip>
-          {reviewOpen ? <StatusChip tone="indigo">평가 기간</StatusChip> : null}
+      <div className="flex flex-col gap-2 px-3 py-2.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-700">
+          <CalendarClock className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+          <span>{lockLabel}</span>
+          <span className={locked ? 'text-amber-800' : 'text-slate-600'}>{lockSummary}</span>
+          {reviewOpen ? <span className="text-slate-600">{MBO_COPY.cycleReviewOpen}</span> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isManager && pendingChangeApprovals > 0 && onOpenPendingApprovals ? (
-            <button
-              type="button"
-              className="inline-flex min-h-11 items-center rounded-xl bg-amber-50 px-3 text-xs font-bold text-amber-900"
-              onClick={onOpenPendingApprovals}
-            >
-              {MBO_COPY.pendingApprovalsTitle} ({pendingChangeApprovals}건)
-            </button>
+            <Button variant="outline" size="sm" onClick={onOpenPendingApprovals}>
+              {MBO_COPY.pendingApprovalsCount(pendingChangeApprovals)}
+            </Button>
           ) : null}
           {canEdit ? (
-            <button
-              type="button"
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700"
-              onClick={onOpenSettings}
-            >
+            <Button variant="outline" size="sm" onClick={onOpenSettings}>
               <Settings2 className="h-3.5 w-3.5" />
               {MBO_COPY.cycleSettingsButton}
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
 
-      <details className="group mt-2 border-t border-slate-100 pt-2">
-        <summary className="flex cursor-pointer list-none items-center gap-1 text-[11px] font-bold text-slate-600 marker:content-none">
+      <details className="group border-t border-slate-200">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 px-3 py-2 text-[11px] font-semibold text-slate-600 marker:content-none">
           <ChevronDown className="h-3.5 w-3.5 transition group-open:rotate-180" aria-hidden />
-          주기·잠금 안내
+          {MBO_COPY.cyclePolicyDetails}
         </summary>
-        <div className="mt-2 space-y-1 text-[11px] leading-relaxed text-slate-600">
+        <div className="space-y-1 px-3 pb-3 text-[11px] leading-relaxed text-slate-600">
           <p>{reviewLabel}</p>
           <p>{MBO_COPY.cyclePolicySummary}</p>
           {isManager && locked ? <p>{MBO_COPY.cycleManagerOverride}</p> : null}
         </div>
       </details>
     </div>
-  );
-}
-
-function StatusChip({
-  children,
-  tone,
-}: {
-  children: React.ReactNode;
-  tone: 'slate' | 'amber' | 'indigo';
-}) {
-  const cls =
-    tone === 'amber'
-      ? 'bg-amber-50 text-amber-900'
-      : tone === 'indigo'
-        ? 'bg-indigo-50 text-indigo-800'
-        : 'bg-slate-100 text-slate-700';
-  return (
-    <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${cls}`}>{children}</span>
   );
 }

@@ -1,11 +1,11 @@
 import React from 'react';
-import { CalendarRange, Eye, Target } from 'lucide-react';
+import { CalendarRange, Eye } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { levelLabelKo } from '../domain/mboGoalHierarchy';
 import type { OrgAlignedFlatRow } from '../domain/mboOrgAlignedTreeEngine';
-import type { MboStatus } from '../domain/mboEngine';
 import { MBO_COPY } from './mboUiCopy';
+import { mboStatusDotClass } from './mboStatusVisual';
 
 type Props = {
   rows: OrgAlignedFlatRow[];
@@ -17,14 +17,6 @@ type Props = {
   onOpenDetail: (id: string) => void;
   onShowOnSchedule?: (id: string) => void;
 };
-
-function statusDot(status: string): string {
-  if (status === 'completed') return 'bg-purple-500';
-  if (status === 'in_progress' || status === 'approved') return 'bg-emerald-500';
-  if (status === 'submitted') return 'bg-amber-500';
-  if (status === 'rejected') return 'bg-rose-500';
-  return 'bg-slate-400';
-}
 
 export const MboOrgAlignedBoard: React.FC<Props> = ({
   rows,
@@ -43,25 +35,38 @@ export const MboOrgAlignedBoard: React.FC<Props> = ({
         : emptyKind === 'no_access'
           ? MBO_COPY.emptyGoalsNoAccess
           : MBO_COPY.emptyGoalsNoData;
+    const description =
+      emptyKind === 'no_data' ? MBO_COPY.emptyGoalsNoDataHint : MBO_COPY.cascadeEmptyHint;
     return (
       <div className="space-y-3" data-testid="mbo-org-aligned-empty">
-        <EmptyState title={title} description={MBO_COPY.cascadeEmptyHint} />
-        {emptyActionLabel && onEmptyAction ? (
-          <div className="flex justify-center">
-            <Button variant="secondary" onClick={onEmptyAction} data-testid="mbo-see-upstream">
-              {emptyActionLabel}
-            </Button>
-          </div>
-        ) : null}
+        <EmptyState
+          title={title}
+          description={description}
+          action={
+            emptyActionLabel && onEmptyAction
+              ? (
+                  <Button
+                    variant="primary"
+                    onClick={onEmptyAction}
+                    data-testid="mbo-see-upstream"
+                  >
+                    {emptyActionLabel}
+                  </Button>
+                )
+              : undefined
+          }
+        />
       </div>
     );
   }
 
   return (
-    <ul
-      className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs"
-      data-testid="mbo-org-aligned-board"
-    >
+    <div className="overflow-hidden border border-slate-200 bg-white" data-testid="mbo-org-aligned-board">
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2">
+        <p className="text-[11px] font-medium text-slate-500">{MBO_COPY.panelGoalsHint}</p>
+        <p className="shrink-0 text-[10px] font-semibold text-slate-500">{MBO_COPY.goalsListLegend}</p>
+      </div>
+      <ul>
       {rows.map((obj) => {
         const selected = selectedObjectiveId === obj.id;
         return (
@@ -69,7 +74,7 @@ export const MboOrgAlignedBoard: React.FC<Props> = ({
             key={obj.id}
             className={[
               'flex min-h-12 items-center gap-2 border-b border-slate-100 px-2 py-2 last:border-b-0',
-              selected ? 'bg-indigo-50' : '',
+              selected ? 'bg-slate-100' : '',
             ].join(' ')}
             style={{ paddingLeft: `${12 + obj.depth * 18}px` }}
           >
@@ -79,18 +84,17 @@ export const MboOrgAlignedBoard: React.FC<Props> = ({
               onClick={() => onSelectObjective(obj.id)}
             >
               <span
-                className={`h-2 w-2 shrink-0 rounded-full ${statusDot(obj.status as MboStatus)}`}
+                className={`h-2 w-2 shrink-0 rounded-full ${mboStatusDotClass(obj.status)}`}
                 aria-label={MBO_COPY.statusLabel[obj.status] ?? obj.status}
                 title={MBO_COPY.statusLabel[obj.status] ?? obj.status}
               />
-              <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span className="shrink-0 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">
+              <span className="shrink-0 text-[10px] font-medium text-slate-500">
                 {levelLabelKo(obj.level)}
               </span>
-              <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900">
+              <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-900">
                 {obj.title}
               </span>
-              <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+              <span className="shrink-0 text-[10px] font-medium text-slate-500">
                 {obj.ownerName} · {obj.progressRate}%
               </span>
             </button>
@@ -117,6 +121,7 @@ export const MboOrgAlignedBoard: React.FC<Props> = ({
           </li>
         );
       })}
-    </ul>
+      </ul>
+    </div>
   );
 };

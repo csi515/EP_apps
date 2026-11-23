@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronRight, CalendarRange, Eye, Target, User } from 'lucide-react';
+import { ChevronDown, ChevronRight, CalendarRange, Eye, User } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import type { PersonObjectiveBucket } from '../domain/mboTeamBoardEngine';
 import type { MboLevel, MboStatus } from '../domain/mboEngine';
 import { levelLabelKo } from '../domain/mboGoalHierarchy';
 import { MBO_COPY } from './mboUiCopy';
+import { mboStatusDotClass } from './mboStatusVisual';
 
 export type MboTeamBoardEmptyKind = 'no_data' | 'filtered' | 'no_access';
 
@@ -19,14 +20,6 @@ export type MboTeamObjectiveBoardProps = {
   onOpenDetail: (id: string) => void;
   onShowOnSchedule?: (id: string) => void;
 };
-
-function statusDot(status: MboStatus): string {
-  if (status === 'completed') return 'bg-purple-500';
-  if (status === 'in_progress' || status === 'approved') return 'bg-emerald-500';
-  if (status === 'submitted') return 'bg-amber-500';
-  if (status === 'rejected') return 'bg-rose-500';
-  return 'bg-slate-400';
-}
 
 function emptyMessage(kind: MboTeamBoardEmptyKind | undefined): string {
   if (kind === 'filtered') return MBO_COPY.emptyGoalsFiltered;
@@ -47,32 +40,47 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   if (buckets.length === 0) {
+    const description =
+      emptyKind === 'no_data' ? MBO_COPY.emptyGoalsNoDataHint : MBO_COPY.cascadeEmptyHint;
     return (
       <div className="space-y-3" data-testid="mbo-team-board-empty">
-        <EmptyState title={emptyMessage(emptyKind)} description={MBO_COPY.cascadeEmptyHint} />
-        {emptyActionLabel && onEmptyAction ? (
-          <div className="flex justify-center">
-            <Button variant="secondary" onClick={onEmptyAction} data-testid="mbo-see-upstream-person">
-              {emptyActionLabel}
-            </Button>
-          </div>
-        ) : null}
+        <EmptyState
+          title={emptyMessage(emptyKind)}
+          description={description}
+          action={
+            emptyActionLabel && onEmptyAction
+              ? (
+                  <Button
+                    variant="primary"
+                    onClick={onEmptyAction}
+                    data-testid="mbo-see-upstream-person"
+                  >
+                    {emptyActionLabel}
+                  </Button>
+                )
+              : undefined
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-3" data-testid="mbo-team-objective-board">
+    <div
+      className="overflow-hidden border border-slate-200 bg-white"
+      data-testid="mbo-team-objective-board"
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2">
+        <p className="text-[11px] font-medium text-slate-500">{MBO_COPY.panelGoalsHint}</p>
+        <p className="shrink-0 text-[10px] font-semibold text-slate-500">{MBO_COPY.goalsListLegend}</p>
+      </div>
       {buckets.map((bucket) => {
         const isCollapsed = collapsed[bucket.ownerKey] === true;
         return (
-          <section
-            key={bucket.ownerKey}
-            className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs"
-          >
+          <section key={bucket.ownerKey} className="border-b border-slate-200 last:border-b-0">
             <button
               type="button"
-              className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left hover:bg-slate-50"
+              className="flex min-h-12 w-full items-center justify-between gap-3 border-b border-slate-100 px-3 py-2.5 text-left hover:bg-slate-50"
               onClick={() =>
                 setCollapsed((prev) => ({
                   ...prev,
@@ -86,50 +94,49 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
                 ) : (
                   <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
                 )}
-                <User className="h-4 w-4 shrink-0 text-indigo-600" />
-                <span className="truncate text-sm font-extrabold text-slate-900">
+                <User className="h-4 w-4 shrink-0 text-slate-500" />
+                <span className="truncate text-sm font-semibold text-slate-900">
                   {bucket.ownerName}
                   {bucket.isViewer ? (
-                    <span className="ml-1.5 text-[10px] font-bold text-indigo-600">(나)</span>
+                    <span className="ml-1.5 text-[10px] font-semibold text-slate-500">(나)</span>
                   ) : null}
                 </span>
               </div>
-              <BucketSummary count={bucket.objectiveCount} avg={bucket.averageProgress} />
+              <span className="shrink-0 text-[11px] font-medium text-slate-500">
+                {MBO_COPY.boardBucketSummary(bucket.objectiveCount, bucket.averageProgress)}
+              </span>
             </button>
 
             {!isCollapsed ? (
-              <ul className="border-t border-slate-100 px-2 pb-2">
+              <ul className="px-1 pb-1">
                 {bucket.flattened.map((obj) => {
                   const selected = selectedObjectiveId === obj.id;
                   return (
                     <li key={obj.id}>
                       <div
                         className={[
-                          'flex min-h-12 w-full items-center gap-2 rounded-xl px-2 py-2',
-                          selected ? 'bg-indigo-50 ring-1 ring-indigo-200' : '',
+                          'flex min-h-12 w-full items-center gap-2 px-2 py-2',
+                          selected ? 'bg-slate-100' : '',
                         ].join(' ')}
                         style={{ paddingLeft: `${12 + obj.depth * 16}px` }}
                       >
                         <button
                           type="button"
-                          className="flex min-w-0 flex-1 items-center gap-2 text-left hover:opacity-90"
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left"
                           onClick={() => onSelectObjective(obj.id)}
                         >
                           <span
-                            className={`h-2 w-2 shrink-0 rounded-full ${statusDot(obj.status as MboStatus)}`}
-                            aria-label={
-                              MBO_COPY.statusLabel[obj.status] ?? obj.status
-                            }
+                            className={`h-2 w-2 shrink-0 rounded-full ${mboStatusDotClass(obj.status as MboStatus)}`}
+                            aria-label={MBO_COPY.statusLabel[obj.status] ?? obj.status}
                             title={MBO_COPY.statusLabel[obj.status] ?? obj.status}
                           />
-                          <Target className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                          <span className="shrink-0 rounded-md bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">
+                          <span className="shrink-0 text-[10px] font-medium text-slate-500">
                             {levelLabelKo(obj.level as MboLevel)}
                           </span>
-                          <span className="min-w-0 flex-1 truncate text-xs font-bold text-slate-900">
+                          <span className="min-w-0 flex-1 truncate text-xs font-medium text-slate-900">
                             {obj.title}
                           </span>
-                          <span className="shrink-0 text-[10px] font-semibold text-slate-500">
+                          <span className="shrink-0 text-[10px] font-medium text-slate-500">
                             {obj.progressRate}%
                           </span>
                         </button>
@@ -167,12 +174,3 @@ export const MboTeamObjectiveBoard: React.FC<MboTeamObjectiveBoardProps> = ({
     </div>
   );
 };
-
-function BucketSummary({ count, avg }: { count: number; avg: number }) {
-  return (
-    <div className="flex shrink-0 items-center gap-2 text-[10px] font-bold text-slate-500">
-      <span className="rounded-full bg-slate-100 px-2 py-0.5">{count}건</span>
-      <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800">평균 {avg}%</span>
-    </div>
-  );
-}
