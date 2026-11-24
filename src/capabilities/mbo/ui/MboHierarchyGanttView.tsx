@@ -1,16 +1,20 @@
 import React, { useMemo, useState } from 'react';
-import { Settings2 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
-import { SegmentedControl } from '@/shared/components/ui/SegmentedControl';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
 import { FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
 import type { HierarchyGanttRow } from '../domain/mboGanttHierarchyEngine';
 import { buildMboFrappeGanttTasks } from '../domain/mboFrappeGanttTasks';
+import {
+  currentMonthVisibleRange,
+  currentYearVisibleRange,
+  datesOverlapRange,
+  normalizeVisibleRange,
+  type MboGanttVisibleRange,
+} from '../domain/mboGanttVisibleRange';
 import { MBO_COPY } from './mboUiCopy';
-import { collectAvailableYears, type PortfolioProject } from '../domain/projectPortfolioEngine';
+import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
-import { ProjectCategoryManager } from './ProjectCategoryManager';
-import { MboFrappeGanttChart, type MboFrappeViewMode } from './MboFrappeGanttChart';
+import { MboFrappeGanttChart } from './MboFrappeGanttChart';
 
 export type MboHierarchyGanttViewProps = {
   rows: HierarchyGanttRow[];
@@ -36,37 +40,42 @@ export type MboHierarchyGanttViewProps = {
 
 export function MboHierarchyGanttView({
   rows,
-  projects,
-  categories = [],
-  organizationId,
   scheduleEditable = true,
   editableProjectIds,
   onSelectProject,
   onOpenProjectSheet,
   onScheduleChange,
-  onCategoriesChanged,
   onCreateProject,
   onOpenCreateObjective,
   onOpenObjectiveDetail,
   onClearFilters,
 }: MboHierarchyGanttViewProps) {
-  const fallbackYear = new Date().getFullYear();
-  const years = useMemo(() => collectAvailableYears(projects, fallbackYear), [projects, fallbackYear]);
-  const [viewMode, setViewMode] = useState<MboFrappeViewMode>('Month');
-  const [yearFilter, setYearFilter] = useState<number | 'all'>(fallbackYear);
-  const [manageOpen, setManageOpen] = useState(false);
+  const [visibleRange, setVisibleRange] = useState<MboGanttVisibleRange>(() =>
+    currentYearVisibleRange(),
+  );
 
-  const filteredRows = useMemo(() => {
-    if (yearFilter === 'all') return rows;
-    return rows.filter((row) => {
-      const y0 = Number((row.startDate || '').slice(0, 4));
-      const y1 = Number((row.targetDate || '').slice(0, 4));
-      if (!y0 && !y1) return true;
-      return y0 === yearFilter || y1 === yearFilter || (y0 < yearFilter && y1 > yearFilter);
-    });
-  }, [rows, yearFilter]);
+  const normalizedRange = useMemo(
+    () => normalizeVisibleRange(visibleRange),
+    [visibleRange],
+  );
 
-  const tasks = useMemo(() => buildMboFrappeGanttTasks(filteredRows), [filteredRows]);
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) =>
+        datesOverlapRange(
+          row.startDate,
+          row.targetDate,
+          normalizedRange.startDate,
+          normalizedRange.endDate,
+        ),
+      ),
+    [rows, normalizedRange],
+  );
+
+  const tasks = useMemo(
+    () => buildMboFrappeGanttTasks(filteredRows, normalizedRange),
+    [filteredRows, normalizedRange],
+  );
 
   const openProject = (projectId: string) => {
     onSelectProject?.(projectId);
@@ -95,46 +104,61 @@ export function MboHierarchyGanttView({
 
   return (
     <div className="space-y-3" data-testid="mbo-hierarchy-gantt">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SegmentedControl
-          value={viewMode}
-          onChange={(v) => setViewMode(v)}
-          activeClassName="bg-slate-800 text-white shadow-none"
-          options={[
-            { value: 'Week', label: '주' },
-            { value: 'Month', label: '월' },
-            { value: 'Year', label: '연' },
-          ]}
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          {organizationId ? (
-            <Button variant="outline" size="sm" onClick={() => setManageOpen(true)}>
-              <Settings2 className="h-3.5 w-3.5" />
-              분류
-            </Button>
-          ) : null}
+      <div className="flex flex-wrap items-center gap-2">
+        <fieldset className="flex flex-wrap items-center gap-2 border-0 p-0">
+          <legend className="sr-only">{MBO_COPY.ganttRangeLabel}</legend>
           <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
-            {MBO_COPY.ganttYearLabel}
-            <select
-              className={`${FORM_CONTROL_CLASS} w-auto min-w-[7rem]`}
-              value={yearFilter === 'all' ? 'all' : String(yearFilter)}
-              onChange={(e) => {
-                const v = e.target.value;
-                setYearFilter(v === 'all' ? 'all' : Number(v));
-              }}
-            >
-              <option value="all">{MBO_COPY.ganttYearAll}</option>
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}년
-                </option>
-              ))}
-            </select>
+            {MBO_COPY.ganttRangeStart}
+            <input
+              type="date"
+              className={`${FORM_CONTROL_CLASS} w-auto min-w-[9.5rem]`}
+              value={normalizedRange.startDate}
+              onChange={(e) =>
+                setVisibleRange((prev) =>
+                  normalizeVisibleRange({
+                    startDate: e.target.value,
+                    endDate: prev.endDate,
+                  }),
+                )
+              }
+            />
           </label>
-        </div>
+          <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+            {MBO_COPY.ganttRangeEnd}
+            <input
+              type="date"
+              className={`${FORM_CONTROL_CLASS} w-auto min-w-[9.5rem]`}
+              value={normalizedRange.endDate}
+              onChange={(e) =>
+                setVisibleRange((prev) =>
+                  normalizeVisibleRange({
+                    startDate: prev.startDate,
+                    endDate: e.target.value,
+                  }),
+                )
+              }
+            />
+          </label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setVisibleRange(currentYearVisibleRange())}
+          >
+            {MBO_COPY.ganttRangeThisYear}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setVisibleRange(currentMonthVisibleRange())}
+          >
+            {MBO_COPY.ganttRangeThisMonth}
+          </Button>
+        </fieldset>
       </div>
 
-      {tasks.length === 0 ? (
+      {filteredRows.length === 0 ? (
         <div className="space-y-3">
           <EmptyState title={MBO_COPY.emptyGoalsFiltered} />
           {onClearFilters ? (
@@ -143,12 +167,27 @@ export function MboHierarchyGanttView({
                 {MBO_COPY.ganttFilterEmptyClear}
               </Button>
             </div>
-          ) : null}
+          ) : (
+            <div className="flex justify-center gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setVisibleRange(currentYearVisibleRange())}
+              >
+                {MBO_COPY.ganttRangeThisYear}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setVisibleRange(currentMonthVisibleRange())}
+              >
+                {MBO_COPY.ganttRangeThisMonth}
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
         <MboFrappeGanttChart
           tasks={tasks}
-          viewMode={viewMode}
+          visibleRange={normalizedRange}
           scheduleEditable={scheduleEditable}
           editableProjectIds={editableProjectIds}
           onOpenProject={openProject}
@@ -159,14 +198,6 @@ export function MboHierarchyGanttView({
         />
       )}
 
-      {manageOpen && organizationId ? (
-        <ProjectCategoryManager
-          organizationId={organizationId}
-          categories={categories}
-          onChanged={() => onCategoriesChanged?.()}
-          onClose={() => setManageOpen(false)}
-        />
-      ) : null}
     </div>
   );
 }

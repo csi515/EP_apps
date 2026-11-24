@@ -6,14 +6,13 @@ import {
   type MboCycleSettings,
 } from '../domain/mboCycle';
 import {
-  applyLockDate,
   applyReviewEnd,
   applyReviewStart,
-  lockDateToIso,
   reviewEndToIso,
   reviewStartToIso,
 } from '../domain/mboCycleDisplay';
 import { upsertMboCycleSettings } from '../services/mboCycleService';
+import { MBO_COPY } from './mboUiCopy';
 
 type Props = {
   open: boolean;
@@ -40,7 +39,6 @@ export function MboCycleSettingsModal({
     if (open) setSettings(initialSettings);
   }, [open, initialSettings]);
 
-  const lockIso = lockDateToIso(displayYear, settings);
   const reviewStartIso = reviewStartToIso(displayYear, settings);
   const reviewEndIso = reviewEndToIso(displayYear, settings);
 
@@ -48,9 +46,15 @@ export function MboCycleSettingsModal({
     if (!canEdit) return;
     setBusy(true);
     try {
-      const next = await upsertMboCycleSettings(organizationId, settings);
+      // 목표 잠금 상태는 상태바 토글로만 바꾸므로, 여기서는 평가 기간만 반영한다.
+      const next = await upsertMboCycleSettings(organizationId, {
+        ...settings,
+        goalLockEnabled: initialSettings.goalLockEnabled,
+        goalLockMonth: initialSettings.goalLockMonth,
+        goalLockDay: initialSettings.goalLockDay,
+      });
       onSaved(next);
-      showToast('목표 수정 마감과 평가 기간이 저장되었습니다.', 'success');
+      showToast(MBO_COPY.cycleSettingsSaved, 'success');
       onClose();
     } catch (error) {
       showToast(error instanceof Error ? error.message : '저장 실패', 'error');
@@ -63,10 +67,10 @@ export function MboCycleSettingsModal({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title="목표 일정 설정"
+      title={MBO_COPY.cycleSettingsTitle}
       maxWidth="lg"
       intent="form"
-      description="매년 반복되는 목표 수정 마감·평가 기간입니다. 월·일은 날짜로 지정합니다."
+      description={MBO_COPY.cycleSettingsDesc}
       footer={
         <div className="flex flex-wrap justify-end gap-2">
           <button
@@ -90,29 +94,6 @@ export function MboCycleSettingsModal({
       }
     >
       <div className="space-y-4 text-sm">
-        <label className="flex min-h-12 items-center gap-2 font-semibold text-slate-800">
-          <input
-            type="checkbox"
-            disabled={!canEdit}
-            checked={settings.goalLockEnabled}
-            onChange={(e) => setSettings((c) => ({ ...c, goalLockEnabled: e.target.checked }))}
-          />
-          목표 수정 마감 사용 (마감일 이후 목표 문구·핵심 지표 수정 불가)
-        </label>
-
-        <FieldBlock
-          label="목표 수정 마감일"
-          disabled={!canEdit || !settings.goalLockEnabled}
-        >
-          <input
-            type="date"
-            disabled={!canEdit || !settings.goalLockEnabled}
-            className="min-h-12 w-full rounded-xl border border-slate-200 px-3"
-            value={lockIso}
-            onChange={(e) => setSettings((c) => applyLockDate(c, e.target.value))}
-          />
-        </FieldBlock>
-
         <FieldBlock label="연말 평가 시작일" disabled={!canEdit}>
           <input
             type="date"
@@ -137,9 +118,17 @@ export function MboCycleSettingsModal({
           <button
             type="button"
             className="min-h-12 w-full rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700"
-            onClick={() => setSettings({ ...DEFAULT_MBO_CYCLE })}
+            onClick={() =>
+              setSettings((c) => ({
+                ...c,
+                reviewStartMonth: DEFAULT_MBO_CYCLE.reviewStartMonth,
+                reviewStartDay: DEFAULT_MBO_CYCLE.reviewStartDay,
+                reviewEndMonth: DEFAULT_MBO_CYCLE.reviewEndMonth,
+                reviewEndDay: DEFAULT_MBO_CYCLE.reviewEndDay,
+              }))
+            }
           >
-            기본값 (1/31 수정 마감 · 12/1~12/31 평가)
+            {MBO_COPY.cycleSettingsDefault}
           </button>
         ) : (
           <p className="text-xs text-slate-500">사업주·관리자만 변경할 수 있습니다.</p>

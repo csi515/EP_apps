@@ -47,7 +47,9 @@ import {
 
 import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
 
+/** @deprecated 목표 목록 패널 제거 — 실행 과제만 사용. 호환용 타입 유지 */
 export type MboContentPanel = 'schedule' | 'goals';
+export type MboProjectCompletionFilter = 'active' | 'completed' | 'all';
 export type MboScheduleViewMode = 'table' | 'gantt';
 import {
   canManagerOverrideCycleGoalLock,
@@ -105,19 +107,21 @@ export function useMboManagementWorkspaceState() {
   const [reviseGoalId, setReviseGoalId] = useState<string | null>(null);
   const [planApprovalObjectiveId, setPlanApprovalObjectiveId] = useState<string | null>(null);
   /** 직원 기본: 회사·팀 목표(visible) — 스트립·조직 트리와 동일 데이터 */
+  /** 보기 범위 탭 제거 — 매니저=team, 직원=visible 고정 */
   const [listScope, setListScope] = useState<MboListScope>('visible');
-  const [dashboardView, setDashboardView] = useState<MboDashboardView>('mine');
-  const [contentPanel, setContentPanel] = useState<MboContentPanel>('goals');
+  const [dashboardView, setDashboardView] = useState<MboDashboardView>('team_overview');
+  const [contentPanel, setContentPanel] = useState<MboContentPanel>('schedule');
   /** 실행 과제: 표(기본) | 간트(조회) */
   const [scheduleViewMode, setScheduleViewMode] = useState<MboScheduleViewMode>('table');
-  /** 목표 목록: 사람별 | 목표 트리(parent_id) — 기본 조직 정렬 */
+  /** 목표 목록(레거시): 사람별 | 조직 — 실행 과제 통합 후에도 일부 파생에 사용 */
   const [goalViewMode, setGoalViewMode] = useState<'person' | 'org'>('org');
+  const [projectCompletionFilter, setProjectCompletionFilter] =
+    useState<MboProjectCompletionFilter>('active');
   const [ownerFilterId, setOwnerFilterId] = useState<string>('');
   const [selectedMemberUserIds, setSelectedMemberUserIds] = useState<string[]>([]);
   const [personQuery, setPersonQuery] = useState('');
   const [ganttCheckinOnly, setGanttCheckinOnly] = useState(false);
   const [detailObjectiveId, setDetailObjectiveId] = useState<string | null>(null);
-  const [pendingApprovalsOpen, setPendingApprovalsOpen] = useState(false);
   const [projectSheetId, setProjectSheetId] = useState<string | null>(null);
   const [monthlyCheckProjectId, setMonthlyCheckProjectId] = useState<string | null>(null);
   const [monthlyCheckAutoWrite, setMonthlyCheckAutoWrite] = useState(false);
@@ -141,30 +145,18 @@ export function useMboManagementWorkspaceState() {
   const immediateSuperior = orgScope?.immediateSuperior ?? null;
 
   useEffect(() => {
-    if (isManager && !managerScopeSyncedRef.current) {
+    if (isManager) {
       setListScope('team');
       setDashboardView('team_overview');
-      setContentPanel('goals');
-      setGoalViewMode('org');
+      setContentPanel('schedule');
       managerScopeSyncedRef.current = true;
-    }
-  }, [isManager]);
-
-  useEffect(() => {
-    if (dashboardView === 'mine') {
-      setListScope('mine');
+    } else {
+      setListScope('visible');
+      setDashboardView('mine');
       setSelectedMemberUserIds([]);
       setOwnerFilterId('');
-      setContentPanel('goals');
-      setGoalViewMode('org');
-    } else if (dashboardView === 'team_overview') {
-      setListScope('team');
-      setOwnerFilterId('');
-      // 팀 운영에서도 목표 목록·조직 정렬을 유지 (일정표로 강제하지 않음)
-    } else {
-      setListScope('team');
     }
-  }, [dashboardView]);
+  }, [isManager]);
   const requirePlanApproval = readMboRequirePlanApproval(
     (currentOrganization?.settings ?? null) as Record<string, unknown> | null
   );
@@ -252,7 +244,6 @@ export function useMboManagementWorkspaceState() {
 
   return {
     detailObjectiveId, setDetailObjectiveId,
-    pendingApprovalsOpen, setPendingApprovalsOpen,
     projectSheetId, setProjectSheetId,
     monthlyCheckProjectId, setMonthlyCheckProjectId,
     monthlyCheckAutoWrite, setMonthlyCheckAutoWrite,
@@ -287,6 +278,7 @@ export function useMboManagementWorkspaceState() {
     contentPanel, setContentPanel,
     scheduleViewMode, setScheduleViewMode,
     goalViewMode, setGoalViewMode,
+    projectCompletionFilter, setProjectCompletionFilter,
     ownerFilterId, setOwnerFilterId,
     selectedMemberUserIds, setSelectedMemberUserIds,
     ganttCheckinOnly, setGanttCheckinOnly,

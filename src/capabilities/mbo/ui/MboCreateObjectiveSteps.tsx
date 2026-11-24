@@ -18,6 +18,49 @@ import type { ObjectiveNode } from './MboObjectiveTreeViewer';
 
 type DeptOption = { id: string; name: string };
 
+function ParentGoalSelect({
+  id,
+  value,
+  onChange,
+  parents,
+  objectives,
+  disabled = false,
+}: {
+  id: string;
+  value: string;
+  onChange: (id: string) => void;
+  parents: readonly ExistingGoalRef[];
+  objectives: ObjectiveNode[];
+  disabled?: boolean;
+}) {
+  return (
+    <FormField
+      label={MBO_COPY.parentGoalLabel}
+      htmlFor={id}
+      hint={MBO_COPY.parentGoalHint}
+    >
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className={FORM_CONTROL_CLASS}
+        data-testid={id}
+      >
+        <option value="">{MBO_COPY.parentGoalNone}</option>
+        {parents.map((parent) => {
+          const title = objectives.find((o) => o.id === parent.id)?.title ?? parent.id;
+          return (
+            <option key={parent.id} value={parent.id}>
+              [{levelLabelKo(parent.level)}] {title}
+            </option>
+          );
+        })}
+      </select>
+    </FormField>
+  );
+}
+
 export type CreateStepSharedProps = {
   newLevel: MboLevel;
   onLevelChange: (level: MboLevel) => void;
@@ -52,19 +95,43 @@ export function CreateStepBasics({
   onTitleChange,
   newCriteria,
   onCriteriaChange,
+  newWeight,
+  onWeightChange,
+  newLevel,
+  newParentId,
+  onParentIdChange,
+  eligibleParents,
   newStartDate,
   newTargetDate,
   onScheduleChange,
+  objectives,
+  selectedOwnerMember,
 }: Pick<
   CreateStepSharedProps,
   | 'newTitle'
   | 'onTitleChange'
   | 'newCriteria'
   | 'onCriteriaChange'
+  | 'newWeight'
+  | 'onWeightChange'
+  | 'newLevel'
+  | 'newParentId'
+  | 'onParentIdChange'
+  | 'eligibleParents'
   | 'newStartDate'
   | 'newTargetDate'
   | 'onScheduleChange'
+  | 'objectives'
+  | 'selectedOwnerMember'
 >) {
+  const ownerId = selectedOwnerMember?.userId;
+  const siblingTotal = objectives
+    .filter((o) => !o.deletedAt && (!ownerId || o.ownerId === ownerId))
+    .reduce((sum, o) => sum + (o.weight || 0), 0);
+  const projected = siblingTotal + (Number.isFinite(newWeight) ? newWeight : 0);
+  const diff = 100 - projected;
+  const weightHint = diff === 0 ? undefined : MBO_COPY.weightInvalid(projected, diff);
+
   return (
     <>
       <FormField
@@ -97,6 +164,27 @@ export function CreateStepBasics({
           required
         />
       </FormField>
+      <FormField label={MBO_COPY.weightLabel} htmlFor="mbo-create-weight" hint={weightHint}>
+        <Input
+          id="mbo-create-weight"
+          type="number"
+          min={1}
+          max={100}
+          value={newWeight}
+          onChange={(e) => onWeightChange(Number(e.target.value))}
+          inputSize="md"
+          data-testid="mbo-create-objective-weight"
+        />
+      </FormField>
+      {newLevel !== 'company' ? (
+        <ParentGoalSelect
+          id="mbo-create-parent"
+          value={newParentId}
+          onChange={onParentIdChange}
+          parents={eligibleParents}
+          objectives={objectives}
+        />
+      ) : null}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <FormField label="시작일" htmlFor="mbo-create-start" required>
           <input
@@ -132,8 +220,6 @@ export function CreateStepBasics({
 export function CreateStepHierarchy({
   newLevel,
   onLevelChange,
-  newWeight,
-  onWeightChange,
   newParentId,
   onParentIdChange,
   newDepartmentId,
@@ -144,88 +230,53 @@ export function CreateStepHierarchy({
   eligibleParents,
   objectives,
   onVisibilityChange,
-  selectedOwnerMember,
 }: CreateStepSharedProps) {
-  const ownerId = selectedOwnerMember?.userId;
-  const siblingTotal = objectives
-    .filter((o) => !o.deletedAt && (!ownerId || o.ownerId === ownerId))
-    .reduce((sum, o) => sum + (o.weight || 0), 0);
-  const projected = siblingTotal + (Number.isFinite(newWeight) ? newWeight : 0);
-  const diff = 100 - projected;
-  const weightHint = diff === 0 ? undefined : MBO_COPY.weightInvalid(projected, diff);
-
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
-        <FormField
-          label={MBO_COPY.levelSelect}
-          htmlFor="mbo-create-level"
-          hint={
-            !hasPrerequisiteGoals(newLevel, existingGoalRefs)
-              ? `${prerequisiteLabel(newLevel)}가 아직 없습니다.`
-              : undefined
-          }
+      <FormField
+        label={MBO_COPY.levelSelect}
+        htmlFor="mbo-create-level"
+        hint={
+          !hasPrerequisiteGoals(newLevel, existingGoalRefs)
+            ? `${prerequisiteLabel(newLevel)}가 아직 없습니다.`
+            : undefined
+        }
+      >
+        <select
+          id="mbo-create-level"
+          value={newLevel}
+          onChange={(e) => {
+            const next = e.target.value as MboLevel;
+            onLevelChange(next);
+            onVisibilityChange(defaultVisibilityForLevel(next));
+            if (next === 'company') {
+              onParentIdChange('');
+            } else {
+              const parents = listEligibleParentGoals(next, existingGoalRefs);
+              onParentIdChange(
+                parents.some((p) => p.id === newParentId) ? newParentId : '',
+              );
+            }
+          }}
+          className={FORM_CONTROL_CLASS}
+          data-testid="mbo-create-objective-level"
         >
-          <select
-            id="mbo-create-level"
-            value={newLevel}
-            onChange={(e) => {
-              const next = e.target.value as MboLevel;
-              onLevelChange(next);
-              onVisibilityChange(defaultVisibilityForLevel(next));
-              if (next === 'company') {
-                onParentIdChange('');
-              } else {
-                const parents = listEligibleParentGoals(next, existingGoalRefs);
-                onParentIdChange(
-                  parents.some((p) => p.id === newParentId) ? newParentId : parents[0]?.id || '',
-                );
-              }
-            }}
-            className={FORM_CONTROL_CLASS}
-            data-testid="mbo-create-objective-level"
-          >
-            {creatableLevels.map((level) => (
-              <option key={level} value={level}>
-                {levelLabelKo(level)}
-              </option>
-            ))}
-          </select>
-        </FormField>
-        <FormField label={MBO_COPY.weightLabel} htmlFor="mbo-create-weight" hint={weightHint}>
-          <Input
-            id="mbo-create-weight"
-            type="number"
-            min={1}
-            max={100}
-            value={newWeight}
-            onChange={(e) => onWeightChange(Number(e.target.value))}
-            inputSize="md"
-          />
-        </FormField>
-      </div>
+          {creatableLevels.map((level) => (
+            <option key={level} value={level}>
+              {levelLabelKo(level)}
+            </option>
+          ))}
+        </select>
+      </FormField>
 
       {newLevel !== 'company' ? (
-        <FormField label="상위 목표" htmlFor="mbo-create-parent" required>
-          <select
-            id="mbo-create-parent"
-            value={newParentId}
-            onChange={(e) => onParentIdChange(e.target.value)}
-            required
-            className={FORM_CONTROL_CLASS}
-            data-testid="mbo-create-objective-parent"
-          >
-            <option value="">상위 목표 선택</option>
-            {eligibleParents.map((parent) => {
-              const title = objectives.find((o) => o.id === parent.id)?.title ?? parent.id;
-              return (
-                <option key={parent.id} value={parent.id}>
-                  [{levelLabelKo(parent.level)}] {title}
-                </option>
-              );
-            })}
-          </select>
-        </FormField>
+        <ParentGoalSelect
+          id="mbo-create-parent-hierarchy"
+          value={newParentId}
+          onChange={onParentIdChange}
+          parents={eligibleParents}
+          objectives={objectives}
+        />
       ) : null}
 
       {newLevel === 'department' ? (

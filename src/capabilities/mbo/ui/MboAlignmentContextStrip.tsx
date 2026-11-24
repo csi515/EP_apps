@@ -80,12 +80,8 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
     <section
       className="border border-slate-200 bg-white"
       data-testid="mbo-alignment-strip"
-      aria-label={MBO_COPY.alignmentStripTitle}
+      aria-label={MBO_COPY.alignmentCompany}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 border-b border-slate-200 px-3 py-2">
-        <p className="text-[11px] font-semibold text-slate-700">{MBO_COPY.alignmentStripTitle}</p>
-        <p className="text-[10px] font-medium text-slate-500">{MBO_COPY.alignmentStripHint}</p>
-      </div>
       <div className="flex flex-col sm:flex-row">
         <Slot
           slot="company"

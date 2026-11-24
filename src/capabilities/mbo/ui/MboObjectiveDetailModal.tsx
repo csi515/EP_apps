@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Send } from 'lucide-react';
 import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
-import { FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
+import { FormField, FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
+import { Input } from '@/shared/components/ui/Input';
 import type { MboStatus } from '../domain/mboEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
 import type { ObjectiveNode } from './MboObjectiveTreeViewer';
@@ -30,6 +31,7 @@ export type MboObjectiveDetailModalProps = {
   onChangeVisibility?: (id: string, visibility: MboVisibilityType) => void;
   onOpenProjects?: () => void;
   onRequestGoalChange?: (id: string) => void;
+  onSaveWeight?: (id: string, weight: number) => Promise<void> | void;
 };
 
 function statusBadge(status: MboStatus) {
@@ -66,8 +68,19 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
   onChangeVisibility,
   onOpenProjects,
   onRequestGoalChange,
+  onSaveWeight,
 }) => {
   const lockView = resolveMboGoalLockView(objective.status, goalsLocked, canOverrideGoalLock);
+  const canEditWeight =
+    Boolean(onSaveWeight) && (!lockView.isStrictLocked || Boolean(lockView.managerOverrideActive));
+  const [weightDraft, setWeightDraft] = useState(objective.weight);
+  const [weightBusy, setWeightBusy] = useState(false);
+
+  useEffect(() => {
+    setWeightDraft(objective.weight);
+  }, [objective.id, objective.weight]);
+
+  const weightDirty = weightDraft !== objective.weight;
 
   return (
     <Modal
@@ -179,14 +192,50 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
       <div className="space-y-3 text-xs" data-testid="mbo-objective-detail-modal">
         <div className="flex flex-wrap items-center gap-2">
           {statusBadge(objective.status)}
-          <span className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
-            {MBO_COPY.weightShort(objective.weight)}
-          </span>
+          {!canEditWeight ? (
+            <span className="rounded bg-slate-100 px-2 py-0.5 font-semibold text-slate-600">
+              {MBO_COPY.weightShort(objective.weight)}
+            </span>
+          ) : null}
           <span className="font-semibold text-slate-800">진척 {objective.progressRate}%</span>
           <span className="rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-900">
             {goalLockStatusLabel(lockView.lockStatus)}
           </span>
         </div>
+
+        {canEditWeight ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <FormField label={MBO_COPY.weightLabel} htmlFor="mbo-detail-weight" className="min-w-[8rem] flex-1">
+              <Input
+                id="mbo-detail-weight"
+                type="number"
+                min={1}
+                max={100}
+                value={weightDraft}
+                onChange={(e) => setWeightDraft(Number(e.target.value))}
+                inputSize="md"
+                data-testid="mbo-detail-objective-weight"
+              />
+            </FormField>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!weightDirty || weightBusy || !Number.isFinite(weightDraft)}
+              isLoading={weightBusy}
+              data-testid="mbo-detail-weight-save"
+              onClick={() => {
+                const next = Math.min(100, Math.max(1, Math.round(weightDraft)));
+                setWeightBusy(true);
+                void Promise.resolve(onSaveWeight?.(objective.id, next))
+                  .catch(() => undefined)
+                  .finally(() => setWeightBusy(false));
+              }}
+            >
+              비중 저장
+            </Button>
+          </div>
+        ) : null}
+
         {!lockView.managerOverrideActive && lockView.isStrictLocked ? (
           <p className="text-[11px] font-semibold text-slate-600">
             지금은 목표 문구·비중을 직접 고칠 수 없습니다. 일정과 메모·진척률은 담당자가 수정할 수 있습니다.

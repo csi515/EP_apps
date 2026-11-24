@@ -5,11 +5,20 @@ import {
   calendarDate,
   isReviewWindowOpen,
   normalizeCycleSettings,
+  withGoalsForceLocked,
+  withGoalsUnlocked,
 } from './mboCycle';
 
 assert.equal(areGoalsLocked(DEFAULT_MBO_CYCLE, new Date(2026, 0, 31)), false);
 assert.equal(areGoalsLocked(DEFAULT_MBO_CYCLE, new Date(2026, 1, 1)), true);
 assert.equal(areGoalsLocked({ ...DEFAULT_MBO_CYCLE, goalLockEnabled: false }, new Date(2026, 5, 1)), false);
+
+{
+  const now = new Date(2026, 10, 24);
+  const forced = withGoalsForceLocked(DEFAULT_MBO_CYCLE, now);
+  assert.equal(areGoalsLocked(forced, now), true);
+  assert.equal(areGoalsLocked(withGoalsUnlocked(forced), now), false);
+}
 
 assert.equal(isReviewWindowOpen(DEFAULT_MBO_CYCLE, new Date(2026, 10, 30)), false);
 assert.equal(isReviewWindowOpen(DEFAULT_MBO_CYCLE, new Date(2026, 11, 1)), true);

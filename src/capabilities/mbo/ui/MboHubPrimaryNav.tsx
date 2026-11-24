@@ -1,7 +1,6 @@
 import React from 'react';
 import { SegmentedControl } from '@/shared/components/ui/SegmentedControl';
 import { MBO_COPY } from './mboUiCopy';
-import type { MboContentPanel } from '../hooks/useMboManagementWorkspaceState';
 import type { MboDashboardView } from '../domain/mboManagerDashboardEngine';
 import type { MboListScope } from '../domain/mboVisibilityEngine';
 
@@ -11,20 +10,16 @@ type Props = {
   onDashboardViewChange: (v: MboDashboardView) => void;
   listScope: MboListScope;
   onListScopeChange: (v: MboListScope) => void;
-  contentPanel: MboContentPanel;
-  onContentPanelChange: (v: MboContentPanel) => void;
   segmentActive: string;
 };
 
-/** 상단 고정 축: 보기 범위 + 일정|목표 */
+/** 상단 고정 축: 보기 범위만 (실행 과제로 통합) */
 export function MboHubPrimaryNav({
   isManager,
   dashboardView,
   onDashboardViewChange,
   listScope,
   onListScopeChange,
-  contentPanel,
-  onContentPanelChange,
   segmentActive,
 }: Props) {
   return (
@@ -52,18 +47,6 @@ export function MboHubPrimaryNav({
             ]}
           />
         )}
-      </div>
-      <div className="flex flex-col gap-1" data-testid="mbo-content-panel">
-        <span className="text-[11px] font-semibold text-slate-500">{MBO_COPY.panelLabel}</span>
-        <SegmentedControl
-          value={contentPanel}
-          onChange={onContentPanelChange}
-          activeClassName={segmentActive}
-          options={[
-            { value: 'schedule', label: MBO_COPY.panelSchedule },
-            { value: 'goals', label: MBO_COPY.panelGoals },
-          ]}
-        />
       </div>
     </div>
   );

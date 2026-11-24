@@ -1,7 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
 import { FORM_CONTROL_CLASS, FormField } from '@/shared/components/ui/FormField';
+import { Input } from '@/shared/components/ui/Input';
+import type { MboLevel } from '../domain/mboEngine';
+import {
+  levelLabelKo,
+  listEligibleParentGoals,
+  type ExistingGoalRef,
+} from '../domain/mboGoalHierarchy';
 import { MboService } from '../services/mboService';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import { MBO_COPY } from './mboUiCopy';
@@ -9,8 +16,16 @@ import { MBO_COPY } from './mboUiCopy';
 interface Props {
   open: boolean;
   goalId: string;
+  organizationId?: string | null;
+  goalLevel?: MboLevel | null;
   currentTargetValue?: string | number | null;
   currentDueDate?: string | null;
+  currentWeight?: number | null;
+  currentParentId?: string | null;
+  existingGoalRefs?: readonly ExistingGoalRef[];
+  objectiveTitlesById?: ReadonlyMap<string, string>;
+  isManager?: boolean;
+  bypassGoalCycleLock?: boolean;
   onClose: () => void;
   onRevised: () => void;
 }
@@ -18,8 +33,16 @@ interface Props {
 export const MboReviseGoalModal: React.FC<Props> = ({
   open,
   goalId,
+  organizationId,
+  goalLevel,
   currentTargetValue,
   currentDueDate,
+  currentWeight,
+  currentParentId,
+  existingGoalRefs = [],
+  objectiveTitlesById,
+  isManager = false,
+  bypassGoalCycleLock = false,
   onClose,
   onRevised,
 }) => {
@@ -27,11 +50,32 @@ export const MboReviseGoalModal: React.FC<Props> = ({
     currentTargetValue == null ? '' : String(currentTargetValue),
   );
   const [dueDate, setDueDate] = useState(currentDueDate ?? '');
+  const [weight, setWeight] = useState(
+    Number.isFinite(currentWeight) ? Number(currentWeight) : 100,
+  );
+  const [parentId, setParentId] = useState(currentParentId ?? '');
   const [unmetReason, setUnmetReason] = useState('');
   const [revisionReason, setRevisionReason] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const dirty = Boolean(unmetReason || revisionReason || targetValue || dueDate);
+  const eligibleParents = useMemo(() => {
+    if (!goalLevel || goalLevel === 'company') return [];
+    return listEligibleParentGoals(goalLevel, existingGoalRefs).filter((p) => p.id !== goalId);
+  }, [goalLevel, existingGoalRefs, goalId]);
+
+  useEffect(() => {
+    if (!open) return;
+    setTargetValue(currentTargetValue == null ? '' : String(currentTargetValue));
+    setDueDate(currentDueDate ?? '');
+    setWeight(Number.isFinite(currentWeight) ? Number(currentWeight) : 100);
+    setParentId(currentParentId ?? '');
+    setUnmetReason('');
+    setRevisionReason('');
+  }, [open, goalId, currentTargetValue, currentDueDate, currentWeight, currentParentId]);
+
+  const dirty = Boolean(
+    unmetReason || revisionReason || targetValue || dueDate || weight || parentId !== (currentParentId ?? ''),
+  );
 
   const handleSubmit = () => {
     if (!unmetReason.trim() || !revisionReason.trim() || !dueDate) {
@@ -42,6 +86,11 @@ export const MboReviseGoalModal: React.FC<Props> = ({
       showToast(MBO_COPY.reviseNeedTarget, 'warning');
       return;
     }
+    const nextWeight = Math.min(100, Math.max(1, Math.round(weight)));
+    if (!Number.isFinite(nextWeight)) {
+      showToast(MBO_COPY.weightSaveFailed, 'warning');
+      return;
+    }
     setBusy(true);
     void MboService.reviseGoal({
       goalId,
@@ -50,7 +99,18 @@ export const MboReviseGoalModal: React.FC<Props> = ({
       unmetReason: unmetReason.trim(),
       revisionReason: revisionReason.trim(),
     })
-      .then(() => {
+      .then(async () => {
+        if (organizationId) {
+          await MboService.updateObjective(
+            goalId,
+            organizationId,
+            {
+              weight: nextWeight,
+              parent_id: goalLevel === 'company' ? null : parentId || null,
+            },
+            { isManager, bypassGoalCycleLock },
+          );
+        }
         showToast(MBO_COPY.reviseSuccess, 'success');
         onRevised();
         onClose();
@@ -92,6 +152,43 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             required
           />
         </FormField>
+        <FormField label={MBO_COPY.weightLabel} htmlFor="mbo-revise-weight">
+          <Input
+            id="mbo-revise-weight"
+            type="number"
+            min={1}
+            max={100}
+            value={weight}
+            onChange={(event) => setWeight(Number(event.target.value))}
+            inputSize="md"
+            data-testid="mbo-revise-objective-weight"
+          />
+        </FormField>
+        {goalLevel && goalLevel !== 'company' ? (
+          <FormField
+            label={MBO_COPY.parentGoalLabel}
+            htmlFor="mbo-revise-parent"
+            hint={MBO_COPY.parentGoalHint}
+          >
+            <select
+              id="mbo-revise-parent"
+              className={FORM_CONTROL_CLASS}
+              value={parentId}
+              onChange={(event) => setParentId(event.target.value)}
+              data-testid="mbo-revise-objective-parent"
+            >
+              <option value="">{MBO_COPY.parentGoalNone}</option>
+              {eligibleParents.map((parent) => {
+                const title = objectiveTitlesById?.get(parent.id) ?? parent.id;
+                return (
+                  <option key={parent.id} value={parent.id}>
+                    [{levelLabelKo(parent.level)}] {title}
+                  </option>
+                );
+              })}
+            </select>
+          </FormField>
+        ) : null}
         <FormField label={MBO_COPY.reviseDueLabel} htmlFor="mbo-revise-due">
           <input
             id="mbo-revise-due"

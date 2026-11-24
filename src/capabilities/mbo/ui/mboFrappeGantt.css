@@ -1,23 +1,137 @@
 /* frappe-gantt package exports에 style만 있어 Vite deep import 대신 상대경로로 로드 */
 @import '../../../../node_modules/frappe-gantt/dist/frappe-gantt.css';
 
-/* Frappe Gantt — 사내 일정표용 절제된 톤 */
-.mbo-frappe-gantt-host {
-  overflow-x: auto;
+/* 왼쪽 고정 이름열 + 타임라인 */
+.mbo-gantt-shell {
+  display: flex;
+  align-items: stretch;
+  min-height: 280px;
   border: 1px solid #e2e8f0;
   border-radius: 0.25rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.mbo-gantt-name-rail {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  max-width: 40%;
+  min-width: 8rem;
+  border-right: 1px solid #e2e8f0;
+  background: #fff;
+  z-index: 2;
+}
+
+.mbo-gantt-name-rail__resize {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 3;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.mbo-gantt-name-rail__resize:hover,
+.mbo-gantt-name-rail__resize:focus-visible {
+  background: rgba(15, 118, 110, 0.25);
+}
+
+.mbo-gantt-name-rail__head {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  box-sizing: border-box;
+  padding: 0 0.75rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.mbo-gantt-name-rail__body {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.mbo-gantt-name-rail__row {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 0;
+  border-bottom: 1px solid #f1f5f9;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.mbo-gantt-name-rail__row:hover {
+  background: #f8fafc;
+}
+
+.mbo-gantt-name-rail__row--objective {
+  font-weight: 600;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.mbo-gantt-name-rail__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+/* Frappe Gantt — 사내 일정표용 절제된 톤 */
+.mbo-frappe-gantt-host {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
   background: #fff;
 }
 
 .mbo-frappe-gantt-host .gantt-container {
   font-family: inherit;
+  border-radius: 0;
+  /* 세로: 페이지 스크롤만. 가로는 구간 맞춤이라 스크롤바 출몰로 폭 루프가 생기지 않게 hidden */
+  overflow: hidden;
 }
 
+/* 이름은 왼쪽 레일로 이동 — 바 라벨 숨김 */
+.mbo-frappe-gantt-host .bar-label {
+  display: none;
+}
+
+/* 계획 기간 = 연한 빈 막대, 실행 = progress 채움 */
 .mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-objective .bar {
-  opacity: 0.75;
+  fill: #e2e8f0;
+  stroke: #94a3b8;
+  stroke-width: 1;
+  opacity: 1;
+}
+
+.mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-objective .bar-progress {
+  fill: #64748b;
+  opacity: 0.9;
 }
 
 .mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-project .bar {
+  fill: #ccfbf1;
+  stroke: #5eead4;
+  stroke-width: 1;
+  opacity: 1;
+}
+
+.mbo-frappe-gantt-host .bar-wrapper.mbo-gantt-project .bar-progress {
+  fill: #0f766e;
   opacity: 1;
 }
 
@@ -28,9 +142,7 @@
   font-weight: 500;
 }
 
+/* Frappe Today 버튼은 가로 스크롤을 어긋나게 해 숨김 */
 .mbo-frappe-gantt-host .today-button {
-  border-radius: 0.25rem;
-  border-color: #cbd5e1;
-  color: #334155;
-  font-weight: 600;
+  display: none;
 }

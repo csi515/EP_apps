@@ -2,8 +2,8 @@
 import { calendarDate, type MboCycleSettings } from './mboCycle';
 
 export function formatLockLabel(settings: MboCycleSettings): string {
-  if (!settings.goalLockEnabled) return '목표 수정 가능';
-  return `목표 수정 마감 ${settings.goalLockMonth}월 ${settings.goalLockDay}일`;
+  if (!settings.goalLockEnabled) return '목표 잠금 해제됨';
+  return `목표 잠금 중 (${settings.goalLockMonth}/${settings.goalLockDay} 이후)`;
 }
 
 export function formatReviewLabel(settings: MboCycleSettings): string {

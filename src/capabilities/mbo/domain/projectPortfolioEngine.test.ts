@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import {
   buildYearMonthBuckets,
   collectAvailableYears,
+  filterProjectsByCompletion,
   filterProjectsByMonth,
+  filterProjectsByOwners,
   filterProjectsByPerson,
   filterProjectsByYear,
   groupProjectsByPerson,
+  isPortfolioProjectCompleted,
   projectOverlapsRange,
   resolvePortfolioProjects,
   summarizePortfolio,
@@ -129,6 +132,36 @@ const SAMPLE: PortfolioProject[] = [
   const end = new Date(2026, 5, 30);
   assert.equal(projectOverlapsRange(SAMPLE[0], start, end), true); // p1 until Jun 30
   console.log('✅ Case 5: resolvePortfolioProjects + collectAvailableYears');
+}
+
+// 6) 완료 판정·필터
+{
+  const done: PortfolioProject = {
+    ...SAMPLE[0],
+    id: 'p-done',
+    status: 'completed',
+    progressRate: 100,
+  };
+  const almost: PortfolioProject = {
+    ...SAMPLE[1],
+    id: 'p-almost',
+    status: 'in_progress',
+    progressRate: 100,
+  };
+  assert.equal(isPortfolioProjectCompleted(done), true);
+  assert.equal(isPortfolioProjectCompleted(almost), true);
+  assert.equal(isPortfolioProjectCompleted(SAMPLE[0]), false);
+
+  const pool = [...SAMPLE, done, almost];
+  // SAMPLE p3 + done + almost
+  assert.equal(filterProjectsByCompletion(pool, 'completed').length, 3);
+  assert.equal(filterProjectsByCompletion(pool, 'active').length, SAMPLE.length - 1 + 0);
+  assert.equal(
+    filterProjectsByCompletion(pool, 'active').every((p) => !isPortfolioProjectCompleted(p)),
+    true
+  );
+  assert.equal(filterProjectsByOwners(pool, ['u-kim']).every((p) => p.ownerId === 'u-kim'), true);
+  console.log('✅ Case 6: completion filter + owner filter');
 }
 
 console.log('🎉 All projectPortfolioEngine tests passed!');

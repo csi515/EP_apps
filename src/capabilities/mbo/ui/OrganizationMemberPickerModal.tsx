@@ -1,5 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { Pagination } from '@/shared/components/ui/Pagination';
+import { useClientPagination } from '@/shared/hooks/useClientPagination';
 import { memberMatchesQuery } from '../domain/mboVisibilityEngine';
 import type {
   MboPickerDepartment as PickerDepartment,
@@ -41,6 +43,15 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
       return memberMatchesQuery(member.displayName, query);
     });
   }, [members, departmentId, query]);
+
+  const { page, pageSize, total, pagedItems, setPage, setPageSize } = useClientPagination(
+    filtered,
+    20,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [departmentId, query, open, setPage]);
 
   const selectedMembers = members.filter((m) => selectedIds.includes(m.id));
 
@@ -107,7 +118,7 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
           ) : null}
 
           <ul className="divide-y rounded-xl border">
-            {filtered.map((member) => {
+            {pagedItems.map((member) => {
               const checked = selectedIds.includes(member.id);
               return (
                 <li key={member.id}>
@@ -138,6 +149,15 @@ export const OrganizationMemberPickerModal: React.FC<Props> = ({
               <li className="px-3 py-6 text-center text-sm text-slate-500">검색 결과가 없습니다.</li>
             ) : null}
           </ul>
+          {filtered.length > 0 ? (
+            <Pagination
+              current={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          ) : null}
         </div>
 
         <footer className="flex justify-end gap-2 border-t p-4">

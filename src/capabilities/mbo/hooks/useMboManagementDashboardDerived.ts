@@ -5,10 +5,7 @@ import {
   computeManagerKpis,
 } from '../domain/mboManagerDashboardEngine';
 import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
-import {
-  canManagerOverrideCycleGoalLock,
-  countPendingGoalApprovals,
-} from '../domain/mboTwoTierLockEngine';
+import { canManagerOverrideCycleGoalLock } from '../domain/mboTwoTierLockEngine';
 import { buildPersonObjectiveBuckets } from '../domain/mboTeamBoardEngine';
 import {
   buildOrgAlignedObjectiveTree,
@@ -210,15 +207,6 @@ export function useMboManagementDashboardDerived(
     missingMonthlyProjectIds,
   ]);
 
-  const pendingChangeApprovals = useMemo(
-    () =>
-      countPendingGoalApprovals(
-        teamObjectivesForManager.map((o) => ({ status: o.status, ownerId: o.ownerId ?? null })),
-        teamUserIds,
-      ),
-    [teamObjectivesForManager, teamUserIds],
-  );
-
   const weightValidation = useMemo(() => {
     // 비중 합 검증은 개인 KPI만 (조직·전사 목표와 섞으면 리더 소유 시 이중 합산됨)
     const owned = ownerFilterId
@@ -298,7 +286,6 @@ export function useMboManagementDashboardDerived(
     canOverrideGoalLockForOwner,
     canManagerCreateWhileLocked,
     hierarchyGanttRows,
-    pendingChangeApprovals,
     hubSummary,
     weightValidation,
     alignmentContext,

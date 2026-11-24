@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
+import { Pagination } from '@/shared/components/ui/Pagination';
+import { useClientPagination } from '@/shared/hooks/useClientPagination';
 import type { ObjectiveNode } from './MboObjectiveTreeViewer';
 import { MBO_COPY } from './mboUiCopy';
 
@@ -33,6 +35,15 @@ export const MboPendingApprovalsModal: React.FC<Props> = ({
   onClose,
   onOpenDetail,
 }) => {
+  const { page, pageSize, total, pagedItems, setPage, setPageSize } = useClientPagination(
+    items,
+    10,
+  );
+
+  useEffect(() => {
+    if (open) setPage(1);
+  }, [open, items.length, setPage]);
+
   return (
     <Modal
       isOpen={open}
@@ -47,38 +58,47 @@ export const MboPendingApprovalsModal: React.FC<Props> = ({
         </div>
       }
     >
-      <div data-testid="mbo-pending-approvals-modal">
+      <div className="space-y-3" data-testid="mbo-pending-approvals-modal">
         {items.length === 0 ? (
           <p className="py-6 text-center text-sm text-slate-500">{MBO_COPY.pendingApprovalsEmpty}</p>
         ) : (
-          <ul className="divide-y divide-slate-200 border border-slate-200">
-            {items.map(({ objective, kind }) => (
-              <li key={objective.id}>
-                <button
-                  type="button"
-                  className="flex min-h-12 w-full flex-col gap-1 px-3 py-2.5 text-left hover:bg-slate-50"
-                  onClick={() => {
-                    onOpenDetail(objective.id);
-                    onClose();
-                  }}
-                >
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-500">
-                    <span className="text-slate-700">
-                      {kind === 'change' ? MBO_COPY.pendingKindChange : MBO_COPY.pendingKindNew}
-                    </span>
-                    <span>·</span>
-                    <span>{objective.ownerName}</span>
-                  </div>
-                  <span className="truncate text-sm font-medium text-slate-900">{objective.title}</span>
-                  {kind === 'change' && objective.rejectionReason ? (
-                    <span className="line-clamp-2 text-[11px] text-slate-600">
-                      {objective.rejectionReason}
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="divide-y divide-slate-200 border border-slate-200">
+              {pagedItems.map(({ objective, kind }) => (
+                <li key={objective.id}>
+                  <button
+                    type="button"
+                    className="flex min-h-12 w-full flex-col gap-1 px-3 py-2.5 text-left hover:bg-slate-50"
+                    onClick={() => {
+                      onOpenDetail(objective.id);
+                      onClose();
+                    }}
+                  >
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-slate-500">
+                      <span className="text-slate-700">
+                        {kind === 'change' ? MBO_COPY.pendingKindChange : MBO_COPY.pendingKindNew}
+                      </span>
+                      <span>·</span>
+                      <span>{objective.ownerName}</span>
+                    </div>
+                    <span className="truncate text-sm font-medium text-slate-900">{objective.title}</span>
+                    {kind === 'change' && objective.rejectionReason ? (
+                      <span className="line-clamp-2 text-[11px] text-slate-600">
+                        {objective.rejectionReason}
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <Pagination
+              current={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </>
         )}
       </div>
     </Modal>

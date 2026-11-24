@@ -6,6 +6,9 @@
 import assert from 'node:assert/strict';
 import {
   canTransitionMboStatus,
+  canTransitionProjectExecutionStatus,
+  toProjectExecutionStatus,
+  fromProjectExecutionStatus,
   detectHierarchyCycle,
   calculateWeightedObjectiveProgress,
   calculateGradeFromScore,
@@ -52,6 +55,23 @@ assert.equal(canTransitionMboStatus('in_progress', 'completed').allowed, true);
 assert.equal(canTransitionMboStatus('completed', 'in_progress').allowed, false);
 assert.equal(canTransitionMboStatus('canceled', 'draft').allowed, false);
 console.log('  -> MBO 상태 전이 불변식 검증 성공');
+
+console.log('=== [1b] Project execution status (진행예정·진행 중·완료) ===');
+assert.equal(toProjectExecutionStatus('draft'), 'planned');
+assert.equal(toProjectExecutionStatus('approved'), 'planned');
+assert.equal(toProjectExecutionStatus('submitted'), 'planned');
+assert.equal(toProjectExecutionStatus('in_progress'), 'in_progress');
+assert.equal(toProjectExecutionStatus('completed'), 'completed');
+assert.equal(fromProjectExecutionStatus('planned'), 'draft');
+assert.equal(fromProjectExecutionStatus('in_progress'), 'in_progress');
+assert.equal(fromProjectExecutionStatus('completed'), 'completed');
+assert.equal(canTransitionProjectExecutionStatus('in_progress', 'draft').allowed, true);
+assert.equal(canTransitionProjectExecutionStatus('completed', 'in_progress').allowed, true);
+assert.equal(canTransitionProjectExecutionStatus('draft', 'completed').allowed, true);
+assert.equal(canTransitionProjectExecutionStatus('approved', 'in_progress').allowed, true);
+assert.equal(canTransitionProjectExecutionStatus('canceled', 'draft').allowed, false);
+assert.equal(canTransitionProjectExecutionStatus('draft', 'submitted').allowed, false);
+console.log('  -> 실행 과제 상태 매핑·전이 검증 성공');
 
 console.log('=== [2] Hierarchy Cycle Prevention (순환 참조 방지) ===');
 

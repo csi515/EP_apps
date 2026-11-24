@@ -3,7 +3,7 @@
  * WorkPageFrame · Layout · 셸이 동일 값을 쓰도록 한곳에서만 정의한다.
  */
 export const WORK_PAGE_GUTTER_CLASS =
-  'px-4 pt-5 pb-8 sm:px-6 sm:pt-6 sm:pb-10';
+  'px-2 pt-4 pb-6 sm:px-3 sm:pt-5 sm:pb-8';
 
 /** 섹션 간 세로 리듬 */
 export const WORK_PAGE_STACK_CLASS = 'space-y-6';

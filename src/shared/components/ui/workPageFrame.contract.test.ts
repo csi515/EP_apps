@@ -19,12 +19,12 @@ console.log('[test:work-page-frame] start');
 
 const spacing = read('src/shared/components/ui/workPageSpacing.ts');
 assert.match(spacing, /WORK_PAGE_GUTTER_CLASS/);
-assert.match(spacing, /px-4/);
-assert.match(spacing, /sm:px-6/);
+assert.match(spacing, /px-2/);
+assert.match(spacing, /sm:px-3/);
 assert.match(spacing, /space-y-6|WORK_PAGE_STACK_CLASS/);
 
 const frame = read('src/shared/components/ui/WorkPageFrame.tsx');
-assert.match(frame, /hub:\s*['"]max-w-6xl['"]/);
+assert.match(frame, /hub:\s*['"]max-w-\[1600px\]['"]/);
 assert.match(frame, /form:\s*['"]max-w-3xl['"]/);
 assert.match(frame, /WORK_PAGE_GUTTER_CLASS/);
 assert.match(frame, /WORK_PAGE_STACK_CLASS/);

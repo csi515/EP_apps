@@ -144,13 +144,6 @@ export function validateGoalCreation(input: {
     };
   }
 
-  if (!hasPrerequisiteGoals(request.level, existing)) {
-    return {
-      allowed: false,
-      reason: `${prerequisiteLabel(request.level)}가 먼저 등록된 뒤에 입력할 수 있습니다.`,
-    };
-  }
-
   if (request.level === 'company') {
     if (request.parentId) {
       return { allowed: false, reason: '전사 목표는 상위 부모 없이 등록합니다.' };
@@ -184,11 +177,9 @@ export function validateGoalCreation(input: {
   }
 
   const parentId = request.parentId;
+  // 연관 상위 목표는 선택 사항 — 없으면 null(없음) 허용
   if (!parentId) {
-    return {
-      allowed: false,
-      reason: `${levelLabelKo(request.level)}는 상위 목표를 부모로 선택한 뒤 등록해야 합니다.`,
-    };
+    return { allowed: true };
   }
 
   const parent = existing.find((g) => g.id === parentId && isActiveGoal(g));

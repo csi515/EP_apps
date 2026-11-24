@@ -147,6 +147,49 @@ export function canTransitionMboStatus(
   }
 }
 
+/** 실행 과제 편집용 3상태 (DB는 기존 MboStatus 유지) */
+export type ProjectExecutionStatus = 'planned' | 'in_progress' | 'completed';
+
+const PROJECT_EXECUTION_DB_STATUSES: readonly MboStatus[] = [
+  'draft',
+  'in_progress',
+  'completed',
+];
+
+/** MboStatus → 실행 과제 UI 상태 (승인 라인 등은 진행예정으로 묶음) */
+export function toProjectExecutionStatus(status: MboStatus): ProjectExecutionStatus {
+  if (status === 'completed') return 'completed';
+  if (status === 'in_progress') return 'in_progress';
+  return 'planned';
+}
+
+/** 실행 과제 UI 상태 → 저장용 MboStatus */
+export function fromProjectExecutionStatus(status: ProjectExecutionStatus): MboStatus {
+  if (status === 'completed') return 'completed';
+  if (status === 'in_progress') return 'in_progress';
+  return 'draft';
+}
+
+/**
+ * 실행 과제 상태 전이 — 진행예정·진행 중·완료 서로 자유 전이.
+ * 취소된 과제는 변경 불가. 승인 라인 상태에서는 3상태로만 진입 가능.
+ */
+export function canTransitionProjectExecutionStatus(
+  current: MboStatus,
+  next: MboStatus,
+): { allowed: boolean; reason?: string } {
+  if (current === next) {
+    return { allowed: true };
+  }
+  if (current === 'canceled') {
+    return { allowed: false, reason: '취소된 과제는 상태를 변경할 수 없습니다.' };
+  }
+  if (!PROJECT_EXECUTION_DB_STATUSES.includes(next)) {
+    return { allowed: false, reason: '실행 과제는 진행예정·진행 중·완료만 선택할 수 있습니다.' };
+  }
+  return { allowed: true };
+}
+
 /**
  * 목표 계층 순환 참조(Cycle) 감지
  *

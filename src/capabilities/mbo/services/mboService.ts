@@ -9,6 +9,7 @@ import { getCoreClient } from '@/lib/supabase';
 import type { Database } from '@/lib/supabase/database.types';
 import {
   canTransitionMboStatus,
+  canTransitionProjectExecutionStatus,
   detectHierarchyCycle,
   calculateGradeFromScore,
   calculateWeightedObjectiveProgress,
@@ -355,10 +356,10 @@ export class MboService {
     }
 
     if (payload.status && payload.status !== existing.status) {
-      const transition = canTransitionMboStatus(existing.status, payload.status, {
-        isManager: options.isManager,
-        rejectionReason: payload.rejection_reason || undefined,
-      });
+      const transition = canTransitionProjectExecutionStatus(
+        existing.status as MboStatus,
+        payload.status as MboStatus,
+      );
       if (!transition.allowed) {
         throw new Error(transition.reason || '허용되지 않는 상태 전이입니다.');
       }

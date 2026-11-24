@@ -9,14 +9,11 @@ import { OrganizationMemberPickerModal } from './OrganizationMemberPickerModal';
 import { MboCreateObjectiveModal } from './MboCreateObjectiveModal';
 import { MboObjectiveRejectModal } from './MboObjectiveRejectModal';
 import { MboObjectiveDeleteModal } from './MboObjectiveDeleteModal';
-import {
-  classifyPendingApproval,
-  MboPendingApprovalsModal,
-} from './MboPendingApprovalsModal';
 import { MboService } from '../services/mboService';
 import { canManageObjectiveOwner } from '../services/mboOrgScopeService';
 import { showToast } from '@/shared/feedback/uiFeedback';
 import type { MboManagementWorkspace } from '../hooks/useMboManagementWorkspace';
+import { MBO_COPY } from './mboUiCopy';
 
 type Props = {
   ws: MboManagementWorkspace;
@@ -78,10 +75,11 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
           w.orgId &&
           w.sheetProject.ownerId &&
           w.sheetProject.ownerId === w.viewerUserId
-            ? async ({ ownerMemo, progressRate }) => {
+            ? async ({ ownerMemo, progressRate, status }) => {
                 await MboService.updateProject(w.sheetProject!.id, w.orgId!, {
                   owner_memo: ownerMemo,
                   progress_rate: progressRate,
+                  status,
                 });
                 await w.projectQuery?.refetch?.();
                 await w.objQuery?.refetch?.();
@@ -131,18 +129,6 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
         onOpenOwnerPicker={() => w.setOwnerPickerOpen(true)}
         onOpenSharePicker={() => w.setSharePickerOpen(true)}
         immediateSuperior={w.immediateSuperior}
-      />
-
-      <MboPendingApprovalsModal
-        open={w.pendingApprovalsOpen}
-        items={w.teamObjectivesForManager
-          .filter((o) => o.status === 'submitted')
-          .map((objective) => ({
-            objective,
-            kind: classifyPendingApproval(objective, w.goalsLocked),
-          }))}
-        onClose={() => w.setPendingApprovalsOpen(false)}
-        onOpenDetail={(id) => w.setDetailObjectiveId(id)}
       />
 
       {w.detailObjectiveId ? (
@@ -197,6 +183,40 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
                 w.setDeleteReason('');
               }}
               onChangeVisibility={(id, visibility) => void w.handleChangeVisibility(id, visibility)}
+              onSaveWeight={
+                w.orgId
+                  ? async (id, weight) => {
+                      try {
+                        await MboService.updateObjective(
+                          id,
+                          w.orgId!,
+                          { weight, target_value: String(weight) },
+                          {
+                            isManager: w.isManager,
+                            bypassGoalCycleLock: w.canOverrideGoalLockForOwner(
+                              w.objectives.find((o) => o.id === id)?.ownerId,
+                            ),
+                          },
+                        );
+                        await w.objQuery?.refetch?.();
+                        w.setLocalObjectives((prev) =>
+                          prev.map((obj) =>
+                            obj.id === id
+                              ? { ...obj, weight, targetValue: String(weight) }
+                              : obj,
+                          ),
+                        );
+                        showToast(MBO_COPY.weightSaved, 'success');
+                      } catch (cause) {
+                        showToast(
+                          cause instanceof Error ? cause.message : MBO_COPY.weightSaveFailed,
+                          'error',
+                        );
+                        throw cause;
+                      }
+                    }
+                  : undefined
+              }
             />
           );
         })()
@@ -221,8 +241,20 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
       <MboReviseGoalModal
         open={Boolean(w.reviseGoalId)}
         goalId={w.reviseGoalId || ''}
+        organizationId={w.orgId}
+        goalLevel={w.objectives.find((o) => o.id === w.reviseGoalId)?.level}
         currentTargetValue={w.objectives.find((o) => o.id === w.reviseGoalId)?.targetValue}
         currentDueDate={w.objectives.find((o) => o.id === w.reviseGoalId)?.targetDate}
+        currentWeight={w.objectives.find((o) => o.id === w.reviseGoalId)?.weight}
+        currentParentId={w.objectives.find((o) => o.id === w.reviseGoalId)?.parentId}
+        existingGoalRefs={w.existingGoalRefs}
+        objectiveTitlesById={
+          new Map(w.objectives.map((o) => [o.id, o.title] as const))
+        }
+        isManager={w.isManager}
+        bypassGoalCycleLock={w.canOverrideGoalLockForOwner(
+          w.objectives.find((o) => o.id === w.reviseGoalId)?.ownerId,
+        )}
         onClose={() => w.setReviseGoalId(null)}
         onRevised={() => {
           void w.objQuery?.refetch?.();

@@ -2,9 +2,17 @@
  * HierarchyGanttRow → Frappe Gantt Task 매핑 (UI 라이브러리 어댑터용)
  */
 import type { HierarchyGanttRow } from './mboGanttHierarchyEngine';
+import {
+  clipDateRangeToVisible,
+  type MboGanttVisibleRange,
+} from './mboGanttVisibleRange';
 
 export const MBO_GANTT_OBJ_PREFIX = 'obj:';
 export const MBO_GANTT_PROJ_PREFIX = 'proj:';
+/** @deprecated spacer task 미사용 — 구간은 차트에서 gantt_start/end로 고정 */
+export const MBO_GANTT_RANGE_START_ID = '__mbo_gantt_range_start__';
+/** @deprecated spacer task 미사용 */
+export const MBO_GANTT_RANGE_END_ID = '__mbo_gantt_range_end__';
 
 export type MboFrappeGanttTask = {
   id: string;
@@ -38,6 +46,10 @@ export function isMboGanttObjectiveTaskId(id: string): boolean {
   return id.startsWith(MBO_GANTT_OBJ_PREFIX);
 }
 
+export function isMboGanttRangeSpacerTaskId(id: string): boolean {
+  return id === MBO_GANTT_RANGE_START_ID || id === MBO_GANTT_RANGE_END_ID;
+}
+
 export function mboGanttProjectIdFromTask(id: string): string | null {
   return isMboGanttProjectTaskId(id) ? id.slice(MBO_GANTT_PROJ_PREFIX.length) : null;
 }
@@ -57,33 +69,30 @@ export function formatGanttDateYmd(value: Date | string): string {
 
 export function buildMboFrappeGanttTasks(
   rows: readonly HierarchyGanttRow[],
+  visibleRange?: MboGanttVisibleRange | null,
 ): MboFrappeGanttTask[] {
   const tasks: MboFrappeGanttTask[] = [];
   for (const row of rows) {
-    const range = ensureRange(row.startDate, row.targetDate);
-    if (row.kind === 'objective') {
-      tasks.push({
-        id: `${MBO_GANTT_OBJ_PREFIX}${row.id}`,
-        name: row.title,
-        start: range.start,
-        end: range.end,
-        progress: Math.min(100, Math.max(0, row.progressRate)),
-        custom_class: 'mbo-gantt-objective',
-        color: '#94a3b8',
-        color_progress: '#64748b',
-      });
-      continue;
-    }
+    // 간트는 실행 과제만 1행 — 목표 부모 행은 표시하지 않음
+    if (row.kind === 'objective') continue;
+
+    const ensured = ensureRange(row.startDate, row.targetDate);
+    const range = visibleRange
+      ? clipDateRangeToVisible(ensured.start, ensured.end, visibleRange)
+      : ensured;
+    if (!range) continue;
+
+    const progress = Math.min(100, Math.max(0, row.progressRate));
     tasks.push({
       id: `${MBO_GANTT_PROJ_PREFIX}${row.id}`,
-      name: `  ${row.title}`,
+      name: row.title,
       start: range.start,
       end: range.end,
-      progress: Math.min(100, Math.max(0, row.progressRate)),
-      dependencies: row.objectiveId ? `${MBO_GANTT_OBJ_PREFIX}${row.objectiveId}` : undefined,
+      progress,
       custom_class: 'mbo-gantt-project',
-      color: '#0f766e',
-      color_progress: '#115e59',
+      // 빈 계획 막대 + 진행 채움
+      color: '#ccfbf1',
+      color_progress: '#0f766e',
     });
   }
   return tasks;

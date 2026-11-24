@@ -42,6 +42,25 @@ export function areGoalsLocked(settings: MboCycleSettings, onDate: Date): boolea
   return sameDayCompare(onDate, lock) > 0;
 }
 
+/** 즉시 잠금 — 마감일을 어제로 두어 오늘부터 잠금 적용 */
+export function withGoalsForceLocked(
+  settings: MboCycleSettings,
+  onDate = new Date(),
+): MboCycleSettings {
+  const yesterday = new Date(onDate.getFullYear(), onDate.getMonth(), onDate.getDate() - 1);
+  return {
+    ...settings,
+    goalLockEnabled: true,
+    goalLockMonth: yesterday.getMonth() + 1,
+    goalLockDay: yesterday.getDate(),
+  };
+}
+
+/** 즉시 잠금 해제 — 마감 사용 끔 */
+export function withGoalsUnlocked(settings: MboCycleSettings): MboCycleSettings {
+  return { ...settings, goalLockEnabled: false };
+}
+
 /** 같은 연도 시작·종료 월일 사이(포함)이면 true. */
 export function isReviewWindowOpen(settings: MboCycleSettings, onDate: Date): boolean {
   const y = onDate.getFullYear();

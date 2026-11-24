@@ -6,7 +6,7 @@ import { WORK_PAGE_GUTTER_CLASS, WORK_PAGE_STACK_CLASS } from './workPageSpacing
 export type WorkPageWidth = 'hub' | 'form';
 
 const WIDTH_CLASS: Record<WorkPageWidth, string> = {
-  hub: 'max-w-6xl',
+  hub: 'max-w-[1600px]',
   form: 'max-w-3xl',
 };
 

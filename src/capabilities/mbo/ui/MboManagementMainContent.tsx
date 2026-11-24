@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '@/shared/components/ui/Button';
 import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
-import { SegmentedControl } from '@/shared/components/ui/SegmentedControl';
 import { MboCycleStatusBar } from './MboCycleStatusBar';
 import { MboManagerKpiStrip } from './MboManagerKpiStrip';
 import { MboAlignmentContextStrip } from './MboAlignmentContextStrip';
@@ -9,12 +8,14 @@ import { MboAlignmentSlotModal } from './MboAlignmentSlotModal';
 import { MboHierarchyGanttView } from './MboHierarchyGanttView';
 import { MboProjectsTable } from './MboProjectsTable';
 import { MboUsageSteps } from './MboUsageSteps';
-import { MboHubPrimaryNav } from './MboHubPrimaryNav';
-import { MboGoalsPanelChrome } from './MboGoalsPanelChrome';
-import { MboGoalsBoardSection } from './MboGoalsBoardSection';
+import { MboProjectsPanelChrome } from './MboProjectsPanelChrome';
 import { MboHubSummaryCards } from './MboHubSummaryCards';
 import { MBO_COPY } from './mboUiCopy';
 import type { AlignmentSlot } from '../domain/mboOrgAlignedTreeEngine';
+import {
+  filterProjectsByCompletion,
+  filterProjectsByOwners,
+} from '../domain/projectPortfolioEngine';
 import type { MboManagementWorkspace } from '../hooks/useMboManagementWorkspace';
 
 type Props = {
@@ -30,12 +31,7 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     isOrgAdmin,
     setCycleSettings,
     isManager,
-    pendingChangeApprovals,
-    setPendingApprovalsOpen,
     setDetailObjectiveId,
-    weightValidation,
-    dashboardView,
-    setDashboardView,
     personQuery,
     setPersonQuery,
     selectedMemberUserIds,
@@ -45,8 +41,6 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     setSelectedMemberUserIds,
     setGanttCheckinOnly,
     ganttCheckinOnly,
-    teamBoardBuckets,
-    selectedObjectiveId,
     setSelectedObjectiveId,
     ganttSectionRef,
     hierarchyGanttRows,
@@ -55,28 +49,23 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     selectedProjectId,
     linkProjectToObjective,
     reloadProjectCategories,
-    contentPanel,
     setContentPanel,
     scheduleViewMode,
     setScheduleViewMode,
-    goalViewMode,
-    setGoalViewMode,
     setListScope,
-    listScope,
     alignmentContext,
-    orgAlignedRows,
-    hasUpstreamPublicGoals,
-    openObjectiveOnSchedule,
     openProjectFromGantt,
     handleDeleteProject,
     viewerUserId,
     objectives,
+    projectCompletionFilter,
+    setProjectCompletionFilter,
+    missingMonthlyProjectIds,
   } = ws;
 
   const [alignmentModalSlot, setAlignmentModalSlot] = useState<AlignmentSlot | null>(null);
 
-  const managerTeamMode = isManager && dashboardView !== 'mine';
-  const pageTitle = managerTeamMode ? MBO_COPY.appTitleManager : MBO_COPY.appTitle;
+  const pageTitle = isManager ? MBO_COPY.appTitleManager : MBO_COPY.appTitle;
   const createDisabled = goalsLocked && !canManagerCreateWhileLocked;
   const hasAnyGoal = objectives.length > 0;
   const showUsageSteps = !hasAnyGoal;
@@ -92,14 +81,42 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
   );
   const segmentActive = 'bg-slate-800 text-white shadow-none';
 
+  const filteredPortfolioProjects = useMemo(() => {
+    let list = portfolioProjects;
+    if (isManager && selectedMemberUserIds.length > 0) {
+      list = filterProjectsByOwners(list, selectedMemberUserIds);
+    }
+    list = filterProjectsByCompletion(list, projectCompletionFilter);
+    if (ganttCheckinOnly) {
+      const missing = new Set(missingMonthlyProjectIds);
+      list = list.filter((p) => missing.has(p.id));
+    }
+    return list;
+  }, [
+    portfolioProjects,
+    isManager,
+    selectedMemberUserIds,
+    projectCompletionFilter,
+    ganttCheckinOnly,
+    missingMonthlyProjectIds,
+  ]);
+
+  const filteredGanttRows = useMemo(() => {
+    const keep = new Set(filteredPortfolioProjects.map((p) => p.id));
+    // 간트는 실행 과제만 — 완료/담당 필터와 테이블 keep 집합을 동일하게 적용
+    return hierarchyGanttRows.filter((r) => r.kind === 'project' && keep.has(r.id));
+  }, [hierarchyGanttRows, filteredPortfolioProjects]);
+
   const clearFilters = () => {
     setGanttCheckinOnly(false);
+    setProjectCompletionFilter('active');
+    setSelectedMemberUserIds([]);
+    setPersonQuery('');
   };
 
   const seeUpstream = () => {
     setListScope('visible');
-    setGoalViewMode('org');
-    setContentPanel('goals');
+    setContentPanel('schedule');
   };
 
   return (
@@ -126,7 +143,7 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
 
       {showUsageSteps ? (
         <MboUsageSteps
-          contentPanel={contentPanel}
+          contentPanel="schedule"
           hasGoals={hasAnyGoal}
           createDisabled={createDisabled}
           onCreateGoal={openCreateObjectiveModal}
@@ -139,8 +156,6 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
         canEditCycle={isOrgAdmin}
         onSettingsChange={setCycleSettings}
         isManager={isManager}
-        pendingChangeApprovals={pendingChangeApprovals}
-        onOpenPendingApprovals={() => setPendingApprovalsOpen(true)}
       />
 
       {showAlignmentStrip ? (
@@ -152,24 +167,13 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
       ) : null}
 
       <div className="space-y-2.5 border-t border-slate-200 pt-3">
-        <MboHubPrimaryNav
-          isManager={isManager}
-          dashboardView={dashboardView}
-          onDashboardViewChange={setDashboardView}
-          listScope={listScope}
-          onListScopeChange={setListScope}
-          contentPanel={contentPanel}
-          onContentPanelChange={setContentPanel}
-          segmentActive={segmentActive}
-        />
-
-        {managerTeamMode ? (
+        {isManager ? (
           <MboManagerKpiStrip kpis={managerKpis} managerMode />
         ) : (
           <MboHubSummaryCards hubSummary={hubSummary} />
         )}
 
-        {ganttCheckinOnly && contentPanel === 'schedule' ? (
+        {ganttCheckinOnly ? (
           <p className="text-xs font-medium text-slate-700">
             {MBO_COPY.filterMissingReport}
             <Button variant="ghost" size="sm" className="ml-2" onClick={clearFilters}>
@@ -180,93 +184,51 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
       </div>
 
       <section ref={ganttSectionRef} className="min-h-[200px]" data-testid="mbo-main-panel">
-        <ContentFadeIn motionKey={`${contentPanel}-${goalViewMode}-${scheduleViewMode}`}>
-          {contentPanel === 'schedule' ? (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-end justify-between gap-2">
-                <div className="flex flex-col gap-1" data-testid="mbo-schedule-view-mode">
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    {MBO_COPY.viewModeLabel}
-                  </span>
-                  <SegmentedControl
-                    value={scheduleViewMode}
-                    onChange={setScheduleViewMode}
-                    activeClassName={segmentActive}
-                    options={[
-                      { value: 'table', label: MBO_COPY.scheduleViewTable },
-                      { value: 'gantt', label: MBO_COPY.scheduleViewGantt },
-                    ]}
-                  />
-                </div>
-              </div>
-              {scheduleViewMode === 'table' ? (
-                <MboProjectsTable
-                  projects={portfolioProjects}
-                  viewerUserId={viewerUserId ?? ''}
-                  onOpen={openProjectFromGantt}
-                  onDelete={handleDeleteProject}
-                  onCreateGoal={createDisabled ? undefined : openCreateObjectiveModal}
-                />
-              ) : (
-                <MboHierarchyGanttView
-                  rows={hierarchyGanttRows}
-                  projects={portfolioProjects}
-                  categories={projectCategories}
-                  organizationId={orgId}
-                  selectedProjectId={selectedProjectId}
-                  scheduleEditable={false}
-                  editableProjectIds={editableProjectIds}
-                  onSelectProject={linkProjectToObjective}
-                  onOpenProjectSheet={openProjectFromGantt}
-                  onCategoriesChanged={() => void reloadProjectCategories()}
-                  onOpenCreateObjective={openCreateObjectiveModal}
-                  onOpenObjectiveDetail={(id) => setDetailObjectiveId(id)}
-                  onClearFilters={ganttCheckinOnly ? clearFilters : undefined}
-                />
-              )}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <MboGoalsPanelChrome
-                managerTeamMode={managerTeamMode}
-                goalViewMode={goalViewMode}
-                onGoalViewModeChange={setGoalViewMode}
-                segmentActive={segmentActive}
-                personQuery={personQuery}
-                onPersonQueryChange={setPersonQuery}
-                teamMemberChips={teamMemberChips}
-                selectedMemberUserIds={selectedMemberUserIds}
-                onChangeSelectedMembers={(ids) => {
-                  setSelectedMemberUserIds(ids);
-                  clearFilters();
-                }}
-                showWeightHint={managerTeamMode && !weightValidation.valid}
-                weightHint={MBO_COPY.weightInvalid(
-                  weightValidation.totalWeight,
-                  weightValidation.difference,
-                )}
+        <ContentFadeIn motionKey={`schedule-${scheduleViewMode}-${projectCompletionFilter}`}>
+          <div className="space-y-2">
+            <MboProjectsPanelChrome
+              isManager={isManager}
+              scheduleViewMode={scheduleViewMode}
+              onScheduleViewModeChange={setScheduleViewMode}
+              completionFilter={projectCompletionFilter}
+              onCompletionFilterChange={setProjectCompletionFilter}
+              segmentActive={segmentActive}
+              personQuery={personQuery}
+              onPersonQueryChange={setPersonQuery}
+              teamMemberChips={teamMemberChips}
+              selectedMemberUserIds={selectedMemberUserIds}
+              onChangeSelectedMembers={(ids) => {
+                setSelectedMemberUserIds(ids);
+                setGanttCheckinOnly(false);
+              }}
+            />
+            {scheduleViewMode === 'table' ? (
+              <MboProjectsTable
+                projects={filteredPortfolioProjects}
+                viewerUserId={viewerUserId ?? ''}
+                onOpen={openProjectFromGantt}
+                onDelete={handleDeleteProject}
+                onCreateGoal={createDisabled ? undefined : openCreateObjectiveModal}
+                filterKey={`${projectCompletionFilter}-${selectedMemberUserIds.join(',')}-${ganttCheckinOnly ? '1' : '0'}-${personQuery}`}
               />
-              <MboGoalsBoardSection
-                goalViewMode={goalViewMode}
-                orgAlignedRows={orgAlignedRows}
-                teamBoardBuckets={teamBoardBuckets}
-                selectedObjectiveId={selectedObjectiveId}
-                personQuery={personQuery}
-                selectedMemberUserIds={selectedMemberUserIds}
-                listScope={listScope}
-                hasUpstreamPublicGoals={hasUpstreamPublicGoals}
-                isManager={isManager}
-                onSelectObjective={(id) => {
-                  setSelectedObjectiveId(id);
-                  setDetailObjectiveId(id);
-                }}
-                onOpenDetail={(id) => setDetailObjectiveId(id)}
-                onShowOnSchedule={(id) => openObjectiveOnSchedule(id)}
-                onSeeUpstream={seeUpstream}
-                onCreateGoal={openCreateObjectiveModal}
+            ) : (
+              <MboHierarchyGanttView
+                rows={filteredGanttRows}
+                projects={filteredPortfolioProjects}
+                categories={projectCategories}
+                organizationId={orgId}
+                selectedProjectId={selectedProjectId}
+                scheduleEditable={false}
+                editableProjectIds={editableProjectIds}
+                onSelectProject={linkProjectToObjective}
+                onOpenProjectSheet={openProjectFromGantt}
+                onCategoriesChanged={() => void reloadProjectCategories()}
+                onOpenCreateObjective={openCreateObjectiveModal}
+                onOpenObjectiveDetail={(id) => setDetailObjectiveId(id)}
+                onClearFilters={ganttCheckinOnly ? clearFilters : undefined}
               />
-            </div>
-          )}
+            )}
+          </div>
         </ContentFadeIn>
       </section>
 

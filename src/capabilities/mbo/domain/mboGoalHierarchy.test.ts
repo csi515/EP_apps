@@ -68,14 +68,13 @@ const denyCompany = validateGoalCreation({
 assert.equal(denyCompany.allowed, false);
 assert.match(String(denyCompany.reason), /상급/);
 
-// 상위 목표 없이 그룹 목표 거부
-const denyNoParentCompany = validateGoalCreation({
+// 연관 상위 없음(null)이어도 조직단위 목표 등록 허용
+const okDeptNoParent = validateGoalCreation({
   actor: groupLead,
   request: { level: 'department', parentId: null, departmentId: 'dept-group-a' },
   existing: empty,
 });
-assert.equal(denyNoParentCompany.allowed, false);
-assert.match(String(denyNoParentCompany.reason), /전사/);
+assert.equal(okDeptNoParent.allowed, true);
 
 // 자기 그룹 + 전사 부모 → 허용
 const okGroup = validateGoalCreation({
@@ -122,13 +121,21 @@ const denyOtherGroup = validateGoalCreation({
 assert.equal(denyOtherGroup.allowed, false);
 assert.match(String(denyOtherGroup.reason), /리더로 맡은/);
 
-// 개인 KPI는 상위 목표 부모 필수 — 회사만 있으면 선행 거부
-const denyIndNoDeptPrereq = validateGoalCreation({
+// 개인 KPI — 연관 상위 없음(null) 허용
+const okIndNoParent = validateGoalCreation({
+  actor: staff,
+  request: { level: 'individual', parentId: null },
+  existing: companyOnly,
+});
+assert.equal(okIndNoParent.allowed, true);
+
+// 개인 KPI를 전사 목표에 직결하면 거부
+const denyIndUnderCompanyOnly = validateGoalCreation({
   actor: staff,
   request: { level: 'individual', parentId: 'c1' },
   existing: companyOnly,
 });
-assert.equal(denyIndNoDeptPrereq.allowed, false);
+assert.equal(denyIndUnderCompanyOnly.allowed, false);
 
 const withDept: ExistingGoalRef[] = [
   ...companyOnly,

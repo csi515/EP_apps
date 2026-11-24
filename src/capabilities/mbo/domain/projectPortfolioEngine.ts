@@ -38,6 +38,31 @@ export interface PortfolioSummary {
   averageProgressRate: number;
 }
 
+/** 실행 과제 완료 여부 (상태 completed 또는 진척 100%) */
+export function isPortfolioProjectCompleted(project: PortfolioProject): boolean {
+  return project.status === 'completed' || (project.progressRate ?? 0) >= 100;
+}
+
+export type ProjectCompletionFilter = 'active' | 'completed' | 'all';
+
+export function filterProjectsByCompletion(
+  projects: PortfolioProject[],
+  filter: ProjectCompletionFilter
+): PortfolioProject[] {
+  if (filter === 'all') return projects;
+  if (filter === 'completed') return projects.filter(isPortfolioProjectCompleted);
+  return projects.filter((p) => !isPortfolioProjectCompleted(p) && p.status !== 'canceled');
+}
+
+export function filterProjectsByOwners(
+  projects: PortfolioProject[],
+  ownerUserIds: string[]
+): PortfolioProject[] {
+  if (ownerUserIds.length === 0) return projects;
+  const pick = new Set(ownerUserIds);
+  return projects.filter((p) => Boolean(p.ownerId && pick.has(p.ownerId)));
+}
+
 export interface MonthBucket {
   year: number;
   month: number; // 1~12
