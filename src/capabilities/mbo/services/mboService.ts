@@ -295,6 +295,8 @@ export class MboService {
         status: payload.status || 'draft',
         progress_rate: payload.progress_rate ?? 0,
         revision: 1,
+        baseline_start_date: payload.baseline_start_date ?? payload.start_date,
+        baseline_target_date: payload.baseline_target_date ?? payload.target_date,
       })
       .select()
       .single();
@@ -324,6 +326,8 @@ export class MboService {
       owner_name: objective.owner_name,
       start_date: objective.start_date,
       target_date: objective.target_date,
+      baseline_start_date: objective.start_date,
+      baseline_target_date: objective.target_date,
       status: 'in_progress',
       progress_rate: 0,
     });
@@ -360,10 +364,20 @@ export class MboService {
       }
     }
 
+    // 최초 일정(baseline)은 생성 후 불변 — 클라이언트가 실수로 덮어쓰지 않도록 제거
+    const {
+      baseline_start_date: _bStart,
+      baseline_target_date: _bTarget,
+      ...safePayload
+    } = payload as MboProjectUpdate & {
+      baseline_start_date?: string;
+      baseline_target_date?: string;
+    };
+
     const { data, error } = await client
       .from('mbo_projects')
       .update({
-        ...payload,
+        ...safePayload,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -373,6 +387,20 @@ export class MboService {
 
     if (error) throw error;
     return data as MboProjectRow;
+  }
+
+  /**
+   * 실행 과제 삭제 (담당자·관리용)
+   */
+  static async deleteProject(id: string, organizationId: string): Promise<void> {
+    const client = getCoreClient();
+    const { error } = await client
+      .from('mbo_projects')
+      .delete()
+      .eq('id', id)
+      .eq('organization_id', organizationId);
+
+    if (error) throw error;
   }
 
   /**
@@ -612,7 +640,7 @@ export class MboService {
   /** 원자적 목표 수정 (objective 스냅샷 → mbo_objective_revisions) */
   static async reviseGoal(input: {
     goalId: string;
-    newTargetValue: number;
+    newTargetValue: string;
     newDueDate: string;
     unmetReason: string;
     revisionReason: string;
@@ -631,7 +659,7 @@ export class MboService {
   static async listGoalRevisions(goalId: string): Promise<
     Array<{
       id: string;
-      previous_target_value: number | null;
+      previous_target_value: string | null;
       previous_due_date: string | null;
       previous_title: string | null;
       unmet_reason: string | null;
@@ -651,7 +679,7 @@ export class MboService {
     return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
       id: String(row.id),
       previous_target_value:
-        row.previous_target_value == null ? null : Number(row.previous_target_value),
+        row.previous_target_value == null ? null : String(row.previous_target_value),
       previous_due_date: (row.previous_due_date as string | null) ?? null,
       previous_title: (row.previous_title as string | null) ?? null,
       unmet_reason: (row.unmet_reason as string | null) ?? null,

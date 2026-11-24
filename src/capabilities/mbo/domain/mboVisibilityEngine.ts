@@ -52,10 +52,10 @@ export type MboRevisionChangeKind = 'revise' | 'delete' | 'field';
 
 export interface MboRevisionSnapshot {
   id: string;
-  previousTargetValue: number | null;
+  previousTargetValue: string | number | null;
   previousDueDate: string | null;
   previousTitle?: string | null;
-  newTargetValue?: number | null;
+  newTargetValue?: string | number | null;
   newDueDate?: string | null;
   unmetReason?: string | null;
   revisionReason: string;
@@ -79,7 +79,7 @@ export interface FormattedRevisionItem {
 
 export function formatRevisionHistory(
   revisions: readonly MboRevisionSnapshot[],
-  current?: { targetValue?: number | null; dueDate?: string | null },
+  current?: { targetValue?: string | number | null; dueDate?: string | null },
 ): FormattedRevisionItem[] {
   const sorted = [...revisions].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -98,7 +98,7 @@ export function formatRevisionHistory(
       revisionReason: rev.revisionReason,
       targetDiff: isDelete
         ? String(rev.previousTargetValue ?? '-')
-        : formatNumericDiff(rev.previousTargetValue, afterTarget),
+        : formatTargetDiff(rev.previousTargetValue, afterTarget),
       dueDateDiff: isDelete
         ? String(rev.previousDueDate ?? '-')
         : formatDateDiff(rev.previousDueDate, afterDue),
@@ -184,8 +184,16 @@ export function buildRevisedGoalFlags(revisionCountBefore: number): {
   };
 }
 
-function formatNumericDiff(before: number | null, after: number | null): string {
-  if (before == null && after == null) return '변경 없음';
+function formatTargetDiff(
+  before: string | number | null | undefined,
+  after: string | number | null | undefined,
+): string {
+  if (
+    (before == null || before === '') &&
+    (after == null || after === '')
+  ) {
+    return '변경 없음';
+  }
   return `${before ?? '-'} → ${after ?? '-'}`;
 }
 

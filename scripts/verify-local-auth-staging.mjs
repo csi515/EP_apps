@@ -11,7 +11,7 @@ const API_BASE = (
   'http://127.0.0.1:8787/api/local-auth'
 ).replace(/\/$/, '');
 
-const email = (process.env.EP_STAGING_EMAIL || 'owner@ep.local').trim().toLowerCase();
+const email = (process.env.EP_STAGING_EMAIL || 'rndceo').trim().toLowerCase();
 const password = process.env.EP_STAGING_PASSWORD || 'EpTest123!';
 
 async function api(path, init = {}) {

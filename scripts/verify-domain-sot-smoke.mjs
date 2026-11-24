@@ -11,7 +11,7 @@ const AUTH = (
   process.env.EP_AUTH_API_BASE || 'http://127.0.0.1:8787/api/local-auth'
 ).replace(/\/$/, '');
 const PGRST = (process.env.EP_POSTGREST_URL || 'http://127.0.0.1:3001').replace(/\/$/, '');
-const email = (process.env.EP_STAGING_EMAIL || 'owner@ep.local').trim().toLowerCase();
+const email = (process.env.EP_STAGING_EMAIL || 'rndceo').trim().toLowerCase();
 const password = process.env.EP_STAGING_PASSWORD || 'EpTest123!';
 const anon = process.env.VITE_SUPABASE_ANON_KEY || 'ep-anon';
 

@@ -99,7 +99,8 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     key: 'policies',
     label: '매장 내규 관리',
     group: 'hr_rbac',
-    description: '사규·내규 문서 관리',
+    description: 'EP_apps에서 미사용. 보유 권한·매트릭스에 노출하지 않습니다.',
+    hideInMatrix: true,
   },
   {
     key: 'seat_room',

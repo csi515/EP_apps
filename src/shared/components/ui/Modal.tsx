@@ -54,14 +54,23 @@ export const Modal: React.FC<ModalProps> = ({
   const descriptionId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const confirmCloseRef = useRef(confirmClose);
+  const intentRef = useRef(intent);
+  const dirtyRef = useRef(dirty);
+
+  onCloseRef.current = onClose;
+  confirmCloseRef.current = confirmClose;
+  intentRef.current = intent;
+  dirtyRef.current = dirty;
 
   const requestClose = useCallback(() => {
-    if (intent === 'form' && dirty && confirmClose) {
-      confirmClose(onClose);
+    if (intentRef.current === 'form' && dirtyRef.current && confirmCloseRef.current) {
+      confirmCloseRef.current(() => onCloseRef.current());
       return;
     }
-    onClose();
-  }, [confirmClose, dirty, intent, onClose]);
+    onCloseRef.current();
+  }, []);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -133,7 +142,7 @@ export const Modal: React.FC<ModalProps> = ({
             </button>
           </div>
         </div>
-        <div className="overflow-y-auto flex-1 min-h-0">{children}</div>
+        <div className="overflow-y-auto flex-1 min-h-0 px-6 py-4">{children}</div>
         {footer ? (
           <div className="shrink-0 border-t border-slate-100 bg-white px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {footer}

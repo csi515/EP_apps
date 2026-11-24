@@ -62,10 +62,6 @@ export const MboOrgAlignedBoard: React.FC<Props> = ({
 
   return (
     <div className="overflow-hidden border border-slate-200 bg-white" data-testid="mbo-org-aligned-board">
-      <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-3 py-2">
-        <p className="text-[11px] font-medium text-slate-500">{MBO_COPY.panelGoalsHint}</p>
-        <p className="shrink-0 text-[10px] font-semibold text-slate-500">{MBO_COPY.goalsListLegend}</p>
-      </div>
       <ul>
       {rows.map((obj) => {
         const selected = selectedObjectiveId === obj.id;

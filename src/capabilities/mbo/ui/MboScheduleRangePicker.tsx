@@ -31,6 +31,7 @@ export type MboScheduleRangePickerProps = {
 /**
  * 연간 월 타임라인에서 드래그로 시작·종료 월을 지정한다.
  * 시작일은 해당 월 1일, 종료일은 해당 월 말일로 맞춘다.
+ * 드래그 중에는 로컬 프리뷰만 하고, pointerup에서만 onChange를 호출한다.
  */
 export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
   startDate,
@@ -40,6 +41,7 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
   const trackRef = useRef<HTMLDivElement>(null);
   const dragOriginRef = useRef<number | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [preview, setPreview] = useState<{ from: number; to: number } | null>(null);
 
   const startParsed = parseIso(startDate);
   const endParsed = parseIso(targetDate);
@@ -48,10 +50,9 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
     return startParsed?.year ?? endParsed?.year ?? new Date().getFullYear();
   });
 
-  const rangeInView = useMemo(() => {
+  const committedRangeInView = useMemo(() => {
     if (!startParsed || !endParsed) return null;
     if (startParsed.year !== viewYear && endParsed.year !== viewYear) {
-      // 범위가 다른 연도면 표시만 약하게
       if (startParsed.year < viewYear && endParsed.year > viewYear) {
         return { from: 0, to: 11 };
       }
@@ -73,6 +74,8 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
     return { from: Math.min(from, to), to: Math.max(from, to) };
   }, [startParsed, endParsed, viewYear]);
 
+  const rangeInView = preview ?? committedRangeInView;
+
   const monthFromClientX = useCallback((clientX: number): number => {
     const el = trackRef.current;
     if (!el) return 0;
@@ -82,7 +85,7 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
     return Math.min(11, Math.floor(ratio * 12));
   }, []);
 
-  const applyMonthRange = useCallback(
+  const commitMonthRange = useCallback(
     (a: number, b: number) => {
       const from = Math.min(a, b);
       const to = Math.max(a, b);
@@ -99,12 +102,14 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
     const month = monthFromClientX(e.clientX);
     dragOriginRef.current = month;
     setDragging(true);
-    applyMonthRange(month, month);
+    setPreview({ from: month, to: month });
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging || dragOriginRef.current == null) return;
-    applyMonthRange(dragOriginRef.current, monthFromClientX(e.clientX));
+    const a = dragOriginRef.current;
+    const b = monthFromClientX(e.clientX);
+    setPreview({ from: Math.min(a, b), to: Math.max(a, b) });
   };
 
   const endDrag = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -112,14 +117,20 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
+    const origin = dragOriginRef.current;
+    const endMonth = monthFromClientX(e.clientX);
     setDragging(false);
     dragOriginRef.current = null;
+    setPreview(null);
+    if (origin != null) {
+      commitMonthRange(origin, endMonth);
+    }
   };
 
   return (
     <div className="space-y-2" data-testid="mbo-schedule-range-picker">
       <div className="flex items-center justify-between gap-2">
-        <label className="text-xs font-bold text-slate-700">일정 (드래그로 기간 지정)</label>
+        <label className="text-xs font-bold text-slate-700">일정</label>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -179,7 +190,6 @@ export const MboScheduleRangePicker: React.FC<MboScheduleRangePickerProps> = ({
         <span className="font-semibold text-slate-800">{startDate}</span>
         <span className="mx-1.5 text-slate-400">~</span>
         <span className="font-semibold text-slate-800">{targetDate}</span>
-        <span className="ml-2 text-slate-400">월 칸을 드래그해 기간을 정하세요</span>
       </p>
     </div>
   );

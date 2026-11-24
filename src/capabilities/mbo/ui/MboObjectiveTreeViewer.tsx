@@ -35,7 +35,7 @@ export interface ObjectiveNode {
   revision: number;
   isRevised?: boolean;
   revisionCount?: number;
-  targetValue?: number | null;
+  targetValue?: string | number | null;
   rejectionReason?: string;
   evaluatorId?: string | null;
   visibilityType?: MboVisibilityType;

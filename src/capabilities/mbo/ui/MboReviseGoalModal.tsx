@@ -4,11 +4,12 @@ import { Modal } from '@/shared/components/ui/Modal';
 import { FORM_CONTROL_CLASS, FormField } from '@/shared/components/ui/FormField';
 import { MboService } from '../services/mboService';
 import { showToast } from '@/shared/feedback/uiFeedback';
+import { MBO_COPY } from './mboUiCopy';
 
 interface Props {
   open: boolean;
   goalId: string;
-  currentTargetValue?: number | null;
+  currentTargetValue?: string | number | null;
   currentDueDate?: string | null;
   onClose: () => void;
   onRevised: () => void;
@@ -22,7 +23,9 @@ export const MboReviseGoalModal: React.FC<Props> = ({
   onClose,
   onRevised,
 }) => {
-  const [targetValue, setTargetValue] = useState(String(currentTargetValue ?? ''));
+  const [targetValue, setTargetValue] = useState(
+    currentTargetValue == null ? '' : String(currentTargetValue),
+  );
   const [dueDate, setDueDate] = useState(currentDueDate ?? '');
   const [unmetReason, setUnmetReason] = useState('');
   const [revisionReason, setRevisionReason] = useState('');
@@ -32,24 +35,28 @@ export const MboReviseGoalModal: React.FC<Props> = ({
 
   const handleSubmit = () => {
     if (!unmetReason.trim() || !revisionReason.trim() || !dueDate) {
-      showToast('미달 사유, 수정 사유, 마감일은 필수입니다.', 'warning');
+      showToast(MBO_COPY.reviseNeedFields, 'warning');
+      return;
+    }
+    if (!targetValue.trim()) {
+      showToast(MBO_COPY.reviseNeedTarget, 'warning');
       return;
     }
     setBusy(true);
     void MboService.reviseGoal({
       goalId,
-      newTargetValue: Number(targetValue),
+      newTargetValue: targetValue.trim(),
       newDueDate: dueDate,
       unmetReason: unmetReason.trim(),
       revisionReason: revisionReason.trim(),
     })
       .then(() => {
-        showToast('목표가 수정되었고 이력이 저장되었습니다.', 'success');
+        showToast(MBO_COPY.reviseSuccess, 'success');
         onRevised();
         onClose();
       })
       .catch((cause) => {
-        showToast(cause instanceof Error ? cause.message : '수정 실패', 'error');
+        showToast(cause instanceof Error ? cause.message : MBO_COPY.reviseFailed, 'error');
       })
       .finally(() => setBusy(false));
   };
@@ -58,7 +65,7 @@ export const MboReviseGoalModal: React.FC<Props> = ({
     <Modal
       isOpen={open}
       onClose={onClose}
-      title="목표 수치·기한 정정"
+      title={MBO_COPY.reviseModalTitle}
       maxWidth="lg"
       intent="form"
       dirty={dirty}
@@ -68,23 +75,24 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             취소
           </Button>
           <Button variant="primary" isLoading={busy} onClick={handleSubmit}>
-            수정 확정
+            {MBO_COPY.reviseConfirm}
           </Button>
         </div>
       }
     >
       <div className="space-y-3">
-        <FormField label="신규 목표치" htmlFor="mbo-revise-target">
+        <FormField label={MBO_COPY.reviseTargetLabel} htmlFor="mbo-revise-target">
           <input
             id="mbo-revise-target"
             className={FORM_CONTROL_CLASS}
-            type="number"
+            type="text"
             value={targetValue}
             onChange={(event) => setTargetValue(event.target.value)}
+            placeholder={MBO_COPY.reviseTargetPlaceholder}
             required
           />
         </FormField>
-        <FormField label="변경 마감일" htmlFor="mbo-revise-due">
+        <FormField label={MBO_COPY.reviseDueLabel} htmlFor="mbo-revise-due">
           <input
             id="mbo-revise-due"
             className={FORM_CONTROL_CLASS}
@@ -94,7 +102,7 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             required
           />
         </FormField>
-        <FormField label="미달성 사유 (원인 분석)" htmlFor="mbo-revise-unmet">
+        <FormField label={MBO_COPY.reviseUnmetLabel} htmlFor="mbo-revise-unmet">
           <textarea
             id="mbo-revise-unmet"
             className={`${FORM_CONTROL_CLASS} min-h-24 resize-none`}
@@ -103,7 +111,7 @@ export const MboReviseGoalModal: React.FC<Props> = ({
             required
           />
         </FormField>
-        <FormField label="목표/일정 수정 사유" htmlFor="mbo-revise-reason">
+        <FormField label={MBO_COPY.reviseReasonLabel} htmlFor="mbo-revise-reason">
           <textarea
             id="mbo-revise-reason"
             className={`${FORM_CONTROL_CLASS} min-h-24 resize-none`}

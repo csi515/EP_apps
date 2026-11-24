@@ -1,45 +1,70 @@
 import React from 'react';
 import { levelLabelKo } from '../domain/mboGoalHierarchy';
-import type { AlignmentContext } from '../domain/mboOrgAlignedTreeEngine';
+import type { AlignmentContext, AlignmentSlot } from '../domain/mboOrgAlignedTreeEngine';
 import { MBO_COPY } from './mboUiCopy';
 
 type Props = {
   context: AlignmentContext;
-  onSelectObjective?: (id: string) => void;
+  onSelectSlot?: (slot: AlignmentSlot) => void;
+  onEmptyScopeAction?: () => void;
 };
 
 function Slot({
+  slot,
   label,
   title,
   owner,
-  id,
+  count = 0,
   emptyHint,
   onSelect,
+  onEmptyAction,
 }: {
+  slot: AlignmentSlot;
   label: string;
   title: string | null;
   owner?: string | null;
-  id?: string | null;
+  count?: number;
   emptyHint?: string;
-  onSelect?: (id: string) => void;
+  onSelect?: (slot: AlignmentSlot) => void;
+  onEmptyAction?: () => void;
 }) {
-  const enabled = Boolean(id);
+  const hasItems = count > 0;
+  const enabled = hasItems || Boolean(onEmptyAction);
   return (
     <button
       type="button"
       disabled={!enabled}
-      onClick={() => id && onSelect?.(id)}
-      className="min-h-11 min-w-0 flex-1 border-b border-slate-200 px-1 py-2 text-left last:border-b-0 enabled:hover:bg-slate-50 disabled:cursor-default sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-3"
-      data-testid={`mbo-align-slot-${label}`}
-      aria-label={enabled ? `${label}: ${title}` : `${label}: ${MBO_COPY.alignmentEmpty}`}
+      onClick={() => {
+        if (hasItems) onSelect?.(slot);
+        else onEmptyAction?.();
+      }}
+      className={[
+        'min-h-11 min-w-0 flex-1 border-b border-slate-200 px-1 py-2 text-left last:border-b-0',
+        'enabled:hover:bg-slate-50 disabled:cursor-default sm:border-b-0 sm:border-r sm:last:border-r-0 sm:px-3',
+      ].join(' ')}
+      data-testid={`mbo-align-slot-${slot}`}
+      aria-label={
+        hasItems
+          ? `${label}: ${title ?? ''}${count > 1 ? ` (${MBO_COPY.alignmentSlotCount(count)})` : ''}`
+          : onEmptyAction
+            ? `${label}: ${MBO_COPY.emptyGoalsSeeUpstream}`
+            : `${label}: ${MBO_COPY.alignmentEmpty}`
+      }
     >
-      <p className="text-[11px] font-medium text-slate-500">{label}</p>
+      <div className="flex items-baseline justify-between gap-1">
+        <p className="text-[11px] font-medium text-slate-500">{label}</p>
+        {count > 1 ? (
+          <p className="shrink-0 text-[10px] font-semibold text-slate-600">
+            {MBO_COPY.alignmentSlotCount(count)}
+          </p>
+        ) : null}
+      </div>
       <p className="mt-0.5 truncate text-sm font-medium text-slate-900">
         {title ?? MBO_COPY.alignmentEmpty}
       </p>
       {owner ? (
         <p className="mt-0.5 truncate text-[10px] font-medium text-slate-500">{owner}</p>
-      ) : !enabled && emptyHint ? (
+      ) : !hasItems && emptyHint ? (
         <p className="mt-0.5 truncate text-[10px] font-medium text-slate-400">{emptyHint}</p>
       ) : null}
     </button>
@@ -48,7 +73,8 @@ function Slot({
 
 export const MboAlignmentContextStrip: React.FC<Props> = ({
   context,
-  onSelectObjective,
+  onSelectSlot,
+  onEmptyScopeAction,
 }) => {
   return (
     <section
@@ -62,6 +88,7 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
       </div>
       <div className="flex flex-col sm:flex-row">
         <Slot
+          slot="company"
           label={MBO_COPY.alignmentCompany}
           title={context.company?.title ?? null}
           owner={
@@ -69,11 +96,13 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
               ? `${levelLabelKo(context.company.level)} · ${context.company.ownerName}`
               : null
           }
-          id={context.company?.id}
+          count={context.companyCount}
           emptyHint={MBO_COPY.alignmentEmptyHint}
-          onSelect={onSelectObjective}
+          onSelect={onSelectSlot}
+          onEmptyAction={!context.company ? onEmptyScopeAction : undefined}
         />
         <Slot
+          slot="department"
           label={MBO_COPY.alignmentDept}
           title={context.department?.title ?? null}
           owner={
@@ -81,11 +110,13 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
               ? `${context.department.departmentName || levelLabelKo('department')} · ${context.department.ownerName}`
               : null
           }
-          id={context.department?.id}
+          count={context.departmentCount}
           emptyHint={MBO_COPY.alignmentEmptyHint}
-          onSelect={onSelectObjective}
+          onSelect={onSelectSlot}
+          onEmptyAction={!context.department ? onEmptyScopeAction : undefined}
         />
         <Slot
+          slot="mine"
           label={MBO_COPY.alignmentMine}
           title={context.mine?.title ?? null}
           owner={
@@ -93,9 +124,9 @@ export const MboAlignmentContextStrip: React.FC<Props> = ({
               ? `${levelLabelKo(context.mine.level)} · ${context.mine.ownerName}`
               : null
           }
-          id={context.mine?.id}
+          count={context.mineCount}
           emptyHint={MBO_COPY.alignmentEmptyHint}
-          onSelect={onSelectObjective}
+          onSelect={onSelectSlot}
         />
       </div>
     </section>

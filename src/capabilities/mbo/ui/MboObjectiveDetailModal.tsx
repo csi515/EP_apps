@@ -77,68 +77,32 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
       maxWidth="lg"
       description={`${levelLabelKo(objective.level)} · ${objective.departmentName} · ${objective.ownerName}`}
       footer={
-        <div className="flex w-full flex-col gap-2">
-          {!hasLinkedProject && onCreateProject ? (
-            <Button
-              variant="primary"
-              onClick={onCreateProject}
-              data-testid="mbo-create-project-from-objective"
-            >
-              {MBO_COPY.ganttCreateProject}
-            </Button>
-          ) : null}
-          {hasLinkedProject && onOpenProjects ? (
-            <Button variant="secondary" onClick={onOpenProjects}>
-              {MBO_COPY.openScheduleAndReport}
-            </Button>
-          ) : null}
-          <div className="flex flex-wrap gap-2">
-            {onChangeVisibility ? (
-              <select
-                className={`${FORM_CONTROL_CLASS} min-h-11 flex-1 text-[11px] font-semibold`}
-                value={objective.visibilityType || 'PRIVATE'}
-                aria-label="공개범위"
-                onChange={(e) =>
-                  onChangeVisibility(objective.id, e.target.value as MboVisibilityType)
-                }
+        <div className="flex w-full flex-col gap-3">
+          <div className="flex flex-col gap-2">
+            {!hasLinkedProject && onCreateProject ? (
+              <Button
+                variant="primary"
+                onClick={onCreateProject}
+                data-testid="mbo-create-project-from-objective"
               >
-                <option value="PRIVATE">비공개</option>
-                <option value="PUBLIC">전체 공개</option>
-                <option value="PARTIAL">선택 공개</option>
-              </select>
-            ) : null}
-            {lockView.isStrictLocked && onRequestGoalChange ? (
-              <Button variant="outline" size="sm" onClick={() => onRequestGoalChange(objective.id)}>
-                목표 변경 승인 요청
-              </Button>
-            ) : onOpenRevise ? (
-              <Button variant="outline" size="sm" onClick={() => onOpenRevise(objective.id)}>
-                목표 수정
+                {MBO_COPY.ganttCreateProject}
               </Button>
             ) : null}
-            {onOpenRevisionHistory ? (
-              <Button variant="ghost" size="sm" onClick={() => onOpenRevisionHistory(objective.id)}>
-                이력
+            {hasLinkedProject && onOpenProjects ? (
+              <Button variant="secondary" onClick={onOpenProjects}>
+                {MBO_COPY.openScheduleAndReport}
               </Button>
             ) : null}
-            {onOpenDelete ? (
-              <Button variant="destructive" size="sm" onClick={() => onOpenDelete(objective.id)}>
-                삭제
-              </Button>
-            ) : null}
-          </div>
-          <div className="flex flex-wrap gap-2">
             {objective.status === 'draft' ? (
-              <Button variant="secondary" size="sm" onClick={() => onRequestApproval(objective.id)}>
+              <Button variant="secondary" onClick={() => onRequestApproval(objective.id)}>
                 <Send className="h-3.5 w-3.5" />
                 승인 요청
               </Button>
             ) : null}
             {objective.status === 'submitted' && canApproveReject ? (
-              <>
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="success"
-                  size="sm"
                   onClick={() => onApprove(objective.id)}
                   data-testid="mbo-detail-approve"
                 >
@@ -147,14 +111,67 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
                 </Button>
                 <Button
                   variant="destructive"
-                  size="sm"
                   onClick={() => onOpenRejectModal(objective.id)}
                   data-testid="mbo-detail-reject"
                 >
                   반려
                 </Button>
-              </>
+              </div>
             ) : null}
+            {objective.status === 'submitted' && !canApproveReject ? (
+              <p className="text-[11px] font-medium text-slate-600">
+                {MBO_COPY.detailAwaitingApproval}
+              </p>
+            ) : null}
+          </div>
+
+          <div className="border-t border-slate-200 pt-2">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              {MBO_COPY.detailManageActions}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {onChangeVisibility ? (
+                <select
+                  className={`${FORM_CONTROL_CLASS} min-h-11 flex-1 text-[11px] font-semibold`}
+                  value={objective.visibilityType || 'PRIVATE'}
+                  aria-label="공개범위"
+                  onChange={(e) =>
+                    onChangeVisibility(objective.id, e.target.value as MboVisibilityType)
+                  }
+                >
+                  <option value="PRIVATE">비공개</option>
+                  <option value="PUBLIC">전체 공개</option>
+                  <option value="PARTIAL">선택 공개</option>
+                </select>
+              ) : null}
+              {lockView.isStrictLocked && onRequestGoalChange ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRequestGoalChange(objective.id)}
+                >
+                  목표 변경 승인 요청
+                </Button>
+              ) : onOpenRevise ? (
+                <Button variant="outline" size="sm" onClick={() => onOpenRevise(objective.id)}>
+                  목표 수정
+                </Button>
+              ) : null}
+              {onOpenRevisionHistory ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onOpenRevisionHistory(objective.id)}
+                >
+                  이력
+                </Button>
+              ) : null}
+              {onOpenDelete ? (
+                <Button variant="destructive" size="sm" onClick={() => onOpenDelete(objective.id)}>
+                  삭제
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
       }
@@ -170,13 +187,9 @@ export const MboObjectiveDetailModal: React.FC<MboObjectiveDetailModalProps> = (
             {goalLockStatusLabel(lockView.lockStatus)}
           </span>
         </div>
-        {lockView.managerOverrideActive ? (
-          <p className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-800">
-            부서장 권한: 잠금 기간에도 이 목표(팀원 소유)를 직접 수정·승인할 수 있습니다.
-          </p>
-        ) : lockView.isStrictLocked ? (
+        {!lockView.managerOverrideActive && lockView.isStrictLocked ? (
           <p className="text-[11px] font-semibold text-slate-600">
-            지금은 목표 문구·비중을 직접 고칠 수 없습니다. 일정과 진척 보고는 언제든 수정할 수 있습니다.
+            지금은 목표 문구·비중을 직접 고칠 수 없습니다. 일정과 메모·진척률은 담당자가 수정할 수 있습니다.
           </p>
         ) : null}
 

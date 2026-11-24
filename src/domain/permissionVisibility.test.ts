@@ -7,7 +7,7 @@ import {
 assert.equal(isPermissionKeyVisible('roles:assign', []), true);
 assert.equal(isPermissionKeyVisible('members:manage', []), true);
 assert.equal(isPermissionKeyVisible('ownership:transfer', ['attendance']), false);
-assert.equal(isPermissionKeyVisible('policies', []), true);
+assert.equal(isPermissionKeyVisible('policies', []), false);
 
 assert.equal(isPermissionKeyVisible('meal_survey:manage', ['meal_survey']), true);
 assert.equal(isPermissionKeyVisible('meal_survey:manage', ['attendance', 'booking']), false);

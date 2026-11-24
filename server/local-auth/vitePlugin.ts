@@ -23,6 +23,7 @@ export function localAuthPlugin(): Plugin {
             `SELECT COUNT(*)::text AS c FROM app.users`
           );
           const logins = [
+            'rndceo',
             RND_DEMO_LEAD_LOGIN,
             ...LOCAL_AUTH_ROLE_ACCOUNTS.map((a) => a.loginId ?? a.email),
             ...LOCAL_PERMISSION_PROFILES.slice(0, 3).map((p) => p.email),
@@ -35,7 +36,7 @@ export function localAuthPlugin(): Plugin {
               : getLocalAuthDatabaseUrl();
           console.info(
             `[local-auth] ${pool.driver} ready (${target}) ` +
-              `${count.rows[0]?.c ?? 0} users. demo ${RND_DEMO_LEAD_LOGIN}. e.g. ${logins}, …`
+              `${count.rows[0]?.c ?? 0} users. owner rndceo. e.g. ${logins}, …`
           );
         })
         .catch((err) => {

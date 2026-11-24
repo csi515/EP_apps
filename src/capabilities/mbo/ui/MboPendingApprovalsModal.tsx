@@ -20,9 +20,9 @@ type Props = {
 
 export function classifyPendingApproval(
   objective: ObjectiveNode,
-  goalsLocked: boolean,
+  _goalsLocked: boolean,
 ): PendingApprovalKind {
-  if (goalsLocked) return 'change';
+  // 잠금 여부와 무관 — 변경 요청 메타(rejection_reason)가 있을 때만 변경 요청
   if (objective.rejectionReason?.trim()) return 'change';
   return 'new';
 }

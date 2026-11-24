@@ -6,7 +6,7 @@ import { formatRevisionHistory, type FormattedRevisionItem } from '../domain/mbo
 interface Props {
   open: boolean;
   goalId: string;
-  currentTargetValue?: number | null;
+  currentTargetValue?: string | number | null;
   currentDueDate?: string | null;
   onClose: () => void;
 }

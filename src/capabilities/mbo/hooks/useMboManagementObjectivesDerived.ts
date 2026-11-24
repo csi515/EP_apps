@@ -7,7 +7,6 @@ import {
 import {
   buildTeamMemberChips,
   computeManagerKpis,
-  listRiskProjectIds,
 } from '../domain/mboManagerDashboardEngine';
 import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
 import {
@@ -89,7 +88,12 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
       revision: row.revision_count ?? row.revision ?? 1,
       isRevised: Boolean(row.is_revised),
       revisionCount: row.revision_count ?? row.revision ?? 1,
-      targetValue: row.target_value ?? row.weight ?? null,
+      targetValue:
+        row.target_value == null || row.target_value === ''
+          ? row.weight != null
+            ? String(row.weight)
+            : null
+          : String(row.target_value),
       rejectionReason: row.rejection_reason,
       evaluatorId: row.evaluator_id ?? null,
       ownerId: row.owner_id ?? null,
@@ -104,7 +108,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
       ...obj,
       isRevised: obj.revision > 1,
       revisionCount: obj.revision,
-      targetValue: obj.weight,
+      targetValue: obj.weight != null ? String(obj.weight) : null,
       ownerId: obj.ownerId ?? null,
       visibilityType: obj.visibilityType ?? ('PRIVATE' as MboVisibilityType),
       sharedMemberIds: obj.sharedMemberIds ?? [],
@@ -287,7 +291,10 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
           status: (row.status || 'draft') as MboStatus,
           startDate: row.start_date || '2026-01-01',
           targetDate: row.target_date || '2026-12-31',
+          baselineStartDate: row.baseline_start_date || row.start_date || '2026-01-01',
+          baselineTargetDate: row.baseline_target_date || row.target_date || '2026-12-31',
           progressRate: row.progress_rate ?? 0,
+          ownerMemo: row.owner_memo ?? null,
           objectiveId: row.objective_id,
           evaluationPeriod: row.evaluation_period,
           description: row.description,
@@ -343,6 +350,14 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
         currentPeriodYm
       ),
     [portfolioProjects, logs, currentPeriodYm]
+  );
+  const myMissingMonthlyProjectIds = useMemo(
+    () =>
+      missingMonthlyProjectIds.filter((id) => {
+        const p = portfolioProjects.find((row) => row.id === id);
+        return Boolean(p?.ownerId && viewerUserId && p.ownerId === viewerUserId);
+      }),
+    [missingMonthlyProjectIds, portfolioProjects, viewerUserId]
   );
 
   const sheetProject = useMemo(
@@ -410,6 +425,7 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
     portfolioProjects,
     currentPeriodYm,
     missingMonthlyProjectIds,
+    myMissingMonthlyProjectIds,
     sheetProject,
     monthlyCheckProject,
     linkProjectToObjective,

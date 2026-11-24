@@ -42,18 +42,18 @@ import {
 import {
   buildTeamMemberChips,
   computeManagerKpis,
-  listRiskProjectIds,
   type MboDashboardView,
 } from '../domain/mboManagerDashboardEngine';
 
-export type MboContentPanel = 'schedule' | 'goals';
 import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
+
+export type MboContentPanel = 'schedule' | 'goals';
+export type MboScheduleViewMode = 'table' | 'gantt';
 import {
   canManagerOverrideCycleGoalLock,
   countPendingGoalApprovals,
 } from '../domain/mboTwoTierLockEngine';
 import { buildPersonObjectiveBuckets } from '../domain/mboTeamBoardEngine';
-import type { ProgressLogItem, FeedbackItem } from '../ui/MboQuarterlyReviewForm';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import {
   ensureDefaultProjectCategories,
@@ -72,7 +72,6 @@ export function useMboManagementWorkspaceState() {
   const goalsLocked = areGoalsLocked(cycleSettings, new Date());
 
   const [localObjectives, setLocalObjectives] = useState<ObjectiveNode[]>([]);
-  const [localFeedbacks, setLocalFeedbacks] = useState<FeedbackItem[]>([]);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState<string | null>(null);
@@ -109,17 +108,19 @@ export function useMboManagementWorkspaceState() {
   const [listScope, setListScope] = useState<MboListScope>('visible');
   const [dashboardView, setDashboardView] = useState<MboDashboardView>('mine');
   const [contentPanel, setContentPanel] = useState<MboContentPanel>('goals');
+  /** 실행 과제: 표(기본) | 간트(조회) */
+  const [scheduleViewMode, setScheduleViewMode] = useState<MboScheduleViewMode>('table');
   /** 목표 목록: 사람별 | 목표 트리(parent_id) — 기본 조직 정렬 */
   const [goalViewMode, setGoalViewMode] = useState<'person' | 'org'>('org');
   const [ownerFilterId, setOwnerFilterId] = useState<string>('');
   const [selectedMemberUserIds, setSelectedMemberUserIds] = useState<string[]>([]);
-  const [ganttRiskOnly, setGanttRiskOnly] = useState(false);
   const [personQuery, setPersonQuery] = useState('');
   const [ganttCheckinOnly, setGanttCheckinOnly] = useState(false);
   const [detailObjectiveId, setDetailObjectiveId] = useState<string | null>(null);
   const [pendingApprovalsOpen, setPendingApprovalsOpen] = useState(false);
   const [projectSheetId, setProjectSheetId] = useState<string | null>(null);
   const [monthlyCheckProjectId, setMonthlyCheckProjectId] = useState<string | null>(null);
+  const [monthlyCheckAutoWrite, setMonthlyCheckAutoWrite] = useState(false);
   const [changeRequestObjectiveId, setChangeRequestObjectiveId] = useState<string | null>(null);
   const [changeRequestBusy, setChangeRequestBusy] = useState(false);
   const managerScopeSyncedRef = useRef(false);
@@ -222,37 +223,6 @@ export function useMboManagementWorkspaceState() {
     void reloadProjectCategories();
   }, [reloadProjectCategories]);
 
-  // ?좏깮 ?꾨줈?앺듃???쇰뱶諛?hydrate
-  useEffect(() => {
-    const projectId = selectedProjectId;
-    if (!orgId || !projectId) {
-      setLocalFeedbacks([]);
-      return;
-    }
-    let cancelled = false;
-    void MboService.listFeedbackComments(orgId, projectId)
-      .then((feedbackRows) => {
-        if (cancelled) return;
-        setLocalFeedbacks(
-          feedbackRows.map((row) => ({
-            id: row.id,
-            projectId: row.project_id,
-            authorName: row.author_name,
-            authorRole: row.author_role,
-            feedbackType: row.feedback_type as FeedbackItem['feedbackType'],
-            content: row.content,
-            createdAt: row.created_at ? new Date(row.created_at).toLocaleTimeString() : '',
-          }))
-        );
-      })
-      .catch(() => {
-        if (!cancelled) setLocalFeedbacks([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [orgId, selectedProjectId, monthlyCheckProjectId]);
-
   const { query: objQuery } = useList<any>({
     resource: 'mbo_objectives',
     pagination: { mode: 'off' },
@@ -285,6 +255,7 @@ export function useMboManagementWorkspaceState() {
     pendingApprovalsOpen, setPendingApprovalsOpen,
     projectSheetId, setProjectSheetId,
     monthlyCheckProjectId, setMonthlyCheckProjectId,
+    monthlyCheckAutoWrite, setMonthlyCheckAutoWrite,
     managerScopeSyncedRef,
     ganttSectionRef,
     selectedObjectiveId, setSelectedObjectiveId,
@@ -293,7 +264,6 @@ export function useMboManagementWorkspaceState() {
     cycleSettings, setCycleSettings,
     goalsLocked,
     localObjectives, setLocalObjectives,
-    localFeedbacks, setLocalFeedbacks,
     showCreateModal, setShowCreateModal,
     showRejectModal, setShowRejectModal,
     rejectionInput, setRejectionInput,
@@ -315,10 +285,10 @@ export function useMboManagementWorkspaceState() {
     listScope, setListScope,
     dashboardView, setDashboardView,
     contentPanel, setContentPanel,
+    scheduleViewMode, setScheduleViewMode,
     goalViewMode, setGoalViewMode,
     ownerFilterId, setOwnerFilterId,
     selectedMemberUserIds, setSelectedMemberUserIds,
-    ganttRiskOnly, setGanttRiskOnly,
     ganttCheckinOnly, setGanttCheckinOnly,
     changeRequestObjectiveId, setChangeRequestObjectiveId,
     changeRequestBusy, setChangeRequestBusy,

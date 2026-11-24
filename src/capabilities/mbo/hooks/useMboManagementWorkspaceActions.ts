@@ -1,4 +1,4 @@
-import { useCallback, type FormEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { canTransitionMboStatus, type MboStatus } from '../domain/mboEngine';
 import { canEditExecutionProject } from '../domain/mboTwoTierLockEngine';
 import { showToast } from '@/shared/feedback/uiFeedback';
@@ -23,8 +23,16 @@ export function useMboManagementWorkspaceActions(
   const objectives = obj.objectives;
   const goalActor = obj.goalActor;
   const existingGoalRefs = obj.existingGoalRefs;
+  const portfolioProjects = obj.portfolioProjects;
+  const myMissingMonthlyProjectIds = obj.myMissingMonthlyProjectIds;
   const selectedOwnerMember = state.selectedOwnerMember;
+  const scheduleSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingScheduleRef = useRef<{
+    projectId: string;
+    range: { startDate: string; targetDate: string };
+  } | null>(null);
   const canManagerCreateWhileLocked = dash.canManagerCreateWhileLocked;
+  const [createBusy, setCreateBusy] = useState(false);
   const {
     goalsLocked,
     viewerMemberId,
@@ -40,12 +48,16 @@ export function useMboManagementWorkspaceActions(
     setShowCreateModal,
     ganttSectionRef,
     setGanttCheckinOnly,
-    setGanttRiskOnly,
     setContentPanel,
     orgId,
     projectQuery,
     setSelectedObjectiveId,
     setSelectedProjectId,
+    setProjectSheetId,
+    projectSheetId,
+    setMonthlyCheckProjectId,
+    setMonthlyCheckAutoWrite,
+    viewerUserId,
     changeRequestObjectiveId,
     setChangeRequestBusy,
     isManager,
@@ -78,6 +90,161 @@ export function useMboManagementWorkspaceActions(
     isOrgAdmin,
     orgScope,
   } = state;
+
+  const scrollToSchedule = useCallback(() => {
+    window.setTimeout(() => {
+      ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  }, [ganttSectionRef]);
+
+  /** 목표 → 일정 패널 (+ 선택적으로 프로젝트 시트/월간 보고) */
+  const focusObjectiveOnSchedule = useCallback(
+    (opts: {
+      objectiveId?: string | null;
+      projectId?: string | null;
+      openSheet?: boolean;
+      openMonthly?: boolean;
+      autoWrite?: boolean;
+    }) => {
+      if (opts.objectiveId) setSelectedObjectiveId(opts.objectiveId);
+      if (opts.projectId) {
+        setSelectedProjectId(opts.projectId);
+        if (opts.openMonthly) {
+          setMonthlyCheckAutoWrite(opts.autoWrite !== false);
+          setMonthlyCheckProjectId(opts.projectId);
+          setProjectSheetId(null);
+        } else if (opts.openSheet) {
+          setProjectSheetId(opts.projectId);
+        }
+      }
+      setContentPanel('schedule');
+      scrollToSchedule();
+    },
+    [
+      setSelectedObjectiveId,
+      setSelectedProjectId,
+      setMonthlyCheckProjectId,
+      setMonthlyCheckAutoWrite,
+      setProjectSheetId,
+      setContentPanel,
+      scrollToSchedule,
+    ],
+  );
+
+  const resolveProjectIdForObjective = useCallback(
+    (objectiveId: string) =>
+      portfolioProjects.find((p) => p.objectiveId === objectiveId)?.id ?? null,
+    [portfolioProjects],
+  );
+
+  const openObjectiveOnSchedule = useCallback(
+    (objectiveId: string, opts?: { openSheet?: boolean; openMonthly?: boolean }) => {
+      const projectId = resolveProjectIdForObjective(objectiveId);
+      focusObjectiveOnSchedule({
+        objectiveId,
+        projectId,
+        openSheet: opts?.openSheet ?? Boolean(projectId),
+        openMonthly: opts?.openMonthly,
+      });
+    },
+    [focusObjectiveOnSchedule, resolveProjectIdForObjective],
+  );
+
+  const openFirstMissingMonthly = useCallback(() => {
+    const firstId = myMissingMonthlyProjectIds[0];
+    if (!firstId) {
+      setContentPanel('schedule');
+      scrollToSchedule();
+      showToast(MBO_COPY.monthlyReportNoneMine, 'info');
+      return;
+    }
+    const proj = portfolioProjects.find((p) => p.id === firstId);
+    focusObjectiveOnSchedule({
+      objectiveId: proj?.objectiveId,
+      projectId: firstId,
+      openMonthly: true,
+      autoWrite: true,
+    });
+  }, [
+    myMissingMonthlyProjectIds,
+    portfolioProjects,
+    focusObjectiveOnSchedule,
+    setContentPanel,
+    scrollToSchedule,
+  ]);
+
+  const openNextMissingMonthly = useCallback(
+    (afterProjectId: string) => {
+      const remaining = myMissingMonthlyProjectIds.filter((id) => id !== afterProjectId);
+      const nextId = remaining[0];
+      if (!nextId) {
+        setMonthlyCheckProjectId(null);
+        setMonthlyCheckAutoWrite(false);
+        return false;
+      }
+      const proj = portfolioProjects.find((p) => p.id === nextId);
+      setMonthlyCheckAutoWrite(true);
+      setSelectedProjectId(nextId);
+      if (proj?.objectiveId) setSelectedObjectiveId(proj.objectiveId);
+      setMonthlyCheckProjectId(nextId);
+      return true;
+    },
+    [
+      myMissingMonthlyProjectIds,
+      portfolioProjects,
+      setMonthlyCheckProjectId,
+      setMonthlyCheckAutoWrite,
+      setSelectedProjectId,
+      setSelectedObjectiveId,
+    ],
+  );
+
+  const openProjectFromGantt = useCallback(
+    (projectId: string) => {
+      const proj = portfolioProjects.find((p) => p.id === projectId);
+      setSelectedProjectId(projectId);
+      if (proj?.objectiveId) setSelectedObjectiveId(proj.objectiveId);
+      setMonthlyCheckProjectId(null);
+      setMonthlyCheckAutoWrite(false);
+      setProjectSheetId(projectId);
+    },
+    [
+      portfolioProjects,
+      setSelectedProjectId,
+      setSelectedObjectiveId,
+      setMonthlyCheckProjectId,
+      setMonthlyCheckAutoWrite,
+      setProjectSheetId,
+    ],
+  );
+
+  const handleDeleteProject = useCallback(
+    (projectId: string) => {
+      if (!orgId) return;
+      const proj = portfolioProjects.find((p) => p.id === projectId);
+      if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
+        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
+        return;
+      }
+      void MboService.deleteProject(projectId, orgId)
+        .then(() => {
+          if (projectSheetId === projectId) setProjectSheetId(null);
+          void projectQuery?.refetch?.();
+          showToast(MBO_COPY.projectDeleteSuccess, 'success');
+        })
+        .catch((err) => {
+          showToast(err instanceof Error ? err.message : MBO_COPY.projectDeleteFailed, 'error');
+        });
+    },
+    [
+      orgId,
+      portfolioProjects,
+      viewerUserId,
+      projectSheetId,
+      setProjectSheetId,
+      projectQuery,
+    ],
+  );
 
   const openCreateObjectiveModal = useCallback(() => {
     const canCreateWhileLocked = isManager && (isOrgAdmin || orgScope?.isSubtreeManager === true);
@@ -134,19 +301,11 @@ export function useMboManagementWorkspaceActions(
     setShowCreateModal,
   ]);
 
-  const handleManagerRiskFilter = useCallback(() => {
-    setGanttCheckinOnly(false);
-    setGanttRiskOnly((on) => !on);
-    setContentPanel('schedule');
-    ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [setContentPanel, ganttSectionRef, setGanttCheckinOnly, setGanttRiskOnly]);
-
   const handleManagerCheckinFilter = useCallback(() => {
-    setGanttRiskOnly(false);
     setGanttCheckinOnly((on) => !on);
     setContentPanel('schedule');
     ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [setContentPanel, ganttSectionRef, setGanttRiskOnly, setGanttCheckinOnly]);
+  }, [setContentPanel, ganttSectionRef, setGanttCheckinOnly]);
 
   const handleEnsureProjectForObjective = useCallback(
     async (objective: ObjectiveNode) => {
@@ -160,24 +319,30 @@ export function useMboManagementWorkspaceActions(
           start_date: objective.startDate,
           target_date: objective.targetDate,
         });
-        setSelectedObjectiveId(objective.id);
-        setSelectedProjectId(project.id);
         void projectQuery?.refetch?.();
-        ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        focusObjectiveOnSchedule({
+          objectiveId: objective.id,
+          projectId: project.id,
+          openSheet: true,
+        });
         showToast(MBO_COPY.projectCreatedHint, 'success');
       } catch (err) {
         showToast(err instanceof Error ? err.message : '프로젝트 생성 실패', 'error');
       }
     },
-    [orgId, projectQuery, setSelectedObjectiveId, setSelectedProjectId, ganttSectionRef],
+    [orgId, projectQuery, focusObjectiveOnSchedule],
   );
 
-  const handleProjectScheduleChange = useCallback(
+  const persistProjectSchedule = useCallback(
     async (projectId: string, range: { startDate: string; targetDate: string }) => {
       if (!orgId) return;
-      // Level-2 실행 일정은 목표 잠금과 무관
       if (!canEditExecutionProject()) {
         showToast(MBO_COPY.lockBlockSchedule, 'warning');
+        return;
+      }
+      const proj = portfolioProjects.find((p) => p.id === projectId);
+      if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
+        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
         return;
       }
       try {
@@ -191,7 +356,36 @@ export function useMboManagementWorkspaceActions(
         showToast(err instanceof Error ? err.message : MBO_COPY.scheduleSaveFailed, 'error');
       }
     },
-    [orgId, projectQuery],
+    [orgId, projectQuery, portfolioProjects, viewerUserId],
+  );
+
+  /** 간트 드래그용 trailing debounce. 시트 피커는 pointerup 1회라 즉시 저장. */
+  const handleProjectScheduleChange = useCallback(
+    (projectId: string, range: { startDate: string; targetDate: string }, opts?: { immediate?: boolean }) => {
+      const proj = portfolioProjects.find((p) => p.id === projectId);
+      if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
+        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
+        return;
+      }
+      if (opts?.immediate) {
+        if (scheduleSaveTimerRef.current) {
+          clearTimeout(scheduleSaveTimerRef.current);
+          scheduleSaveTimerRef.current = null;
+        }
+        pendingScheduleRef.current = null;
+        void persistProjectSchedule(projectId, range);
+        return;
+      }
+      pendingScheduleRef.current = { projectId, range };
+      if (scheduleSaveTimerRef.current) clearTimeout(scheduleSaveTimerRef.current);
+      scheduleSaveTimerRef.current = setTimeout(() => {
+        const pending = pendingScheduleRef.current;
+        scheduleSaveTimerRef.current = null;
+        pendingScheduleRef.current = null;
+        if (pending) void persistProjectSchedule(pending.projectId, pending.range);
+      }, 300);
+    },
+    [portfolioProjects, viewerUserId, persistProjectSchedule],
   );
 
   const submitGoalChangeRequest = useCallback(
@@ -289,7 +483,10 @@ export function useMboManagementWorkspaceActions(
 
   const handleCreateObjective = (e: FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim()) {
+      showToast(MBO_COPY.createGoalTitleRequired, 'warning');
+      return;
+    }
     if (!orgId) {
       showToast(MBO_COPY.noOrgContext, 'error');
       return;
@@ -337,6 +534,7 @@ export function useMboManagementWorkspaceActions(
       newVisibility ||
       (newLevel === 'company' || newLevel === 'department' ? 'PUBLIC' : 'PRIVATE');
 
+    setCreateBusy(true);
     mutateCreate(
       {
         resource: 'mbo_objectives',
@@ -355,13 +553,14 @@ export function useMboManagementWorkspaceActions(
           weight: newWeight,
           progress_rate: 0,
           status: 'draft',
-          target_value: newWeight,
+          target_value: String(newWeight),
           visibility_type: visibility,
         },
       },
       {
         onSuccess: async (result) => {
           const createdId = (result as { data?: { id?: string } })?.data?.id;
+          let projectId: string | null = null;
           try {
             if (createdId) {
               if (visibility === 'PARTIAL') {
@@ -375,8 +574,7 @@ export function useMboManagementWorkspaceActions(
                 start_date: newStartDate,
                 target_date: newTargetDate,
               });
-              setSelectedObjectiveId(createdId);
-              setSelectedProjectId(project.id);
+              projectId = project.id;
               const shares = await MboService.listObjectiveSharesByOrg(orgId).catch(
                 () => new Map<string, string[]>()
               );
@@ -394,10 +592,18 @@ export function useMboManagementWorkspaceActions(
           setNewParentId('');
           setNewDepartmentId('');
           showToast(MBO_COPY.createGoalSuccess, 'success');
+          if (createdId) {
+            focusObjectiveOnSchedule({
+              objectiveId: createdId,
+              projectId,
+              openSheet: Boolean(projectId),
+            });
+          }
         },
         onError: (err) => {
           showToast(err instanceof Error ? err.message : MBO_COPY.createGoalFailed, 'error');
         },
+        onSettled: () => setCreateBusy(false),
       }
     );
   };
@@ -452,7 +658,6 @@ export function useMboManagementWorkspaceActions(
 
   return {
     openCreateObjectiveModal,
-    handleManagerRiskFilter,
     handleManagerCheckinFilter,
     handleEnsureProjectForObjective,
     handleProjectScheduleChange,
@@ -461,5 +666,12 @@ export function useMboManagementWorkspaceActions(
     handleCreateObjective,
     handleChangeVisibility,
     handleConfirmSoftDelete,
+    focusObjectiveOnSchedule,
+    openObjectiveOnSchedule,
+    openFirstMissingMonthly,
+    openNextMissingMonthly,
+    openProjectFromGantt,
+    handleDeleteProject,
+    createBusy,
   };
 }

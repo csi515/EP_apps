@@ -13,9 +13,14 @@ export interface PortfolioProject {
   ownerId: string | null;
   ownerName: string;
   status: MboStatus;
-  startDate: string; // YYYY-MM-DD
+  startDate: string; // YYYY-MM-DD — 현재 일정
   targetDate: string;
+  /** 최초 확정 일정 (없으면 start/target과 동일로 취급) */
+  baselineStartDate?: string;
+  baselineTargetDate?: string;
   progressRate: number;
+  /** 담당자 메모장 */
+  ownerMemo?: string | null;
   objectiveId?: string | null;
   evaluationPeriod?: string | null;
   description?: string | null;

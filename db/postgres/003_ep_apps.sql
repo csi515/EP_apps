@@ -510,6 +510,8 @@ CREATE TABLE IF NOT EXISTS core.mbo_projects (
   status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'approved', 'rejected', 'in_progress', 'completed', 'canceled')),
   start_date date NOT NULL,
   target_date date NOT NULL,
+  baseline_start_date date,
+  baseline_target_date date,
   evaluation_period text NOT NULL DEFAULT '2026-Q1',
   progress_rate integer NOT NULL DEFAULT 0 CHECK (progress_rate >= 0 AND progress_rate <= 100),
   rejection_reason text,

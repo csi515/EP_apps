@@ -4532,7 +4532,7 @@ export interface Database {
           target_date: string;
           weight: number;
           progress_rate: number;
-          target_value: number | null;
+          target_value: string | null;
           rejection_reason: string | null;
           approved_by: string | null;
           approved_at: string | null;
@@ -4557,7 +4557,7 @@ export interface Database {
           target_date: string;
           weight?: number;
           progress_rate?: number;
-          target_value?: number | null;
+          target_value?: string | null;
           rejection_reason?: string | null;
           approved_by?: string | null;
           approved_at?: string | null;
@@ -5222,8 +5222,11 @@ export interface Database {
           status: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
           start_date: string;
           target_date: string;
+          baseline_start_date: string;
+          baseline_target_date: string;
           evaluation_period: string;
           progress_rate: number;
+          owner_memo: string | null;
           rejection_reason: string | null;
           approved_by: string | null;
           approved_at: string | null;
@@ -5243,8 +5246,11 @@ export interface Database {
           status?: 'draft' | 'submitted' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'canceled';
           start_date: string;
           target_date: string;
+          baseline_start_date?: string;
+          baseline_target_date?: string;
           evaluation_period?: string;
           progress_rate?: number;
+          owner_memo?: string | null;
           rejection_reason?: string | null;
           approved_by?: string | null;
           approved_at?: string | null;
@@ -5572,7 +5578,7 @@ export interface Database {
           goal_id: string;
           organization_id: string;
           revised_by: string;
-          previous_target_value: number | null;
+          previous_target_value: string | null;
           previous_due_date: string | null;
           previous_title: string | null;
           unmet_reason: string | null;
@@ -5584,7 +5590,7 @@ export interface Database {
           goal_id: string;
           organization_id: string;
           revised_by: string;
-          previous_target_value?: number | null;
+          previous_target_value?: string | null;
           previous_due_date?: string | null;
           previous_title?: string | null;
           unmet_reason?: string | null;

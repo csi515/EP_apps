@@ -1,8 +1,6 @@
 import React from 'react';
 import { MboPlanApprovalModal } from './MboPlanApprovalModal';
 import { MboProjectSheetModal } from './MboProjectSheetModal';
-import { Modal } from '@/shared/components/ui/Modal';
-import { MboQuarterlyReviewForm, type FeedbackItem } from './MboQuarterlyReviewForm';
 import { MboObjectiveDetailModal } from './MboObjectiveDetailModal';
 import { MboRevisionTimelineModal } from './MboRevisionTimelineModal';
 import { MboGoalChangeRequestModal } from './MboGoalChangeRequestModal';
@@ -18,7 +16,6 @@ import {
 import { MboService } from '../services/mboService';
 import { canManageObjectiveOwner } from '../services/mboOrgScopeService';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import { MBO_COPY } from './mboUiCopy';
 import type { MboManagementWorkspace } from '../hooks/useMboManagementWorkspace';
 
 type Props = {
@@ -35,7 +32,7 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
           open
           organizationId={w.orgId ?? ''}
           objectiveId={w.planApprovalObjectiveId}
-          objectiveTitle={w.objectives.find((o) => o.id === w.planApprovalObjectiveId)?.title ?? 'MBO 목표'}
+          objectiveTitle={w.objectives.find((o) => o.id === w.planApprovalObjectiveId)?.title ?? '목표'}
           objectiveDescription={w.objectives.find((o) => o.id === w.planApprovalObjectiveId)?.description}
           successCriteria={w.objectives.find((o) => o.id === w.planApprovalObjectiveId)?.successCriteria}
           ownerName={w.objectives.find((o) => o.id === w.planApprovalObjectiveId)?.ownerName}
@@ -47,7 +44,7 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
           onClose={() => w.setPlanApprovalObjectiveId(null)}
           onSubmitted={() => {
             w.handleTransitionStatus(w.planApprovalObjectiveId!, 'submitted');
-            showToast('MBO 계획 결재가 상신되었습니다.', 'success');
+            showToast('목표 계획 결재가 요청되었습니다.', 'success');
           }}
           onSkipToLocalSubmit={() => w.handleTransitionStatus(w.planApprovalObjectiveId!, 'submitted')}
         />
@@ -56,82 +53,48 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
       <MboProjectSheetModal
         open={Boolean(w.projectSheetId && w.sheetProject)}
         project={w.sheetProject}
-        goalsLocked={w.goalsLocked}
-        missingMonthly={w.sheetProject ? w.missingMonthlyProjectIds.includes(w.sheetProject.id) : false}
         onClose={() => w.setProjectSheetId(null)}
-        onOpenMonthlyCheck={() => {
-          if (!w.sheetProject) return;
-          w.setSelectedProjectId(w.sheetProject.id);
-          w.setMonthlyCheckProjectId(w.sheetProject.id);
-          w.setProjectSheetId(null);
-        }}
+        canEdit={Boolean(
+          w.sheetProject?.ownerId &&
+            w.viewerUserId &&
+            w.sheetProject.ownerId === w.viewerUserId,
+        )}
         onScheduleChange={
-          w.sheetProject ? (range) => void w.handleProjectScheduleChange(w.sheetProject!.id, range) : undefined
+          w.sheetProject &&
+          w.orgId &&
+          w.sheetProject.ownerId &&
+          w.sheetProject.ownerId === w.viewerUserId
+            ? async (range) => {
+                await MboService.updateProject(w.sheetProject!.id, w.orgId!, {
+                  start_date: range.startDate,
+                  target_date: range.targetDate,
+                });
+                await w.projectQuery?.refetch?.();
+              }
+            : undefined
+        }
+        onSaveMemoProgress={
+          w.sheetProject &&
+          w.orgId &&
+          w.sheetProject.ownerId &&
+          w.sheetProject.ownerId === w.viewerUserId
+            ? async ({ ownerMemo, progressRate }) => {
+                await MboService.updateProject(w.sheetProject!.id, w.orgId!, {
+                  owner_memo: ownerMemo,
+                  progress_rate: progressRate,
+                });
+                await w.projectQuery?.refetch?.();
+                await w.objQuery?.refetch?.();
+              }
+            : undefined
         }
       />
-
-      {w.monthlyCheckProject ? (
-        <Modal
-          isOpen
-          onClose={() => w.setMonthlyCheckProjectId(null)}
-          title={`${MBO_COPY.monthlyReport} · ${w.monthlyCheckProject.title}`}
-          maxWidth="2xl"
-          intent="form"
-        >
-          <MboQuarterlyReviewForm
-            projectId={w.monthlyCheckProject.id}
-            projectTitle={w.monthlyCheckProject.title}
-            logs={w.logs}
-            feedbacks={w.localFeedbacks}
-            authorName={w.activeUser?.name || w.authUser?.email || '실무자'}
-            onCreateLog={async (newLog) => {
-              if (!w.orgId) throw new Error('조직 컨텍스트가 없습니다.');
-              await MboService.recordProgressLog({
-                organization_id: w.orgId,
-                project_id: newLog.projectId,
-                author_name: newLog.authorName,
-                log_date: newLog.logDate,
-                progress_rate: newLog.progressRate,
-                achievements: newLog.achievements,
-                issues_and_actions: newLog.issuesAndActions ?? null,
-                next_steps: newLog.nextSteps ?? null,
-                period_ym: newLog.periodYm,
-              });
-              await w.logQuery?.refetch?.();
-              await w.projectQuery?.refetch?.();
-              await w.objQuery?.refetch?.();
-            }}
-            onCreateFeedback={async (newFb) => {
-              if (!w.orgId) throw new Error('조직 컨텍스트가 없습니다.');
-              await MboService.createFeedbackComment({
-                organization_id: w.orgId,
-                project_id: newFb.projectId,
-                author_name: newFb.authorName,
-                author_role: newFb.authorRole,
-                feedback_type: newFb.feedbackType,
-                content: newFb.content,
-              });
-              const rows = await MboService.listFeedbackComments(w.orgId, newFb.projectId);
-              w.setLocalFeedbacks(
-                rows.map((row) => ({
-                  id: row.id,
-                  projectId: row.project_id,
-                  authorName: row.author_name,
-                  authorRole: row.author_role,
-                  feedbackType: row.feedback_type as FeedbackItem['feedbackType'],
-                  content: row.content,
-                  createdAt: row.created_at ? new Date(row.created_at).toLocaleTimeString() : '',
-                }))
-              );
-            }}
-          />
-        </Modal>
-      ) : null}
 
       <MboCreateObjectiveModal
         open={w.showCreateModal}
         onClose={() => w.setShowCreateModal(false)}
         onSubmit={w.handleCreateObjective}
+        createBusy={w.createBusy}
         newLevel={w.newLevel}
         onLevelChange={w.setNewLevel}
         newWeight={w.newWeight}
@@ -208,12 +171,18 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
               onCreateProject={hasLinked ? undefined : () => void w.handleEnsureProjectForObjective(detail)}
               onOpenProjects={() => {
                 w.setDetailObjectiveId(null);
-                w.setContentPanel('schedule');
-                w.ganttSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                w.openObjectiveOnSchedule(detail.id);
               }}
               onRequestApproval={(id) => {
                 if (w.requirePlanApproval && w.hasApprovalWorkflow) {
                   w.setPlanApprovalObjectiveId(id);
+                  return;
+                }
+                if (w.requirePlanApproval && !w.hasApprovalWorkflow) {
+                  showToast(
+                    '전자결재가 꺼져 있어 계획 결재를 올릴 수 없습니다. 관리자에게 문의하세요.',
+                    'warning',
+                  );
                   return;
                 }
                 w.handleTransitionStatus(id, 'submitted');
@@ -243,7 +212,7 @@ export const MboManagementOverlayStack: React.FC<Props> = ({ ws }) => {
 
       <MboGoalChangeRequestModal
         open={Boolean(w.changeRequestObjectiveId)}
-        objectiveTitle={w.objectives.find((o) => o.id === w.changeRequestObjectiveId)?.title ?? 'MBO 목표'}
+        objectiveTitle={w.objectives.find((o) => o.id === w.changeRequestObjectiveId)?.title ?? '목표'}
         busy={w.changeRequestBusy}
         onClose={() => w.setChangeRequestObjectiveId(null)}
         onSubmit={w.submitGoalChangeRequest}

@@ -3,7 +3,6 @@ import { validateMboObjectiveWeights } from '../domain/mboEngine';
 import {
   buildTeamMemberChips,
   computeManagerKpis,
-  listRiskProjectIds,
 } from '../domain/mboManagerDashboardEngine';
 import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
 import {
@@ -60,6 +59,7 @@ export function useMboManagementDashboardDerived(
   const teamObjectivesForManager = obj.teamObjectivesForManager;
   const portfolioProjects = obj.portfolioProjects;
   const missingMonthlyProjectIds = obj.missingMonthlyProjectIds;
+  const myMissingMonthlyProjectIds = obj.myMissingMonthlyProjectIds;
   const {
     goalsLocked,
     orgScope,
@@ -69,7 +69,6 @@ export function useMboManagementDashboardDerived(
     viewerMemberId,
     ownerFilterId,
     selectedMemberUserIds,
-    ganttRiskOnly,
     ganttCheckinOnly,
     orgMembers,
   } = state;
@@ -115,9 +114,9 @@ export function useMboManagementDashboardDerived(
       teamCount: team.length,
       mineAvg,
       teamAvg,
-      missingMonthly: missingMonthlyProjectIds.length,
+      missingMonthly: myMissingMonthlyProjectIds.length,
     };
-  }, [objectives, viewerUserId, missingMonthlyProjectIds.length]);
+  }, [objectives, viewerUserId, myMissingMonthlyProjectIds.length]);
 
   const teamUserIds = useMemo(() => {
     const ids = new Set<string>();
@@ -169,8 +168,6 @@ export function useMboManagementDashboardDerived(
     [managerObjectiveRefs, portfolioProjects, orgMembers, viewerUserId, teamUserIds, missingMonthlyProjectIds],
   );
 
-  const riskProjectIds = useMemo(() => listRiskProjectIds(portfolioProjects), [portfolioProjects]);
-
   const canOverrideGoalLockForOwner = useCallback(
     (ownerId: string | null | undefined) => {
       if (!orgScope) return isOrgAdmin && goalsLocked;
@@ -198,8 +195,6 @@ export function useMboManagementDashboardDerived(
       portfolioProjects,
       {
         ownerUserIds: selectedMemberUserIds.length > 0 ? selectedMemberUserIds : undefined,
-        riskOnly: ganttRiskOnly,
-        riskProjectIds,
       },
     );
     if (ganttCheckinOnly) {
@@ -211,8 +206,6 @@ export function useMboManagementDashboardDerived(
     objectives,
     portfolioProjects,
     selectedMemberUserIds,
-    ganttRiskOnly,
-    riskProjectIds,
     ganttCheckinOnly,
     missingMonthlyProjectIds,
   ]);
@@ -227,10 +220,11 @@ export function useMboManagementDashboardDerived(
   );
 
   const weightValidation = useMemo(() => {
-    const subset = ownerFilterId
+    // 비중 합 검증은 개인 KPI만 (조직·전사 목표와 섞으면 리더 소유 시 이중 합산됨)
+    const owned = ownerFilterId
       ? objectives.filter((o) => o.ownerId === ownerFilterId)
       : objectives.filter((o) => o.ownerId === viewerUserId);
-    return validateMboObjectiveWeights(subset);
+    return validateMboObjectiveWeights(owned.filter((o) => o.level === 'individual'));
   }, [objectives, ownerFilterId, viewerUserId]);
 
   const viewerMember = useMemo(
@@ -301,7 +295,6 @@ export function useMboManagementDashboardDerived(
     managerObjectiveRefs,
     managerKpis,
     teamMemberChips,
-    riskProjectIds,
     canOverrideGoalLockForOwner,
     canManagerCreateWhileLocked,
     hierarchyGanttRows,

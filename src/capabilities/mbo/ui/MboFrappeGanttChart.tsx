@@ -16,6 +16,8 @@ type Props = {
   tasks: MboFrappeGanttTask[];
   viewMode: MboFrappeViewMode;
   scheduleEditable?: boolean;
+  /** 지정 시 해당 프로젝트만 기간 드래그 허용 (담당자 소유 등) */
+  editableProjectIds?: ReadonlySet<string>;
   onOpenProject?: (projectId: string) => void;
   onOpenObjective?: (objectiveId: string) => void;
   onProjectScheduleChange?: (
@@ -31,6 +33,7 @@ export const MboFrappeGanttChart: React.FC<Props> = ({
   tasks,
   viewMode,
   scheduleEditable = true,
+  editableProjectIds,
   onOpenProject,
   onOpenObjective,
   onProjectScheduleChange,
@@ -42,6 +45,7 @@ export const MboFrappeGanttChart: React.FC<Props> = ({
   const onOpenObjectiveRef = useRef(onOpenObjective);
   const onScheduleRef = useRef(onProjectScheduleChange);
   const editableRef = useRef(scheduleEditable);
+  const editableIdsRef = useRef(editableProjectIds);
 
   useEffect(() => {
     tasksRef.current = tasks;
@@ -58,6 +62,9 @@ export const MboFrappeGanttChart: React.FC<Props> = ({
   useEffect(() => {
     editableRef.current = scheduleEditable;
   }, [scheduleEditable]);
+  useEffect(() => {
+    editableIdsRef.current = editableProjectIds;
+  }, [editableProjectIds]);
 
   useEffect(() => {
     const el = hostRef.current;
@@ -95,6 +102,11 @@ export const MboFrappeGanttChart: React.FC<Props> = ({
         }
         const projectId = mboGanttProjectIdFromTask(id);
         if (!projectId) return;
+        const allowed = editableIdsRef.current;
+        if (allowed && !allowed.has(projectId)) {
+          ganttRef.current?.refresh(tasksRef.current.map((t) => ({ ...t })));
+          return;
+        }
         onScheduleRef.current?.(projectId, {
           startDate: formatGanttDateYmd(start),
           targetDate: formatGanttDateYmd(end),

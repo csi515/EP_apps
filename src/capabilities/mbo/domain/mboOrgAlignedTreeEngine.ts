@@ -54,15 +54,29 @@ export function buildOrgAlignedObjectiveTree(
   return out;
 }
 
+export type AlignmentSlot = 'company' | 'department' | 'mine';
+
 export type AlignmentContext = {
+  /** 스트립 미리보기용 대표 1건 */
   company: OrgAlignedObjective | null;
   department: OrgAlignedObjective | null;
   mine: OrgAlignedObjective | null;
+  /** 슬롯 클릭 시 보드에 펼칠 전체 목록 */
+  companies: OrgAlignedObjective[];
+  departments: OrgAlignedObjective[];
+  mines: OrgAlignedObjective[];
+  companyCount: number;
+  departmentCount: number;
+  mineCount: number;
 };
+
+function sortByTitle(list: OrgAlignedObjective[]): OrgAlignedObjective[] {
+  return [...list].sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+}
 
 /**
  * 열람 가능 목표 중 전사·내 조직·내 KPI 요약.
- * departmentPathPrefix: 내 부서 path (예: /hq/rnd/) — departmentId 매칭 우선, 없으면 departmentName.
+ * departmentId 매칭 우선, 없으면 departmentName.
  */
 export function resolveAlignmentContext(input: {
   visibleObjectives: readonly OrgAlignedObjective[];
@@ -71,41 +85,63 @@ export function resolveAlignmentContext(input: {
   viewerDepartmentName?: string | null;
 }): AlignmentContext {
   const active = input.visibleObjectives;
-  const company =
-    active
-      .filter((o) => o.level === 'company')
-      .sort((a, b) => a.title.localeCompare(b.title, 'ko'))[0] ?? null;
+  const companies = sortByTitle(active.filter((o) => o.level === 'company'));
+  const company = companies[0] ?? null;
 
-  const deptCandidates = active.filter((o) => o.level === 'department');
-  let department: OrgAlignedObjective | null = null;
+  const allDept = active.filter((o) => o.level === 'department');
+  let departments: OrgAlignedObjective[] = [];
   if (input.viewerDepartmentId) {
-    department =
-      deptCandidates.find((o) => o.departmentId === input.viewerDepartmentId) ?? null;
+    departments = allDept.filter((o) => o.departmentId === input.viewerDepartmentId);
   }
-  if (!department && input.viewerDepartmentName) {
+  if (departments.length === 0 && input.viewerDepartmentName) {
     const name = input.viewerDepartmentName.trim();
-    department =
-      deptCandidates.find((o) => (o.departmentName || '').trim() === name) ?? null;
+    departments = allDept.filter((o) => (o.departmentName || '').trim() === name);
   }
-  if (!department) {
-    department = deptCandidates[0] ?? null;
+  // 내 부서 매칭이 없으면 열람 가능한 조직 목표 전체를 슬롯에 둔다
+  if (departments.length === 0) {
+    departments = allDept;
   }
+  departments = sortByTitle(departments);
+  const department = departments[0] ?? null;
 
   const ownedByViewer = active.filter(
     (o) => o.ownerId && input.viewerUserId && o.ownerId === input.viewerUserId
   );
-  const mineIndividual =
-    ownedByViewer
-      .filter((o) => o.level === 'individual')
-      .sort((a, b) => a.title.localeCompare(b.title, 'ko'))[0] ?? null;
+  const mineIndividuals = sortByTitle(
+    ownedByViewer.filter((o) => o.level === 'individual')
+  );
   // 리더 등: 개인 KPI가 없으면 본인 소유 조직단위 목표로 폴백
-  const mineDeptFallback =
-    ownedByViewer
-      .filter((o) => o.level === 'department')
-      .sort((a, b) => a.title.localeCompare(b.title, 'ko'))[0] ?? null;
-  const mine = mineIndividual ?? mineDeptFallback;
+  const mineDeptFallback = sortByTitle(
+    ownedByViewer.filter((o) => o.level === 'department')
+  );
+  const mines = mineIndividuals.length > 0 ? mineIndividuals : mineDeptFallback;
+  const mine = mines[0] ?? null;
 
-  return { company, department, mine };
+  return {
+    company,
+    department,
+    mine,
+    companies,
+    departments,
+    mines,
+    companyCount: companies.length,
+    departmentCount: departments.length,
+    mineCount: mines.length,
+  };
+}
+
+/** 정렬 슬롯 → 보드용 플랫 행(깊이 0, 한눈에 목록) */
+export function listAlignmentSlotRows(
+  context: AlignmentContext,
+  slot: AlignmentSlot
+): OrgAlignedFlatRow[] {
+  const list =
+    slot === 'company'
+      ? context.companies
+      : slot === 'department'
+        ? context.departments
+        : context.mines;
+  return list.map((o) => ({ ...o, depth: 0 }));
 }
 
 /** 매니저 팀 화면용 — 내가 관리하지 않는 상위(company 등) 열람 가능 목표 */

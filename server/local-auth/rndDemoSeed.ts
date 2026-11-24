@@ -490,19 +490,31 @@ type ObjectiveSeed = {
   achievements: string;
   issues: string;
   nextSteps: string;
+  /** 현재 시작일이 최초(baseline)과 다를 때 (일정 변경 데모) */
+  currentStartDate?: string;
+  currentTargetDate?: string;
 };
 
 function buildObjectives(): ObjectiveSeed[] {
   const ceo = PEOPLE[0];
+  const head = PEOPLE[1];
   const lead = PEOPLE[2];
   const s1 = PEOPLE[3];
   const s2 = PEOPLE[4];
   const s3 = PEOPLE[5];
-  const companyId = oid('501');
-  const deptId = oid('502');
+
+  const c1 = oid('501');
+  const c2 = oid('506');
+  const c3 = oid('507');
+  const d1 = oid('502');
+  const d2 = oid('508');
+  const d3 = oid('509');
+  const d4 = oid('510');
+
   return [
+    // —— 전사 3 (김대표 weight 40/30/30) ——
     {
-      id: companyId,
+      id: c1,
       parentId: null,
       level: 'company',
       departmentId: null,
@@ -510,7 +522,7 @@ function buildObjectives(): ObjectiveSeed[] {
       owner: ceo,
       title: '2026 신소재 상용화 KPI',
       description: '연구소 핵심 신소재의 양산 전환과 품질 안정화',
-      weight: 100,
+      weight: 40,
       progressRate: 28,
       projectId: pid('501'),
       logId: lid('501'),
@@ -520,14 +532,51 @@ function buildObjectives(): ObjectiveSeed[] {
       nextSteps: '양산 조건서 1차 확정 및 원가 시뮬레이션',
     },
     {
-      id: deptId,
-      parentId: companyId,
+      id: c2,
+      parentId: null,
+      level: 'company',
+      departmentId: null,
+      departmentName: null,
+      owner: ceo,
+      title: '글로벌 고객 인증 3건 확보',
+      description: '주요 시장 고객사 품질·안전 인증 취득',
+      weight: 30,
+      progressRate: 22,
+      projectId: pid('506'),
+      logId: lid('506'),
+      logProgress: 22,
+      achievements: '유럽 인증 사전 심사 통과',
+      issues: '시험 기관 슬롯 지연',
+      nextSteps: '본심사 일정 확정',
+    },
+    {
+      id: c3,
+      parentId: null,
+      level: 'company',
+      departmentId: null,
+      departmentName: null,
+      owner: ceo,
+      title: '연구생산성 지표 15% 개선',
+      description: '과제 리드타임·재현성 지표 개선',
+      weight: 30,
+      progressRate: 18,
+      projectId: pid('507'),
+      logId: lid('507'),
+      logProgress: 18,
+      achievements: '공통 실험 템플릿 배포',
+      issues: '팀별 데이터 형식 불일치',
+      nextSteps: '데이터 표준 가이드 확정',
+    },
+    // —— 조직 4 (박그룹장 2 · 이리더 2, owner별 100) ——
+    {
+      id: d1,
+      parentId: c1,
       level: 'department',
-      departmentId: DEPTS.rndTeam.id,
-      departmentName: DEPTS.rndTeam.name,
-      owner: lead,
+      departmentId: DEPTS.rndGroup.id,
+      departmentName: DEPTS.rndGroup.name,
+      owner: head,
       title: '그룹 목표: 핵심 소재 양산 전환율 80%',
-      description: '연구개발1팀 주관 양산 전환 과제',
+      description: '연구개발그룹 주관 양산 전환 과제',
       weight: 50,
       progressRate: 35,
       projectId: pid('502'),
@@ -538,15 +587,126 @@ function buildObjectives(): ObjectiveSeed[] {
       nextSteps: '수율 안정화 실험 2차 및 표준작업서 초안',
     },
     {
+      id: d2,
+      parentId: c2,
+      level: 'department',
+      departmentId: DEPTS.rndGroup.id,
+      departmentName: DEPTS.rndGroup.name,
+      owner: head,
+      title: '그룹 목표: 인증 시험 데이터 패키지',
+      description: '고객 인증용 시험·문서 패키지 완성',
+      weight: 50,
+      progressRate: 30,
+      projectId: pid('508'),
+      logId: lid('508'),
+      logProgress: 30,
+      achievements: '시험 항목 매트릭스 초안',
+      issues: '외부 시험비 예산 조정',
+      nextSteps: '패키지 1차 리뷰',
+    },
+    {
+      id: d3,
+      parentId: c1,
+      level: 'department',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: lead,
+      title: '팀 목표: 파일럿 수율 안정화',
+      description: '연구개발1팀 파일럿 수율·재현성',
+      weight: 50,
+      progressRate: 40,
+      projectId: pid('509'),
+      logId: lid('509'),
+      logProgress: 40,
+      achievements: '주간 수율 리뷰 체계 가동',
+      issues: '야간 배치 편차',
+      nextSteps: '야간 조건 보정 실험',
+    },
+    {
+      id: d4,
+      parentId: c3,
+      level: 'department',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: lead,
+      title: '팀 목표: 실험 데이터 표준화',
+      description: '팀 내 실험 기록·공유 표준',
+      weight: 50,
+      progressRate: 25,
+      projectId: pid('510'),
+      logId: lid('510'),
+      logProgress: 25,
+      achievements: '공통 시트 템플릿 배포',
+      issues: '레거시 데이터 이관',
+      nextSteps: '이관 스크립트 검증',
+    },
+    // —— 개인 9 (이리더 3 · 사원 각 2) ——
+    {
+      id: oid('511'),
+      parentId: d3,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: lead,
+      title: '팀 운영 KPI: 주간 진척 리뷰',
+      description: '팀원 주간 진척·리스크 리뷰 정례화',
+      weight: 40,
+      progressRate: 45,
+      projectId: pid('511'),
+      logId: lid('511'),
+      logProgress: 45,
+      achievements: '리뷰 보드 운영 4주 연속',
+      issues: '회의 시간 초과',
+      nextSteps: '안건 템플릿 단축',
+    },
+    {
+      id: oid('512'),
+      parentId: d3,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: lead,
+      title: '파일럿 라인 일정 조율',
+      description: '설비·인력 슬롯 조율',
+      weight: 30,
+      progressRate: 33,
+      projectId: pid('512'),
+      logId: lid('512'),
+      logProgress: 33,
+      achievements: '월간 슬롯표 확정',
+      issues: '긴급 고객 샘플 충돌',
+      nextSteps: '버퍼 슬롯 확보',
+      currentStartDate: `${new Date().getFullYear()}-03-01`,
+      currentTargetDate: `${new Date().getFullYear()}-11-30`,
+    },
+    {
+      id: oid('513'),
+      parentId: d4,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: lead,
+      title: '팀 지식베이스 정리',
+      description: '표준작업·실패 사례 문서화',
+      weight: 30,
+      progressRate: 20,
+      projectId: pid('513'),
+      logId: lid('513'),
+      logProgress: 20,
+      achievements: '실패 사례 5건 정리',
+      issues: '문서 리뷰어 부족',
+      nextSteps: '리뷰 순환 배정',
+    },
+    {
       id: oid('503'),
-      parentId: deptId,
+      parentId: d3,
       level: 'individual',
       departmentId: DEPTS.rndTeam.id,
       departmentName: DEPTS.rndTeam.name,
       owner: s1,
       title: '소재 조성 최적화 및 특성 평가',
       description: '조성비 최적화와 물성 데이터 확보',
-      weight: 40,
+      weight: 50,
       progressRate: 40,
       projectId: pid('503'),
       logId: lid('503'),
@@ -556,15 +716,33 @@ function buildObjectives(): ObjectiveSeed[] {
       nextSteps: '재현성 실험 및 데이터 정리',
     },
     {
+      id: oid('514'),
+      parentId: d4,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: s1,
+      title: '물성 DB 구축',
+      description: '조성-물성 매핑 DB 1차',
+      weight: 50,
+      progressRate: 15,
+      projectId: pid('514'),
+      logId: lid('514'),
+      logProgress: 15,
+      achievements: '스키마 초안',
+      issues: '측정 단위 혼재',
+      nextSteps: '단위 표준화',
+    },
+    {
       id: oid('504'),
-      parentId: deptId,
+      parentId: d3,
       level: 'individual',
       departmentId: DEPTS.rndTeam.id,
       departmentName: DEPTS.rndTeam.name,
       owner: s2,
       title: '파일럿 공정 조건 표준화',
       description: '파일럿 라인 표준 조건서 작성',
-      weight: 30,
+      weight: 50,
       progressRate: 30,
       projectId: pid('504'),
       logId: lid('504'),
@@ -574,15 +752,33 @@ function buildObjectives(): ObjectiveSeed[] {
       nextSteps: '설비 담당과 일정 조율',
     },
     {
+      id: oid('515'),
+      parentId: d3,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: s2,
+      title: '설비 점검 체크리스트',
+      description: '파일럿 설비 일상 점검 체계',
+      weight: 50,
+      progressRate: 28,
+      projectId: pid('515'),
+      logId: lid('515'),
+      logProgress: 28,
+      achievements: '체크리스트 초안',
+      issues: '야간 점검 공백',
+      nextSteps: '교대 점검 시범',
+    },
+    {
       id: oid('505'),
-      parentId: deptId,
+      parentId: d2,
       level: 'individual',
       departmentId: DEPTS.rndTeam.id,
       departmentName: DEPTS.rndTeam.name,
       owner: s3,
       title: '고객 샘플 대응 및 피드백 반영',
       description: '고객 요구사항 반영 샘플 제작',
-      weight: 30,
+      weight: 50,
       progressRate: 25,
       projectId: pid('505'),
       logId: lid('505'),
@@ -590,6 +786,24 @@ function buildObjectives(): ObjectiveSeed[] {
       achievements: '고객 A 피드백 1차 반영',
       issues: '스펙 변경 요청 추가',
       nextSteps: '2차 샘플 일정 확정',
+    },
+    {
+      id: oid('516'),
+      parentId: d4,
+      level: 'individual',
+      departmentId: DEPTS.rndTeam.id,
+      departmentName: DEPTS.rndTeam.name,
+      owner: s3,
+      title: '샘플 이력 추적표',
+      description: '출하 샘플 로트·피드백 추적',
+      weight: 50,
+      progressRate: 12,
+      projectId: pid('516'),
+      logId: lid('516'),
+      logProgress: 12,
+      achievements: '추적표 초안',
+      issues: '과거 로트 누락',
+      nextSteps: '누락 로트 보완',
     },
   ];
 }
@@ -655,16 +869,21 @@ async function upsertMboTree(client: Queryable): Promise<void> {
       ]
     );
 
+    const projectStart = obj.currentStartDate ?? startDate;
+    const projectTarget = obj.currentTargetDate ?? targetDate;
+
     await client.query(
       `
       INSERT INTO core.mbo_projects (
         id, organization_id, objective_id, title, description,
         owner_id, owner_name, status, start_date, target_date,
+        baseline_start_date, baseline_target_date,
         evaluation_period, progress_rate, revision
       ) VALUES (
         $1::uuid, $2::uuid, $3::uuid, $4, $5,
         $6::uuid, $7, 'in_progress', $8::date, $9::date,
-        $10, $11, 1
+        $10::date, $11::date,
+        $12, $13, 1
       )
       ON CONFLICT (id) DO UPDATE
         SET title = EXCLUDED.title,
@@ -674,6 +893,8 @@ async function upsertMboTree(client: Queryable): Promise<void> {
             status = EXCLUDED.status,
             start_date = EXCLUDED.start_date,
             target_date = EXCLUDED.target_date,
+            baseline_start_date = EXCLUDED.baseline_start_date,
+            baseline_target_date = EXCLUDED.baseline_target_date,
             evaluation_period = EXCLUDED.evaluation_period,
             progress_rate = EXCLUDED.progress_rate,
             updated_at = NOW()
@@ -686,6 +907,8 @@ async function upsertMboTree(client: Queryable): Promise<void> {
         obj.description,
         obj.owner.userId,
         obj.owner.fullName,
+        projectStart,
+        projectTarget,
         startDate,
         targetDate,
         `${year}-Q4`,
@@ -758,8 +981,110 @@ async function upsertMboTree(client: Queryable): Promise<void> {
   }
 }
 
+/**
+ * 레거시 EP 대표(owner)·e2e/smoke 영문 MBO 잔여 데이터 정리.
+ * 시연 화면에는 김대표·한글 목표만 남긴다.
+ */
+async function cleanupLegacyEpOwnerAndSmokeMbo(client: Queryable): Promise<void> {
+  const legacyEmails = ['owner@ep.local', 'test@ep.local'];
+  const legacyUserIds = [
+    '11111111-1111-4111-8111-111111111111',
+    '11111111-1111-4111-8111-11111111111a',
+  ];
+
+  await client.query(
+    `
+    UPDATE core.organization_members m
+    SET is_active = FALSE,
+        is_current_context = FALSE,
+        deleted_at = COALESCE(m.deleted_at, NOW())
+    FROM app.users u
+    WHERE m.user_id = u.id
+      AND m.organization_id = $1::uuid
+      AND (
+        u.email = ANY($2::text[])
+        OR m.user_id = ANY($3::uuid[])
+      )
+  `,
+    [ORG_ID, legacyEmails, legacyUserIds]
+  );
+
+  await client.query(
+    `
+    UPDATE app.users
+    SET is_active = FALSE
+    WHERE email = ANY($1::text[])
+       OR id = ANY($2::uuid[])
+  `,
+    [legacyEmails, legacyUserIds]
+  );
+
+  // e2e/smoke가 남긴 영문·타임스탬프 목표/과제 제거
+  await client.query(
+    `
+    DELETE FROM core.mbo_progress_logs
+    WHERE organization_id = $1::uuid
+      AND project_id IN (
+        SELECT id FROM core.mbo_projects
+        WHERE organization_id = $1::uuid
+          AND (
+            title LIKE 'e2e-mbo-%'
+            OR title LIKE 'domain-smoke-%'
+            OR title = 'domain-smoke-mbo-project'
+          )
+      )
+  `,
+    [ORG_ID]
+  );
+
+  await client.query(
+    `
+    DELETE FROM core.mbo_feedback_comments
+    WHERE organization_id = $1::uuid
+      AND project_id IN (
+        SELECT id FROM core.mbo_projects
+        WHERE organization_id = $1::uuid
+          AND (
+            title LIKE 'e2e-mbo-%'
+            OR title LIKE 'domain-smoke-%'
+            OR title = 'domain-smoke-mbo-project'
+          )
+      )
+  `,
+    [ORG_ID]
+  );
+
+  await client.query(
+    `
+    DELETE FROM core.mbo_projects
+    WHERE organization_id = $1::uuid
+      AND (
+        title LIKE 'e2e-mbo-%'
+        OR title LIKE 'domain-smoke-%'
+        OR title = 'domain-smoke-mbo-project'
+      )
+  `,
+    [ORG_ID]
+  );
+
+  await client.query(
+    `
+    DELETE FROM core.mbo_objectives
+    WHERE organization_id = $1::uuid
+      AND (
+        title LIKE 'e2e-mbo-%'
+        OR title LIKE 'domain-smoke-%'
+        OR title = 'domain-smoke-mbo'
+      )
+  `,
+    [ORG_ID]
+  );
+}
+
 /** 연구개발그룹 조직·인원·MBO 시연 데이터를 멱등 시드한다. */
 export async function seedRndDemoPack(client: Queryable): Promise<void> {
+  await cleanupLegacyEpOwnerAndSmokeMbo(client);
+
   const ceoRoleId = await upsertCeoRole(client);
   await upsertDepartments(client);
 

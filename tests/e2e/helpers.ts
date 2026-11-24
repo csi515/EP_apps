@@ -1,6 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 
-export const E2E_EMAIL = process.env.EP_STAGING_EMAIL || 'owner@ep.local';
+/** 로컬 기본 owner = 김대표(rndceo). 스테이징은 env로 덮어쓴다. */
+export const E2E_EMAIL = process.env.EP_STAGING_EMAIL || 'rndceo';
 export const E2E_PASSWORD = process.env.EP_STAGING_PASSWORD || 'EpTest123!';
 
 /** 로그인 폼 제출 후 보호 경로로 이동할 때까지 대기 */

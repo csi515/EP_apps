@@ -19,6 +19,7 @@ export type MboHierarchyGanttViewProps = {
   organizationId?: string | null;
   selectedProjectId?: string | null;
   scheduleEditable?: boolean;
+  editableProjectIds?: ReadonlySet<string>;
   goalsLocked?: boolean;
   onSelectProject?: (projectId: string) => void;
   onOpenProjectSheet?: (projectId: string) => void;
@@ -30,6 +31,7 @@ export type MboHierarchyGanttViewProps = {
   onCreateProject?: () => void;
   onOpenCreateObjective?: () => void;
   onOpenObjectiveDetail?: (objectiveId: string) => void;
+  onClearFilters?: () => void;
 };
 
 export function MboHierarchyGanttView({
@@ -38,6 +40,7 @@ export function MboHierarchyGanttView({
   categories = [],
   organizationId,
   scheduleEditable = true,
+  editableProjectIds,
   onSelectProject,
   onOpenProjectSheet,
   onScheduleChange,
@@ -45,6 +48,7 @@ export function MboHierarchyGanttView({
   onCreateProject,
   onOpenCreateObjective,
   onOpenObjectiveDetail,
+  onClearFilters,
 }: MboHierarchyGanttViewProps) {
   const fallbackYear = new Date().getFullYear();
   const years = useMemo(() => collectAvailableYears(projects, fallbackYear), [projects, fallbackYear]);
@@ -129,15 +133,24 @@ export function MboHierarchyGanttView({
           </label>
         </div>
       </div>
-      <p className="text-[11px] leading-relaxed text-slate-500">{MBO_COPY.ganttDragHint}</p>
 
       {tasks.length === 0 ? (
-        <EmptyState title={MBO_COPY.emptyGoalsFiltered} />
+        <div className="space-y-3">
+          <EmptyState title={MBO_COPY.emptyGoalsFiltered} />
+          {onClearFilters ? (
+            <div className="flex justify-center">
+              <Button variant="secondary" onClick={onClearFilters}>
+                {MBO_COPY.ganttFilterEmptyClear}
+              </Button>
+            </div>
+          ) : null}
+        </div>
       ) : (
         <MboFrappeGanttChart
           tasks={tasks}
           viewMode={viewMode}
           scheduleEditable={scheduleEditable}
+          editableProjectIds={editableProjectIds}
           onOpenProject={openProject}
           onOpenObjective={(id) => onOpenObjectiveDetail?.(id)}
           onProjectScheduleChange={(projectId, range) => {

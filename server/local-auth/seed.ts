@@ -28,23 +28,11 @@ export type LocalAuthRoleAccount = {
   expectedRoleHints: readonly string[];
 };
 
+/**
+ * 역할별 고정 계정.
+ * 대표(owner)는 rndDemoSeed의 김대표(rndceo)만 쓴다 — EP 대표(owner) 중복 제거.
+ */
 export const LOCAL_AUTH_ROLE_ACCOUNTS: readonly LocalAuthRoleAccount[] = [
-  {
-    role: 'owner',
-    userId: '11111111-1111-4111-8111-111111111111',
-    membershipId: '33333333-3333-4333-8333-333333333333',
-    email: 'owner@ep.local',
-    aliases: [
-      {
-        userId: '11111111-1111-4111-8111-11111111111a',
-        membershipId: '33333333-3333-4333-8333-33333333333a',
-        email: 'test@ep.local',
-      },
-    ],
-    password: 'EpTest123!',
-    fullName: 'EP 대표(owner)',
-    expectedRoleHints: ['사업주', '대표', 'owner'],
-  },
   {
     role: 'admin',
     userId: '11111111-1111-4111-8111-111111111112',
@@ -78,13 +66,14 @@ export const LOCAL_AUTH_ROLE_ACCOUNTS: readonly LocalAuthRoleAccount[] = [
   },
 ] as const;
 
-/** @deprecated 단일 owner 시드 — LOCAL_AUTH_ROLE_ACCOUNTS[0] + LOCAL_AUTH_ORG 사용 */
+/** 로컬 기본 owner = 김대표(rndceo). rndDemoSeed PEOPLE[0] 와 동일 UUID */
 export const LOCAL_AUTH_SEED = {
   ...LOCAL_AUTH_ORG,
-  userId: LOCAL_AUTH_ROLE_ACCOUNTS[0].userId,
-  email: 'test@ep.local',
-  password: LOCAL_AUTH_ROLE_ACCOUNTS[0].password,
-  fullName: LOCAL_AUTH_ROLE_ACCOUNTS[0].fullName,
-  membershipId: LOCAL_AUTH_ROLE_ACCOUNTS[0].membershipId,
-  role: LOCAL_AUTH_ROLE_ACCOUNTS[0].role,
+  userId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaa501',
+  email: null as string | null,
+  loginId: 'rndceo',
+  password: 'EpTest123!',
+  fullName: '김대표',
+  membershipId: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbb501',
+  role: 'owner' as const,
 } as const;

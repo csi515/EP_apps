@@ -121,9 +121,11 @@ function CycleBarStrip({
           {reviewOpen ? <span className="text-slate-600">{MBO_COPY.cycleReviewOpen}</span> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {isManager && pendingChangeApprovals > 0 && onOpenPendingApprovals ? (
+          {isManager && onOpenPendingApprovals ? (
             <Button variant="outline" size="sm" onClick={onOpenPendingApprovals}>
-              {MBO_COPY.pendingApprovalsCount(pendingChangeApprovals)}
+              {pendingChangeApprovals > 0
+                ? MBO_COPY.pendingApprovalsCount(pendingChangeApprovals)
+                : MBO_COPY.pendingApprovalsZero}
             </Button>
           ) : null}
           {canEdit ? (
