@@ -1,5 +1,5 @@
 import React from 'react';
-import { canUserProcessStep } from '../domain/approvalEngine';
+import { canRequesterCancelApproval, canUserProcessStep } from '../domain/approvalEngine';
 import { readRejectionHistory } from '../domain/approvalLine';
 import {
   findPendingStepForRequest,
@@ -13,9 +13,11 @@ type Props = {
   steps: ApprovalStepRow[];
   userId: string;
   processingId: string | null;
+  allowRequesterCancel?: boolean;
   onApprove: (req: ApprovalRequestRow) => void;
   onReject: (req: ApprovalRequestRow, stepId: string) => void;
   onResubmit: (req: ApprovalRequestRow) => void;
+  onCancel?: (req: ApprovalRequestRow) => void;
 };
 
 export const ApprovalRequestTable: React.FC<Props> = ({
@@ -23,9 +25,11 @@ export const ApprovalRequestTable: React.FC<Props> = ({
   steps,
   userId,
   processingId,
+  allowRequesterCancel = true,
   onApprove,
   onReject,
   onResubmit,
+  onCancel,
 }) => {
   if (requests.length === 0) {
     return (
@@ -67,6 +71,14 @@ export const ApprovalRequestTable: React.FC<Props> = ({
               req.status === 'draft' &&
               Boolean(req.rejection_reason) &&
               (!req.requester_id || req.requester_id === userId);
+            const canCancel =
+              Boolean(onCancel) &&
+              canRequesterCancelApproval({
+                status: req.status,
+                requesterId: req.requester_id,
+                viewerUserId: userId,
+                allowRequesterCancel,
+              });
             const history = readRejectionHistory(req.content ?? undefined);
             return (
               <tr key={req.id} className="hover:bg-slate-50/50">
@@ -92,14 +104,17 @@ export const ApprovalRequestTable: React.FC<Props> = ({
                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                       req.status === 'approved'
                         ? 'bg-emerald-50 text-emerald-700'
-                        : req.status === 'draft' || req.status === 'rejected'
-                          ? 'bg-rose-50 text-rose-700'
-                          : 'bg-amber-50 text-amber-700'
+                        : req.status === 'canceled'
+                          ? 'bg-slate-100 text-slate-600'
+                          : req.status === 'draft' || req.status === 'rejected'
+                            ? 'bg-rose-50 text-rose-700'
+                            : 'bg-amber-50 text-amber-700'
                     }`}
                   >
                     {req.status === 'approved' && '승인'}
                     {req.status === 'rejected' && '반려'}
                     {req.status === 'pending' && '심사 중'}
+                    {req.status === 'canceled' && '회수됨'}
                     {req.status === 'draft' && (req.rejection_reason ? '반려 초안' : '임시 저장')}
                   </span>
                 </td>
@@ -132,6 +147,16 @@ export const ApprovalRequestTable: React.FC<Props> = ({
                         className="rounded bg-indigo-50 px-2 py-1 text-xs font-semibold text-indigo-700"
                       >
                         수정·재상신
+                      </button>
+                    ) : null}
+                    {canCancel ? (
+                      <button
+                        type="button"
+                        disabled={processingId === req.id}
+                        onClick={() => onCancel?.(req)}
+                        className="rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-50"
+                      >
+                        회수
                       </button>
                     ) : null}
                   </div>

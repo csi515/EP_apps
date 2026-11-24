@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useList, useCreate, useUpdate } from '@refinedev/core';
-import { HelpCircle, Plus, ShieldCheck, MessageSquare, Search } from 'lucide-react';
+import { useList, useCreate, useUpdate, useDelete } from '@refinedev/core';
+import { HelpCircle, Plus, ShieldCheck, MessageSquare, Search, Pencil, Trash2 } from 'lucide-react';
 import {
+  canAuthorMutateGrievance,
   hashAccessPin,
   validateGrievanceSubmission,
   generateBlindReceiptToken,
@@ -61,6 +62,7 @@ export const GrievanceListPage: React.FC = () => {
   const isHandler = useCanManageGrievances();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingRecord, setEditingRecord] = useState<AnonymousGrievanceRecord | null>(null);
   const [visibility, setVisibility] = useState<GrievanceVisibility>(defaultVisibility);
 
   useEffect(() => {
@@ -98,6 +100,31 @@ export const GrievanceListPage: React.FC = () => {
 
   const { mutate: createRecord } = useCreate();
   const { mutate: updateRecord } = useUpdate();
+  const { mutate: deleteRecord } = useDelete();
+
+  const resetComposeForm = () => {
+    setEditingRecord(null);
+    setTitle('');
+    setContent('');
+    setPin('');
+    setCategory('GENERAL_GRIEVANCE');
+    setVisibility(defaultVisibility);
+  };
+
+  const openCreateModal = () => {
+    resetComposeForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (record: AnonymousGrievanceRecord) => {
+    setEditingRecord(record);
+    setVisibility(record.visibility);
+    setCategory(record.category);
+    setTitle(record.subject_title);
+    setContent(record.incident_content);
+    setPin('');
+    setIsModalOpen(true);
+  };
 
   const visibleRecords = useMemo(() => {
     if (isHandler) return records;
@@ -117,15 +144,52 @@ export const GrievanceListPage: React.FC = () => {
     if (page > maxPage) setPage(maxPage);
   }, [visibleRecords.length, pageSize, page]);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleComposeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const val = validateGrievanceSubmission(title, content, pin, visibility);
+    const composeVisibility = editingRecord ? editingRecord.visibility : visibility;
+    const val = validateGrievanceSubmission(title, content, pin, composeVisibility);
     if (!val.isValid) {
       showToast(val.error || '입력 오류', 'error');
       return;
     }
     if (!currentOrganization?.id) {
       showToast('사업장이 선택되지 않았습니다.', 'error');
+      return;
+    }
+
+    if (editingRecord) {
+      if (
+        !canAuthorMutateGrievance({
+          record: editingRecord,
+          viewerUserId: user?.id,
+        })
+      ) {
+        showToast('접수 대기 상태의 본인 기명 건의만 수정할 수 있습니다.', 'error');
+        return;
+      }
+      updateRecord(
+        {
+          resource: 'anonymous_grievances',
+          id: editingRecord.id,
+          values: {
+            category,
+            subject_title: title.trim(),
+            incident_content: content.trim(),
+          },
+          meta: { schema: 'core' },
+        },
+        {
+          onSuccess: () => {
+            showToast(`[${editingRecord.ticket_code}] 건의가 수정되었습니다.`, 'success');
+            setIsModalOpen(false);
+            resetComposeForm();
+            refetch();
+          },
+          onError: (err) => {
+            showToast(err?.message || '수정 실패', 'error');
+          },
+        }
+      );
       return;
     }
 
@@ -179,10 +243,7 @@ export const GrievanceListPage: React.FC = () => {
             if (visibility === 'anonymous') {
               setIssuedReceipt({ ticketCode, token: receiptToken });
             }
-            setTitle('');
-            setContent('');
-            setPin('');
-            setVisibility(defaultVisibility);
+            resetComposeForm();
             refetch();
           },
           onError: (err) => {
@@ -193,6 +254,36 @@ export const GrievanceListPage: React.FC = () => {
     } catch (cause) {
       showToast(cause instanceof Error ? cause.message : '접수 실패', 'error');
     }
+  };
+
+  const handleDeleteOwn = (record: AnonymousGrievanceRecord) => {
+    if (
+      !canAuthorMutateGrievance({
+        record,
+        viewerUserId: user?.id,
+      })
+    ) {
+      showToast('접수 대기 상태의 본인 기명 건의만 삭제할 수 있습니다.', 'error');
+      return;
+    }
+    if (!window.confirm(`[${record.ticket_code}] 건의를 삭제하시겠습니까?`)) return;
+
+    deleteRecord(
+      {
+        resource: 'anonymous_grievances',
+        id: record.id,
+        meta: { schema: 'core' },
+      },
+      {
+        onSuccess: () => {
+          showToast(`[${record.ticket_code}] 건의가 삭제되었습니다.`, 'success');
+          refetch();
+        },
+        onError: (err) => {
+          showToast(err?.message || '삭제 실패', 'error');
+        },
+      }
+    );
   };
 
   const handleInquirySubmit = async (e: React.FormEvent) => {
@@ -289,7 +380,7 @@ export const GrievanceListPage: React.FC = () => {
           <p className="mt-1 text-sm text-slate-500">
             {isHandler
               ? '기명·익명 건의를 조회하고 조치 회신을 등록합니다. 급여·승진과 연결되지 않습니다.'
-              : '본인이 접수한 기명 건의를 확인하고, 새 건의를 작성할 수 있습니다.'}
+              : '본인이 접수한 기명 건의를 작성·수정·삭제할 수 있습니다. (접수 대기 상태만)'}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -308,7 +399,7 @@ export const GrievanceListPage: React.FC = () => {
             variant="primary"
             className="bg-rose-600 hover:bg-rose-700"
             leftIcon={<Plus className="h-4 w-4" />}
-            onClick={() => setIsModalOpen(true)}
+            onClick={openCreateModal}
           >
             새 건의
           </Button>
@@ -326,24 +417,29 @@ export const GrievanceListPage: React.FC = () => {
                 <th className="p-3">제목</th>
                 <th className="p-3">접수일</th>
                 <th className="p-3">상태</th>
-                {isHandler ? <th className="p-3 text-right">조사 / 회신</th> : null}
+                <th className="p-3 text-right">관리</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
                     불러오는 중…
                   </td>
                 </tr>
               ) : visibleRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={isHandler ? 7 : 6} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
                     접수된 건의가 없습니다.
                   </td>
                 </tr>
               ) : (
-                pagedRecords.map((r) => (
+                pagedRecords.map((r) => {
+                  const canMutateOwn = canAuthorMutateGrievance({
+                    record: r,
+                    viewerUserId: user?.id,
+                  });
+                  return (
                   <tr key={r.id} className="hover:bg-slate-50">
                     <td className="p-3 font-mono font-bold text-rose-600">{r.ticket_code}</td>
                     <td className="p-3 text-xs">{r.visibility === 'anonymous' ? '익명' : '기명'}</td>
@@ -376,23 +472,49 @@ export const GrievanceListPage: React.FC = () => {
                         <p className="mt-1 text-xs text-slate-500">{r.investigation_feedback}</p>
                       ) : null}
                     </td>
-                    {isHandler ? (
-                      <td className="p-3 text-right">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedTicket(r);
-                            setFeedbackText(r.investigation_feedback || '');
-                            setReplyModalOpen(true);
-                          }}
-                          className="inline-flex min-h-11 items-center gap-1 rounded border px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
-                        >
-                          <MessageSquare className="h-3.5 w-3.5" aria-hidden /> 회신
-                        </button>
-                      </td>
-                    ) : null}
+                    <td className="p-3 text-right">
+                      <div className="inline-flex flex-wrap items-center justify-end gap-1">
+                        {canMutateOwn ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-md"
+                              aria-label="건의 수정"
+                              onClick={() => openEditModal(r)}
+                            >
+                              <Pencil className="h-4 w-4" aria-hidden />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-md"
+                              aria-label="건의 삭제"
+                              className="text-rose-600 hover:text-rose-700"
+                              onClick={() => handleDeleteOwn(r)}
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden />
+                            </Button>
+                          </>
+                        ) : null}
+                        {isHandler ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedTicket(r);
+                              setFeedbackText(r.investigation_feedback || '');
+                              setReplyModalOpen(true);
+                            }}
+                            className="inline-flex min-h-11 items-center gap-1 rounded border px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" aria-hidden /> 회신
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -452,32 +574,38 @@ export const GrievanceListPage: React.FC = () => {
           <div className="w-full max-w-md space-y-4 rounded-xl bg-white p-6">
             <h2 className="flex items-center gap-2 text-xl font-bold text-rose-600">
               <ShieldCheck className="h-5 w-5" aria-hidden />
-              새 건의 작성
+              {editingRecord ? `건의 수정 (${editingRecord.ticket_code})` : '새 건의 작성'}
             </h2>
-            <form onSubmit={(e) => void handleCreate(e)} className="space-y-4">
-              <fieldset>
-                <legend className="mb-1 text-xs font-semibold text-slate-600">접수 방식 *</legend>
-                <div className="flex gap-3">
-                  <label className="flex min-h-11 items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      checked={visibility === 'named'}
-                      onChange={() => setVisibility('named')}
-                    />
-                    기명 (본인만·담당자 조회)
-                  </label>
-                  <label className="flex min-h-11 items-center gap-2 text-sm">
-                    <input
-                      type="radio"
-                      name="visibility"
-                      checked={visibility === 'anonymous'}
-                      onChange={() => setVisibility('anonymous')}
-                    />
-                    익명 (PIN)
-                  </label>
-                </div>
-              </fieldset>
+            <form onSubmit={(e) => void handleComposeSubmit(e)} className="space-y-4">
+              {!editingRecord ? (
+                <fieldset>
+                  <legend className="mb-1 text-xs font-semibold text-slate-600">접수 방식 *</legend>
+                  <div className="flex gap-3">
+                    <label className="flex min-h-11 items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        checked={visibility === 'named'}
+                        onChange={() => setVisibility('named')}
+                      />
+                      기명 (본인만·담당자 조회)
+                    </label>
+                    <label className="flex min-h-11 items-center gap-2 text-sm">
+                      <input
+                        type="radio"
+                        name="visibility"
+                        checked={visibility === 'anonymous'}
+                        onChange={() => setVisibility('anonymous')}
+                      />
+                      익명 (PIN)
+                    </label>
+                  </div>
+                </fieldset>
+              ) : (
+                <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                  기명 건의 · 접수 대기 상태에서만 수정할 수 있습니다.
+                </p>
+              )}
               <label className="block text-xs font-semibold text-slate-600">
                 분류 *
                 <select
@@ -512,7 +640,7 @@ export const GrievanceListPage: React.FC = () => {
                   required
                 />
               </label>
-              {visibility === 'anonymous' ? (
+              {!editingRecord && visibility === 'anonymous' ? (
                 <label className="block text-xs font-semibold text-slate-600">
                   사후 조회용 PIN (4자리 이상) *
                   <input
@@ -525,11 +653,18 @@ export const GrievanceListPage: React.FC = () => {
                 </label>
               ) : null}
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="min-h-11 rounded-lg border px-4 text-sm">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    resetComposeForm();
+                  }}
+                  className="min-h-11 rounded-lg border px-4 text-sm"
+                >
                   취소
                 </button>
                 <button type="submit" className="min-h-11 rounded-lg bg-rose-600 px-4 text-sm font-medium text-white">
-                  접수
+                  {editingRecord ? '저장' : '접수'}
                 </button>
               </div>
             </form>

@@ -4,6 +4,7 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { DocumentApprovalStepper } from './DocumentApprovalStepper';
 import { RevisionHistoryModal } from './RevisionHistoryModal';
 import {
+  deleteDraftRiskAssessment,
   listApprovalLines,
   listOrgMembers,
   listRevisions,
@@ -15,7 +16,11 @@ import {
   type RevisionRow,
   type RiskAssessmentRow,
 } from '../services/riskAssessmentApprovalService';
-import { shouldShowOccasionalReviewBadge, type ApprovalStepState } from '../domain/approvalEngine';
+import {
+  canAuthorMutateRiskAssessment,
+  shouldShowOccasionalReviewBadge,
+  type ApprovalStepState,
+} from '../domain/approvalEngine';
 import { readDocumentBody, validateDraftForSubmit, type OrgMemberOption } from '../domain/sopStepDocument';
 import { formatRevisionNo } from '../domain/sopNumberingAndAuditEngine';
 
@@ -168,65 +173,97 @@ export const SopRiskApprovalPanel: React.FC = () => {
                 </ol>
               ) : null}
 
-              {selected.status === 'DRAFT' && selected.created_by === userId ? (
-                <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-                  <select
-                    className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
-                    aria-label="검토자"
-                    value={reviewerId}
-                    onChange={(event) => setReviewerId(event.target.value)}
-                  >
-                    <option value="">검토자 선택</option>
-                    {members.map((member) => (
-                      <option key={member.userId} value={member.userId}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
-                    aria-label="최종 승인자"
-                    value={approverId}
-                    onChange={(event) => setApproverId(event.target.value)}
-                  >
-                    <option value="">최종 승인자 선택</option>
-                    {members.map((member) => (
-                      <option key={`approver-${member.userId}`} value={member.userId}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
+              {canAuthorMutateRiskAssessment({
+                status: selected.status,
+                createdBy: selected.created_by,
+                viewerUserId: userId,
+              }) ? (
+                <div className="mt-4 flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <select
+                      className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
+                      aria-label="검토자"
+                      value={reviewerId}
+                      onChange={(event) => setReviewerId(event.target.value)}
+                    >
+                      <option value="">검토자 선택</option>
+                      {members.map((member) => (
+                        <option key={member.userId} value={member.userId}>
+                          {member.name}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="h-12 flex-1 rounded-lg border border-slate-300 px-3 text-sm"
+                      aria-label="최종 승인자"
+                      value={approverId}
+                      onChange={(event) => setApproverId(event.target.value)}
+                    >
+                      <option value="">최종 승인자 선택</option>
+                      {members.map((member) => (
+                        <option key={`approver-${member.userId}`} value={member.userId}>
+                          {member.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="h-12 rounded-xl bg-rose-700 px-4 font-bold text-white"
+                      onClick={() => {
+                        const current = selected;
+                        const body = {
+                          ...readDocumentBody(current.snapshot_payload),
+                          intendedReviewerId: reviewerId.trim() || null,
+                          intendedApproverId: approverId.trim() || null,
+                        };
+                        const check = validateDraftForSubmit(body);
+                        if (!check.isValid) {
+                          setError(check.error ?? '검토 요청 전에 내용을 확인해 주세요.');
+                          return;
+                        }
+                        void saveDraftRiskAssessment({
+                          assessmentId: current.id,
+                          processName: current.process_name,
+                          body,
+                        })
+                          .then(() => submitForReview(current.id, reviewerId.trim()))
+                          .then(() => {
+                            setMessage('검토 요청이 접수되었습니다.');
+                            return reload();
+                          })
+                          .catch((cause) => {
+                            setError(cause instanceof Error ? cause.message : '검토 요청 실패');
+                          });
+                      }}
+                    >
+                      {readDocumentBody(selected.snapshot_payload).rejectionHistory.length > 0
+                        ? '다시 검토 요청'
+                        : '검토 요청'}
+                    </button>
+                  </div>
                   <button
                     type="button"
-                    className="h-12 rounded-xl bg-rose-700 px-4 font-bold text-white"
+                    className="h-12 rounded-xl border border-slate-300 px-4 text-sm font-semibold text-slate-700"
                     onClick={() => {
-                      const current = selected;
-                      const body = {
-                        ...readDocumentBody(current.snapshot_payload),
-                        intendedReviewerId: reviewerId.trim() || null,
-                        intendedApproverId: approverId.trim() || null,
-                      };
-                      const check = validateDraftForSubmit(body);
-                      if (!check.isValid) {
-                        setError(check.error ?? '검토 요청 전에 내용을 확인해 주세요.');
+                      if (
+                        !window.confirm(
+                          `[${selected.document_no}] 초안을 삭제하시겠습니까?`
+                        )
+                      ) {
                         return;
                       }
-                      void saveDraftRiskAssessment({
-                        assessmentId: current.id,
-                        processName: current.process_name,
-                        body,
-                      })
-                        .then(() => submitForReview(current.id, reviewerId.trim()))
+                      void deleteDraftRiskAssessment(selected.id)
                         .then(() => {
-                          setMessage('검토 요청이 접수되었습니다.');
+                          setMessage('초안이 삭제되었습니다.');
+                          setSelectedId(null);
                           return reload();
                         })
                         .catch((cause) => {
-                          setError(cause instanceof Error ? cause.message : '검토 요청 실패');
+                          setError(cause instanceof Error ? cause.message : '초안 삭제 실패');
                         });
                     }}
                   >
-                    {readDocumentBody(selected.snapshot_payload).rejectionHistory.length > 0 ? '다시 검토 요청' : '검토 요청'}
+                    초안 삭제
                   </button>
                 </div>
               ) : null}

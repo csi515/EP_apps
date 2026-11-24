@@ -220,6 +220,16 @@ function mergeRejectionHistory(local: RejectionNote[], remote: RejectionNote[]):
   return [...byId.values()];
 }
 
+export async function deleteDraftRiskAssessment(assessmentId: string): Promise<void> {
+  const client = getCoreClient();
+  const { error } = await client
+    .from('risk_assessments')
+    .delete()
+    .eq('id', assessmentId)
+    .eq('status', 'DRAFT');
+  if (error) throw new Error(error.message);
+}
+
 export async function saveDraftRiskAssessment(input: {
   assessmentId: string;
   processName: string;

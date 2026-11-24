@@ -1,9 +1,10 @@
 import { useCallback, useState } from 'react';
 import { useInvalidate } from '@refinedev/core';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import { canUserProcessStep } from '../domain/approvalEngine';
+import { canRequesterCancelApproval, canUserProcessStep } from '../domain/approvalEngine';
 import { validateChosenApprovers } from '../domain/approvalLine';
 import {
+  cancelApprovalRequestByRequester,
   createApprovalWithChosenLine,
   findPendingStepForRequest,
   isMboPlanApprovalEntity,
@@ -31,6 +32,7 @@ export function useApprovalInboxActions(input: {
   requesterName: string;
   members: ApprovalMemberOption[];
   steps: ApprovalStepRow[];
+  allowRequesterCancel?: boolean;
   refetch: () => void;
   refetchSteps?: () => void;
   /** 최종 승인·반려 후 연계 엔티티 동기화(자원예약·MBO 등). Cap 간 역의존 방지용 콜백 */
@@ -182,6 +184,36 @@ export function useApprovalInboxActions(input: {
     setRejectReason('');
   };
 
+  const runCancel = async (req: ApprovalRequestRow) => {
+    if (
+      !canRequesterCancelApproval({
+        status: req.status,
+        requesterId: req.requester_id,
+        viewerUserId: input.userId,
+        allowRequesterCancel: input.allowRequesterCancel,
+      })
+    ) {
+      showToast('회수할 수 없는 결재입니다.', 'error');
+      return;
+    }
+    if (!window.confirm(`[${req.title}] 결재를 회수하시겠습니까?`)) return;
+    setProcessingId(req.id);
+    const result = await cancelApprovalRequestByRequester(req.id);
+    setProcessingId(null);
+    if (!result.success) {
+      const msg =
+        result.error === 'CANCEL_DISABLED'
+          ? '기안자 자진 회수가 비활성화되어 있습니다.'
+          : result.error === 'NOT_REQUESTER'
+            ? '본인이 기안한 문서만 회수할 수 있습니다.'
+            : result.error || '회수 실패';
+      showToast(msg, 'error');
+      return;
+    }
+    refreshAll(req);
+    showToast('결재가 회수되었습니다.', 'success');
+  };
+
   const confirmReject = async () => {
     if (!rejectTarget) return;
     const reason = rejectReason.trim();
@@ -218,6 +250,7 @@ export function useApprovalInboxActions(input: {
     handleCreate,
     handleResubmit,
     runApprove,
+    runCancel,
     openReject,
     confirmReject,
   };

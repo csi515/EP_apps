@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  canAuthorMutateGrievance,
   canViewGrievanceContent,
   generateTicketCode,
   hashAccessPin,
@@ -86,6 +87,35 @@ async function run() {
 
   const masked = getMaskedGrievanceAuthor({ visibility: 'anonymous', author_user_id: null });
   assert.match(masked, /익명 제보자/, '감사 로그 마스킹 확인');
+
+  assert.equal(
+    canAuthorMutateGrievance({
+      record: { author_user_id: 'u1', visibility: 'named', status: 'SUBMITTED' },
+      viewerUserId: 'u1',
+    }),
+    true
+  );
+  assert.equal(
+    canAuthorMutateGrievance({
+      record: { author_user_id: 'u1', visibility: 'named', status: 'RESOLVED' },
+      viewerUserId: 'u1',
+    }),
+    false
+  );
+  assert.equal(
+    canAuthorMutateGrievance({
+      record: { author_user_id: 'u1', visibility: 'named', status: 'SUBMITTED' },
+      viewerUserId: 'u2',
+    }),
+    false
+  );
+  assert.equal(
+    canAuthorMutateGrievance({
+      record: { author_user_id: null, visibility: 'anonymous', status: 'SUBMITTED' },
+      viewerUserId: 'u1',
+    }),
+    false
+  );
 
   console.log('grievanceEngine.test.ts: all tests passed including blind tokenization.');
 }

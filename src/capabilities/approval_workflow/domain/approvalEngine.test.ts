@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   validateApprovalSteps,
   canUserProcessStep,
+  canRequesterCancelApproval,
   transitionApprovalStep,
   summarizeApprovalMetrics,
   type ApprovalRequest,
@@ -185,6 +186,45 @@ console.log('=== [5] Summary Metrics ===');
   assert.equal(metrics.approvedCount, 2);
   assert.equal(metrics.rejectedCount, 1);
   console.log('  -> 결재 현황 메트릭스 집계 검증 통과');
+}
+
+console.log('=== [6] Requester cancel ===');
+{
+  assert.equal(
+    canRequesterCancelApproval({
+      status: 'pending',
+      requesterId: 'u1',
+      viewerUserId: 'u1',
+      allowRequesterCancel: true,
+    }),
+    true
+  );
+  assert.equal(
+    canRequesterCancelApproval({
+      status: 'pending',
+      requesterId: 'u1',
+      viewerUserId: 'u1',
+      allowRequesterCancel: false,
+    }),
+    false
+  );
+  assert.equal(
+    canRequesterCancelApproval({
+      status: 'approved',
+      requesterId: 'u1',
+      viewerUserId: 'u1',
+    }),
+    false
+  );
+  assert.equal(
+    canRequesterCancelApproval({
+      status: 'pending',
+      requesterId: 'u1',
+      viewerUserId: 'u2',
+    }),
+    false
+  );
+  console.log('  -> 기안자 회수 가능 여부 검증 통과');
 }
 
 console.log('\n[PASS] approvalEngine.test.ts: 모든 도메인 불변식 검증 성공');

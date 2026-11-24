@@ -134,3 +134,18 @@ export function canViewGrievanceContent(params: {
   }
   return false;
 }
+
+/**
+ * 본인 기명·접수대기(SUBMITTED) 글만 작성자가 수정·삭제 가능.
+ * 조사 중이거나 조치 완료된 건은 담당자만 변경.
+ */
+export function canAuthorMutateGrievance(params: {
+  record: Pick<AnonymousGrievanceRecord, 'author_user_id' | 'visibility' | 'status'>;
+  viewerUserId: string | null | undefined;
+}): boolean {
+  const { record, viewerUserId } = params;
+  if (!viewerUserId) return false;
+  if (record.visibility !== 'named') return false;
+  if (!record.author_user_id || record.author_user_id !== viewerUserId) return false;
+  return record.status === 'SUBMITTED';
+}

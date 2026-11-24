@@ -259,6 +259,22 @@ export async function resubmitApprovalDraft(input: {
   if (stepError) throw new Error(stepError.message);
 }
 
+export async function cancelApprovalRequestByRequester(
+  requestId: string
+): Promise<{ success: boolean; error?: string }> {
+  const client = getCoreClient();
+  const { data, error } = await client.rpc('cancel_approval_request_by_requester' as never, {
+    p_request_id: requestId,
+  } as never);
+  if (error) return { success: false, error: error.message };
+  const payload = data as Record<string, unknown> | null;
+  if (!payload || payload.success !== true) {
+    const code = typeof payload?.error === 'string' ? payload.error : 'CANCEL_RPC_FAILED';
+    return { success: false, error: code };
+  }
+  return { success: true };
+}
+
 export async function processApprovalStepAtomic(params: {
   requestId: string;
   stepId: string;

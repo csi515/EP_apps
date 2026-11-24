@@ -68,6 +68,17 @@ export function canPerformApprovalAction(
   return false;
 }
 
+/** 작성자 본인·DRAFT 상태만 수정·삭제 가능 */
+export function canAuthorMutateRiskAssessment(params: {
+  status: DocumentStatus | string;
+  createdBy: string | null | undefined;
+  viewerUserId: string | null | undefined;
+}): boolean {
+  if (!params.viewerUserId || !params.createdBy) return false;
+  if (params.createdBy !== params.viewerUserId) return false;
+  return params.status === 'DRAFT';
+}
+
 /**
  * 결재 상태 머신 전이 순수 함수
  */

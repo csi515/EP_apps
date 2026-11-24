@@ -110,6 +110,21 @@ export function canUserProcessStep(
 }
 
 /**
+ * 기안자 자진 회수: pending + 본인 + setup allow_requester_cancel(기본 true).
+ */
+export function canRequesterCancelApproval(params: {
+  status: ApprovalStatus | string;
+  requesterId: string | null | undefined;
+  viewerUserId: string | null | undefined;
+  allowRequesterCancel?: boolean | null;
+}): boolean {
+  if (!params.viewerUserId || !params.requesterId) return false;
+  if (params.requesterId !== params.viewerUserId) return false;
+  if (params.status !== 'pending') return false;
+  return params.allowRequesterCancel !== false;
+}
+
+/**
  * 결재/반려 상태 전이 엔진
  */
 export function transitionApprovalStep(

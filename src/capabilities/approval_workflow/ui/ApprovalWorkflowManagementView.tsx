@@ -36,6 +36,9 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
   const orgId = currentOrganization?.id ?? '';
   const userId = identity?.id ?? '';
   const requesterName = identity?.name?.trim() || '기안자';
+  const allowRequesterCancel =
+    (currentOrganization?.settings as Record<string, unknown> | null | undefined)
+      ?.allow_requester_cancel !== false;
 
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,6 +126,7 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
     requesterName,
     members,
     steps,
+    allowRequesterCancel,
     refetch,
     refetchSteps: () => void stepsQuery.query?.refetch?.(),
     onLinkedEntityOutcome,
@@ -240,9 +244,11 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
           steps={steps}
           userId={userId}
           processingId={actions.processingId}
+          allowRequesterCancel={allowRequesterCancel}
           onApprove={(req) => void actions.runApprove(req)}
           onReject={actions.openReject}
           onResubmit={setResubmitTarget}
+          onCancel={(req) => void actions.runCancel(req)}
         />
       </div>
 

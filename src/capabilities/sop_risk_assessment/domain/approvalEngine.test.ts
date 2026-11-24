@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   buildWormSnapshotPayload,
+  canAuthorMutateRiskAssessment,
   canPerformApprovalAction,
   getNextDocumentStatus,
   validateRejectReason,
@@ -89,6 +90,35 @@ console.log('--- Testing sop_risk_assessment approvalEngine ---');
   });
   assert.equal(revisionCheck.isValid, true);
   console.log('✅ Case 4: WORM snapshot payload and final APPROVE transition');
+}
+
+// [케이스 5] 작성자 DRAFT만 수정·삭제
+{
+  assert.equal(
+    canAuthorMutateRiskAssessment({
+      status: 'DRAFT',
+      createdBy: 'u1',
+      viewerUserId: 'u1',
+    }),
+    true
+  );
+  assert.equal(
+    canAuthorMutateRiskAssessment({
+      status: 'REVIEW_PENDING',
+      createdBy: 'u1',
+      viewerUserId: 'u1',
+    }),
+    false
+  );
+  assert.equal(
+    canAuthorMutateRiskAssessment({
+      status: 'DRAFT',
+      createdBy: 'u1',
+      viewerUserId: 'u2',
+    }),
+    false
+  );
+  console.log('✅ Case 5: author mutate only on own DRAFT');
 }
 
 console.log('🎉 All approvalEngine tests passed!');
