@@ -50,7 +50,7 @@ import { buildHierarchyGanttRows } from '../domain/mboGanttHierarchyEngine';
 /** @deprecated 목표 목록 패널 제거 — 실행 과제만 사용. 호환용 타입 유지 */
 export type MboContentPanel = 'schedule' | 'goals';
 export type MboProjectCompletionFilter = 'active' | 'completed' | 'all';
-export type MboScheduleViewMode = 'table' | 'gantt';
+export type MboScheduleViewMode = 'table' | 'gantt' | 'matrix';
 import {
   canManagerOverrideCycleGoalLock,
   countPendingGoalApprovals,
@@ -111,8 +111,9 @@ export function useMboManagementWorkspaceState() {
   const [listScope, setListScope] = useState<MboListScope>('visible');
   const [dashboardView, setDashboardView] = useState<MboDashboardView>('team_overview');
   const [contentPanel, setContentPanel] = useState<MboContentPanel>('schedule');
-  /** 실행 과제: 표(기본) | 간트(조회) */
+  /** 실행 과제: 표(기본) | 간트(조회) | 월간 매트릭스 */
   const [scheduleViewMode, setScheduleViewMode] = useState<MboScheduleViewMode>('table');
+  const [matrixYear, setMatrixYear] = useState(() => new Date().getFullYear());
   /** 목표 목록(레거시): 사람별 | 조직 — 실행 과제 통합 후에도 일부 파생에 사용 */
   const [goalViewMode, setGoalViewMode] = useState<'person' | 'org'>('org');
   const [projectCompletionFilter, setProjectCompletionFilter] =
@@ -277,6 +278,7 @@ export function useMboManagementWorkspaceState() {
     dashboardView, setDashboardView,
     contentPanel, setContentPanel,
     scheduleViewMode, setScheduleViewMode,
+    matrixYear, setMatrixYear,
     goalViewMode, setGoalViewMode,
     projectCompletionFilter, setProjectCompletionFilter,
     ownerFilterId, setOwnerFilterId,

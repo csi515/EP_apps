@@ -48,6 +48,7 @@ export function MboProjectsPanelChrome({
             options={[
               { value: 'table', label: MBO_COPY.scheduleViewTable },
               { value: 'gantt', label: MBO_COPY.scheduleViewGantt },
+              { value: 'matrix', label: MBO_COPY.scheduleViewMatrix },
             ]}
           />
         </div>

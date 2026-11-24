@@ -7,6 +7,7 @@ import { MboAlignmentContextStrip } from './MboAlignmentContextStrip';
 import { MboAlignmentSlotModal } from './MboAlignmentSlotModal';
 import { MboHierarchyGanttView } from './MboHierarchyGanttView';
 import { MboProjectsTable } from './MboProjectsTable';
+import { MboPlanActualMatrixView } from './MboPlanActualMatrixView';
 import { MboUsageSteps } from './MboUsageSteps';
 import { MboProjectsPanelChrome } from './MboProjectsPanelChrome';
 import { MboHubSummaryCards } from './MboHubSummaryCards';
@@ -52,6 +53,8 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
     setContentPanel,
     scheduleViewMode,
     setScheduleViewMode,
+    matrixYear,
+    setMatrixYear,
     setListScope,
     alignmentContext,
     openProjectFromGantt,
@@ -211,6 +214,19 @@ export const MboManagementMainContent: React.FC<Props> = ({ ws }) => {
                 onCreateGoal={createDisabled ? undefined : openCreateObjectiveModal}
                 filterKey={`${projectCompletionFilter}-${selectedMemberUserIds.join(',')}-${ganttCheckinOnly ? '1' : '0'}-${personQuery}`}
               />
+            ) : scheduleViewMode === 'matrix' ? (
+              orgId ? (
+                <MboPlanActualMatrixView
+                  organizationId={orgId}
+                  year={matrixYear}
+                  onYearChange={setMatrixYear}
+                  projects={filteredPortfolioProjects}
+                  categories={projectCategories}
+                  viewerUserId={viewerUserId ?? ''}
+                  editableProjectIds={editableProjectIds}
+                  selectedOwnerIds={selectedMemberUserIds}
+                />
+              ) : null
             ) : (
               <MboHierarchyGanttView
                 rows={filteredGanttRows}

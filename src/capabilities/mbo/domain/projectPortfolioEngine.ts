@@ -28,6 +28,10 @@ export interface PortfolioProject {
   categoryId?: string | null;
   categoryLabel?: string | null;
   categoryColor?: string | null;
+  /** 중분류 코드 (예: 1-1) */
+  wbsCode?: string | null;
+  /** 세부 순번 */
+  wbsSeq?: number | null;
 }
 
 export interface PortfolioSummary {

@@ -67,6 +67,7 @@
     "test:mbo-engine": "tsx src/capabilities/mbo/domain/mboEngine.test.ts",
     "test:mbo-plan-approval": "tsx src/capabilities/mbo/domain/mboPlanApproval.test.ts",
     "test:mbo-monthly-checkin": "tsx src/capabilities/mbo/domain/mboMonthlyCheckin.test.ts",
+    "test:mbo-plan-actual-matrix": "tsx src/capabilities/mbo/domain/mboPlanActualMatrixEngine.test.ts",
     "test:mbo-team-board": "tsx src/capabilities/mbo/domain/mboTeamBoardEngine.test.ts",
     "test:mbo-goal-hierarchy": "tsx src/capabilities/mbo/domain/mboGoalHierarchy.test.ts",
     "test:mbo-org-aligned": "tsx src/capabilities/mbo/domain/mboOrgAlignedTreeEngine.test.ts",

@@ -5232,6 +5232,8 @@ export interface Database {
           approved_at: string | null;
           revision: number;
           category_id: string | null;
+          wbs_code: string | null;
+          wbs_seq: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -5256,6 +5258,8 @@ export interface Database {
           approved_at?: string | null;
           revision?: number;
           category_id?: string | null;
+          wbs_code?: string | null;
+          wbs_seq?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -5277,6 +5281,51 @@ export interface Database {
             foreignKeyName: 'mbo_projects_category_id_fkey';
             columns: ['category_id'];
             referencedRelation: 'project_categories';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      mbo_project_month_cells: {
+        Row: {
+          id: string;
+          organization_id: string;
+          project_id: string;
+          year: number;
+          month: number;
+          plan_text: string | null;
+          plan_status: 'normal' | 'highlighted' | 'changed_or_delayed';
+          actual_text: string | null;
+          actual_status: 'normal' | 'highlighted' | 'changed_or_delayed';
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          project_id: string;
+          year: number;
+          month: number;
+          plan_text?: string | null;
+          plan_status?: 'normal' | 'highlighted' | 'changed_or_delayed';
+          actual_text?: string | null;
+          actual_status?: 'normal' | 'highlighted' | 'changed_or_delayed';
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['mbo_project_month_cells']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'mbo_project_month_cells_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'mbo_project_month_cells_project_id_fkey';
+            columns: ['project_id'];
+            referencedRelation: 'mbo_projects';
             referencedColumns: ['id'];
           },
         ];

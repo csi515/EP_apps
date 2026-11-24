@@ -301,6 +301,8 @@ export function useMboManagementObjectivesDerived(state: MboManagementWorkspaceS
           categoryId: row.category_id ?? null,
           categoryLabel: cat?.label ?? null,
           categoryColor: cat?.color ?? null,
+          wbsCode: row.wbs_code ?? null,
+          wbsSeq: row.wbs_seq ?? null,
         };
       });
       // 목표 열람 가능하면 연결된 실행 프로젝트도 일정표에 표시 (가시성 정합)

@@ -16,7 +16,7 @@ const MIGRATIONS_DIR = path.resolve(process.cwd(), 'migrations/domain');
 
 /** PGlite/임베디드용 관대한 skip. Docker Postgres는 EP_MIGRATE_STRICT=1 로 엄격. */
 const SKIPPABLE_SOFT =
-  /extension .*does not exist|role .*already exists|type .*already exists|must be owner|permission denied to create role|btree_gist|no default operator class|EXCLUDE USING gist|EXECUTE FUNCTION|syntax error at or near \"FUNCTION\"|function digest\(|function crypt\(|gen_salt\(|operator does not exist|cannot cast|function .* does not exist|relation .* does not exist|role \".*\" does not exist|policy .* already exists/i;
+  /extension .*does not exist|role .*already exists|type .*already exists|must be owner|permission denied to create role|롤 만들 권한 없음|permission denied|btree_gist|no default operator class|EXCLUDE USING gist|EXECUTE FUNCTION|syntax error at or near \"FUNCTION\"|function digest\(|function crypt\(|gen_salt\(|operator does not exist|cannot cast|function .* does not exist|relation .* does not exist|role \".*\" does not exist|policy .* already exists/i;
 
 const SKIPPABLE_STRICT =
   /role .*already exists|type .*already exists|policy .* already exists|already exists/i;

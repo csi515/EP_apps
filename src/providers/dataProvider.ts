@@ -79,6 +79,7 @@ export const TENANT_SCOPED_RESOURCES = [
   "research_project_gates",
   "research_project_links",
   "mbo_progress_logs",
+  "mbo_project_month_cells",
   "mbo_feedback_comments",
   "mbo_evaluations",
   "approval_requests",
