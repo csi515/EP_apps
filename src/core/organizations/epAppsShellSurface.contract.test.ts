@@ -116,7 +116,7 @@ assert.match(app, /path="\/workspace\/org-admin"/);
 
 const login = read('src/pages/auth/LoginPage.tsx');
 assert.doesNotMatch(login, /extra-login-notice-mobile|lg:hidden text-center mb-6/);
-assert.match(login, /임직원 로그인|formTitle/);
+assert.match(login, /formTitle/);
 assert.match(login, /LoginForm/);
 assert.doesNotMatch(login, /MobileLoginForm/);
 assertNoMobileOnlyBreakpoints(login, 'LoginPage');

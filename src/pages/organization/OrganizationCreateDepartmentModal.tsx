@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Modal } from '@/shared/components/ui/Modal';
-import { DEPARTMENT_UNIT_KIND_SUGGESTIONS } from '@/core/organizations/services/organizationTreeService';
 import type { OrgNode } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 
@@ -93,16 +92,11 @@ export function OrganizationCreateDepartmentModal({
           {ORG_CHART_COPY.unitKind}
           <input
             className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3"
-            list="org-create-unit-kind"
             placeholder={ORG_CHART_COPY.unitKindHint}
             value={unitKind}
             onChange={(e) => setUnitKind(e.target.value)}
+            autoComplete="off"
           />
-          <datalist id="org-create-unit-kind">
-            {DEPARTMENT_UNIT_KIND_SUGGESTIONS.map((kind) => (
-              <option key={kind} value={kind} />
-            ))}
-          </datalist>
         </label>
         <label className="block font-semibold text-slate-700">
           {ORG_CHART_COPY.parent}

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { DEPARTMENT_UNIT_KIND_SUGGESTIONS } from '@/core/organizations/services/organizationTreeService';
 import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
 import type { DepartmentMemberRow, OrgNode } from './useOrganizationTree';
 import { OrganizationGovernancePanel, SCOPE_LABELS } from './OrganizationGovernancePanel';
@@ -135,15 +134,11 @@ export function OrganizationDepartmentDetailPanel({
             {ORG_CHART_COPY.unitKind}
             <input
               className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm"
-              list="org-detail-unit-kind"
+              placeholder={ORG_CHART_COPY.unitKindHint}
               value={editUnitKind}
               onChange={(e) => setEditUnitKind(e.target.value)}
+              autoComplete="off"
             />
-            <datalist id="org-detail-unit-kind">
-              {DEPARTMENT_UNIT_KIND_SUGGESTIONS.map((kind) => (
-                <option key={kind} value={kind} />
-              ))}
-            </datalist>
           </label>
           <div className="flex flex-wrap gap-2">
             <button

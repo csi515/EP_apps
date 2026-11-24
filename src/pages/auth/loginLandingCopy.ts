@@ -32,7 +32,7 @@ const ko: LoginLandingCopy = {
   extraLoginTitle: '추가 로그인이 필요합니다',
   extraLoginBody:
     '회사 EP(그룹웨어)에 이미 로그인되어 있어도, 이 업무 앱은 별도 계정입니다. 아래에서 한 번 더 로그인해야 앱을 실행할 수 있습니다.',
-  formTitle: '임직원 로그인',
+  formTitle: '로그인',
   formSubtitle: '등록된 회사 계정으로 업무 앱에 접속하세요.',
   formTitleToss: '앱스인토스 로그인',
   formSubtitleToss: '토스 앱 계정으로 자동 인증하여 접속합니다.',
@@ -41,7 +41,7 @@ const ko: LoginLandingCopy = {
   passwordLabel: '비밀번호',
   forgotPassword: '비밀번호 찾기',
   rememberMe: '로그인 상태 유지',
-  submitLabel: '임직원 로그인',
+  submitLabel: '로그인',
   loggingIn: '로그인 중...',
   tossConnecting: '토스 계정과 업무 앱을 연결 중입니다.',
   tossSecureBadge: '토스 앱 보안 연동',

@@ -265,11 +265,24 @@ export async function assignDepartmentScope(input: {
   if (error) throw new Error(error.message);
 }
 
+/** 배치가 없는 활성 멤버 (owner 제외) */
+export function listUnassignedMembers(
+  members: readonly DynamicMemberRow[],
+  departmentMembers: readonly DepartmentMemberRow[],
+): DynamicMemberRow[] {
+  const placed = new Set(departmentMembers.map((row) => row.member_id));
+  return members.filter(
+    (m) => m.role !== 'owner' && m.is_active !== false && !placed.has(m.id),
+  );
+}
+
 /** 주 소속 부서 재배치 — 기존 배정 삭제 후 SELF_ONLY 단일 행 */
 export async function reassignMemberDepartment(input: {
   organizationId: string;
   memberId: string;
   departmentId: string;
+  scopeType?: DepartmentScopeType;
+  customRoleId?: string | null;
 }): Promise<void> {
   const client = getCoreClient();
   const { error: delError } = await client
@@ -282,10 +295,132 @@ export async function reassignMemberDepartment(input: {
     organization_id: input.organizationId,
     department_id: input.departmentId,
     member_id: input.memberId,
-    scope_type: 'SELF_ONLY',
-    custom_role_id: null,
+    scope_type: input.scopeType ?? 'SELF_ONLY',
+    custom_role_id: input.customRoleId ?? null,
   } as never);
   if (error) throw new Error(error.message);
+}
+
+/** 주 소속 이동 (reassign 별칭) */
+export async function moveMemberToDepartment(input: {
+  organizationId: string;
+  memberId: string;
+  departmentId: string;
+  scopeType?: DepartmentScopeType;
+  customRoleId?: string | null;
+}): Promise<void> {
+  await reassignMemberDepartment(input);
+}
+
+/** 겸직 추가 — 기존 배정 유지, 대상 부서에 upsert */
+export async function addMemberSecondaryDepartment(input: {
+  organizationId: string;
+  memberId: string;
+  departmentId: string;
+  scopeType?: DepartmentScopeType;
+  customRoleId?: string | null;
+}): Promise<void> {
+  const client = getCoreClient();
+  const { error } = await client.from('department_members' as never).upsert(
+    {
+      organization_id: input.organizationId,
+      department_id: input.departmentId,
+      member_id: input.memberId,
+      scope_type: input.scopeType ?? 'SELF_ONLY',
+      custom_role_id: input.customRoleId ?? null,
+    } as never,
+    { onConflict: 'department_id,member_id' } as never,
+  );
+  if (error) throw new Error(error.message);
+}
+
+/** 특정 부서에서만 배치 해제 (다른 겸직 유지) */
+export async function removeMemberFromDepartment(input: {
+  organizationId: string;
+  memberId: string;
+  departmentId: string;
+}): Promise<void> {
+  const client = getCoreClient();
+  const { error } = await client
+    .from('department_members' as never)
+    .delete()
+    .eq('organization_id', input.organizationId)
+    .eq('member_id', input.memberId)
+    .eq('department_id', input.departmentId);
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * 부서 삭제 + 하위/인원 처리.
+ * - memberAction reassign: 인원을 targetParentId(또는 직상위)로 주 소속 이동
+ * - memberAction unassign: 해당 부서 인원 배치만 삭제
+ * 하위 조직은 항상 targetParentId(또는 직상위)로 이동 후 삭제.
+ */
+export async function deleteDepartmentWithReassign(input: {
+  organizationId: string;
+  departmentId: string;
+  memberAction: 'reassign' | 'unassign';
+  /** 하위·인원 이관 대상. null이면 최상위(parent 없음) */
+  targetParentId?: string | null;
+}): Promise<void> {
+  const nodes = await listDepartments(input.organizationId);
+  const target = nodes.find((n) => n.id === input.departmentId);
+  if (!target) throw new Error('부서를 찾을 수 없습니다.');
+  const children = nodes.filter((n) => n.parentId === input.departmentId);
+  const transferParentId =
+    input.targetParentId !== undefined ? input.targetParentId : target.parentId;
+
+  if (transferParentId === input.departmentId) {
+    throw new Error('이관 대상이 삭제할 조직과 같습니다.');
+  }
+  if (transferParentId) {
+    const transferNode = nodes.find((n) => n.id === transferParentId);
+    if (!transferNode) throw new Error('이관 대상 조직을 찾을 수 없습니다.');
+    if (transferNode.path.startsWith(target.path)) {
+      throw new Error('하위 조직으로는 이관할 수 없습니다.');
+    }
+  }
+
+  for (const child of children) {
+    await moveDepartment(child.id, transferParentId, input.organizationId);
+  }
+
+  const placements = await listDepartmentMembers(input.organizationId);
+  const inDept = placements.filter((p) => p.department_id === input.departmentId);
+  if (input.memberAction === 'reassign') {
+    if (!transferParentId) {
+      for (const row of inDept) {
+        await removeMemberFromDepartment({
+          organizationId: input.organizationId,
+          memberId: row.member_id,
+          departmentId: input.departmentId,
+        });
+      }
+    } else {
+      for (const row of inDept) {
+        await moveMemberToDepartment({
+          organizationId: input.organizationId,
+          memberId: row.member_id,
+          departmentId: transferParentId,
+          scopeType: row.scope_type,
+          customRoleId: row.custom_role_id,
+        });
+      }
+    }
+  } else {
+    const client = getCoreClient();
+    const { error } = await client
+      .from('department_members' as never)
+      .delete()
+      .eq('organization_id', input.organizationId)
+      .eq('department_id', input.departmentId);
+    if (error) throw new Error(error.message);
+  }
+
+  await deleteDepartment({
+    organizationId: input.organizationId,
+    departmentId: input.departmentId,
+  });
 }
 
 export async function revokeMemberRoleViaRpc(memberId: string): Promise<void> {

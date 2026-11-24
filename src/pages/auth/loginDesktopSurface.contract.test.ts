@@ -41,7 +41,7 @@ assert.doesNotMatch(copy, /학원|원생|수강|학부모|출결 패드/);
 assert.doesNotMatch(copy, /heroDescription|featureApproval|securityRls|소규모 현장용/);
 assert.doesNotMatch(login, /appBrand\.description|featureApprovalTitle|securityRls/);
 assert.match(copy, /추가 로그인이 필요합니다/);
-assert.match(copy, /임직원 로그인/);
+assert.match(copy, /formTitle:\s*'로그인'/);
 
 // 로그인 폼
 assert.match(login, /<LoginForm/);

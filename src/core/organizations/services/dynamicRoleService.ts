@@ -32,6 +32,8 @@ export type DynamicMemberRow = {
   joined_at?: string;
   email?: string | null;
   login_id?: string | null;
+  /** 연락처 — staff/local 경로에서만 채워질 수 있음 */
+  phone?: string | null;
   name?: string;
   feature_permissions?: Record<string, boolean>;
   department_id?: string | null;

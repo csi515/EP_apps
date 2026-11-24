@@ -1,0 +1,74 @@
+/* 클래식 상하 조직도 — flex + border 커넥터 */
+.mbo-org-diagram {
+  --org-line: #cbd5e1;
+  --org-gap-x: 1rem;
+  --org-gap-y: 1.25rem;
+}
+
+.mbo-org-diagram ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  justify-content: center;
+  position: relative;
+}
+
+.mbo-org-diagram > ul {
+  padding-top: 0;
+}
+
+.mbo-org-diagram li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: var(--org-gap-y) var(--org-gap-x) 0;
+}
+
+/* 부모 → 자식: 세로 줄기 */
+.mbo-org-diagram li::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: var(--org-gap-y);
+  border-left: 1px solid var(--org-line);
+  transform: translateX(-50%);
+}
+
+/* 형제 가로 바 */
+.mbo-org-diagram li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+  border-top: 1px solid var(--org-line);
+}
+
+.mbo-org-diagram li:first-child::after {
+  left: 50%;
+  width: 50%;
+}
+
+.mbo-org-diagram li:last-child::after {
+  width: 50%;
+}
+
+.mbo-org-diagram li:only-child::after {
+  display: none;
+}
+
+/* 루트 직계는 상단 커넥터 없음 */
+.mbo-org-diagram > ul > li::before,
+.mbo-org-diagram > ul > li::after {
+  display: none;
+}
+
+.mbo-org-diagram .org-diagram-card {
+  position: relative;
+  z-index: 1;
+}

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { OrganizationTreePage } from '../organization/OrganizationTreePage';
+import { Link } from 'react-router-dom';
+import { Network } from 'lucide-react';
 import { StorageService } from '@/services/storage';
+import { ORG_CHART_COPY } from '@/pages/organization/orgChartCopy';
 import {
   assignOrganizationRole,
   deleteDynamicRole,
@@ -72,7 +74,7 @@ export function DynamicRoleSettingsPage() {
   const [permissions, setPermissions] = useState<RolePermissionMap>(EMPTY_ROLE_PERMISSIONS);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [settingTab, setSettingTab] = useState<'org' | 'roles'>('org');
+  const [settingTab, setSettingTab] = useState<'org' | 'roles'>('roles');
   const [dictOpen, setDictOpen] = useState(true);
 
   const activeUser = StorageService.getActiveUser();
@@ -173,8 +175,16 @@ export function DynamicRoleSettingsPage() {
       </div>
 
       {settingTab === 'org' ? (
-        <section>
-          <OrganizationTreePage />
+        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs">
+          <h2 className="text-lg font-bold text-slate-900">{ORG_CHART_COPY.title}</h2>
+          <p className="mt-1 text-sm text-slate-500">{ORG_CHART_COPY.subtitle}</p>
+          <Link
+            to="/workspace/organization"
+            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white"
+          >
+            <Network className="h-4 w-4" aria-hidden />
+            {ORG_CHART_COPY.openOrgWorkspace}
+          </Link>
         </section>
       ) : (
         <>

@@ -43,6 +43,7 @@ import { useOrgMembersDirectory } from '@/pages/members/useOrgMembersDirectory';
 import { StaffAccessMemberSheet } from '@/pages/workspace/staffAccess/StaffAccessMemberSheet';
 import { StaffAccessAppHomeView } from '@/pages/workspace/staffAccess/StaffAccessAppHomeView';
 import { useOrganizationTree } from '@/pages/organization/useOrganizationTree';
+import { ORG_CHART_COPY } from '@/pages/organization/orgChartCopy';
 import { listEnabledPermissionLabels } from '@/domain/permissionCatalog';
 import type { AdminMemberDirectoryRow } from '@/core/organizations/services/orgMemberAdminService';
 import { summarizeMemberEffectiveAccess } from '@/core/organizations/services/orgMemberAdminService';
@@ -528,10 +529,18 @@ export function MemberList(): React.JSX.Element {
                 </ul>
               </div>
               <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-                소속이 비어 있는 임직원은 목록 탭에서 확인한 뒤, 조직도에서 배치하세요.
-                {!canStructure
-                  ? ' (조직도 편집 권한이 없으면 조회만 가능합니다.)'
-                  : ''}
+                <p>
+                  소속이 비어 있는 임직원은 조직도 미배치 풀에서 바로 배치할 수 있습니다.
+                  {!canStructure
+                    ? ' (조직도 편집 권한이 없으면 조회만 가능합니다.)'
+                    : ''}
+                </p>
+                <Link
+                  to="/workspace/organization?unassigned=1"
+                  className="mt-3 inline-flex min-h-11 items-center text-xs font-bold text-indigo-700 underline-offset-2 hover:underline"
+                >
+                  {ORG_CHART_COPY.unassignedDeepLink}
+                </Link>
               </div>
             </div>
           ) : null}

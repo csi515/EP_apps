@@ -245,6 +245,7 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
           userId={userId}
           processingId={actions.processingId}
           allowRequesterCancel={allowRequesterCancel}
+          filterKey={`${selectedStatus}-${searchQuery}`}
           onApprove={(req) => void actions.runApprove(req)}
           onReject={actions.openReject}
           onResubmit={setResubmitTarget}
