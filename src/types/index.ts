@@ -1,12 +1,169 @@
 // @ts-nocheck
 import type { StaffGrants } from '@/core/staff/staffGrants';
-import type { TeacherPayType } from '@/capabilities/billing/finance/billingLedgerTypes';
 
 /**
  * Legacy compatibility barrel.
  * 신규 domain type은 여기 정의하지 않는다. 소유 계층에서 import한다.
  * @see docs/TYPES_DOMAIN_MAP.md
  */
+
+/** EP_apps: 강사 정산 타입 (billing capability 제거 후 로컬 유지) */
+export type TeacherPayType = 'hourly' | 'attendance' | 'work_hours' | 'monthly' | 'none';
+
+export type PaymentMethod =
+  | 'card'
+  | 'transfer'
+  | 'cash'
+  | 'other'
+  | 'local_currency'
+  | 'onsite_card';
+
+export type InvoiceStatus = 'paid' | 'partial' | 'unpaid' | 'overdue' | 'cancelled';
+
+export interface InvoiceExtraItem {
+  id: string;
+  label: string;
+  amount: number;
+  sourceType: 'recital' | 'manual';
+}
+
+export interface TuitionInvoice {
+  id: string;
+  studentId: string;
+  studentName: string;
+  yearMonth: string;
+  title?: string;
+  baseTuition?: number;
+  baseFee?: number;
+  discount?: number;
+  discountAmount?: number;
+  textbookFee?: number;
+  additionalAmount?: number;
+  extraFee?: number;
+  extraFeeLabel?: string;
+  totalAmount: number;
+  paidAmount: number;
+  unpaidAmount: number;
+  dueDate: string;
+  status: InvoiceStatus;
+  paymentMethod?: PaymentMethod | null;
+  paidAt?: string;
+  paidDate?: string;
+  notes?: string;
+  receiptNumber?: string;
+  includeExtras?: boolean;
+  linkedTextbookSaleIds?: string[];
+  linkedExtraItems?: InvoiceExtraItem[];
+  invoiceSent?: boolean;
+  sentAt?: string | null;
+  cashReceiptRequested?: boolean;
+}
+
+export interface TuitionPayment {
+  id: string;
+  invoiceId: string;
+  studentId: string;
+  studentName: string;
+  yearMonth: string;
+  paymentDate: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  memo?: string;
+  receiptNumber?: string;
+  cashReceiptIssued?: boolean;
+  createdAt?: string;
+}
+
+export type ExpenseCategory =
+  | 'rent'
+  | 'utility'
+  | 'maintenance'
+  | 'electricity'
+  | 'water'
+  | 'textbook'
+  | 'supplies'
+  | 'snacks'
+  | 'marketing'
+  | 'teacher_salary'
+  | 'salary'
+  | 'instructor_fee'
+  | 'piano_tuning'
+  | 'tuning'
+  | 'other';
+
+export interface ExpenseItem {
+  id: string;
+  date: string;
+  category: ExpenseCategory;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  description: string;
+  recipient?: string;
+  vendor?: string;
+  memo?: string;
+  receiptMemo?: string;
+  teacherId?: string;
+  settlementYearMonth?: string;
+  settlementKind?: 'teacher_payroll';
+  settlementPayType?: TeacherPayType;
+  settlementQuantity?: number;
+  settlementRate?: number;
+  settlementCalculatedAmount?: number;
+  settlementAdjustmentAmount?: number;
+  settlementAdjustmentReason?: string;
+}
+export type Expense = ExpenseItem;
+
+/** 동기화용 수입·지출·정산 (billing capability 제거 후 로컬 유지) */
+export interface FinanceExpense {
+  id: string;
+  date: string;
+  category: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  description: string;
+  recipient?: string;
+  vendor?: string;
+  memo?: string;
+  receiptMemo?: string;
+  teacherId?: string;
+  settlementYearMonth?: string;
+  settlementKind?: 'teacher_payroll';
+  settlementPayType?: TeacherPayType;
+  settlementQuantity?: number;
+  settlementRate?: number;
+  settlementCalculatedAmount?: number;
+  settlementAdjustmentAmount?: number;
+  settlementAdjustmentReason?: string;
+}
+
+export interface IncomeEntry {
+  id: string;
+  date: string;
+  category: string;
+  amount: number;
+  paymentMethod: PaymentMethod;
+  description: string;
+  payer?: string;
+  memo?: string;
+  sourceType?: 'manual' | 'tuition' | 'textbook' | 'booking' | 'retail';
+  sourceId?: string;
+}
+
+export interface TeacherPayrollSettlement {
+  id: string;
+  teacherId: string;
+  yearMonth: string;
+  payType: TeacherPayType;
+  quantity: number;
+  rate: number;
+  calculatedAmount: number;
+  adjustmentAmount: number;
+  adjustmentReason?: string;
+  finalAmount: number;
+  confirmedAt: string;
+  expenseId?: string;
+}
 
 /** @deprecated 신규 코드는 `@/core/auth/types/sessionUser` */
 export type { User, UserRole } from '@/core/auth/types/sessionUser';
@@ -214,23 +371,6 @@ export interface MakeupScheduleInput {
   teacherName?: string;
 }
 
-/** @deprecated 신규 코드는 `@/capabilities/billing/finance/billingLedgerTypes` */
-export type {
-  CombinedPaymentRequest,
-  Expense,
-  ExpenseCategory,
-  ExpenseItem,
-  InvoiceExtraItem,
-  InvoiceStatus,
-  PaymentMethod,
-  StudentMonthlyBillingSummary,
-  StudentUnpaidSummary,
-  TeacherPayType,
-  TuitionInvoice,
-  TuitionPayment,
-  UnpaidInvoiceItem,
-} from '@/capabilities/billing/finance/billingLedgerTypes';
-
 /** @deprecated 신규 코드는 `@/capabilities/resources` */
 export type { PracticeRoomBooking, PracticeRoomBookingStatus } from '@/capabilities/resources/types';
 
@@ -309,16 +449,6 @@ export interface Song {
   description?: string;
   difficultyStars?: number;
 }
-
-/** @deprecated 신규 코드는 `@/capabilities/commerce/textbookTypes` */
-export type {
-  InventoryTransactionType,
-  Textbook,
-  TextbookInventoryTransaction,
-  TextbookPayment,
-  TextbookPaymentStatus,
-  TextbookSale,
-} from '@/capabilities/commerce/textbookTypes';
 
 /** @deprecated 신규 코드는 `@/core/notices/notificationTypes` */
 export type {

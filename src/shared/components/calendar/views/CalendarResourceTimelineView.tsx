@@ -16,7 +16,7 @@ import {
   snapPercentToTime,
   calculateResourceOccupancy,
   TimelineConfig,
-} from '@/capabilities/scheduling/domain/timelineGridEngine';
+} from '../timelineGridEngine';
 import { Clock, User, ShieldAlert, Sparkles } from 'lucide-react';
 
 export interface CalendarResourceTimelineViewProps<T = any> {

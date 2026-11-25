@@ -61,21 +61,11 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   lockers: ['locker'],
   inventory: ['inventory'],
   finance: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  tuition: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  income: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  expenses: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
-  payroll: ['billing_invoicing', 'ledger_simple', 'credit_wallet', 'billing'],
 
-  // 확장 12종 Capability 슬러그 라우트 (URL 슬러그와 1:1 매핑)
+  // 확장 Capability 슬러그 라우트 (URL 슬러그와 1:1 매핑)
   'seat-rooms': ['seat_room', 'booking'],
-  rentals: ['rental_equipment'],
-  maintenance: ['maintenance_checklist'],
-  instructors: ['instructor_match'],
-  shifts: ['shift_schedule'],
   pipelines: ['task_pipeline'],
   'billing-invoices': ['billing_invoicing', 'billing'],
-  ledger: ['ledger_simple', 'billing'],
-  wallets: ['credit_wallet', 'billing'],
   consultations: ['consultation_crm'],
   charts: ['treatment_chart'],
   consents: ['safety_consent'],
@@ -151,7 +141,7 @@ export function isTabAllowedForCapabilities(tab: string, enabledCaps: readonly s
   return true;
 }
 
-export type TabImplementationTier = 'tier1_ready' | 'tier2_basic' | 'tier3_deferred';
+export type TabImplementationTier = 'tier1_ready' | 'tier2_basic';
 
 export interface TabMetadataItem {
   tab: string;
@@ -239,50 +229,6 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '정기 청구 및 인보이스 발행',
     tier: 'tier1_ready',
     primaryCapability: 'billing_invoicing',
-  },
-  ledger: {
-    tab: 'ledger',
-    label: '원장 관리',
-    description: '수입 및 지출 단순 장부',
-    tier: 'tier1_ready',
-    primaryCapability: 'ledger_simple',
-  },
-  wallets: {
-    tab: 'wallets',
-    label: '크레딧 지갑',
-    description: '고객별 적립금/크레딧 잔액 관리',
-    tier: 'tier1_ready',
-    primaryCapability: 'credit_wallet',
-  },
-
-  // Tier 3: 도메인 스키마 및 리소스 연동 완료, 전용 UI 화면 준비 중(연기)
-  rentals: {
-    tab: 'rentals',
-    label: '장비·물품 대여',
-    description: '대여 장비 목록 및 반납 관리',
-    tier: 'tier3_deferred',
-    primaryCapability: 'rental_equipment',
-  },
-  maintenance: {
-    tab: 'maintenance',
-    label: '시설·점검표',
-    description: '정기 시설 점검 및 체크리스트',
-    tier: 'tier3_deferred',
-    primaryCapability: 'maintenance_checklist',
-  },
-  instructors: {
-    tab: 'instructors',
-    label: '강사·전문가 매칭',
-    description: '담당 강사 배정 및 매칭 관리',
-    tier: 'tier3_deferred',
-    primaryCapability: 'instructor_match',
-  },
-  shifts: {
-    tab: 'shifts',
-    label: '근무 교대·시프트',
-    description: '직원 근무 일정 및 시프트 배정',
-    tier: 'tier3_deferred',
-    primaryCapability: 'shift_schedule',
   },
   pipelines: {
     tab: 'pipelines',

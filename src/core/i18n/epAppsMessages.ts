@@ -21,7 +21,6 @@ export const EP_APPS_MESSAGES_KO: Record<string, string> = {
   'ep.staffAccess.switchToMine': '내 권한 보기',
   'ep.staffAccess.my.hint':
     '변경이 필요하면 관리자에게 요청하세요. 본인에게 보이는 앱이 런처와 동일합니다.',
-  'ep.staffAccess.my.requestStub': '변경 요청 (준비 중)',
   'ep.staffAccess.my.openApp': '앱 열기',
   'ep.staffAccess.state.available': '이용 가능',
   'ep.staffAccess.home.kpiGranted': '개별 부여 {{n}}',
@@ -224,7 +223,6 @@ export const EP_APPS_MESSAGES_EN: Record<string, string> = {
   'ep.staffAccess.switchToMine': 'View my access',
   'ep.staffAccess.my.hint':
     'Ask an admin to change access. Apps shown here match your launcher.',
-  'ep.staffAccess.my.requestStub': 'Request change (coming soon)',
   'ep.staffAccess.my.openApp': 'Open app',
   'ep.staffAccess.state.available': 'Available',
   'ep.staffAccess.home.kpiGranted': 'Granted {{n}}',

@@ -1,2 +1,2 @@
-/** @deprecated 신규 코드는 `@/capabilities/scheduling`를 사용한다. */
-export { availabilityService } from '@/core/availability/availabilityService';
+/** @deprecated ?�규 코드??`@/capabilities/scheduling`�??�용?�다. */
+export { availabilityService } from '@/capabilities/scheduling/availability/availabilityService';

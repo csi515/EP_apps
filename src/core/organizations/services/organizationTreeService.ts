@@ -1,4 +1,5 @@
 import { getCoreClient } from '@/lib/supabase';
+import { isLocalAuthEnabled } from '@/core/auth/localAuth/isLocalAuth';
 import {
   buildDepartmentPath,
   depthFromPath,
@@ -128,6 +129,7 @@ export async function createDepartment(input: {
 }
 
 export async function renameDepartment(input: {
+  organizationId: string;
   departmentId: string;
   name: string;
   unitKind?: string | null;
@@ -149,7 +151,8 @@ export async function renameDepartment(input: {
   const { error } = await client
     .from('departments' as never)
     .update(patch as never)
-    .eq('id', input.departmentId);
+    .eq('id', input.departmentId)
+    .eq('organization_id', input.organizationId);
   if (error) throw new Error(error.message);
 }
 
@@ -209,7 +212,8 @@ async function moveDepartmentClientSide(
     const { error } = await client
       .from('departments' as never)
       .update(patch as never)
-      .eq('id', node.id);
+      .eq('id', node.id)
+      .eq('organization_id', organizationId);
     if (error) throw new Error(error.message);
   }
 }
@@ -310,6 +314,51 @@ export async function moveMemberToDepartment(input: {
   customRoleId?: string | null;
 }): Promise<void> {
   await reassignMemberDepartment(input);
+}
+
+/**
+ * 다수 멤버를 대상 부서로 원자적 주 소속 재배치.
+ * - 원격: core.bulk_reassign_department_members RPC
+ * - 로컬 Auth / RPC 미적용: reassignMemberDepartment 순차 호출 (문서화 폴백)
+ */
+export async function bulkReassignMembersToDepartment(input: {
+  organizationId: string;
+  departmentId: string;
+  memberIds: readonly string[];
+}): Promise<void> {
+  const memberIds = [...new Set(input.memberIds.filter(Boolean))];
+  if (memberIds.length === 0) return;
+
+  const runSequentialFallback = async () => {
+    for (const memberId of memberIds) {
+      await reassignMemberDepartment({
+        organizationId: input.organizationId,
+        memberId,
+        departmentId: input.departmentId,
+      });
+    }
+  };
+
+  if (isLocalAuthEnabled()) {
+    // 로컬 Auth는 SECURITY DEFINER RPC 대신 동일 delete+insert를 순차 수행
+    await runSequentialFallback();
+    return;
+  }
+
+  const client = getCoreClient();
+  const { error } = await client.rpc('bulk_reassign_department_members' as never, {
+    p_organization_id: input.organizationId,
+    p_department_id: input.departmentId,
+    p_member_ids: memberIds,
+  } as never);
+  if (!error) return;
+
+  const msg = error.message || '';
+  if (msg.includes('does not exist') || msg.includes('not found in schema')) {
+    await runSequentialFallback();
+    return;
+  }
+  throw new Error(msg);
 }
 
 /** 겸직 추가 — 기존 배정 유지, 대상 부서에 upsert */
@@ -429,20 +478,6 @@ export async function revokeMemberRoleViaRpc(memberId: string): Promise<void> {
     p_member_id: memberId,
     p_role_id: null,
     p_revoke: true,
-  } as never);
-  if (error) throw new Error(error.message);
-}
-
-export async function transferOrganizationOwnership(input: {
-  organizationId: string;
-  nextOwnerMemberId: string;
-  reason: string;
-}): Promise<void> {
-  const client = getCoreClient();
-  const { error } = await client.rpc('transfer_organization_ownership' as never, {
-    p_organization_id: input.organizationId,
-    p_next_owner_member_id: input.nextOwnerMemberId,
-    p_reason: input.reason,
   } as never);
   if (error) throw new Error(error.message);
 }

@@ -28,7 +28,7 @@ const member = mapPresetPermissionTokensToRoleMap([
   'research_project:view',
 ]);
 assert.equal(member.booking, true);
-assert.equal(member['rnd_portal:access'], true);
+assert.equal(member['rnd_portal:access'], false, 'research_project:view alone must not open portal');
 assert.equal(member['research:read'], true);
 assert.equal(member['research:write'], false);
 assert.equal(member.grievances_manage, true);

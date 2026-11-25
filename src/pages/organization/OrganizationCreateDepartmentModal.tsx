@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { Input } from '@/shared/components/ui/Input';
+import { FormField, FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
 import type { OrgNode } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 
@@ -43,20 +46,17 @@ export function OrganizationCreateDepartmentModal({
       title={ORG_CHART_COPY.createTitle}
       maxWidth="md"
       intent="form"
-      description="조직도에 새 단위를 추가합니다."
+      description={ORG_CHART_COPY.createDescription}
       footer={
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="min-h-12 rounded-xl px-4 text-sm font-semibold text-slate-600"
-            onClick={onClose}
-          >
+          <Button type="button" variant="ghost" onClick={onClose}>
             {ORG_CHART_COPY.cancel}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            disabled={busy || !name.trim()}
-            className="min-h-12 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white disabled:opacity-40"
+            variant="primary"
+            disabled={!name.trim()}
+            isLoading={busy}
             onClick={() => {
               setBusy(true);
               setError(null);
@@ -67,41 +67,33 @@ export function OrganizationCreateDepartmentModal({
               })
                 .then(() => onClose())
                 .catch((cause) => {
-                  setError(cause instanceof Error ? cause.message : '조직 추가에 실패했습니다.');
+                  setError(
+                    cause instanceof Error ? cause.message : ORG_CHART_COPY.createFailed,
+                  );
                 })
                 .finally(() => setBusy(false));
             }}
           >
             {ORG_CHART_COPY.createSubmit}
-          </button>
+          </Button>
         </div>
       }
     >
       <div className="space-y-3 text-sm">
         {error ? <p className="text-xs font-semibold text-rose-600">{error}</p> : null}
-        <label className="block font-semibold text-slate-700">
-          {ORG_CHART_COPY.name}
-          <input
-            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3 font-semibold"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-          />
-        </label>
-        <label className="block font-semibold text-slate-700">
-          {ORG_CHART_COPY.unitKind}
-          <input
-            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3"
-            placeholder={ORG_CHART_COPY.unitKindHint}
+        <FormField label={ORG_CHART_COPY.name}>
+          <Input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </FormField>
+        <FormField label={ORG_CHART_COPY.unitKind} hint={ORG_CHART_COPY.unitKindHint}>
+          <Input
             value={unitKind}
             onChange={(e) => setUnitKind(e.target.value)}
             autoComplete="off"
           />
-        </label>
-        <label className="block font-semibold text-slate-700">
-          {ORG_CHART_COPY.parent}
+        </FormField>
+        <FormField label={ORG_CHART_COPY.parent}>
           <select
-            className="mt-1 min-h-12 w-full rounded-xl border border-slate-200 px-3"
+            className={FORM_CONTROL_CLASS}
             value={parentId}
             onChange={(e) => setParentId(e.target.value)}
           >
@@ -113,7 +105,7 @@ export function OrganizationCreateDepartmentModal({
               </option>
             ))}
           </select>
-        </label>
+        </FormField>
       </div>
     </Modal>
   );

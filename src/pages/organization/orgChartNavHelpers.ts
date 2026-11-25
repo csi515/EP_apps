@@ -3,6 +3,7 @@
  */
 import type { DepartmentMemberRow, OrgNode } from './useOrganizationTree';
 import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRoleService';
+import { resolvePrimaryDepartmentIdForUser as resolvePrimaryDepartmentIdForUserCore } from '@/core/organizations/orgChartPrimitives';
 
 /** 리더(DESCENDANTS)가 없는 조직 목록 */
 export function listDepartmentsMissingLeaders(
@@ -23,13 +24,7 @@ export function resolvePrimaryDepartmentIdForUser(
   members: readonly DynamicMemberRow[],
   departmentMembers: readonly DepartmentMemberRow[],
 ): string | null {
-  if (!userId) return null;
-  const member = members.find((m) => m.user_id === userId && m.is_active !== false);
-  if (!member) return null;
-  const placements = departmentMembers.filter((dm) => dm.member_id === member.id);
-  if (placements.length === 0) return null;
-  const selfOnly = placements.find((p) => p.scope_type === 'SELF_ONLY');
-  return (selfOnly ?? placements[0]!).department_id;
+  return resolvePrimaryDepartmentIdForUserCore(userId, members, departmentMembers);
 }
 
 /** 대상 부서까지 경로에 있는 조상 id (본인 제외) — 펼치기용 */

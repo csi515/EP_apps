@@ -1,20 +1,14 @@
 import React from 'react';
 import type { DepartmentScopeType } from '@/core/organizations/departmentScope';
 import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
+import { memberDisplayLabel } from '@/core/organizations/orgChartPrimitives';
 import type { DepartmentMemberRow } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 import { MEMBER_DRAG_MIME } from './orgMemberDrag';
 import { FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
 
-function memberLabel(member: DynamicMemberRow): string {
-  if (member.name?.trim()) return member.name.trim();
-  if (member.email?.trim()) return member.email.trim();
-  return `${member.user_id.slice(0, 8)}…`;
-}
-
 function initials(member: DynamicMemberRow): string {
-  const label = memberLabel(member);
-  return label.slice(0, 2).toUpperCase();
+  return memberDisplayLabel(member).slice(0, 2).toUpperCase();
 }
 
 type Props = {
@@ -59,7 +53,7 @@ export function OrgMemberRow({
         className="h-4 w-4 shrink-0"
         checked={selected}
         onChange={() => onToggleSelect(member.id)}
-        aria-label={memberLabel(member)}
+        aria-label={memberDisplayLabel(member)}
         disabled={!canEdit}
       />
       <span
@@ -69,7 +63,7 @@ export function OrgMemberRow({
         {initials(member)}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-900">{memberLabel(member)}</p>
+        <p className="truncate text-sm font-semibold text-slate-900">{memberDisplayLabel(member)}</p>
         {inactive ? (
           <p className="text-[10px] font-semibold text-slate-500">비활성</p>
         ) : null}

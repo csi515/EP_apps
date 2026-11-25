@@ -3,7 +3,6 @@
  * EP_apps Legacy storage 조립 — 디스크에 존재하는 capability storage만 결합한다.
  */
 import { bookingStorage } from '@/capabilities/booking/infrastructure/bookingStorage';
-import { commerceStorage } from '@/capabilities/commerce/infrastructure/commerceStorage';
 import { resourcesStorage } from '@/capabilities/resources/infrastructure/resourcesStorage';
 import { schedulingStorage } from '@/capabilities/scheduling/infrastructure/schedulingStorage';
 import { dashboardStatsStorage } from './dashboardStatsStorage';
@@ -20,13 +19,11 @@ export const assembledStorage = Object.assign(
   bookingStorage,
   resourcesStorage,
   settingsStorage,
-  commerceStorage,
   dashboardStatsStorage
 );
 
 export {
   bookingStorage,
-  commerceStorage,
   dashboardStatsStorage,
   resourcesStorage,
   schedulingStorage,

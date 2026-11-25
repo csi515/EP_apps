@@ -1,10 +1,9 @@
-// @ts-nocheck
 /**
- * EP_apps Capability 공개 배럴 — 디스크에 존재하는 manifest만 등록한다.
+ * EP_apps Capability 공개 배럴 — manifest 등록과 표시명만 노출한다.
+ * UI/서비스는 `@/capabilities/<id>/...` 직접 경로를 사용한다.
  */
 import type { CapabilityManifest } from './_shared/capabilityTypes';
 import { bookingCapability } from './booking/manifest';
-import { commerceCapability } from './commerce/manifest';
 import { resourcesCapability } from './resources/manifest';
 import { schedulingCapability } from './scheduling/manifest';
 import { inventoryCapability } from './inventory/manifest';
@@ -42,7 +41,6 @@ export {
 export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   schedulingCapability,
   bookingCapability,
-  commerceCapability,
   resourcesCapability,
   inventoryCapability,
   seat_roomCapability,
@@ -66,15 +64,6 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   whistleblower_grievanceCapability,
   hazardous_substance_msdsCapability,
 ];
-
-export * from './supply_restock';
-export * from './facility_incident_report';
-export * from './mbo';
-export * from './approval_workflow';
-export * from './patent_ip_asset';
-export * from './research_project';
-export * from './whistleblower_grievance';
-export * from './hazardous_substance_msds';
 
 const CAPABILITY_DISPLAY_NAME_MAP: Record<string, string> = Object.fromEntries(
   CAPABILITY_MANIFESTS.map((m) => [m.definition.id, m.definition.displayName])

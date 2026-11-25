@@ -12,7 +12,7 @@ import {
   type MboCycleSettings,
 } from '../domain/mboCycle';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import type { ObjectiveNode } from '../ui/MboObjectiveTreeViewer';
+import type { ObjectiveNode } from '../domain/mboObjectiveNode';
 import type { PortfolioProject } from '../domain/projectPortfolioEngine';
 import type { ProjectCategory } from '../domain/projectCategoryEngine';
 import { MboService } from '../services/mboService';

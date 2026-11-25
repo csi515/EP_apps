@@ -90,14 +90,6 @@ export function StaffAccessMyLauncherView({
       <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-[11px] leading-snug text-slate-600">
         {translate('ep.staffAccess.my.hint')}
       </p>
-      <button
-        type="button"
-        disabled
-        className="min-h-11 w-full rounded-xl border border-dashed border-slate-200 px-4 text-xs font-semibold text-slate-400"
-        title={translate('ep.staffAccess.my.requestStub')}
-      >
-        {translate('ep.staffAccess.my.requestStub')}
-      </button>
       {canManage ? (
         <Link
           to={buildStaffAccessPath({ mode: 'admin' })}

@@ -1,4 +1,4 @@
-import { capacityCapability } from '@/core/capacity';
+import { capacityCapability } from '@/capabilities/scheduling/capacity';
 import { getCoreClient } from '@/lib/supabase';
 import type {
   MyReservationRpcRow,
@@ -39,9 +39,9 @@ function mapReservationRow(row: ReservationRow): Reservation {
 }
 
 /**
- * get_organization_reservations RETURNS TABLE에는 ReservationDetail의
- * organization_id / user_id / confirmed_by / cancelled_by / metadata / updated_at 이 없음.
- * 호출 인자·기본값으로 도메인 타입을 채운다 (기존 as-cast 시 undefined였던 필드의 안전한 기본값).
+ * get_organization_reservations RETURNS TABLE?�는 ReservationDetail??
+ * organization_id / user_id / confirmed_by / cancelled_by / metadata / updated_at ???�음.
+ * ?�출 ?�자·기본값으�??�메???�?�을 채운??(기존 as-cast ??undefined?�???�드???�전??기본�?.
  */
 function mapOrganizationReservation(
   row: OrganizationReservationRpcRow,
@@ -94,14 +94,14 @@ function mapMyReservation(row: MyReservationRpcRow): MyReservation {
 
 /**
  * Schedule Reservation Service
- * bookable Schedule(core.schedules)에 대한 고객 신청 (core.reservations).
- * 슬롯 점유 status는 reservations만 바꾼다. 방문/출석 원장을 만들지 않는다.
+ * bookable Schedule(core.schedules)???�??고객 ?�청 (core.reservations).
+ * ?�롯 ?�유 status??reservations�?바꾼?? 방문/출석 ?�장??만들지 ?�는??
  */
 export const reservationService = {
   capacitySnapshot: capacityCapability.reservationSnapshot,
 
   /**
-   * 예약 신청 (고객)
+   * ?�약 ?�청 (고객)
    */
   async requestReservation(request: ReservationRequest): Promise<string> {
     const { data, error } = await getCoreClient().rpc('request_reservation', {
@@ -117,7 +117,7 @@ export const reservationService = {
   },
 
   /**
-   * 예약 확정 (원장/관리자)
+   * ?�약 ?�정 (?�장/관리자)
    */
   async confirmReservation(reservationId: string, fromStatus?: ReservationStatus): Promise<void> {
     if (fromStatus) {
@@ -131,7 +131,7 @@ export const reservationService = {
   },
 
   /**
-   * 예약 취소
+   * ?�약 취소
    */
   async cancelReservation(
     reservationId: string,
@@ -150,7 +150,7 @@ export const reservationService = {
   },
 
   /**
-   * 조직의 예약 목록 조회 (원장/관리자)
+   * 조직???�약 목록 조회 (?�장/관리자)
    */
   async getOrganizationReservations(
     organizationId: string,
@@ -174,7 +174,7 @@ export const reservationService = {
   },
 
   /**
-   * 내 예약 목록 조회 (고객)
+   * ???�약 목록 조회 (고객)
    */
   async getMyReservations(status?: ReservationStatus, limit = 50): Promise<MyReservation[]> {
     const { data, error } = await getCoreClient().rpc('get_my_reservations', {
@@ -187,7 +187,7 @@ export const reservationService = {
   },
 
   /**
-   * 예약 상세 조회
+   * ?�약 ?�세 조회
    */
   async getReservation(reservationId: string): Promise<Reservation> {
     const { data, error } = await getCoreClient()
@@ -201,7 +201,7 @@ export const reservationService = {
   },
 
   /**
-   * 조직의 미확정 예약 개수 조회
+   * 조직??미확???�약 개수 조회
    */
   async getPendingReservationCount(organizationId: string): Promise<number> {
     const { count, error } = await getCoreClient()

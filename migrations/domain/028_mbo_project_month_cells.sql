@@ -1,11 +1,4 @@
--- MBO Plan vs Actual: 월별 계획/실적 셀 + 과제 WBS 보조 컬럼
-
-ALTER TABLE core.mbo_projects
-  ADD COLUMN IF NOT EXISTS wbs_code text,
-  ADD COLUMN IF NOT EXISTS wbs_seq integer;
-
-COMMENT ON COLUMN core.mbo_projects.wbs_code IS '중분류 코드 (예: 1-1)';
-COMMENT ON COLUMN core.mbo_projects.wbs_seq IS '세부 순번 (정렬용)';
+-- MBO Plan vs Actual: 월별 계획/실적 셀
 
 CREATE TABLE IF NOT EXISTS core.mbo_project_month_cells (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

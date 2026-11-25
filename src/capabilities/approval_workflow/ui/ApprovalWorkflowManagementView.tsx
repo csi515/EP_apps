@@ -18,6 +18,9 @@ import {
   type SavedApprovalLine,
 } from '../services/approvalWorkflowService';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { APPROVAL_WORKFLOW_COPY } from './approvalWorkflowCopy';
 
 type Identity = { id?: string; name?: string };
 
@@ -289,35 +292,41 @@ export const ApprovalWorkflowManagementView: React.FC<Props> = ({
         }}
       />
 
-      {actions.rejectTarget ? (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/40 sm:items-center sm:justify-center">
-          <div className="w-full rounded-t-2xl bg-white p-5 sm:max-w-md sm:rounded-2xl">
-            <h3 className="text-base font-bold text-slate-900">반려 사유</h3>
-            <textarea
-              className="mt-3 min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"
-              value={actions.rejectReason}
-              onChange={(e) => actions.setRejectReason(e.target.value)}
-              placeholder="보완이 필요한 항목을 구체적으로 적어 주세요"
-            />
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                className="h-12 flex-1 rounded-xl border border-slate-300"
-                onClick={() => actions.setRejectTarget(null)}
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                className="h-12 flex-1 rounded-xl bg-rose-700 font-bold text-white"
-                onClick={() => void actions.confirmReject()}
-              >
-                반려
-              </button>
-            </div>
+      <Modal
+        isOpen={Boolean(actions.rejectTarget)}
+        onClose={() => actions.setRejectTarget(null)}
+        title={APPROVAL_WORKFLOW_COPY.rejectTitle}
+        maxWidth="md"
+        intent="form"
+        footer={
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => actions.setRejectTarget(null)}
+            >
+              {APPROVAL_WORKFLOW_COPY.cancel}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="flex-1"
+              isLoading={actions.busy}
+              onClick={() => void actions.confirmReject()}
+            >
+              {APPROVAL_WORKFLOW_COPY.rejectConfirm}
+            </Button>
           </div>
-        </div>
-      ) : null}
+        }
+      >
+        <textarea
+          className="min-h-24 w-full rounded-lg border border-slate-300 p-3 text-sm"
+          value={actions.rejectReason}
+          onChange={(e) => actions.setRejectReason(e.target.value)}
+          placeholder={APPROVAL_WORKFLOW_COPY.rejectPlaceholder}
+        />
+      </Modal>
     </WorkPageFrame>
   );
 };

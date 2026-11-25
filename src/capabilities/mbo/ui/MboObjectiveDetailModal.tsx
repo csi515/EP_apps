@@ -6,7 +6,7 @@ import { FormField, FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField'
 import { Input } from '@/shared/components/ui/Input';
 import type { MboStatus } from '../domain/mboEngine';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
-import type { ObjectiveNode } from './MboObjectiveTreeViewer';
+import type { ObjectiveNode } from '../domain/mboObjectiveNode';
 import {
   goalLockStatusLabel,
   resolveMboGoalLockView,

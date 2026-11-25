@@ -258,7 +258,7 @@ console.log('[test:login-to-delegation] start');
 
   assert.equal(canAccessRndPortal(owner), true);
   assert.equal(canAccessRndPortal(hq), true);
-  assert.equal(canAccessRndPortal(teamMember), true, 'research_project:view → rnd 접근');
+  assert.equal(canAccessRndPortal(teamMember), false, 'research_project:view alone must not open portal');
 
   assert.equal(isNavTabAllowed('grievances', teamMember), true);
   assert.equal(isNavTabAllowed('bookings', teamMember), true);

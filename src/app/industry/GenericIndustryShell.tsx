@@ -17,8 +17,6 @@ import {
   Wallet,
   MessageSquare,
   Package,
-  Clock,
-  ClipboardList,
   Workflow,
   FileText,
   Award,
@@ -60,12 +58,6 @@ const SafetyConsentView = lazy(() =>
 );
 const TaskPipelineView = lazy(() =>
   import('@/capabilities/task_pipeline').then((m) => ({ default: m.TaskPipelineKanbanView }))
-);
-const RentalEquipmentView = lazy(() =>
-  import('@/capabilities/rental_equipment').then((m) => ({ default: m.RentalEquipmentManagementView }))
-);
-const MaintenanceChecklistView = lazy(() =>
-  import('@/capabilities/maintenance_checklist').then((m) => ({ default: m.MaintenanceChecklistManagementView }))
 );
 const RecipeBomView = lazy(() =>
   import('@/capabilities/recipe_bom').then((m) => ({ default: m.RecipeBomManagementView }))
@@ -114,7 +106,7 @@ const CapabilitySwitchboardView = lazy(() =>
 );
 import { PluginErrorBoundary } from '@/shared/components/PluginErrorBoundary';
 import { ToastContainer, ConfirmDialog } from '@/shared/components';
-import { ExecutiveRiskDashboardWidget } from '@/shared/components/ExecutiveRiskDashboardWidget';
+import { ExecutiveRiskDashboardWidget } from '@/capabilities/_shared/ui/ExecutiveRiskDashboardWidget';
 import { ModuleAppShell } from '@/shared/components/layout/ModuleAppShell';
 import { getModuleChrome } from '@/app/industry/moduleChromeRegistry';
 import {
@@ -354,9 +346,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     }
 
     const extendedItems: NavMenuItem[] = [];
-    if (enabledCaps.includes('rental_equipment')) {
-      extendedItems.push({ tab: 'rentals', label: '장비 대여', icon: <Clock className="w-4 h-4" /> });
-    }
     if (enabledCaps.includes('equipment_lifecycle')) {
       extendedItems.push({ tab: 'equipment-lifecycle', label: '장비 수명주기', icon: <Wrench className="w-4 h-4" /> });
     }
@@ -366,9 +355,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     if (enabledCaps.includes('sop_risk_assessment')) {
       extendedItems.push({ tab: 'sop-risk', label: 'SOP·위험성평가', icon: <ShieldAlert className="w-4 h-4" /> });
       extendedItems.push({ tab: 'risk-approvals', label: '내 결재 대기함', icon: <FileCheck className="w-4 h-4" /> });
-    }
-    if (enabledCaps.includes('maintenance_checklist')) {
-      extendedItems.push({ tab: 'maintenance', label: '시설 점검', icon: <ClipboardList className="w-4 h-4" /> });
     }
     if (enabledCaps.includes('task_pipeline')) {
       extendedItems.push({ tab: 'pipelines', label: '파이프라인', icon: <Workflow className="w-4 h-4" /> });
@@ -452,7 +438,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     bookings: '/workspace/resources',
     inventory: '/workspace/inventory',
     'supply-restock': '/workspace/supply-restock',
-    maintenance: '/rnd/maintenance',
     grievances: '/workspace/grievances',
     'whistleblower-grievances': '/workspace/grievances',
   };
@@ -517,16 +502,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
         {financeViewEntries.finance()}
       </Suspense>
     ),
-    ledger: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">원장 내역을 불러오는 중…</div>}>
-        {financeViewEntries.finance()}
-      </Suspense>
-    ),
-    wallets: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">크레딧 지갑을 불러오는 중…</div>}>
-        {financeViewEntries.finance()}
-      </Suspense>
-    ),
     inventory: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">재고 화면을 불러오는 중…</div>}>
         <InventoryView />
@@ -540,16 +515,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
     pipelines: () => (
       <Suspense fallback={<div className="p-8 text-center text-slate-400">작업 파이프라인 화면을 불러오는 중…</div>}>
         <TaskPipelineView />
-      </Suspense>
-    ),
-    rentals: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">장비 대여 화면을 불러오는 중…</div>}>
-        <RentalEquipmentView />
-      </Suspense>
-    ),
-    maintenance: () => (
-      <Suspense fallback={<div className="p-8 text-center text-slate-400">시설 점검 화면을 불러오는 중…</div>}>
-        <MaintenanceChecklistView />
       </Suspense>
     ),
     'recipe-bom': () => (
@@ -685,43 +650,6 @@ export const GenericIndustryShell: FC<{ viewMap?: Record<string, () => ReactNode
 
     const viewRenderer = viewMap[activeTab];
     if (!viewRenderer) {
-      // Capability는 활성화되어 있으나 화면 구현이 Tier 3(화면 연기)인 경우
-      if (TAB_REQUIRED_CAPABILITIES[activeTab]) {
-        return (
-          <div className="max-w-xl mx-auto mt-10 p-6 sm:p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-xs" data-testid="deferred-feature-notice">
-            <div className="w-12 h-12 mx-auto mb-3.5 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <Building2 className="w-6 h-6" />
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50/80 text-indigo-700 rounded-full text-xs font-semibold mb-2">
-              <span>Tier 3 · 화면 준비 중</span>
-            </div>
-            <h2 className="text-xl font-extrabold text-slate-800">
-              {tabMeta?.label || '화면 준비 중인 기능입니다'}
-            </h2>
-            <p className="text-xs text-slate-500 mt-2 max-w-md mx-auto leading-relaxed">
-              {tabMeta?.description ? `${tabMeta.description} — ` : ''}
-              해당 기능({activeTab})의 백엔드 도메인 엔진 및 설정 스키마가 정상 활성화되어 있습니다. 전용 화면은 다음 릴리스에서 제공될 예정입니다.
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-2.5">
-              <button
-                type="button"
-                onClick={() => setActiveTab('dashboard')}
-                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs"
-              >
-                대시보드로 돌아가기
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('settings')}
-                className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-200 transition-colors"
-              >
-                워크스페이스 설정
-              </button>
-            </div>
-          </div>
-        );
-      }
-
       // 정의되지 않은 미등록 탭
       if (activeTab !== 'dashboard') {
         return (

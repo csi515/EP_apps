@@ -19,12 +19,9 @@ import { StaffInviteResultModal } from '@/core/staff/components/StaffInviteResul
 import { JoinRequestsPanel } from '@/core/organizations/components/JoinRequestsPanel';
 import { PageHeader } from '@/shared/components';
 import { PageListSkeleton } from '@/shared/components/ui/Skeleton';
-import { CurrencyInput } from '@/shared/components/CurrencyInput';
-import { Teacher, type TeacherPayType } from '@/types';
-import { payTypeLabel, payTypeRateUnitLabel, payTypeUsesUnitRate } from '@/capabilities/billing/finance/teacherPayroll';
+import { Teacher } from '@/types';
 import { normalizeStaffGrants, type StaffGrants } from '@/core/staff/staffGrants';
 import { StaffGrantFields, emptyStaffGrants } from './StaffGrantFields';
-import { formatCurrency } from '@/utils/formatters';
 import {
   GraduationCap,
   Plus,
@@ -82,10 +79,6 @@ export const TeacherManagementView: React.FC = () => {
       userId: row.user_id,
       status: row.status as Teacher['status'],
       hireDate: (row.metadata as any)?.hireDate || row.created_at,
-      payType: (row.metadata as any)?.payType,
-      payRate: (row.metadata as any)?.payRate,
-      hourlyRate: (row.metadata as any)?.hourlyRate,
-      salary: (row.metadata as any)?.salary,
       color: (row.metadata as any)?.color,
       specialty: (row.metadata as any)?.specialty,
       memo: (row.metadata as any)?.memo,
@@ -157,12 +150,9 @@ export const TeacherManagementView: React.FC = () => {
     phone: '',
     email: '',
     hireDate: new Date().toISOString().slice(0, 10),
-    specialty: '클래식 피아노, 기초 테크닉',
+    specialty: '',
     status: 'active' as 'active' | 'inactive',
     color: '#4f46e5',
-    payType: 'hourly' as import('@/types').TeacherPayType,
-    hourlyRate: 30000,
-    salary: 0,
     grants: emptyStaffGrants(),
   });
 
@@ -173,12 +163,9 @@ export const TeacherManagementView: React.FC = () => {
       phone: '010-0000-0000',
       email: '',
       hireDate: new Date().toISOString().slice(0, 10),
-      specialty: '유아 피아노, 반주법, 콩쿠르 지도',
+      specialty: '',
       status: 'active',
       color: '#8b5cf6',
-      payType: 'hourly',
-      hourlyRate: 30000,
-      salary: 0,
       grants: emptyStaffGrants(),
     });
     setIsModalOpen(true);
@@ -186,9 +173,6 @@ export const TeacherManagementView: React.FC = () => {
 
   const handleOpenEdit = (t: Teacher) => {
     setEditingTeacher(t);
-    const inferred =
-      t.payType ||
-      ((t.hourlyRate || 0) > 0 ? 'hourly' : (t.salary || 0) > 0 ? 'monthly' : 'hourly');
     setFormData({
       name: t.name,
       phone: t.phone,
@@ -197,9 +181,6 @@ export const TeacherManagementView: React.FC = () => {
       specialty: t.specialty || '',
       status: t.status === 'resigned' ? 'inactive' : t.status,
       color: t.color || '#4f46e5',
-      payType: inferred,
-      hourlyRate: t.hourlyRate || 0,
-      salary: t.salary || 0,
       grants: normalizeStaffGrants(t.grants),
     });
     setIsModalOpen(true);
@@ -236,14 +217,6 @@ export const TeacherManagementView: React.FC = () => {
         hireDate: formData.hireDate,
         specialty: formData.specialty.trim(),
         color: formData.color,
-        payType: formData.payType,
-        hourlyRate:
-          formData.payType === 'hourly' ||
-          formData.payType === 'attendance' ||
-          formData.payType === 'work_hours'
-            ? Number(formData.hourlyRate) || 0
-            : undefined,
-        salary: formData.payType === 'monthly' ? Number(formData.salary) || 0 : undefined,
         grants: formData.grants,
       }
     };
@@ -437,23 +410,6 @@ export const TeacherManagementView: React.FC = () => {
                     <span className="text-slate-500">개설 클래스</span>
                     <strong className="text-slate-800">{teacherClasses.length}개 반</strong>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">정산</span>
-                    <strong className="text-slate-800 text-right">
-                      {(() => {
-                        const type =
-                          t.payType ||
-                          ((t.hourlyRate || 0) > 0
-                            ? 'hourly'
-                            : (t.salary || 0) > 0
-                              ? 'monthly'
-                              : 'none');
-                        if (type === 'none') return '미설정';
-                        if (type === 'monthly') return `월급 ${formatTeacherPay(t.salary)}`;
-                        return `${payTypeLabel(type)} ${formatTeacherPay(t.hourlyRate)}`;
-                      })()}
-                    </strong>
-                  </div>
                 </div>
 
                 {canManageAccounts && (
@@ -614,59 +570,6 @@ export const TeacherManagementView: React.FC = () => {
                 />
               </div>
 
-              <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">정산 방식</label>
-                  <select
-                    value={formData.payType}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        payType: e.target.value as TeacherPayType,
-                      })
-                    }
-                    className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold min-h-[44px]"
-                  >
-                    <option value="hourly">수업 실적 (수업 횟수 × 회당 지급액)</option>
-                    <option value="attendance">출근 횟수 (출근 × 1회 지급액)</option>
-                    <option value="work_hours">근무 시간 (시간 × 시간당 지급액)</option>
-                    <option value="monthly">월급 (월 고정)</option>
-                    <option value="none">정산 안 함</option>
-                  </select>
-                </div>
-                {payTypeUsesUnitRate(formData.payType) && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      지급 기준 ({payTypeRateUnitLabel(formData.payType)})
-                    </label>
-                    <CurrencyInput
-                      value={formData.hourlyRate}
-                      onChange={(v) => setFormData({ ...formData, hourlyRate: v })}
-                    />
-                    {(formData.payType === 'attendance' || formData.payType === 'work_hours') && (
-                      <p className="text-[11px] text-slate-500 mt-1.5 leading-relaxed">
-                        강사 출근·근무시간은 아직 자동 집계되지 않습니다. 매월 정산 화면에서
-                        실적을 직접 입력합니다.
-                      </p>
-                    )}
-                  </div>
-                )}
-                {formData.payType === 'monthly' && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      지급 기준 (원 / 월)
-                    </label>
-                    <CurrencyInput
-                      value={formData.salary}
-                      onChange={(v) => setFormData({ ...formData, salary: v })}
-                    />
-                  </div>
-                )}
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  재무 &gt; 강사정산에서 월별 실적을 확인하고 정산 확정·지출 등록을 진행합니다.
-                </p>
-              </div>
-
               <StaffGrantFields
                 value={formData.grants}
                 onChange={(grants: StaffGrants) => setFormData({ ...formData, grants })}
@@ -711,8 +614,3 @@ export const TeacherManagementView: React.FC = () => {
     </div>
   );
 };
-
-function formatTeacherPay(amount?: number): string {
-  if (!amount || amount <= 0) return '미설정';
-  return formatCurrency(amount);
-}

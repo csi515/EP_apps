@@ -4,7 +4,7 @@ import type { ApprovalRequestRow } from '@/capabilities/approval_workflow/servic
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuth } from '@/core/auth/AuthProvider';
 import { showToast } from '@/shared/feedback/uiFeedback';
-import { syncApprovalLinkedEntity } from './syncApprovalLinkedEntity';
+import { syncApprovalLinkedEntity } from '@/app/approvals/syncApprovalLinkedEntity';
 
 /** 페이지 계층에서 Cap 연계 동기화를 주입해 approval_workflow 역의존을 피한다. */
 export const ApprovalWorkflowWithLinkedSync: React.FC = () => {

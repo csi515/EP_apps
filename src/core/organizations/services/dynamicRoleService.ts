@@ -132,17 +132,22 @@ export async function saveDynamicRole(input: {
   if (result.error) throw new Error(result.error.message);
 }
 
-export async function deleteDynamicRole(id: string): Promise<void> {
+export async function deleteDynamicRole(id: string, organizationId: string): Promise<void> {
   if (isLocalAuthEnabled()) {
     throw new Error('로컬 인증 모드에서 개별 직급 삭제는 초기 설정의 일괄 저장으로 처리하세요.');
   }
   const client = getCoreClient();
-  const result = await client.from('organization_roles').delete().eq('id', id);
+  const result = await client
+    .from('organization_roles')
+    .delete()
+    .eq('id', id)
+    .eq('tenant_id', organizationId);
   if (result.error) throw new Error(result.error.message);
 }
 
 /**
  * 직원의 직급을 배정하거나 회수(기본 사원으로 강등).
+ * RPC 전용 — 테넌트 미필터 클라이언트 폴백은 제거됨.
  */
 export async function assignOrganizationRole(
   memberId: string,
@@ -162,21 +167,13 @@ export async function assignOrganizationRole(
   });
 
   if (rpcRes.error) {
-    const msg = rpcRes.error.message || '';
-    if (msg.includes('does not exist') || msg.includes('not found in schema')) {
-      const result = await client
-        .from('organization_members')
-        .update({ organization_role_id: roleId } as any)
-        .eq('id', memberId);
-      if (result.error) throw new Error(result.error.message);
-      return;
-    }
-    throw new Error(msg);
+    throw new Error(rpcRes.error.message || '직급 배정에 실패했습니다.');
   }
 }
 
 /**
  * 특정 회원에게 원자적 직무 기능 권한(총무, 노경, 봉사, 셔틀, 소모품 등)을 부여하거나 회수.
+ * RPC 전용 — 테넌트 미필터 클라이언트 폴백은 제거됨.
  */
 export async function grantMemberFeaturePermission(
   memberId: string,
@@ -196,21 +193,6 @@ export async function grantMemberFeaturePermission(
   });
 
   if (rpcRes.error) {
-    const msg = rpcRes.error.message || '';
-    if (msg.includes('does not exist') || msg.includes('not found in schema')) {
-      const { data: member } = await (client as any)
-        .from('organization_members')
-        .select('feature_permissions')
-        .eq('id', memberId)
-        .single();
-      const nextPerms = { ...((member as any)?.feature_permissions || {}), [featureKey]: enabled };
-      const { error } = await (client as any)
-        .from('organization_members')
-        .update({ feature_permissions: nextPerms })
-        .eq('id', memberId);
-      if (error) throw new Error(error.message);
-      return;
-    }
-    throw new Error(msg);
+    throw new Error(rpcRes.error.message || '기능 권한 변경에 실패했습니다.');
   }
 }

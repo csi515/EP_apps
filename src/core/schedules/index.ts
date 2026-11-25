@@ -2,12 +2,12 @@
  * Core Schedule / Reservation infrastructure
  *
  * 책임 경계:
- * - Schedule: core.schedules — 예약 가능 시간 또는 운영 슬롯
- * - Reservation: core.reservations — bookable 슬롯에 대한 고객 신청
- * - Booking: 고객 배정 schedules 행(필라테스/피부). 새 테이블 없음
- * - Session/Attendance: customer_sessions / attendance_sessions. 이 barrel이 원장이 아님
+ * - Schedule: core.schedules ???�약 가???�간 ?�는 ?�영 ?�롯
+ * - Reservation: core.reservations ??bookable ?�롯???�??고객 ?�청
+ * - Booking: 고객 배정 schedules ???�라?�스/?��?). ???�이�??�음
+ * - Session/Attendance: customer_sessions / attendance_sessions. ??barrel???�장???�님
  * - Availability / slot capacity / settings UI: Scheduling Capability SoT.
- *   이 barrel의 availability·bookingCapacity export는 deprecated shim
+ *   ??barrel??availability·bookingCapacity export??deprecated shim
  */
 export {
   APPOINTMENT_BOOKING_LEDGER,
@@ -35,8 +35,8 @@ export {
 export { reservationService, reservationService as scheduleReservationService } from './services/reservationService';
 export { availabilityService } from './services/availabilityService';
 export { materializeAvailabilitySlots } from './services/materializeAvailabilitySlots';
-export { availabilityCapability } from '@/core/availability';
-export { capacityCapability } from '@/core/capacity';
+export { availabilityCapability } from '@/capabilities/scheduling/availability';
+export { capacityCapability } from '@/capabilities/scheduling/capacity';
 export { sessionPassService } from './sessionPassService';
 export { updateBookingStatusAtomic } from './bookingPassAtomic';
 export {

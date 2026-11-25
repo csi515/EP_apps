@@ -1108,13 +1108,8 @@ export const BookingCalendarView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          const { createdIncome, income } = confirmBookingDeposit(b);
-                          showToast(
-                            createdIncome && income
-                              ? `예약금 입금 확인 · 수입 ${income.amount.toLocaleString('ko-KR')}원 반영`
-                              : '예약금 입금을 확인했습니다.',
-                            'success'
-                          );
+                          confirmBookingDeposit(b);
+                          showToast('예약금 입금을 확인했습니다.', 'success');
                         }}
                         className="px-2 py-1 text-xs font-bold bg-rose-50 text-rose-700 rounded-lg min-h-[44px]"
                       >
@@ -1359,13 +1354,8 @@ export const BookingCalendarView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const { createdIncome, income } = confirmBookingDeposit(selectedBookingForDetail);
-                    showToast(
-                      createdIncome && income
-                        ? `예약금 입금 확인 · 수입 ${income.amount.toLocaleString('ko-KR')}원 반영`
-                        : '예약금 입금을 확인했습니다.',
-                      'success'
-                    );
+                    confirmBookingDeposit(selectedBookingForDetail);
+                    showToast('예약금 입금을 확인했습니다.', 'success');
                     setSelectedBookingForDetail(null);
                   }}
                   className="px-3 py-1.5 text-xs font-bold bg-rose-50 text-rose-700 rounded-lg min-h-[44px]"

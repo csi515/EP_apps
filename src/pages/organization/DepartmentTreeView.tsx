@@ -2,83 +2,17 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronRight, GripVertical, Pencil, Plus } from 'lucide-react';
 import type { OrgNode, DepartmentMemberRow } from './useOrganizationTree';
 import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
+import { buildDepartmentChildrenMap } from '@/core/organizations/orgChartPrimitives';
 import { ORG_CHART_COPY } from './orgChartCopy';
 import { DEPT_DRAG_MIME, MEMBER_DRAG_MIME } from './orgMemberDrag';
+import {
+  INDENT_PX,
+  canDropDepartmentOnto,
+  filterVisibleIds,
+  indentForDepth,
+} from './orgTreeViewEngine';
 
 const DEPT_DRAG = DEPT_DRAG_MIME;
-/** depth당 들여쓰기(px) — 깊은 계층도 구분되게 */
-const INDENT_PX = 18;
-const MAX_DEPTH_INDENT = 12;
-
-function isDescendant(nodes: OrgNode[], ancestorId: string, nodeId: string): boolean {
-  const node = nodes.find((n) => n.id === nodeId);
-  const ancestor = nodes.find((n) => n.id === ancestorId);
-  if (!node || !ancestor || node.id === ancestor.id) return false;
-  return node.path.startsWith(ancestor.path);
-}
-
-function buildChildrenMap(nodes: OrgNode[]): Map<string | null, OrgNode[]> {
-  const map = new Map<string | null, OrgNode[]>();
-  for (const node of nodes) {
-    const key = node.parentId;
-    const list = map.get(key) ?? [];
-    list.push(node);
-    map.set(key, list);
-  }
-  for (const list of map.values()) {
-    list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  }
-  return map;
-}
-
-function memberLabel(member: DynamicMemberRow): string {
-  if (member.name?.trim()) return member.name.trim();
-  if (member.email?.trim()) return member.email.trim();
-  return `${member.user_id.slice(0, 8)}…`;
-}
-
-function matchesQuery(
-  node: OrgNode,
-  deptMembers: DepartmentMemberRow[],
-  members: DynamicMemberRow[],
-  query: string,
-): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  if (node.name.toLowerCase().includes(q)) return true;
-  if ((node.unitKind ?? '').toLowerCase().includes(q)) return true;
-  return deptMembers.some((dm) => {
-    const m = members.find((row) => row.id === dm.member_id);
-    if (!m) return false;
-    return memberLabel(m).toLowerCase().includes(q);
-  });
-}
-
-/** 검색 시 매칭 노드와 조상만 남긴다 */
-function filterVisibleIds(
-  nodes: OrgNode[],
-  departmentMembers: DepartmentMemberRow[],
-  members: DynamicMemberRow[],
-  query: string,
-): Set<string> | null {
-  if (!query.trim()) return null;
-  const byId = new Map(nodes.map((n) => [n.id, n]));
-  const visible = new Set<string>();
-  for (const node of nodes) {
-    const dms = departmentMembers.filter((dm) => dm.department_id === node.id);
-    if (!matchesQuery(node, dms, members, query)) continue;
-    let cur: OrgNode | undefined = node;
-    while (cur) {
-      visible.add(cur.id);
-      cur = cur.parentId ? byId.get(cur.parentId) : undefined;
-    }
-  }
-  return visible;
-}
-
-function indentForDepth(depth: number): number {
-  return Math.min(depth, MAX_DEPTH_INDENT) * INDENT_PX;
-}
 
 interface Props {
   nodes: OrgNode[];
@@ -123,7 +57,7 @@ export const DepartmentTreeView: React.FC<Props> = ({
   members = [],
   roles = [],
 }) => {
-  const childrenMap = useMemo(() => buildChildrenMap(nodes), [nodes]);
+  const childrenMap = useMemo(() => buildDepartmentChildrenMap(nodes), [nodes]);
   const visibleIds = useMemo(
     () => filterVisibleIds(nodes, departmentMembers, members, searchQuery),
     [nodes, departmentMembers, members, searchQuery],
@@ -228,8 +162,7 @@ export const DepartmentTreeView: React.FC<Props> = ({
                 }
               }
               if (!allowDrag || !dragDeptId) return;
-              if (dragDeptId === node.id) return;
-              if (isDescendant(nodes, dragDeptId, node.id)) return;
+              if (!canDropDepartmentOnto(nodes, dragDeptId, node.id)) return;
               event.preventDefault();
               setDropTargetId(node.id);
             }}
@@ -246,7 +179,7 @@ export const DepartmentTreeView: React.FC<Props> = ({
                 return;
               }
               const droppedDept = event.dataTransfer.getData(DEPT_DRAG) || dragDeptId || '';
-              if (droppedDept && droppedDept !== node.id && !isDescendant(nodes, droppedDept, node.id)) {
+              if (droppedDept && canDropDepartmentOnto(nodes, droppedDept, node.id)) {
                 onMove(droppedDept, node.id);
               }
             }}
@@ -341,7 +274,7 @@ export const DepartmentTreeView: React.FC<Props> = ({
               {allowInlineEdit ? (
                 <button
                   type="button"
-                  className="inline-flex h-11 w-9 shrink-0 items-center justify-center text-slate-400 hover:text-slate-800"
+                  className="inline-flex h-11 w-11 min-w-[44px] shrink-0 items-center justify-center text-slate-400 hover:text-slate-800"
                   aria-label={ORG_CHART_COPY.renameInline}
                   title={ORG_CHART_COPY.renameInline}
                   onClick={(e) => {
@@ -356,7 +289,7 @@ export const DepartmentTreeView: React.FC<Props> = ({
               {editMode && canManage && onAddChild ? (
                 <button
                   type="button"
-                  className="inline-flex h-11 w-9 shrink-0 items-center justify-center text-slate-400 hover:text-slate-800"
+                  className="inline-flex h-11 w-11 min-w-[44px] shrink-0 items-center justify-center text-slate-400 hover:text-slate-800"
                   aria-label={ORG_CHART_COPY.addChild}
                   title={ORG_CHART_COPY.addChild}
                   onClick={(e) => {

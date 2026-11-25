@@ -4,6 +4,7 @@ import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRole
 import {
   addMemberSecondaryDepartment,
   assignDepartmentScope,
+  bulkReassignMembersToDepartment,
   createDepartment,
   deleteDepartment,
   deleteDepartmentWithReassign,
@@ -18,6 +19,7 @@ import {
   type DepartmentMemberRow,
   type OrgTreeNode,
 } from '@/core/organizations/services/organizationTreeService';
+import { ORG_CHART_COPY } from './orgChartCopy';
 
 export type { DepartmentMemberRow, OrgTreeNode as OrgNode };
 
@@ -43,7 +45,7 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
       setMembers(loaded.members);
       setDepartmentMembers(loaded.departmentMembers);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : '조직도 조회에 실패했습니다.');
+      setError(cause instanceof Error ? cause.message : ORG_CHART_COPY.loadFailed);
     } finally {
       setLoading(false);
     }
@@ -76,10 +78,11 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
 
   const rename = useCallback(
     async (departmentId: string, name: string, unitKind?: string | null) => {
-      await renameDepartment({ departmentId, name, unitKind });
+      if (!organizationId) return;
+      await renameDepartment({ organizationId, departmentId, name, unitKind });
       await reload();
     },
-    [reload],
+    [organizationId, reload],
   );
 
   const remove = useCallback(
@@ -165,6 +168,19 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
     [organizationId, reload],
   );
 
+  const bulkMoveMembers = useCallback(
+    async (memberIds: readonly string[], departmentId: string) => {
+      if (!organizationId) return;
+      await bulkReassignMembersToDepartment({
+        organizationId,
+        departmentId,
+        memberIds,
+      });
+      await reload();
+    },
+    [organizationId, reload],
+  );
+
   const addSecondary = useCallback(
     async (memberId: string, departmentId: string) => {
       if (!organizationId) return;
@@ -207,6 +223,7 @@ export function useOrganizationTree(organizationId: string | null | undefined) {
     assignScope,
     reassignMember,
     moveMember,
+    bulkMoveMembers,
     addSecondaryPlacement: addSecondary,
     unassignFromDepartment,
     revokeMemberRole,

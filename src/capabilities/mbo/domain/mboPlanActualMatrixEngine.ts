@@ -30,8 +30,6 @@ export type MatrixProjectInput = {
   ownerName: string;
   categoryId?: string | null;
   categoryLabel?: string | null;
-  wbsCode?: string | null;
-  wbsSeq?: number | null;
   startDate: string;
   targetDate: string;
   createdAt?: string | null;
@@ -46,13 +44,9 @@ export type MatrixDualRow = {
   ownerName: string;
   categoryId: string | null;
   categoryLabel: string;
-  wbsCode: string;
-  wbsSeq: number | null;
   kind: MatrixRowKind;
   /** 대분류 라벨을 이 행에만 표시 (그룹 첫 행) */
   showCategoryLabel: boolean;
-  /** 중분류(wbs) 라벨을 이 행에만 표시 */
-  showWbsLabel: boolean;
   /** 선택 연도 1~12 — 구간 밖이면 null */
   cellsByMonth: Record<number, MboProjectMonthCellModel | null>;
   /** 해당 연도에서 편집 가능한 월 */
@@ -129,11 +123,6 @@ function sortMatrixProjects(projects: MatrixProjectInput[]): MatrixProjectInput[
   return [...projects].sort((a, b) => {
     const catA = (a.categoryLabel ?? '').localeCompare(b.categoryLabel ?? '', 'ko');
     if (catA !== 0) return catA;
-    const wbsA = (a.wbsCode ?? '').localeCompare(b.wbsCode ?? '', 'ko');
-    if (wbsA !== 0) return wbsA;
-    const seqA = a.wbsSeq ?? Number.MAX_SAFE_INTEGER;
-    const seqB = b.wbsSeq ?? Number.MAX_SAFE_INTEGER;
-    if (seqA !== seqB) return seqA - seqB;
     const titleCmp = a.title.localeCompare(b.title, 'ko');
     if (titleCmp !== 0) return titleCmp;
     return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
@@ -201,7 +190,6 @@ export function buildPlanActualMatrixRows(
 
   const rows: MatrixDualRow[] = [];
   let prevCategory = '';
-  let prevWbs = '';
 
   for (const project of sorted) {
     const periodYms = listPeriodYmBetween(project.startDate, project.targetDate);
@@ -222,11 +210,8 @@ export function buildPlanActualMatrixRows(
     }
 
     const categoryLabel = project.categoryLabel?.trim() || '미분류';
-    const wbsCode = project.wbsCode?.trim() || '—';
     const showCategoryLabel = categoryLabel !== prevCategory;
-    const showWbsLabel = showCategoryLabel || wbsCode !== prevWbs;
     prevCategory = categoryLabel;
-    prevWbs = wbsCode;
 
     const base = {
       projectId: project.id,
@@ -235,8 +220,6 @@ export function buildPlanActualMatrixRows(
       ownerName: project.ownerName,
       categoryId: project.categoryId ?? null,
       categoryLabel,
-      wbsCode,
-      wbsSeq: project.wbsSeq ?? null,
       cellsByMonth,
       editableMonths,
     };
@@ -246,20 +229,17 @@ export function buildPlanActualMatrixRows(
         ...base,
         kind: 'plan',
         showCategoryLabel,
-        showWbsLabel,
       });
       rows.push({
         ...base,
         kind: 'actual',
         showCategoryLabel: false,
-        showWbsLabel: false,
       });
     } else {
       rows.push({
         ...base,
         kind: 'actual',
         showCategoryLabel,
-        showWbsLabel,
       });
     }
   }

@@ -25,6 +25,7 @@ import {
   assignOrganizationRole,
   type DynamicMemberRow,
 } from '@/core/organizations/services/dynamicRoleService';
+import { memberDisplayLabel } from '@/core/organizations/orgChartPrimitives';
 import { listAuditLogs } from '@/core/audit';
 import type { AuditLog } from '@/core/audit/types';
 import { StorageService } from '@/services/storage';
@@ -54,10 +55,6 @@ function formatAuditAction(action: string): string {
   if (action === 'ROLE_ASSIGNED') return '직급 부여';
   if (action === 'ROLE_REVOKED') return '권한 회수';
   return action;
-}
-
-function memberLabel(member: DynamicMemberRow): string {
-  return member.name || member.login_id || member.email || `사원 (${member.user_id.slice(0, 8)})`;
 }
 
 export function MemberList(): React.JSX.Element {
@@ -156,7 +153,7 @@ export function MemberList(): React.JSX.Element {
         selectedRoleId || null,
         assignReason.trim() || '총무/운영 위임 관리자 직급 부여'
       );
-      setSuccessMessage(`${memberLabel(assignTarget)} 님에게 직급이 부여되었습니다.`);
+      setSuccessMessage(`${memberDisplayLabel(assignTarget)} 님에게 직급이 부여되었습니다.`);
       setAssignTarget(null);
       setSelectedRoleId('');
       setAssignReason('');
@@ -174,7 +171,7 @@ export function MemberList(): React.JSX.Element {
     setError(null);
     try {
       await assignOrganizationRole(revokeTarget.id, null, '권한 회수 (기본 사원으로 강등)');
-      setSuccessMessage(`${memberLabel(revokeTarget)} 님의 권한이 회수되었습니다.`);
+      setSuccessMessage(`${memberDisplayLabel(revokeTarget)} 님의 권한이 회수되었습니다.`);
       setRevokeTarget(null);
       await reload();
     } catch (cause) {
@@ -313,7 +310,7 @@ export function MemberList(): React.JSX.Element {
                                     className="text-left"
                                     onClick={() => setSheetMemberId(member.id)}
                                   >
-                                    <p className="font-bold text-slate-900">{memberLabel(member)}</p>
+                                    <p className="font-bold text-slate-900">{memberDisplayLabel(member)}</p>
                                     <p className="font-mono text-[11px] text-slate-500">
                                       {member.login_id || member.email || member.user_id.slice(0, 13)}
                                     </p>
@@ -465,7 +462,7 @@ export function MemberList(): React.JSX.Element {
                                 {formatAuditAction(log.action)}
                               </span>
                               <span className="font-semibold text-slate-900">
-                                {targetMember ? memberLabel(targetMember) : '대상 미상'}
+                                {targetMember ? memberDisplayLabel(targetMember) : '대상 미상'}
                               </span>
                               {roleName ? (
                                 <span className="text-xs text-indigo-700">→ {roleName}</span>

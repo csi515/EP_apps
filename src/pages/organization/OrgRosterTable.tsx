@@ -30,6 +30,7 @@ type Props = {
   roles: readonly DynamicRoleRow[];
   canEdit: boolean;
   moveMember: (memberId: string, departmentId: string) => Promise<void>;
+  bulkMoveMembers: (memberIds: readonly string[], departmentId: string) => Promise<void>;
   unassignFromDepartment: (memberId: string, departmentId: string) => Promise<void>;
   reload: () => Promise<void>;
 };
@@ -42,6 +43,7 @@ export function OrgRosterTable({
   roles,
   canEdit,
   moveMember,
+  bulkMoveMembers,
   unassignFromDepartment,
   reload,
 }: Props) {
@@ -129,9 +131,7 @@ export function OrgRosterTable({
   const handleBulkMove = async (departmentId: string) => {
     const ids = Array.from(selectedIds);
     try {
-      for (const id of ids) {
-        await moveMember(id, departmentId);
-      }
+      await bulkMoveMembers(ids, departmentId);
       setSelectedIds(new Set());
       showToast(ORG_CHART_COPY.rosterMoveDone(ids.length), 'success');
     } catch (cause) {

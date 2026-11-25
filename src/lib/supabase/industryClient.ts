@@ -17,11 +17,6 @@ export function getIndustryClient<T extends string & keyof Database = string & k
   return supabase.schema(schema) as unknown as SupabaseClient<Database, T>;
 }
 
-/** @deprecated 하위 호환용: getIndustryClient('piano')를 사용하세요. */
-export function getPianoClient(): SupabaseClient<Database, 'piano'> {
-  return getIndustryClient<'piano'>('piano');
-}
-
 /** @deprecated 하위 호환용: getIndustryClient('bath')를 사용하세요. */
 export function getBathClient(): SupabaseClient<Database, 'bath'> {
   return getIndustryClient<'bath'>('bath');

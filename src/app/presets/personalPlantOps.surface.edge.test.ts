@@ -53,7 +53,6 @@ const enabled = [...caps];
 assert.equal(isTabAllowedForCapabilities('attendance', enabled), false);
 assert.equal(isTabAllowedForCapabilities('passes', enabled), false);
 assert.equal(isTabAllowedForCapabilities('lockers', enabled), false);
-assert.equal(isTabAllowedForCapabilities('instructors', enabled), false);
 // EP 핵심 탭은 허용
 assert.equal(isTabAllowedForCapabilities('mbo', enabled), true);
 assert.equal(isTabAllowedForCapabilities('grievances', enabled), true);

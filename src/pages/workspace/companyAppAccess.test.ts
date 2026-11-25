@@ -94,7 +94,18 @@ assert.equal(
     role: 'staff',
     customRole: { permissions: mapPresetPermissionTokensToRoleMap(['research_project:view']) },
   }),
-  true
+  false,
+  'research_project:view alone must not open research portal launcher'
+);
+assert.equal(
+  canAccessCompanyApp('research', {
+    role: 'staff',
+    customRole: {
+      permissions: mapPresetPermissionTokensToRoleMap(['research_project:update', 'rnd_portal:access']),
+    },
+  }),
+  true,
+  'research managers with portal token can open launcher'
 );
 
 assert.equal(

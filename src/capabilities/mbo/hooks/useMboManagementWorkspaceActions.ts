@@ -1,19 +1,22 @@
 import { useCallback, useRef, useState, type FormEvent } from 'react';
 import { canTransitionMboStatus, type MboStatus } from '../domain/mboEngine';
 import { canEditExecutionProject } from '../domain/mboTwoTierLockEngine';
-import { showToast } from '@/shared/feedback/uiFeedback';
 import { MBO_COPY } from '../ui/mboUiCopy';
 import { MboService } from '../services/mboService';
 import { listEligibleParentGoals, resolveMaxCreatableLevel, validateGoalCreation } from '../domain/mboGoalHierarchy';
 import type { MboVisibilityType } from '../domain/mboVisibilityEngine';
-import type { ObjectiveNode } from '../ui/MboObjectiveTreeViewer';
+import type { ObjectiveNode } from '../domain/mboObjectiveNode';
 import type { MboManagementWorkspaceState } from './useMboManagementWorkspaceState';
 import type { MboManagementObjectivesDerived } from './useMboManagementObjectivesDerived';
 import type { MboManagementDashboardDerived } from './useMboManagementDashboardDerived';
-
-function statusLabelKo(status: MboStatus): string {
-  return MBO_COPY.statusLabel[status] ?? status;
-}
+import {
+  mutationErrorHandler,
+  statusLabelKo,
+  toastError,
+  toastInfo,
+  toastSuccess,
+  toastWarning,
+} from './mboWorkspaceActionHelpers';
 
 export function useMboManagementWorkspaceActions(
   state: MboManagementWorkspaceState,
@@ -155,7 +158,7 @@ export function useMboManagementWorkspaceActions(
     if (!firstId) {
       setContentPanel('schedule');
       scrollToSchedule();
-      showToast(MBO_COPY.monthlyReportNoneMine, 'info');
+      toastInfo(MBO_COPY.monthlyReportNoneMine);
       return;
     }
     const proj = portfolioProjects.find((p) => p.id === firstId);
@@ -223,18 +226,16 @@ export function useMboManagementWorkspaceActions(
       if (!orgId) return;
       const proj = portfolioProjects.find((p) => p.id === projectId);
       if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
-        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
+        toastWarning(MBO_COPY.scheduleOwnerOnly);
         return;
       }
       void MboService.deleteProject(projectId, orgId)
         .then(() => {
           if (projectSheetId === projectId) setProjectSheetId(null);
           void projectQuery?.refetch?.();
-          showToast(MBO_COPY.projectDeleteSuccess, 'success');
+          toastSuccess(MBO_COPY.projectDeleteSuccess);
         })
-        .catch((err) => {
-          showToast(err instanceof Error ? err.message : MBO_COPY.projectDeleteFailed, 'error');
-        });
+        .catch((err) => toastError(err, MBO_COPY.projectDeleteFailed));
     },
     [
       orgId,
@@ -249,7 +250,7 @@ export function useMboManagementWorkspaceActions(
   const openCreateObjectiveModal = useCallback(() => {
     const canCreateWhileLocked = isManager && (isOrgAdmin || orgScope?.isSubtreeManager === true);
     if (goalsLocked && !canCreateWhileLocked) {
-      showToast(MBO_COPY.lockBlockCreate, 'warning');
+      toastWarning(MBO_COPY.lockBlockCreate);
       return;
     }
     const ownerMemberId = newOwnerMemberId || viewerMemberId || '';
@@ -325,9 +326,9 @@ export function useMboManagementWorkspaceActions(
           projectId: project.id,
           openSheet: true,
         });
-        showToast(MBO_COPY.projectCreatedHint, 'success');
+        toastSuccess(MBO_COPY.projectCreatedHint);
       } catch (err) {
-        showToast(err instanceof Error ? err.message : '프로젝트 생성 실패', 'error');
+        toastError(err, '프로젝트 생성 실패');
       }
     },
     [orgId, projectQuery, focusObjectiveOnSchedule],
@@ -337,12 +338,12 @@ export function useMboManagementWorkspaceActions(
     async (projectId: string, range: { startDate: string; targetDate: string }) => {
       if (!orgId) return;
       if (!canEditExecutionProject()) {
-        showToast(MBO_COPY.lockBlockSchedule, 'warning');
+        toastWarning(MBO_COPY.lockBlockSchedule);
         return;
       }
       const proj = portfolioProjects.find((p) => p.id === projectId);
       if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
-        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
+        toastWarning(MBO_COPY.scheduleOwnerOnly);
         return;
       }
       try {
@@ -351,9 +352,9 @@ export function useMboManagementWorkspaceActions(
           target_date: range.targetDate,
         });
         void projectQuery?.refetch?.();
-        showToast(MBO_COPY.scheduleSaved, 'success');
+        toastSuccess(MBO_COPY.scheduleSaved);
       } catch (err) {
-        showToast(err instanceof Error ? err.message : MBO_COPY.scheduleSaveFailed, 'error');
+        toastError(err, MBO_COPY.scheduleSaveFailed);
       }
     },
     [orgId, projectQuery, portfolioProjects, viewerUserId],
@@ -364,7 +365,7 @@ export function useMboManagementWorkspaceActions(
     (projectId: string, range: { startDate: string; targetDate: string }, opts?: { immediate?: boolean }) => {
       const proj = portfolioProjects.find((p) => p.id === projectId);
       if (!proj?.ownerId || proj.ownerId !== viewerUserId) {
-        showToast(MBO_COPY.scheduleOwnerOnly, 'warning');
+        toastWarning(MBO_COPY.scheduleOwnerOnly);
         return;
       }
       if (opts?.immediate) {
@@ -393,14 +394,14 @@ export function useMboManagementWorkspaceActions(
       if (!changeRequestObjectiveId || !orgId) return;
       const trimmed = reason.trim();
       if (!trimmed) {
-        showToast(MBO_COPY.changeRequestNeedReason, 'warning');
+        toastWarning(MBO_COPY.changeRequestNeedReason);
         return;
       }
       const target = objectives.find((o) => o.id === changeRequestObjectiveId);
       if (!target) return;
       const transition = canTransitionMboStatus(target.status, 'submitted', { isManager });
       if (!transition.allowed) {
-        showToast(transition.reason || '변경 요청을 보낼 수 없는 상태입니다.', 'warning');
+        toastWarning(transition.reason || '변경 요청을 보낼 수 없는 상태입니다.');
         return;
       }
       setChangeRequestBusy(true);
@@ -417,12 +418,10 @@ export function useMboManagementWorkspaceActions(
         {
           onSuccess: () => {
             void objQuery?.refetch?.();
-            showToast(MBO_COPY.changeRequestAppendedHint, 'success');
+            toastSuccess(MBO_COPY.changeRequestAppendedHint);
             setChangeRequestObjectiveId(null);
           },
-          onError: (err) => {
-            showToast(err instanceof Error ? err.message : '요청 실패', 'error');
-          },
+          onError: mutationErrorHandler('요청 실패'),
           onSettled: () => setChangeRequestBusy(false),
         },
       );
@@ -448,16 +447,15 @@ export function useMboManagementWorkspaceActions(
       rejectionReason: reason,
     });
     if (!transition.allowed) {
-      showToast(
+      toastWarning(
         transition.reason ||
           MBO_COPY.transitionBlocked(statusLabelKo(target.status), statusLabelKo(targetStatus)),
-        'warning',
       );
       return;
     }
 
     if (!orgId) {
-      showToast(MBO_COPY.noOrgContextShort, 'error');
+      toastError(null, MBO_COPY.noOrgContextShort);
       return;
     }
     mutateUpdate(
@@ -472,11 +470,9 @@ export function useMboManagementWorkspaceActions(
       {
         onSuccess: () => {
           void objQuery?.refetch?.();
-          showToast(MBO_COPY.statusChanged(statusLabelKo(targetStatus)), 'success');
+          toastSuccess(MBO_COPY.statusChanged(statusLabelKo(targetStatus)));
         },
-        onError: (err) => {
-          showToast(err instanceof Error ? err.message : MBO_COPY.statusChangeFailed, 'error');
-        },
+        onError: mutationErrorHandler(MBO_COPY.statusChangeFailed),
       }
     );
   };
@@ -484,23 +480,23 @@ export function useMboManagementWorkspaceActions(
   const handleCreateObjective = (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) {
-      showToast(MBO_COPY.createGoalTitleRequired, 'warning');
+      toastWarning(MBO_COPY.createGoalTitleRequired);
       return;
     }
     if (!orgId) {
-      showToast(MBO_COPY.noOrgContext, 'error');
+      toastError(null, MBO_COPY.noOrgContext);
       return;
     }
     if (goalsLocked && !canManagerCreateWhileLocked) {
-      showToast(MBO_COPY.lockBlockCreate, 'warning');
+      toastWarning(MBO_COPY.lockBlockCreate);
       return;
     }
     if (!selectedOwnerMember?.userId) {
-      showToast(MBO_COPY.pickOwnerMember, 'warning');
+      toastWarning(MBO_COPY.pickOwnerMember);
       return;
     }
     if (newVisibility === 'PARTIAL' && newShareMemberIds.length === 0) {
-      showToast(MBO_COPY.pickShareMembers, 'warning');
+      toastWarning(MBO_COPY.pickShareMembers);
       return;
     }
 
@@ -523,7 +519,7 @@ export function useMboManagementWorkspaceActions(
       existing: existingGoalRefs,
     });
     if (!gate.allowed) {
-      showToast(gate.reason ?? MBO_COPY.createGoalBlocked, 'warning');
+      toastWarning(gate.reason ?? MBO_COPY.createGoalBlocked);
       return;
     }
 
@@ -581,7 +577,7 @@ export function useMboManagementWorkspaceActions(
               setSharesByObjective(shares);
             }
           } catch {
-            showToast(MBO_COPY.createGoalProjectWarn, 'warning');
+            toastWarning(MBO_COPY.createGoalProjectWarn);
           }
           void objQuery?.refetch?.();
           void projectQuery?.refetch?.();
@@ -591,7 +587,7 @@ export function useMboManagementWorkspaceActions(
           setNewVisibility('PRIVATE');
           setNewParentId('');
           setNewDepartmentId('');
-          showToast(MBO_COPY.createGoalSuccess, 'success');
+          toastSuccess(MBO_COPY.createGoalSuccess);
           if (createdId) {
             focusObjectiveOnSchedule({
               objectiveId: createdId,
@@ -600,9 +596,7 @@ export function useMboManagementWorkspaceActions(
             });
           }
         },
-        onError: (err) => {
-          showToast(err instanceof Error ? err.message : MBO_COPY.createGoalFailed, 'error');
-        },
+        onError: mutationErrorHandler(MBO_COPY.createGoalFailed),
         onSettled: () => setCreateBusy(false),
       }
     );
@@ -622,9 +616,9 @@ export function useMboManagementWorkspaceActions(
         const shares = await MboService.listObjectiveSharesByOrg(orgId);
         setSharesByObjective(shares);
         void objQuery?.refetch?.();
-        showToast(MBO_COPY.visibilityChanged, 'success');
+        toastSuccess(MBO_COPY.visibilityChanged);
       } catch (err) {
-        showToast(err instanceof Error ? err.message : MBO_COPY.visibilityChangeFailed, 'error');
+        toastError(err, MBO_COPY.visibilityChangeFailed);
       }
     },
     [
@@ -640,20 +634,18 @@ export function useMboManagementWorkspaceActions(
 
   const handleConfirmSoftDelete = () => {
     if (!deleteGoalId || !deleteReason.trim()) {
-      showToast(MBO_COPY.deleteReasonRequired, 'warning');
+      toastWarning(MBO_COPY.deleteReasonRequired);
       return;
     }
     void MboService.softDeleteObjective(deleteGoalId, deleteReason.trim())
       .then(() => {
-        showToast(MBO_COPY.deleteSuccess, 'success');
+        toastSuccess(MBO_COPY.deleteSuccess);
         setDeleteGoalId(null);
         setDeleteReason('');
         void objQuery?.refetch?.();
         void projectQuery?.refetch?.();
       })
-      .catch((err) => {
-        showToast(err instanceof Error ? err.message : MBO_COPY.deleteFailed, 'error');
-      });
+      .catch((err) => toastError(err, MBO_COPY.deleteFailed));
   };
 
   return {

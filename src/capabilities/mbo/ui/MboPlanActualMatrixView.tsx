@@ -10,6 +10,7 @@ import {
   type MonthCellStatus,
 } from '../domain/mboPlanActualMatrixEngine';
 import { MboService, type MboProjectMonthCellRow } from '../services/mboService';
+import { InlineBusy } from '@/shared/components/ui/Skeleton';
 import { MboPlanActualMatrixGrid } from './MboPlanActualMatrixGrid';
 import { MBO_COPY } from './mboUiCopy';
 
@@ -45,8 +46,6 @@ function toMatrixProject(p: PortfolioProject): MatrixProjectInput {
     ownerName: p.ownerName,
     categoryId: p.categoryId ?? null,
     categoryLabel: p.categoryLabel ?? null,
-    wbsCode: p.wbsCode ?? null,
-    wbsSeq: p.wbsSeq ?? null,
     startDate: p.startDate,
     targetDate: p.targetDate,
   };
@@ -253,9 +252,7 @@ export function MboPlanActualMatrixView({
           />
           {MBO_COPY.matrixHidePlanRows}
         </label>
-        {loading ? (
-          <span className="ml-auto text-[11px] text-slate-400">…</span>
-        ) : null}
+        {loading ? <span className="ml-auto"><InlineBusy label={MBO_COPY.matrixLoading} /></span> : null}
       </div>
 
       <MboPlanActualMatrixGrid

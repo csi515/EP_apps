@@ -12,6 +12,7 @@ import {
   type DynamicMemberRow,
   type DynamicRoleRow,
 } from '@/core/organizations/services/dynamicRoleService';
+import { memberDisplayLabel } from '@/core/organizations/orgChartPrimitives';
 import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import {
@@ -28,13 +29,13 @@ import {
 import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 import { RolePermissionMatrix } from './RolePermissionMatrix';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { Input } from '@/shared/components/ui/Input';
+import { FormField } from '@/shared/components/ui/FormField';
 
 type RoleRow = DynamicRoleRow;
 type MemberRow = DynamicMemberRow;
-
-function memberDisplayName(member: MemberRow): string {
-  return member.name || member.email || `${member.user_id.slice(0, 8)}…`;
-}
 
 export function AccessDeniedBanner() {
   return (
@@ -74,6 +75,7 @@ export function DynamicRoleSettingsPage() {
   const [permissions, setPermissions] = useState<RolePermissionMap>(EMPTY_ROLE_PERMISSIONS);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [settingTab, setSettingTab] = useState<'org' | 'roles'>('roles');
   const [dictOpen, setDictOpen] = useState(true);
 
@@ -108,6 +110,7 @@ export function DynamicRoleSettingsPage() {
 
   async function saveRole() {
     if (!orgId || !name.trim()) return;
+    setSaving(true);
     try {
       await saveDynamicRole({
         organizationId: orgId,
@@ -115,21 +118,22 @@ export function DynamicRoleSettingsPage() {
         name: name.trim(),
         permissions,
       });
+      setOpen(false);
+      setEditingId(null);
+      setName('');
+      setPermissions(EMPTY_ROLE_PERMISSIONS);
+      await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '저장에 실패했습니다.');
-      return;
+    } finally {
+      setSaving(false);
     }
-    setOpen(false);
-    setEditingId(null);
-    setName('');
-    setPermissions(EMPTY_ROLE_PERMISSIONS);
-    await reload();
   }
 
   async function removeRole(roleRow: RoleRow) {
     if (roleRow.is_system) return;
     try {
-      await deleteDynamicRole(roleRow.id);
+      await deleteDynamicRole(roleRow.id, orgId);
       await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '삭제에 실패했습니다.');
@@ -318,7 +322,7 @@ export function DynamicRoleSettingsPage() {
                             key={member.id}
                             className="rounded-lg bg-white px-2 py-1 text-xs font-medium text-slate-800 border border-slate-200"
                           >
-                            {memberDisplayName(member)}
+                            {memberDisplayLabel(member)}
                             {member.role === 'owner' ? ' (대표이사)' : ''}
                             {member.role === 'admin' ? ' (관리자)' : ''}
                           </li>
@@ -343,10 +347,10 @@ export function DynamicRoleSettingsPage() {
                 >
                   <span className="text-sm">
                     {member.role === 'owner'
-                      ? `${memberDisplayName(member)} (대표이사)`
+                      ? `${memberDisplayLabel(member)} (대표이사)`
                       : member.role === 'admin'
-                        ? `${memberDisplayName(member)} (관리자)`
-                        : memberDisplayName(member)}
+                        ? `${memberDisplayLabel(member)} (관리자)`
+                        : memberDisplayLabel(member)}
                   </span>
                   <select
                     className="min-h-11 rounded-lg border px-2 text-sm"
@@ -370,40 +374,34 @@ export function DynamicRoleSettingsPage() {
         </>
       )}
 
-      {open ? (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
-          <div className="max-h-[90vh] w-full max-w-lg overflow-auto rounded-t-2xl bg-white p-4 sm:rounded-2xl">
-            <h2 className="text-lg font-bold">{editingId ? '직급 수정' : '새 직급'}</h2>
-            <label className="mt-3 block text-sm">
-              직급명
-              <input
-                className="mt-1 min-h-11 w-full rounded-lg border px-3"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-              />
-            </label>
-            <div className="mt-4">
-              <RolePermissionMatrix
-                value={permissions}
-                onChange={setPermissions}
-                activeCapabilityIds={scopedCapIds}
-              />
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button type="button" className="min-h-11 px-4" onClick={() => setOpen(false)}>
-                닫기
-              </button>
-              <button
-                type="button"
-                className="min-h-11 rounded-xl bg-slate-900 px-4 text-white"
-                onClick={() => void saveRole()}
-              >
-                저장
-              </button>
-            </div>
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={editingId ? '직급 수정' : '새 직급'}
+        maxWidth="lg"
+        intent="form"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              닫기
+            </Button>
+            <Button type="button" variant="primary" isLoading={saving} onClick={() => void saveRole()}>
+              저장
+            </Button>
           </div>
+        }
+      >
+        <FormField label="직급명">
+          <Input value={name} onChange={(event) => setName(event.target.value)} />
+        </FormField>
+        <div className="mt-4">
+          <RolePermissionMatrix
+            value={permissions}
+            onChange={setPermissions}
+            activeCapabilityIds={scopedCapIds}
+          />
         </div>
-      ) : null}
+      </Modal>
     </WorkPageFrame>
   );
 }

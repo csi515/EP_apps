@@ -55,7 +55,7 @@ const teamPerms = mapPresetPermissionTokensToRoleMap([
   'research_project:view',
 ]);
 const team = { role: 'staff', customRole: { permissions: teamPerms } };
-assert.equal(canAccessRndPortal(team), true);
+assert.equal(canAccessRndPortal(team), false, 'research_project:view alone must not open portal');
 assert.equal(canManageResourceCatalog(team), false);
 assert.equal(canManageShuttleRoutes(team), false);
 assert.equal(teamPerms['mbo:goals:read'], true);

@@ -64,16 +64,10 @@ export function MboPlanActualMatrixGrid({
             <th className="sticky left-0 z-20 min-w-[4.5rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
               {MBO_COPY.matrixColCategory}
             </th>
-            <th className="sticky left-[4.5rem] z-20 min-w-[3.5rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
-              {MBO_COPY.matrixColWbs}
-            </th>
-            <th className="sticky left-[8rem] z-20 min-w-[2.25rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
-              {MBO_COPY.matrixColSeq}
-            </th>
-            <th className="sticky left-[10.25rem] z-20 min-w-[8rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
+            <th className="sticky left-[4.5rem] z-20 min-w-[8rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
               {MBO_COPY.matrixColTitle}
             </th>
-            <th className="sticky left-[18.25rem] z-20 min-w-[3.5rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
+            <th className="sticky left-[12.5rem] z-20 min-w-[3.5rem] border border-slate-200 bg-slate-50 px-1.5 py-1.5">
               {MBO_COPY.matrixColOwner}
             </th>
             <th className="min-w-[2.5rem] border border-slate-200 px-1 py-1.5"> </th>
@@ -93,16 +87,10 @@ export function MboPlanActualMatrixGrid({
                 <td className="sticky left-0 z-[1] border border-slate-100 bg-inherit px-1.5 py-0.5 font-medium text-slate-700">
                   {row.showCategoryLabel ? row.categoryLabel : ''}
                 </td>
-                <td className="sticky left-[4.5rem] z-[1] border border-slate-100 bg-inherit px-1.5 py-0.5 text-slate-600">
-                  {row.showWbsLabel ? row.wbsCode : ''}
-                </td>
-                <td className="sticky left-[8rem] z-[1] border border-slate-100 bg-inherit px-1.5 py-0.5 text-slate-500">
-                  {row.showWbsLabel && row.wbsSeq != null ? row.wbsSeq : ''}
-                </td>
-                <td className="sticky left-[10.25rem] z-[1] max-w-[8rem] truncate border border-slate-100 bg-inherit px-1.5 py-0.5 font-medium text-slate-800">
+                <td className="sticky left-[4.5rem] z-[1] max-w-[8rem] truncate border border-slate-100 bg-inherit px-1.5 py-0.5 font-medium text-slate-800">
                   {row.kind === 'plan' ? row.title : ''}
                 </td>
-                <td className="sticky left-[18.25rem] z-[1] border border-slate-100 bg-inherit px-1.5 py-0.5 text-slate-600">
+                <td className="sticky left-[12.5rem] z-[1] border border-slate-100 bg-inherit px-1.5 py-0.5 text-slate-600">
                   {row.kind === 'plan' ? row.ownerName : ''}
                 </td>
                 <td className="border border-slate-100 px-1 py-0.5 text-[10px] font-semibold text-slate-500">

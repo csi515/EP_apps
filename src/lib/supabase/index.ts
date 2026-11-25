@@ -1,7 +1,5 @@
 export { supabase, isSupabaseConfigured, getCoreClient } from './client';
-export { getIndustryClient } from './industryClient';
-export { getPianoClient } from './pianoClient';
-export { getBathClient } from './bathClient';
+export { getIndustryClient, getBathClient } from './industryClient';
 export { getPlatformClient } from './platformClient';
 export type {
   Database,
@@ -23,7 +21,4 @@ export type {
   PaymentMethod,
   NotificationStatus,
   NotificationChannel,
-  PianoAttendanceStatus,
-  PianoInventoryTransactionType,
-  PianoTextbookPaymentStatus,
 } from './database.types';

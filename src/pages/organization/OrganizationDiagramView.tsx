@@ -1,29 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { DynamicMemberRow, DynamicRoleRow } from '@/core/organizations/services/dynamicRoleService';
+import {
+  buildDepartmentChildrenMap,
+  memberDisplayLabel,
+} from '@/core/organizations/orgChartPrimitives';
 import type { DepartmentMemberRow, OrgNode } from './useOrganizationTree';
 import { ORG_CHART_COPY } from './orgChartCopy';
 import './organizationDiagram.css';
-
-function buildChildrenMap(nodes: OrgNode[]): Map<string | null, OrgNode[]> {
-  const map = new Map<string | null, OrgNode[]>();
-  for (const node of nodes) {
-    const key = node.parentId;
-    const list = map.get(key) ?? [];
-    list.push(node);
-    map.set(key, list);
-  }
-  for (const list of map.values()) {
-    list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  }
-  return map;
-}
-
-function memberLabel(member: DynamicMemberRow): string {
-  if (member.name?.trim()) return member.name.trim();
-  if (member.email?.trim()) return member.email.trim();
-  return `${member.user_id.slice(0, 8)}…`;
-}
 
 function matchesQuery(
   node: OrgNode,
@@ -37,7 +21,7 @@ function matchesQuery(
   if ((node.unitKind ?? '').toLowerCase().includes(q)) return true;
   return deptMembers.some((dm) => {
     const m = members.find((row) => row.id === dm.member_id);
-    return m ? memberLabel(m).toLowerCase().includes(q) : false;
+    return m ? memberDisplayLabel(m).toLowerCase().includes(q) : false;
   });
 }
 
@@ -94,7 +78,7 @@ export function OrganizationDiagramView({
   members = [],
   roles = [],
 }: Props) {
-  const childrenMap = useMemo(() => buildChildrenMap(nodes), [nodes]);
+  const childrenMap = useMemo(() => buildDepartmentChildrenMap(nodes), [nodes]);
   const visibleIds = useMemo(
     () => filterVisibleIds(nodes, departmentMembers, members, searchQuery),
     [nodes, departmentMembers, members, searchQuery],

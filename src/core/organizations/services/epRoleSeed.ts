@@ -58,7 +58,11 @@ export function mapPresetPermissionTokensToRoleMap(
     next['resources:manage'] = true;
   }
 
-  if (hasPrefix('research_project') || tokens.includes('rnd_portal:access')) {
+  // research_project:view → 연구 열람만. 연구소 포털은 rnd_portal:access 또는 연구 담당 토큰만.
+  if (hasPrefix('research_project')) {
+    next['research:read'] = true;
+  }
+  if (tokens.includes('rnd_portal:access')) {
     next['rnd_portal:access'] = true;
     next['research:read'] = true;
   }

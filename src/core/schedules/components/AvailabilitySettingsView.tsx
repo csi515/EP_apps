@@ -1,2 +1,2 @@
-ï»¿/** @deprecated ì‹ ê·œ ì½”ë“œëŠ” `@/capabilities/scheduling`ë¥¼ ì‚¬ìš©í•œë‹¤. */
-export { AvailabilitySettingsView } from '@/core/availability/AvailabilitySettingsView';
+/** @deprecated ½Å±Ô ÄÚµå´Â `@/capabilities/scheduling`¸¦ »ç¿ëÇÑ´Ù. */
+export { AvailabilitySettingsView } from '@/capabilities/scheduling/availability/AvailabilitySettingsView';

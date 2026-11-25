@@ -1,0 +1,16 @@
+{
+  "description": "임시 허용: Core 스케줄·리소스 다리가 Scheduling Capability를 참조. 신규 코드는 @/capabilities 직접 사용 후 목록을 줄인다.",
+  "coreMayImportCapabilities": [
+    "src/core/schedules/bookingCapacity.ts",
+    "src/core/schedules/index.ts",
+    "src/core/schedules/components/AvailabilitySettingsView.tsx",
+    "src/core/schedules/types/availability.ts",
+    "src/core/schedules/services/materializeAvailabilitySlots.ts",
+    "src/core/schedules/services/availabilityService.ts",
+    "src/core/schedules/services/reservationService.ts",
+    "src/core/resources/resourceCapability.ts",
+    "src/core/resources/resourcePolicy.ts"
+  ],
+  "sharedMayImportCapabilities": [],
+  "libMayImportCapabilities": []
+}

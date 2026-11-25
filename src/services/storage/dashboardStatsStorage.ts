@@ -1,7 +1,9 @@
 // @ts-nocheck
 import type { Student, TuitionInvoice } from '../../types';
 import type { StorageApi } from './helpers';
+import { getItem, setItem } from './helpers';
 import { storageApi } from './storageApi';
+import { STORAGE_KEYS } from '../adapters/storageKeys';
 import { todayIsoLocal, yearMonthLocal } from '../../shared/utils/localDate';
 import { isMonthlyBillingStudent, type Student as BillingStudent } from '@/types';
 
@@ -44,8 +46,8 @@ export function createDashboardStatsStorage(api: StorageApi) {
         color?: string;
       }[])();
       const attendance = (api.getAttendance as () => AttRow[])();
-      const invoices = (api.getInvoices as () => TuitionInvoice[])();
-      const expenses = (api.getExpenses as () => { date: string; amount: number }[])();
+      const invoices = getItem<TuitionInvoice[]>(STORAGE_KEYS.INVOICES, []);
+      const expenses = getItem<{ date: string; amount: number }[]>(STORAGE_KEYS.EXPENSES, []);
 
       const currentYearMonth = yearMonthLocal();
       const todayStr = todayIsoLocal();
@@ -189,10 +191,9 @@ export function createDashboardStatsStorage(api: StorageApi) {
 
     batchGenerateMonthlyInvoices(yearMonth: string): number {
       const students = filterMonthlyBillingStudents(
-        (api.getStudents as () => Student[])(),
-        { activeOnly: true }
-      );
-      const existingInvoices = (api.getInvoices as () => TuitionInvoice[])();
+        (api.getStudents as () => Student[])()
+      ).filter((s) => s.status === 'active');
+      const existingInvoices = getItem<TuitionInvoice[]>(STORAGE_KEYS.INVOICES, []);
       let generatedCount = 0;
 
       students.forEach((student) => {
@@ -205,7 +206,8 @@ export function createDashboardStatsStorage(api: StorageApi) {
         const dueDay = String(student.paymentDay || 10).padStart(2, '0');
         const dueDate = `${yearMonth}-${dueDay}`;
 
-        (api.saveInvoice as (inv: Omit<TuitionInvoice, 'id'>) => void)({
+        existingInvoices.push({
+          id: crypto.randomUUID(),
           studentId: student.id,
           studentName: student.name,
           yearMonth,
@@ -220,6 +222,10 @@ export function createDashboardStatsStorage(api: StorageApi) {
         });
         generatedCount += 1;
       });
+
+      if (generatedCount > 0) {
+        setItem(STORAGE_KEYS.INVOICES, existingInvoices);
+      }
 
       return generatedCount;
     },

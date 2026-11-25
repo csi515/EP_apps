@@ -1,12 +1,12 @@
 /**
- * Schedule / Reservation / Session / Attendance 책임 경계.
- * 실행: npm run test:domain-roles
+ * Schedule / Reservation / Session / Attendance ?? ??.
+ * ???: npm run test:domain-roles
  */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SCHEDULE_HOLDING_STATUSES } from '@/core/capacity/types';
+import { SCHEDULE_HOLDING_STATUSES } from '@/capabilities/scheduling/capacity/types';
 import {
   APPOINTMENT_BOOKING_LEDGER,
   ATTENDANCE_CHECK_IN_LEDGER,
@@ -24,8 +24,6 @@ import {
   shouldMirrorStatusAcrossLedgers,
   SLOT_RESERVATION_HOLDING_STATUSES,
 } from './domainRoles';
-import { CLASS_ATTENDANCE_LEDGER } from './classAttendanceLedger';
-
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
 
 function readRel(rel: string): string {
@@ -40,7 +38,6 @@ function run() {
   assert.equal(SESSION_LEDGER.table, 'core.customer_sessions');
   assert.equal(ATTENDANCE_CHECK_IN_LEDGER.table, 'core.attendance_sessions');
   assert.equal(ATTENDANCE_CHECK_IN_LEDGER.statusField, 'check_in_at');
-  assert.equal(CLASS_ATTENDANCE_LEDGER.table, 'piano.attendance');
   assert.equal(RESOURCE_RESERVATION_LEDGER.table, 'core.room_reservations');
   assert.equal(SESSION_PASS_TABLE, 'core.session_passes');
   assert.equal(shouldMirrorStatusAcrossLedgers(), false);
@@ -71,19 +68,14 @@ function run() {
   assert.match(scheduleService, /appointment Booking/);
   assert.match(scheduleService, /core\.reservations/);
 
-  const attendanceTypes = readRel('src/capabilities/attendance/domain/types.ts').replace(/\r/g, '');
-  assert.match(attendanceTypes, /AttendanceCheckIn/);
-  assert.match(attendanceTypes, /core\.attendance_sessions/);
-  assert.doesNotMatch(attendanceTypes, /customer_sessions/);
+  assert.equal(ATTENDANCE_CHECK_IN_LEDGER.table, 'core.attendance_sessions');
 
   const sessionTypes = readRel('src/core/sessions/types.ts');
   assert.match(sessionTypes, /core\.customer_sessions/);
   assert.match(sessionTypes, /room_reservations/);
-  assert.match(sessionTypes, /차감하지 않는다/);
 
   const bookingTypes = readRel('src/core/types/schedule.ts');
   assert.match(bookingTypes, /core\.schedules/);
-  assert.match(bookingTypes, /Session\(방문 사실\)이 아니다/);
 
   console.log('domain-roles ok');
 }

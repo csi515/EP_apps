@@ -27,7 +27,7 @@ Docker 없이 네이티브 Postgres(예: 바이너리 `:54329`) + PostgREST `:30
 
 시드: `owner@ep.local`, `ceo@ep.local`, `hq@ep.local`, `teamlead@ep.local`, `member@ep.local`, `mbo@ep.local`, `staff@ep.local` 등 (`EpTest123!`).
 
-마이그레이션 SoT: `mbo_objectives` + domain `008`–`011` (가시성·RLS·개정 RPC).
+마이그레이션 SoT: `mbo_objectives` + domain `008`–`011` (가시성·RLS·개정 RPC), `028` 월별 Plan/Actual 셀 (`mbo_project_month_cells`).
 
 ## 2. 전제조건 (조직·권한)
 
@@ -40,6 +40,7 @@ Docker 없이 네이티브 Postgres(예: 바이너리 `:54329`) + PostgREST `:30
 | 직급 | `organization_roles.rank_order` (임원 100 … 사원 900) + `mbo:goals:*` 키 |
 | 앱 접근 | `feature_permissions.company_app:mbo` 부여(또는 unset+역할). **deny면 차단** |
 | 역할 권한 | `mbo:view`→read, `mbo:*`→write+평가, `mbo:evaluations:approve` |
+| 연구 포털 | `rnd_portal:access` — 연구소 런처/포털 게이트. 일반 `research_project:view`와 분리 ([Wave 1](./EP_PERSONAL_PLANT_OPS_GAP_WAVE1.md)) |
 | 결재 | `require_plan_approval` 기본 true → capability `approval_workflow` 활성 |
 | 사이클 | `mbo_cycle_settings` (없으면 UI 기본값) |
 | 캐스케이드 | 전사→부서→개인. 상위 없으면 하위 생성 실패가 정상 |
@@ -54,15 +55,20 @@ Docker 없이 네이티브 Postgres(예: 바이너리 `:54329`) + PostgREST `:30
 npm run test:mbo-engine
 npm run test:mbo-plan-approval
 npm run test:mbo-monthly-checkin
+npm run test:mbo-plan-actual-matrix
 npm run test:mbo-team-board
 npm run test:mbo-gantt
+npm run test:mbo-gantt-hierarchy
+npm run test:mbo-gantt-scale
 npm run test:mbo-manager-dashboard
 npm run test:mbo-two-tier-lock
+npm run test:org-roster-engine
 npx tsx src/capabilities/mbo/domain/mboVisibilityEngine.test.ts
 npx tsx src/capabilities/mbo/domain/mboGoalHierarchy.test.ts
 npm run test:ep-role-seed
 npm run test:published-company-apps
 npm run test:company-app-features-edge
+npm run test:architecture
 npx tsx src/services/adapters/storageContext.test.ts
 npm run test:domain-smoke
 npx playwright test tests/e2e/mbo-monthly-smoke.spec.ts
@@ -89,14 +95,15 @@ E2E: 스택이 healthy(`postgres` health + PostgREST 200)인데 create UI가 없
 3. `ACTIVE_USER` org-scoped 잔존 / device-only 미적용  
 4. `company_app:mbo` deny vs 역할 이중 게이트  
 5. `approval_workflow` 미활성 + `require_plan_approval`  
-6. 마이그레이션 `008`–`011` 미적용  
+6. 마이그레이션 `008`–`011` 또는 `028` 월 셀 미적용  
+7. `rnd_portal:access` 없이 연구소 포털만 기대 / `research_project:view`와 혼동  
 
 ## 검증 기록 (2026-11-11 로컬)
 
 | 항목 | 결과 |
 |------|------|
 | 네이티브 PG 17.4 `:54329` + PostgREST 12.2.3 `:3001` | 기동 |
-| migrate 001–018 + seed 20 memberships | OK |
+| migrate 001–028 + seed 20 memberships | OK |
 | 조직도 HQ/운영팀 + DESCENDANTS | 시드 OK |
 | MBO 유닛/계약/access/storageContext | green |
 | `test:domain-smoke` | passed |

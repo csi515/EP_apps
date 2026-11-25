@@ -62,7 +62,12 @@ export const CAPABILITY_DEPENDENCY_GRAPH: Partial<Record<CapabilityId, readonly 
   space_turnaround: ['seat_room'],
 
   // 소모품 안전재고 발주는 재고(inventory) 필수
-  supply_restock: ['inventory'],
+  supply_restock: ['inventory', 'approval_workflow'],
+
+  // 전자결재 연계 (선언적 선행 — 구현 import는 app 오케스트레이터)
+  mbo: ['approval_workflow'],
+  resources: ['approval_workflow'],
+  research_project: ['approval_workflow'],
 
   // 결석 보강은 원생 명부 및 스케줄링 필수
   makeup_lesson_pass: ['roster', 'scheduling'],

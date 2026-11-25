@@ -279,13 +279,26 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       {
         name: '부장',
         rank_order: 200,
-        permissions: ['approval_workflow:*', 'mbo:*', 'task_pipeline:*', 'research_project:*', 'resources:*'],
+        permissions: [
+          'approval_workflow:*',
+          'mbo:*',
+          'task_pipeline:*',
+          'research_project:*',
+          'rnd_portal:access',
+          'resources:*',
+        ],
         description: '추천 직급. 예: 부장(직급)+공장장/실장(직책) 병행 가능',
       },
       {
         name: '차장',
         rank_order: 300,
-        permissions: ['approval_workflow:*', 'mbo:*', 'task_pipeline:*', 'research_project:update'],
+        permissions: [
+          'approval_workflow:*',
+          'mbo:*',
+          'task_pipeline:*',
+          'research_project:update',
+          'rnd_portal:access',
+        ],
         description: '추천 직급. 직책(그룹장·센터장 등)과 별도',
       },
       {

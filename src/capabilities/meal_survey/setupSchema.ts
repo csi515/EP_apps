@@ -6,14 +6,6 @@ export const mealSurveySetupSchema: CapabilitySetupSchema = {
   description: '조·중·석 제공 설정 및 임직원 일별 식사 여부 사전 조사',
   fields: [
     {
-      id: 'surveyDeadlineHour',
-      label: '당일 식수 조사 마감 시각 (시)',
-      type: 'number',
-      // 미구현·설정 무시 — 마감은 mealSurveyEngine 슬롯별 설정 사용
-      defaultValue: 10,
-      description: '미구현·설정 무시. 마감은 식수 관리 설정의 끼니별 마감 시각을 따릅니다.',
-    },
-    {
       id: 'enabledMealTypes',
       label: '제공 식사 구분',
       type: 'tags',

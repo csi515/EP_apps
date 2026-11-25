@@ -14,7 +14,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { FormField, FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
 import { Input } from '@/shared/components/ui/Input';
 import { MBO_COPY } from './mboUiCopy';
-import type { ObjectiveNode } from './MboObjectiveTreeViewer';
+import type { ObjectiveNode } from '../domain/mboObjectiveNode';
 
 type DeptOption = { id: string; name: string };
 

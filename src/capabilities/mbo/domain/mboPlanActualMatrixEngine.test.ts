@@ -79,8 +79,6 @@ const projects: MatrixProjectInput[] = [
     ownerName: '김이',
     categoryId: 'cat1',
     categoryLabel: '품질',
-    wbsCode: '1-2',
-    wbsSeq: 2,
     startDate: '2026-02-01',
     targetDate: '2026-04-30',
   },
@@ -91,8 +89,6 @@ const projects: MatrixProjectInput[] = [
     ownerName: '홍길',
     categoryId: 'cat1',
     categoryLabel: '품질',
-    wbsCode: '1-1',
-    wbsSeq: 1,
     startDate: '2026-01-01',
     targetDate: '2026-03-31',
   },
@@ -128,7 +124,6 @@ assert.equal(dual[0].editableMonths.has(1), true);
 assert.equal(dual[0].editableMonths.has(4), false);
 assert.equal(dual[2].projectId, 'p2');
 assert.equal(dual[2].showCategoryLabel, false);
-assert.equal(dual[2].showWbsLabel, true);
 
 const actualOnly = buildPlanActualMatrixRows(projects, cells, 2026, { hidePlanRows: true });
 assert.equal(actualOnly.length, 2);

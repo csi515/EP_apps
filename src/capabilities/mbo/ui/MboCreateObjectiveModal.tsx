@@ -14,7 +14,7 @@ import {
   type CreateStepSharedProps,
 } from './MboCreateObjectiveSteps';
 import { MBO_COPY } from './mboUiCopy';
-import type { ObjectiveNode } from './MboObjectiveTreeViewer';
+import type { ObjectiveNode } from '../domain/mboObjectiveNode';
 
 type Props = CreateStepSharedProps & {
   open: boolean;

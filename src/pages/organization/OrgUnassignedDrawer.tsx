@@ -1,18 +1,13 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import type { DynamicMemberRow } from '@/core/organizations/services/dynamicRoleService';
+import { memberDisplayLabel } from '@/core/organizations/orgChartPrimitives';
 import { Button } from '@/shared/components/ui/Button';
 import { ORG_CHART_COPY } from './orgChartCopy';
 import { MEMBER_DRAG_MIME } from './orgMemberDrag';
 
-function memberLabel(member: DynamicMemberRow): string {
-  if (member.name?.trim()) return member.name.trim();
-  if (member.email?.trim()) return member.email.trim();
-  return `${member.user_id.slice(0, 8)}…`;
-}
-
 function initials(member: DynamicMemberRow): string {
-  return memberLabel(member).slice(0, 2).toUpperCase();
+  return memberDisplayLabel(member).slice(0, 2).toUpperCase();
 }
 
 type Props = {
@@ -81,13 +76,13 @@ export function OrgUnassignedDrawer({
                   checked={selected}
                   disabled={!canEdit}
                   onChange={() => onToggleSelect(m.id)}
-                  aria-label={memberLabel(m)}
+                  aria-label={memberDisplayLabel(m)}
                 />
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-[10px] font-bold text-amber-900">
                   {initials(m)}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">
-                  {memberLabel(m)}
+                  {memberDisplayLabel(m)}
                 </span>
               </li>
             );

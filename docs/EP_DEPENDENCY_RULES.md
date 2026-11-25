@@ -122,7 +122,7 @@ Infrastructure (src/lib/supabase, src/services/storage)
 ### 7.1 현재 자동화된 검사
 - **Typecheck**: `npx tsc --noEmit` (`npm run lint`)
 - **Build**: `npm run build`
-- **계층 간 의존성 검사**: `npm run test:architecture` (`node scripts/check-architecture-dependencies.mjs --self-test`)
+- **계층 간 의존성 검사**: `npm run test:architecture` (`scripts/check-architecture-dependencies.mjs`, `check:all`에 포함). 임시 허용은 `scripts/architecture-allowlist.json`
 - **비즈니스 불변식 검사**: `npm run test:business-invariants`
 - **계약 테스트**: `test:capability-contract`, `test:preset-assembler`, `test:industry-contract`
 
