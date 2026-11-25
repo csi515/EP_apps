@@ -25,6 +25,9 @@ export const ROLE_PERMISSION_KEYS = [
   'volunteer:manage',
   'meal_survey:manage',
   'office_supply_request:manage',
+  'supply_restock:manage',
+  'training_ack:manage',
+  'safety:manage',
   'rnd_portal:access',
   'research:read',
   'research:write',
@@ -61,6 +64,9 @@ export const EMPTY_ROLE_PERMISSIONS: RolePermissionMap = {
   'volunteer:manage': false,
   'meal_survey:manage': false,
   'office_supply_request:manage': false,
+  'supply_restock:manage': false,
+  'training_ack:manage': false,
+  'safety:manage': false,
   'rnd_portal:access': false,
   'research:read': false,
   'research:write': false,
@@ -93,6 +99,9 @@ export const GENERAL_AFFAIRS_ROLE_TEMPLATE = {
     'volunteer:manage': true,
     'meal_survey:manage': true,
     'office_supply_request:manage': true,
+    'supply_restock:manage': true,
+    'training_ack:manage': true,
+    'safety:manage': true,
     'rnd_portal:access': false,
   },
 } as const;
@@ -412,6 +421,33 @@ export function canManageOfficeSupplyRequest(member: AccessMember): boolean {
   return effective['office_supply_request:manage'] === true;
 }
 
+/** 교육관리 작성·배정·이수 로그 위임 권한 */
+export function canManageTrainingAck(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['training_ack:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['training_ack:manage'] === true;
+}
+
+/** 소모품 안전재고·간이 발주 위임 권한 */
+export function canManageSupplyRestock(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['supply_restock:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['supply_restock:manage'] === true;
+}
+
+/** 현장 안전·SOP·위험성평가 위임 권한 */
+export function canManageRiskAssessments(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['safety:manage']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['safety:manage'] === true;
+}
+
 /** 연구소 통합 포털 진입 (과제 조회 view 와 분리) */
 export function canAccessRndPortal(member: AccessMember): boolean {
   if (isOmnipotentOrgRole(member.role)) return true;
@@ -419,6 +455,37 @@ export function canAccessRndPortal(member: AccessMember): boolean {
   if (flags?.['rnd_portal:access']) return true;
   const effective = getCallerEffectivePermissions(member);
   return effective['rnd_portal:access'] === true;
+}
+
+export function canReadResearch(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['research:read'] || flags?.['research:write'] || flags?.['research:gate:decide']) {
+    return true;
+  }
+  const effective = getCallerEffectivePermissions(member);
+  return Boolean(
+    effective['research:read'] ||
+      effective['research:write'] ||
+      effective['research:gate:decide'] ||
+      effective['rnd_portal:access']
+  );
+}
+
+export function canWriteResearch(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['research:write']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['research:write'] === true;
+}
+
+export function canDecideResearchGate(member: AccessMember): boolean {
+  if (isOmnipotentOrgRole(member.role)) return true;
+  const flags = normalizeRolePermissions(member.customRole?.permissions ?? null);
+  if (flags?.['research:gate:decide']) return true;
+  const effective = getCallerEffectivePermissions(member);
+  return effective['research:gate:decide'] === true;
 }
 
 export function canReadAllFeedbacks(member: AccessMember): boolean {

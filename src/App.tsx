@@ -54,6 +54,7 @@ const OrganizationTreePage = lazy(() => import("./pages/organization/Organizatio
 const OrgAdminHubPage = lazy(() => import("./pages/workspace/OrgAdminHubPage").then((m) => ({ default: m.OrgAdminHubPage })));
 const WorkspaceResourcesPage = lazy(() => import("./pages/workspace/WorkspaceResourcesPage").then((m) => ({ default: m.WorkspaceResourcesPage })));
 const WorkspaceFeedbacksPage = lazy(() => import("./pages/workspace/WorkspaceFeedbacksPage").then((m) => ({ default: m.WorkspaceFeedbacksPage })));
+const WorkspaceGrievancesManagePage = lazy(() => import("./pages/workspace/WorkspaceFeedbacksPage").then((m) => ({ default: m.WorkspaceGrievancesManagePage })));
 const RndPortalPage = lazy(() => import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndPortalPage })));
 const RndProjectsSection = lazy(() =>
   import("./pages/workspace/RndPortalPage").then((m) => ({ default: m.RndProjectsSection })),
@@ -85,6 +86,8 @@ const WorkspaceMealSurveySettingsPage = lazy(() => import("./pages/workspace/Wor
 const WorkspaceOfficeSupplyMyPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyMyPage })));
 const WorkspaceOfficeSupplyManagePage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyManagePage })));
 const WorkspaceOfficeSupplyCatalogPage = lazy(() => import("./pages/workspace/WorkspaceOfficeSupplyPage").then((m) => ({ default: m.WorkspaceOfficeSupplyCatalogPage })));
+const WorkspaceTrainingMyPage = lazy(() => import("./pages/workspace/WorkspaceTrainingPage").then((m) => ({ default: m.WorkspaceTrainingMyPage })));
+const WorkspaceTrainingManagePage = lazy(() => import("./pages/workspace/WorkspaceTrainingPage").then((m) => ({ default: m.WorkspaceTrainingManagePage })));
 const WorkspaceHazardousSubstancesPage = lazy(() => import("./pages/workspace/WorkspaceHazardousSubstancesPage").then((m) => ({ default: m.WorkspaceHazardousSubstancesPage })));
 const WorkspaceFacilityIncidentPage = lazy(() => import("./pages/workspace/WorkspaceFacilityIncidentPage").then((m) => ({ default: m.WorkspaceFacilityIncidentPage })));
 const EpZeroSetupWizard = lazy(() => import("./pages/onboarding/EpZeroSetupWizard").then((m) => ({ default: m.EpZeroSetupWizard })));
@@ -233,10 +236,11 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/resources" element={<CompanyAppAccessGate appId="resources"><WorkspaceResourcesPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/feedbacks" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/grievances" element={<CompanyAppAccessGate appId="grievances"><WorkspaceFeedbacksPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/grievances/manage" element={<CompanyAppAccessGate appId="grievances"><WorkspaceGrievancesManagePage /></CompanyAppAccessGate>} />
             <Route path="/workspace/mbo" element={<CompanyAppAccessGate appId="mbo"><WorkspaceMboPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/approvals" element={<WorkspaceApprovalsPage />} />
             <Route path="/workspace/inventory" element={<WorkspaceInventoryPage />} />
-            <Route path="/workspace/supply-restock" element={<WorkspaceSupplyRestockPage />} />
+            <Route path="/workspace/supply-restock" element={<CompanyAppAccessGate appId="supply_restock"><WorkspaceSupplyRestockPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/shuttle/routes" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleRoutesPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/shuttle/roster" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleRosterPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/shuttle/my" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleMyPage /></CompanyAppAccessGate>} />
@@ -250,6 +254,8 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/office-supply" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyMyPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/office-supply/manage" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyManagePage /></CompanyAppAccessGate>} />
             <Route path="/workspace/office-supply/catalog" element={<CompanyAppAccessGate appId="office_supply"><WorkspaceOfficeSupplyCatalogPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/training" element={<CompanyAppAccessGate appId="training"><WorkspaceTrainingMyPage /></CompanyAppAccessGate>} />
+            <Route path="/workspace/training/manage" element={<CompanyAppAccessGate appId="training"><WorkspaceTrainingManagePage /></CompanyAppAccessGate>} />
             <Route path="/workspace/hazardous-substances" element={<WorkspaceHazardousSubstancesPage />} />
             <Route path="/workspace/setup-wizard" element={<EpZeroSetupWizard />} />
             <Route path="/onboarding/ep-setup" element={<EpZeroSetupWizard />} />

@@ -11,7 +11,7 @@ import {
   type GrievanceCategory,
   type GrievanceVisibility,
 } from '../domain/grievanceEngine';
-import { showToast } from '@/shared/feedback/uiFeedback';
+import { showErrorToast, showToast } from '@/shared/feedback/uiFeedback';
 import { canReadAllFeedbacks, type AccessMember } from '@/domain/permissions';
 import { useActiveUser } from '@/shared/session/useActiveUser';
 import { useAuth } from '@/core/auth/AuthProvider';
@@ -19,10 +19,14 @@ import { useOrganization } from '@/core/organizations/OrganizationProvider';
 import { Pagination } from '@/shared/components/ui/Pagination';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { InlineBusy } from '@/shared/components/ui/Skeleton';
 import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
+import { AccessDeniedBanner } from '@/pages/settings/DynamicRoleSettingsPage';
 import { getCoreClient } from '@/lib/supabase';
 
+export type GrievanceListMode = 'mine' | 'manage';
 
 function resolveAccessMember(): AccessMember {
   const active = useActiveUser();
@@ -32,7 +36,7 @@ function resolveAccessMember(): AccessMember {
   };
 }
 
-function useCanManageGrievances(): boolean {
+export function useCanManageGrievances(): boolean {
   try {
     return canReadAllFeedbacks(resolveAccessMember());
   } catch {
@@ -51,7 +55,12 @@ function resolveDefaultGrievanceVisibility(
   return 'named';
 }
 
-export const GrievanceListPage: React.FC = () => {
+type GrievanceListPageProps = {
+  /** mine=내 건의, manage=담당 접수함 */
+  mode?: GrievanceListMode;
+};
+
+export const GrievanceListPage: React.FC<GrievanceListPageProps> = ({ mode = 'mine' }) => {
   const { user } = useAuth();
   const { currentOrganization } = useOrganization();
   const settings = (currentOrganization?.settings ?? null) as Record<string, unknown> | null;
@@ -59,7 +68,9 @@ export const GrievanceListPage: React.FC = () => {
     () => resolveDefaultGrievanceVisibility(settings, currentOrganization?.industry_type),
     [settings, currentOrganization?.industry_type],
   );
-  const isHandler = useCanManageGrievances();
+  const canManage = useCanManageGrievances();
+  const isHandler = mode === 'manage';
+  const manageDenied = mode === 'manage' && !canManage;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<AnonymousGrievanceRecord | null>(null);
@@ -149,11 +160,11 @@ export const GrievanceListPage: React.FC = () => {
     const composeVisibility = editingRecord ? editingRecord.visibility : visibility;
     const val = validateGrievanceSubmission(title, content, pin, composeVisibility);
     if (!val.isValid) {
-      showToast(val.error || '입력 오류', 'error');
+      showErrorToast(val.error || '입력 오류');
       return;
     }
     if (!currentOrganization?.id) {
-      showToast('사업장이 선택되지 않았습니다.', 'error');
+      showErrorToast('사업장이 선택되지 않았습니다.');
       return;
     }
 
@@ -164,7 +175,7 @@ export const GrievanceListPage: React.FC = () => {
           viewerUserId: user?.id,
         })
       ) {
-        showToast('접수 대기 상태의 본인 기명 건의만 수정할 수 있습니다.', 'error');
+        showErrorToast('접수 대기 상태의 본인 기명 건의만 수정할 수 있습니다.');
         return;
       }
       updateRecord(
@@ -186,7 +197,7 @@ export const GrievanceListPage: React.FC = () => {
             refetch();
           },
           onError: (err) => {
-            showToast(err?.message || '수정 실패', 'error');
+            showErrorToast(err?.message || '수정 실패');
           },
         }
       );
@@ -247,12 +258,12 @@ export const GrievanceListPage: React.FC = () => {
             refetch();
           },
           onError: (err) => {
-            showToast(err?.message || '접수 실패', 'error');
+            showErrorToast(err?.message || '접수 실패');
           },
         }
       );
     } catch (cause) {
-      showToast(cause instanceof Error ? cause.message : '접수 실패', 'error');
+      showErrorToast(cause instanceof Error ? cause.message : '접수 실패');
     }
   };
 
@@ -263,7 +274,7 @@ export const GrievanceListPage: React.FC = () => {
         viewerUserId: user?.id,
       })
     ) {
-      showToast('접수 대기 상태의 본인 기명 건의만 삭제할 수 있습니다.', 'error');
+      showErrorToast('접수 대기 상태의 본인 기명 건의만 삭제할 수 있습니다.');
       return;
     }
     if (!window.confirm(`[${record.ticket_code}] 건의를 삭제하시겠습니까?`)) return;
@@ -280,7 +291,7 @@ export const GrievanceListPage: React.FC = () => {
           refetch();
         },
         onError: (err) => {
-          showToast(err?.message || '삭제 실패', 'error');
+          showErrorToast(err?.message || '삭제 실패');
         },
       }
     );
@@ -369,6 +380,10 @@ export const GrievanceListPage: React.FC = () => {
     }
   };
 
+  if (manageDenied) {
+    return <AccessDeniedBanner />;
+  }
+
   return (
     <WorkPageFrame width="hub">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -423,14 +438,16 @@ export const GrievanceListPage: React.FC = () => {
             <tbody className="divide-y divide-slate-200">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
-                    불러오는 중…
+                  <td colSpan={7} className="p-8 text-center">
+                    <InlineBusy label="불러오는 중" />
                   </td>
                 </tr>
               ) : visibleRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-slate-400">
-                    접수된 건의가 없습니다.
+                  <td colSpan={7} className="p-6">
+                    <EmptyState
+                      title={isHandler ? '접수된 건의가 없습니다.' : '작성한 건의가 없습니다.'}
+                    />
                   </td>
                 </tr>
               ) : (

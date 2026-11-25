@@ -10,6 +10,7 @@ import {
   UtensilsCrossed,
   Package,
   ClipboardList,
+  GraduationCap,
   Bell,
   ChevronRight,
   MessageSquareWarning,
@@ -329,6 +330,14 @@ export const CompanyAppLauncherDashboard: React.FC<{
         icon: <Package className={iconCls} />,
         gradient: 'from-sky-500 to-blue-600',
         requiredAnyCapability: ['office_supply_request'],
+      },
+      {
+        id: 'training',
+        to: '/workspace/training',
+        label: '교육관리',
+        icon: <GraduationCap className={iconCls} />,
+        gradient: 'from-indigo-500 to-blue-700',
+        requiredAnyCapability: ['training_ack'],
       },
       {
         id: 'app_access',

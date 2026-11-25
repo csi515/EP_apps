@@ -105,8 +105,20 @@ export function mapPresetPermissionTokensToRoleMap(
     next['meal_survey:manage'] = true;
   }
 
+  if (hasPrefix('training')) {
+    next['training_ack:manage'] = true;
+  }
+
   if (hasPrefix('office_supply')) {
     next['office_supply_request:manage'] = true;
+  }
+
+  if (hasPrefix('supply_restock') || hasPrefix('supply')) {
+    next['supply_restock:manage'] = true;
+  }
+
+  if (hasPrefix('safety') || hasPrefix('sop') || hasPrefix('risk')) {
+    next['safety:manage'] = true;
   }
 
   // MBO ACL: mbo:view → goals:read만. evaluations:read_all은 상위 권한만.

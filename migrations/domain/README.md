@@ -19,5 +19,12 @@ npm run db:migrate:domain          # soft skip (임베디드/개발 폴백)
 | 006–013 | inventory, 도메인 RPC 골격, MBO, shuttle, meal closed days |
 | 014–018 | research links, approval atomic, grievance, volunteer capacity, shuttle multi-route |
 | 019–021 | meal response/overview, office supply campaign, volunteer checkin + project categories |
+| 022–029 | admin login_id, MBO dept/dates/memo/cells, grievance author, bulk dept reassign |
+| 030–031 | training_ack 테이블·초기 RLS(030), can_manage + RLS 강화 + acknowledge/replace RPC(031) |
+| 032–034 | supply_restock manage RLS(032), resources can_manage+예약 RPC SoT(033), research read/write/gate RLS(034) |
+| 035–036 | sop safety:manage 위임(035), mbo goals:write 쓰기 RLS(036) |
+
+032+ 적용 후 PostgREST 스키마 캐시 리로드: `NOTIFY pgrst, 'reload schema';` (또는 postgrest 재시작).
+로컬 테이블 소유자가 `postgres`이면 `postgresql://postgres:…` 로 적용한다.
 
 검증: `npm run check:migration-syntax`

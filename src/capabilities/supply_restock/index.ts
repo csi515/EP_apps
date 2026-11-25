@@ -2,6 +2,10 @@ export { supply_restockCapability } from './manifest';
 export * from './domain/supplyRestockEngine';
 export * from './domain/procurementPipelineEngine';
 export { SupplyRestockView } from './ui/SupplyRestockView';
+export {
+  SupplyRestockManageGate,
+  useSupplyRestockManageAccess,
+} from './ui/SupplyRestockAccessGate';
 export { PurchaseRequisitionFormModal } from './ui/PurchaseRequisitionFormModal';
 export { ProcurementVettingQueueView } from './ui/ProcurementVettingQueueView';
 export { PurchaseContractPackageModal } from './ui/PurchaseContractPackageModal';

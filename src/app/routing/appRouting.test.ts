@@ -169,6 +169,8 @@ function runRoutingTests() {
     "workspace/office-supply",
     "workspace/office-supply/manage",
     "workspace/office-supply/catalog",
+    "workspace/training",
+    "workspace/training/manage",
     "workspace/approvals",
     "workspace/mbo",
     "workspace/facility-incidents",

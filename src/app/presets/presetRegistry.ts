@@ -33,6 +33,8 @@ import { mealSurveySetupSchema } from '@/capabilities/meal_survey/setupSchema';
 import { mealSurveyResources } from '@/capabilities/meal_survey/resources';
 import { officeSupplyRequestSetupSchema } from '@/capabilities/office_supply_request/setupSchema';
 import { officeSupplyRequestResources } from '@/capabilities/office_supply_request/resources';
+import { trainingAckSetupSchema } from '@/capabilities/training_ack/setupSchema';
+import { trainingAckResources } from '@/capabilities/training_ack/resources';
 import { recipeBomSetupSchema } from '@/capabilities/recipe_bom/setupSchema';
 import { recipeBomResources } from '@/capabilities/recipe_bom/resources';
 import { equipmentLifecycleSetupSchema } from '@/capabilities/equipment_lifecycle/setupSchema';
@@ -111,6 +113,11 @@ export const CAPABILITY_BUNDLES = {
     capabilityId: 'office_supply_request',
     setupSchema: officeSupplyRequestSetupSchema,
     resources: officeSupplyRequestResources,
+  },
+  training_ack: {
+    capabilityId: 'training_ack',
+    setupSchema: trainingAckSetupSchema,
+    resources: trainingAckResources,
   },
   recipe_bom: {
     capabilityId: 'recipe_bom',
@@ -239,6 +246,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'volunteer_activity',
       'meal_survey',
       'office_supply_request',
+      'training_ack',
       'shuttle_dispatch',
       'hazardous_substance_msds',
     ] as const,
@@ -264,6 +272,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
       'volunteer_activity',
       'meal_survey',
       'office_supply_request',
+      'training_ack',
       'shuttle_dispatch',
       'hazardous_substance_msds',
     ] as const,

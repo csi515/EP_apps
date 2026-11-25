@@ -4,7 +4,10 @@ import {
   canManageMealSurvey,
   canManageOfficeSupplyRequest,
   canManageResourceCatalog,
+  canManageRiskAssessments,
   canManageShuttleRoutes,
+  canManageSupplyRestock,
+  canManageTrainingAck,
   canManageVolunteer,
   getCallerEffectivePermissions,
   normalizeRolePermissions,
@@ -29,7 +32,9 @@ export const COMPANY_APP_LEGACY_MANAGER_FEATURE_KEYS: Partial<
   volunteer: 'volunteer:manage',
   shuttle: 'shuttle:manage',
   office_supply: 'office_supply_request:manage',
+  supply_restock: 'supply_restock:manage',
   meal_survey: 'meal_survey:manage',
+  training: 'training_ack:manage',
   sop_risk: 'safety:manage',
 };
 
@@ -45,12 +50,15 @@ export const COMPANY_APP_ACCESS_LABELS: Record<string, string> = {
   'company_app:meal_survey': '식수인원 조사 앱',
   'company_app:office_supply': '사무용품 취합 앱',
   'company_app:supply_restock': '소모품 안전재고 앱',
+  'company_app:training': '교육관리 앱',
   resources: '공용자원 담당',
   'volunteer:manage': '봉사활동 담당',
   grievances_manage: '노경·고충 담당',
   'shuttle:manage': '통근셔틀 담당',
   'office_supply_request:manage': '사무용품 담당',
+  'supply_restock:manage': '소모품 안전재고 담당',
   'meal_survey:manage': '식수조사 담당',
+  'training_ack:manage': '교육관리 담당',
   'safety:manage': '현장 안전/SOP 담당',
 };
 
@@ -95,6 +103,8 @@ export const COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS: readonly CompanyAppFeatureA
       '연구소 포털 런처 표시 및 /rnd 진입',
       'research'
     ),
+    buildOption('research:write', '연구과제 작성', '연구과제 등록·수정·예산·산출물·관련 자료 관리'),
+    buildOption('research:gate:decide', '연구 게이트 심의', '연구과제 게이트 승인·반려'),
     buildOption(
       companyAppAccessFeatureKey('mbo'),
       'MBO 앱 이용',
@@ -149,6 +159,12 @@ export const COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS: readonly CompanyAppFeatureA
       '안전재고·간이 발주 앱 진입',
       'supply_restock'
     ),
+    buildOption(
+      companyAppAccessFeatureKey('training'),
+      '교육관리 앱 이용',
+      '교육 열람·이수 확인 앱 진입',
+      'training'
+    ),
     buildOption('resources:manage', '공용자원/총무 담당', '회의실·업무차량 자원 등록 및 승인'),
     buildOption('volunteer:manage', '봉사활동 담당', '봉사 프로그램 개설 및 신청자 확정'),
     buildOption('grievances_manage', '노경 건의함 담당', '고충 건의함 열람 및 답변 등록'),
@@ -158,7 +174,13 @@ export const COMPANY_APP_FEATURE_ASSIGNMENT_OPTIONS: readonly CompanyAppFeatureA
       '사무 소모품 담당',
       '소모품 신청 검토 및 재고 불출'
     ),
+    buildOption(
+      'supply_restock:manage',
+      '소모품 안전재고 담당',
+      '안전재고 품목·간이 발주·구매요청 관리'
+    ),
     buildOption('meal_survey:manage', '식수인원 조사 담당', '식사 슬롯·식수 현황 관리'),
+    buildOption('training_ack:manage', '교육관리 담당', '교육 작성·배정·이수 로그 관리'),
     buildOption('safety:manage', '현장 안전/SOP 담당', '위험성평가 및 작업표준 관리'),
   ] as const;
 
@@ -216,7 +238,7 @@ function roleGrantsCompanyApp(appId: PublishedCompanyAppId, member: AccessMember
     case 'shuttle':
       return canManageShuttleRoutes(member) || true;
     case 'sop_risk':
-      return false;
+      return canManageRiskAssessments(member);
     case 'grievances':
       return Boolean(effective.grievances_manage || effective['feedbacks:read_all']);
     case 'volunteer':
@@ -226,7 +248,9 @@ function roleGrantsCompanyApp(appId: PublishedCompanyAppId, member: AccessMember
     case 'office_supply':
       return canManageOfficeSupplyRequest(member) || true;
     case 'supply_restock':
-      return canManageOfficeSupplyRequest(member) || true;
+      return canManageSupplyRestock(member) || true;
+    case 'training':
+      return canManageTrainingAck(member) || true;
     case 'app_access':
       return true;
     default:

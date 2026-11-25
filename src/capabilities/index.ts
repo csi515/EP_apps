@@ -16,6 +16,7 @@ import { shuttle_dispatchCapability } from './shuttle_dispatch/manifest';
 import { volunteer_activityCapability } from './volunteer_activity/manifest';
 import { meal_surveyCapability } from './meal_survey/manifest';
 import { office_supply_requestCapability } from './office_supply_request/manifest';
+import { training_ackCapability } from './training_ack/manifest';
 import { recipe_bomCapability } from './recipe_bom/manifest';
 import { equipment_lifecycleCapability } from './equipment_lifecycle/manifest';
 import { sop_risk_assessmentCapability } from './sop_risk_assessment/manifest';
@@ -52,6 +53,7 @@ export const CAPABILITY_MANIFESTS: readonly CapabilityManifest[] = [
   volunteer_activityCapability,
   meal_surveyCapability,
   office_supply_requestCapability,
+  training_ackCapability,
   recipe_bomCapability,
   equipment_lifecycleCapability,
   sop_risk_assessmentCapability,

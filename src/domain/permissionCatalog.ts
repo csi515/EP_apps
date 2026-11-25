@@ -165,6 +165,24 @@ export const PERMISSION_CATALOG: readonly PermissionCatalogEntry[] = [
     description: '구매 가능 품목·월별 마감 캠페인·부서별 취합',
   },
   {
+    key: 'supply_restock:manage',
+    label: '소모품 안전재고 담당',
+    group: 'intranet',
+    description: '안전재고 품목·간이 발주·구매요청 관리',
+  },
+  {
+    key: 'training_ack:manage',
+    label: '교육관리 담당',
+    group: 'intranet',
+    description: '교육 작성·부서/개인 배정·이수 확인 로그',
+  },
+  {
+    key: 'safety:manage',
+    label: '현장 안전/SOP 담당',
+    group: 'intranet',
+    description: '위험성평가 및 작업표준 관리',
+  },
+  {
     key: 'rnd_portal:access',
     label: '연구소 포털 접속',
     group: 'intranet',

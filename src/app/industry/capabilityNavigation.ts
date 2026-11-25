@@ -104,6 +104,7 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   volunteer_activity: ['volunteer', 'volunteer-manage'],
   meal_survey: ['meal-survey', 'meal-survey-manage', 'meal-survey-settings'],
   office_supply_request: ['office-supply', 'office-supply-manage', 'office-supply-catalog'],
+  training_ack: ['training', 'training-manage'],
   commission_payroll: ['commission-payroll', 'payroll', 'settlement'],
   lost_found: ['lost-found', 'lost_items'],
   recipe_bom: ['recipe-bom', 'recipes', 'bom'],

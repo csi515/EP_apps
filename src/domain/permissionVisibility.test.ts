@@ -16,6 +16,15 @@ assert.equal(
   isPermissionKeyVisible('office_supply_request:manage', ['meal_survey', 'booking']),
   false
 );
+assert.equal(isPermissionKeyVisible('training_ack:manage', ['training_ack']), true);
+assert.equal(isPermissionKeyVisible('training_ack:manage', ['meal_survey', 'booking']), false);
+assert.equal(isPermissionKeyVisible('supply_restock:manage', ['supply_restock']), true);
+assert.equal(
+  isPermissionKeyVisible('supply_restock:manage', ['office_supply_request', 'booking']),
+  false
+);
+assert.equal(isPermissionKeyVisible('safety:manage', ['sop_risk_assessment']), true);
+assert.equal(isPermissionKeyVisible('safety:manage', ['meal_survey']), false);
 assert.equal(isPermissionKeyVisible('rnd_portal:access', ['research_project']), true);
 assert.equal(isPermissionKeyVisible('rnd_portal:access', ['booking']), false);
 assert.equal(isPermissionKeyVisible('research:read', ['research_project']), true);

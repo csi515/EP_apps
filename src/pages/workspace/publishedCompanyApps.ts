@@ -13,6 +13,7 @@ export type PublishedCompanyAppId =
   | 'meal_survey'
   | 'office_supply'
   | 'supply_restock'
+  | 'training'
   | 'app_access';
 
 export type PublishedCompanyApp = {
@@ -135,6 +136,17 @@ export const PUBLISHED_COMPANY_APPS: readonly PublishedCompanyApp[] = [
       'src/capabilities/office_supply_request/ui/OfficeSupplyMyView.tsx',
       'src/capabilities/office_supply_request/ui/OfficeSupplyManagePage.tsx',
       'src/capabilities/office_supply_request/ui/OfficeSupplyCatalogPage.tsx',
+    ],
+  },
+  {
+    id: 'training',
+    label: '교육관리',
+    path: '/workspace/training',
+    capabilities: ['training_ack'],
+    pageRel: 'src/pages/workspace/WorkspaceTrainingPage.tsx',
+    errorSurfaceRels: [
+      'src/capabilities/training_ack/ui/TrainingMyView.tsx',
+      'src/capabilities/training_ack/ui/TrainingManagePage.tsx',
     ],
   },
   {

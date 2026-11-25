@@ -43,6 +43,7 @@ export const CAPABILITY_IDS = [
   'volunteer_activity',
   'meal_survey',
   'office_supply_request',
+  'training_ack',
   'commission_payroll',
   'lost_found',
   'recipe_bom',

@@ -4883,6 +4883,111 @@ export interface Database {
           },
         ];
       };
+      training_courses: {
+        Row: {
+          id: string;
+          organization_id: string;
+          title: string;
+          body: string;
+          status: 'draft' | 'published' | 'closed';
+          revision: number;
+          created_by: string | null;
+          published_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          title: string;
+          body?: string;
+          status?: 'draft' | 'published' | 'closed';
+          revision?: number;
+          created_by?: string | null;
+          published_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['training_courses']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'training_courses_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      training_assignees: {
+        Row: {
+          id: string;
+          organization_id: string;
+          course_id: string;
+          department_id: string | null;
+          member_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          course_id: string;
+          department_id?: string | null;
+          member_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['training_assignees']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'training_assignees_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'training_assignees_course_id_fkey';
+            columns: ['course_id'];
+            referencedRelation: 'training_courses';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      training_acknowledgments: {
+        Row: {
+          id: string;
+          organization_id: string;
+          course_id: string;
+          member_id: string;
+          course_revision: number;
+          acked_at: string;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          course_id: string;
+          member_id: string;
+          course_revision?: number;
+          acked_at?: string;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database['core']['Tables']['training_acknowledgments']['Insert']>;
+        Relationships: [
+          {
+            foreignKeyName: 'training_acknowledgments_organization_id_fkey';
+            columns: ['organization_id'];
+            referencedRelation: 'organizations';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'training_acknowledgments_course_id_fkey';
+            columns: ['course_id'];
+            referencedRelation: 'training_courses';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       office_supply_catalog_items: {
         Row: {
           id: string;
@@ -7118,6 +7223,50 @@ export interface Database {
       can_manage_meal_survey: {
         Args: { p_org: string };
         Returns: boolean;
+      };
+      can_manage_training_ack: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_manage_supply_restock: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_manage_resources: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_write_research: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_decide_research_gate: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_read_research: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      can_write_mbo_goals: {
+        Args: { p_org: string };
+        Returns: boolean;
+      };
+      acknowledge_training_course: {
+        Args: {
+          p_organization_id: string;
+          p_course_id: string;
+          p_user_agent?: string | null;
+        };
+        Returns: Database['core']['Tables']['training_acknowledgments']['Row'];
+      };
+      replace_training_assignees: {
+        Args: {
+          p_organization_id: string;
+          p_course_id: string;
+          p_assignees: Json;
+        };
+        Returns: undefined;
       };
       ensure_meal_survey_settings: {
         Args: { p_org: string };
