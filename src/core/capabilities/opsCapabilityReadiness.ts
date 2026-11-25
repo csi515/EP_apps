@@ -90,7 +90,7 @@ export const OPS_CAPABILITY_READINESS: Record<OpsCapabilityId, OpsCapabilityMeta
     persistence: 'supabase',
     opsReadiness: 'ops_verified',
     shellTab: 'sop-risk',
-    refineResource: 'sop_risk_assessment',
+    refineResource: 'risk_assessments',
   },
   hygiene_haccp_log: {
     persistence: 'supabase',

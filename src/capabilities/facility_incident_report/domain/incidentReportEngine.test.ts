@@ -65,7 +65,7 @@ describe('facility_incident_report - domain engine', () => {
       severity: 'moderate',
       locationInFacility: '2층 키즈 트램펄린 존',
       involvedPersonName: '김민준',
-      involvedPersonRole: '원생',
+      involvedPersonRole: '작업자',
       description: '트램펄린 점프 후 착지하면서 발목을 삐끗함',
       hospitalTransported: false,
       emergencyActionTaken: '아이싱 및 압박 붕대 처치 완료',

@@ -3,6 +3,12 @@
  * 초안만 추가·삭제·순서 변경이 되고, 승인 스냅샷은 읽기 전용이다.
  */
 import { computeRiskScore, type StepHazardBlock } from './sopNumberingAndAuditEngine';
+import { SOP_RISK_SETUP_DEFAULTS } from '../setupSchema';
+
+export type SopSubmitPolicy = {
+  criticalRiskThreshold?: number;
+  requirePpeChecklist?: boolean;
+};
 
 export const HAZARD_CATEGORIES = [
   '기계적',
@@ -295,7 +301,15 @@ export function countHazardsInSnapshot(snapshot: Record<string, unknown>): numbe
   return Array.isArray(raw.hazards) ? raw.hazards.length : 0;
 }
 
-export function validateDraftForSubmit(body: SopDocumentBody): { isValid: boolean; error?: string } {
+export function validateDraftForSubmit(
+  body: SopDocumentBody,
+  policy: SopSubmitPolicy = {},
+): { isValid: boolean; error?: string } {
+  const criticalThreshold =
+    policy.criticalRiskThreshold ?? SOP_RISK_SETUP_DEFAULTS.criticalRiskThreshold;
+  const requirePpe =
+    policy.requirePpeChecklist ?? SOP_RISK_SETUP_DEFAULTS.requirePpeChecklist;
+
   if (body.steps.length === 0) {
     return { isValid: false, error: '작업 단계를 한 개 이상 추가해 주세요.' };
   }
@@ -308,6 +322,18 @@ export function validateDraftForSubmit(body: SopDocumentBody): { isValid: boolea
     }
     if (!step.sopControlMeasure.trim()) {
       return { isValid: false, error: `${step.stepNumber}단계의 안전조치를 입력해 주세요.` };
+    }
+    if (requirePpe && step.requiredPPE.length === 0) {
+      return {
+        isValid: false,
+        error: `${step.stepNumber}단계의 필수 보호구(PPE)를 한 개 이상 지정해 주세요.`,
+      };
+    }
+    if (step.residualScore >= criticalThreshold) {
+      return {
+        isValid: false,
+        error: `${step.stepNumber}단계 잔여위험(${step.residualScore})이 중대 기준(≥${criticalThreshold})입니다. 통제를 강화한 뒤 다시 요청해 주세요.`,
+      };
     }
   }
   if (!body.intendedReviewerId) {

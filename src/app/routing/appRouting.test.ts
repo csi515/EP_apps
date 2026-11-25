@@ -173,7 +173,6 @@ function runRoutingTests() {
     "workspace/training/manage",
     "workspace/approvals",
     "workspace/mbo",
-    "workspace/facility-incidents",
     // /workspace/:tab → IndustryAppRouter 탭
     "workspace/dispatch",
     "workspace/waitlist",

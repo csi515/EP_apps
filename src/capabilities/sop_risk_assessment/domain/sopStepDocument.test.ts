@@ -112,6 +112,20 @@ function body(steps: StepHazardBlock[]): SopDocumentBody {
   assert.equal(kept.rejectionHistory[0].reason, '보호구 항목을 구체적으로 적을 것');
   assert.equal(validateDraftForSubmit(kept).isValid, true);
   assert.equal(validateDraftForSubmit({ ...restored, steps: [] }).isValid, false);
+  assert.equal(
+    validateDraftForSubmit({
+      ...kept,
+      steps: [{ ...kept.steps[0], requiredPPE: [] }],
+    }).isValid,
+    false,
+  );
+  assert.equal(
+    validateDraftForSubmit({
+      ...kept,
+      steps: [{ ...kept.steps[0], residualScore: 20, residualLevel: 'critical' }],
+    }).isValid,
+    false,
+  );
   console.log('sopStepDocument: payload roundtrip ok');
 }
 

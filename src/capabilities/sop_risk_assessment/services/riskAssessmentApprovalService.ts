@@ -100,10 +100,10 @@ export async function listRevisions(assessmentId: string): Promise<RevisionRow[]
 
 export async function submitForReview(assessmentId: string, reviewerId: string): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('submit_risk_assessment_for_review' as never, {
+  const { error } = await client.rpc('submit_risk_assessment_for_review', {
     p_assessment_id: assessmentId,
     p_reviewer_id: reviewerId,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -115,13 +115,13 @@ export async function approveStep(input: {
   nextAssigneeId?: string | null;
 }): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('approve_risk_assessment_step' as never, {
+  const { error } = await client.rpc('approve_risk_assessment_step', {
     p_assessment_id: input.assessmentId,
     p_step_order: input.stepOrder,
     p_comment: input.comment ?? null,
     p_signature: input.signature,
     p_next_assignee_id: input.nextAssigneeId ?? null,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -131,11 +131,11 @@ export async function rejectStep(input: {
   rejectReason: string;
 }): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('reject_risk_assessment_step' as never, {
+  const { error } = await client.rpc('reject_risk_assessment_step', {
     p_assessment_id: input.assessmentId,
     p_step_order: input.stepOrder,
     p_reject_reason: input.rejectReason,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -145,11 +145,11 @@ export async function reviseAssessment(input: {
   revisionReason: string;
 }): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('revise_risk_assessment' as never, {
+  const { error } = await client.rpc('revise_risk_assessment', {
     p_assessment_id: input.assessmentId,
     p_revision_type: input.revisionType,
     p_revision_reason: input.revisionReason,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }
 
@@ -267,9 +267,9 @@ export async function saveDraftRiskAssessment(input: {
 
 export async function completeRepledge(repledgeId: string, signature: string): Promise<void> {
   const client = getCoreClient();
-  const { error } = await client.rpc('complete_risk_assessment_repledge' as never, {
+  const { error } = await client.rpc('complete_risk_assessment_repledge', {
     p_repledge_id: repledgeId,
     p_signature: signature,
-  } as never);
+  });
   if (error) throw new Error(error.message);
 }

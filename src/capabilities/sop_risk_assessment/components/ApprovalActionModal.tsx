@@ -179,7 +179,7 @@ export const ApprovalActionModal: React.FC<Props> = ({
                     className="mt-1 h-12 w-full rounded-lg border border-slate-300 px-3"
                     value={nextAssigneeId}
                     onChange={(event) => setNextAssigneeId(event.target.value)}
-                    placeholder="승인자 사용자 UUID"
+                    placeholder="승인자 선택 또는 구성원 ID"
                   />
                 )}
               </label>

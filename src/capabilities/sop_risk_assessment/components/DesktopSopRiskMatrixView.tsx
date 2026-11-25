@@ -13,6 +13,8 @@ import type { RejectionNote } from '../domain/sopStepDocument';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 import { ContentFadeIn } from '@/shared/components/ui/ContentFadeIn';
 import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { SOP_RISK_UI_COPY } from '../ui/sopRiskUiCopy';
+import { SOP_RISK_SETUP_DEFAULTS } from '../setupSchema';
 
 function RejectionRecord({
   history,
@@ -85,6 +87,10 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
 
   return (
     <WorkPageFrame width="hub" data-testid="desktop-sop-risk-matrix">
+      <p className="mb-2 text-xs text-slate-500 print:hidden">
+        {SOP_RISK_UI_COPY.independentApprovalNote}{' '}
+        {SOP_RISK_UI_COPY.auditCycleHint(SOP_RISK_SETUP_DEFAULTS.regularAuditCycleMonths)}
+      </p>
       <SopPendingApprovalStrip />
       <header className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 print:hidden">
         <div className="flex flex-wrap items-center gap-2">
@@ -132,7 +138,12 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
             ))}
           </select>
           {canCreate ? (
-          <button type="button" className="inline-flex h-11 items-center gap-1 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 px-3 text-xs font-bold text-indigo-700" onClick={() => setShowNew(true)}>
+          <button
+            type="button"
+            data-testid="sop-risk-create-open"
+            className="inline-flex h-11 items-center gap-1 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 px-3 text-xs font-bold text-indigo-700"
+            onClick={() => setShowNew(true)}
+          >
             <Plus className="h-3.5 w-3.5" />
             신규 공정 표준 등록
           </button>
@@ -255,7 +266,9 @@ export const DesktopSopRiskMatrixView: React.FC = () => {
                   초안 저장
                 </button>
                 <button type="button" className="h-12 rounded-xl bg-rose-700 px-4 text-sm font-bold text-white" onClick={() => void workspace.submit()} disabled={workspace.busy}>
-                  {workspace.body.rejectionHistory.length > 0 ? '다시 검토 요청' : '검토 요청'}
+                  {workspace.body.rejectionHistory.length > 0
+                    ? SOP_RISK_UI_COPY.resubmitReview
+                    : SOP_RISK_UI_COPY.submitReview}
                 </button>
               </div>
             ) : null}

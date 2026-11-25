@@ -62,8 +62,14 @@ export const SopNewDocumentModal: React.FC<NewDocProps> = ({
   const docNoPreview = generateSopDocNo(deptCode, getNextSequenceNumber(existingDocNos, deptCode));
 
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      data-testid="sop-risk-create-dialog"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+    >
       <form
+        data-testid="sop-risk-create-form"
         className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl"
         onSubmit={(event) => {
           event.preventDefault();
@@ -110,6 +116,7 @@ export const SopNewDocumentModal: React.FC<NewDocProps> = ({
           공정 / 작업 명칭
           <input
             required
+            data-testid="sop-risk-create-process-name"
             className="mt-1 h-11 w-full rounded-xl border border-slate-300 px-3 text-sm"
             value={processName}
             onChange={(event) => setProcessName(event.target.value)}
@@ -119,7 +126,11 @@ export const SopNewDocumentModal: React.FC<NewDocProps> = ({
           <button type="button" className="h-11 rounded-xl border border-slate-200 px-4 text-sm font-bold" onClick={onClose}>
             취소
           </button>
-          <button type="submit" className="h-11 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white">
+          <button
+            type="submit"
+            data-testid="sop-risk-create-submit"
+            className="h-11 rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white"
+          >
             초안 만들기
           </button>
         </div>

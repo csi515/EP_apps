@@ -6,5 +6,5 @@ export const sop_risk_assessmentCapability = defineCapability({
   dependencies: [],
   configurable: true,
   defaultEnabled: false,
-  requiredPermissions: ['safety:read', 'safety:write'],
+  requiredPermissions: ['safety:manage'],
 });

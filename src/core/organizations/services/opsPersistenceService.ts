@@ -7,7 +7,6 @@ export type OpsTableName =
   | 'equipment_lifecycle'
   | 'maintenance_checklists'
   | 'safety_consents'
-  | 'sop_risk_assessment'
   | 'hygiene_haccp_log'
   | 'space_turnarounds'
   | 'safety_consent_signatures';

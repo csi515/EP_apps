@@ -114,7 +114,7 @@ export const TENANT_COLUMN_MAP: Record<string, string> = {
   rental_equipments: "tenant_id",
   maintenance_checklists: "tenant_id",
   credit_wallets: "tenant_id",
-  safety_consents: "tenant_id",
+  safety_consents: "organization_id",
   onboarding_tokens: "tenant_id",
   tenant_roles: "tenant_id",
   tenant_operating_hours: "tenant_id",

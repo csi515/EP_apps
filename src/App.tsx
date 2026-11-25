@@ -89,7 +89,6 @@ const WorkspaceOfficeSupplyCatalogPage = lazy(() => import("./pages/workspace/Wo
 const WorkspaceTrainingMyPage = lazy(() => import("./pages/workspace/WorkspaceTrainingPage").then((m) => ({ default: m.WorkspaceTrainingMyPage })));
 const WorkspaceTrainingManagePage = lazy(() => import("./pages/workspace/WorkspaceTrainingPage").then((m) => ({ default: m.WorkspaceTrainingManagePage })));
 const WorkspaceHazardousSubstancesPage = lazy(() => import("./pages/workspace/WorkspaceHazardousSubstancesPage").then((m) => ({ default: m.WorkspaceHazardousSubstancesPage })));
-const WorkspaceFacilityIncidentPage = lazy(() => import("./pages/workspace/WorkspaceFacilityIncidentPage").then((m) => ({ default: m.WorkspaceFacilityIncidentPage })));
 const EpZeroSetupWizard = lazy(() => import("./pages/onboarding/EpZeroSetupWizard").then((m) => ({ default: m.EpZeroSetupWizard })));
 const WeeklyTimetableView = lazy(() =>
   import("@/capabilities/scheduling/components/timetable/WeeklyTimetableView").then((m) => ({
@@ -245,7 +244,7 @@ const RefineApp: React.FC = () => {
             <Route path="/workspace/shuttle/roster" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleRosterPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/shuttle/my" element={<CompanyAppAccessGate appId="shuttle"><WorkspaceShuttleMyPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/sop-risk" element={<CompanyAppAccessGate appId="sop_risk"><WorkspaceSopRiskPage /></CompanyAppAccessGate>} />
-            <Route path="/workspace/facility-incidents" element={<CompanyAppAccessGate appId="sop_risk"><WorkspaceFacilityIncidentPage /></CompanyAppAccessGate>} />
+            {/* facility_incident_report는 plant 기본 앱이 아님 — SOP 게이트로 열지 않음 */}
             <Route path="/workspace/volunteer" element={<CompanyAppAccessGate appId="volunteer"><WorkspaceVolunteerListPage /></CompanyAppAccessGate>} />
             <Route path="/workspace/volunteer/manage" element={<CompanyAppAccessGate appId="volunteer"><WorkspaceVolunteerManagePage /></CompanyAppAccessGate>} />
             <Route path="/workspace/meal-survey" element={<CompanyAppAccessGate appId="meal_survey"><WorkspaceMealSurveyMyPage /></CompanyAppAccessGate>} />

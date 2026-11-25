@@ -44,6 +44,9 @@
 
 ```bash
 npm run test:local-auth-staging   # Auth
-npm run test:domain-smoke         # PostgREST + 결재/MBO/재고
+npm run db:migrate:domain         # 037 포함 (소유권 이슈 시 postgres URL)
+npm run test:sop-risk-lifecycle-pg # SOP 초안→승인→개정→재서약 (PG 직접, PostgREST 불필요)
+npm run test:domain-smoke         # PostgREST + 결재/MBO/재고/SOP수명주기
+npx playwright test tests/e2e/sop-risk-smoke.spec.ts  # SOP 초안 UI (스택 healthy 시)
 npm run test:e2e                  # 파일럿 UI 여정
 ```

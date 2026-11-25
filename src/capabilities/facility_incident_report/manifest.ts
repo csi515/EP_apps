@@ -6,7 +6,7 @@ export const facility_incident_reportCapability = defineCapability({
   dependencies: ['safety_consent'],
   configurable: true,
   defaultEnabled: false,
-  requiredPermissions: ['safety.manage'],
+  requiredPermissions: ['safety:manage'],
 });
 
 export const facilityIncidentReportCapability = facility_incident_reportCapability;

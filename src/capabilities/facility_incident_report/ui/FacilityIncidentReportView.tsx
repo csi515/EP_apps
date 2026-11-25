@@ -21,7 +21,7 @@ export const FacilityIncidentReportView: React.FC = () => {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [personName, setPersonName] = useState('');
-  const [personRole, setPersonRole] = useState('원생');
+  const [personRole, setPersonRole] = useState('작업자');
   const [description, setDescription] = useState('');
   const [injuryDetails, setInjuryDetails] = useState('');
   const [emergencyAction, setEmergencyAction] = useState('');

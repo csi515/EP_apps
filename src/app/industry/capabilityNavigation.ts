@@ -121,6 +121,8 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   membership_referral_tree: ['family-tree', 'families', 'referrals'],
   hygiene_haccp_log: ['hygiene-log', 'hygiene', 'temperatures'],
   sop_risk_assessment: ['sop-risk', 'safety', 'hazards', 'sops'],
+  /** 팬텀 capability — 구현 전까지 탭 비연결 */
+  safety_work_permit: [],
   vendor_ap_invoice: ['vendor-ap', 'vendors', 'ap-invoices', 'purchase-invoices'],
   work_attendance_payroll: ['work-payroll', 'timecards', 'payroll-slips', 'staff-payroll'],
   pickup_orders: ['pickup-orders', 'pickups', 'orders'],
@@ -194,7 +196,6 @@ export const CAPABILITY_IMPLEMENTATION_TABS: Readonly<Record<CapabilityId, reado
   hazardous_substance_msds: ['hazardous-substances', 'msds'],
   electronic_lab_notebook: ['lab-notebooks', 'eln'],
   vehicle_mileage_log: ['vehicle-mileage', 'mileage-logs'],
-  safety_work_permit: ['safety-permits', 'work-permits'],
   baby_food_coop: ['baby-food', 'baby-food-coop'],
 };
 

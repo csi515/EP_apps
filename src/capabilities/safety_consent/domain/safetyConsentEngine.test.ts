@@ -12,9 +12,9 @@ function run() {
   const templates: ConsentTemplate[] = [
     {
       id: 'tpl-1',
-      type: 'CLIMBING_WAIVER',
+      type: 'PLANT_TBM_PLEDGE',
       version: 1,
-      title: '클라이밍 안전 수칙 및 면책 서약서 v1',
+      title: 'TBM 서약서 v1',
       bodyText: '구 버전 약관 본문',
       mandatoryClauses: [{ id: 'clause-1', text: '부상 위험 고지 확인' }],
       effectiveFrom: '2025-01-01',
@@ -22,9 +22,9 @@ function run() {
     },
     {
       id: 'tpl-2',
-      type: 'CLIMBING_WAIVER',
+      type: 'PLANT_TBM_PLEDGE',
       version: 2,
-      title: '클라이밍 안전 수칙 및 면책 서약서 v2',
+      title: 'TBM 서약서 v2',
       bodyText: '신 버전 개정 약관 본문',
       mandatoryClauses: [
         { id: 'clause-1', text: '부상 위험 고지 확인' },
@@ -36,7 +36,7 @@ function run() {
   ];
 
   // 1. 최신 활성 서약서 버전 선택 (2026년 기준 v2 선택)
-  const activeTpl = selectActiveConsentTemplate(templates, 'CLIMBING_WAIVER', '2026-06-01');
+  const activeTpl = selectActiveConsentTemplate(templates, 'PLANT_TBM_PLEDGE', '2026-06-01');
   assert.ok(activeTpl);
   assert.equal(activeTpl.version, 2);
   assert.equal(activeTpl.id, 'tpl-2');

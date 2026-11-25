@@ -29,46 +29,46 @@ import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const DEFAULT_TEMPLATES: ConsentTemplate[] = [
   {
-    id: 'tpl-climbing',
-    type: 'CLIMBING_WAIVER',
+    id: 'tpl-tbm',
+    type: 'PLANT_TBM_PLEDGE',
     version: 1,
-    title: '클라이밍 안전 수칙 및 면책 서약서',
+    title: 'TBM(작업 전 안전조회) 및 작업표준 준수 서약서',
     bodyText:
-      '본인은 볼더링 및 인공암벽 등반이 본질적으로 부상 위험을 수반하는 활동임을 인지하며, 시설 내 안전 수칙을 준수하고 본인의 부주의로 인한 사고에 대해 사업장에 책임을 묻지 않을 것에 동의합니다.',
+      '본인은 당일 작업표준·위험성평가 내용을 숙지하였으며, 지정된 보호구 착용과 금지행위 준수를 서약합니다. 이상 징후 발견 시 즉시 작업을 중단하고 관리자에게 보고하겠습니다.',
     mandatoryClauses: [
-      { id: 'c1', text: '기본 안전 수칙 및 낙하 법 숙지 확인' },
-      { id: 'c2', text: '신체 이상 및 기저 질환 유무 확인' },
-      { id: 'c3', text: '위험 행동 시 퇴장 조치 동의' },
+      { id: 'c1', text: '당일 SOP·위험성평가 숙지 확인' },
+      { id: 'c2', text: '필수 보호구 착용 및 점검 확인' },
+      { id: 'c3', text: '이상 시 작업 중단·보고 의무 동의' },
     ],
     effectiveFrom: '2025-01-01',
     isActive: true,
   },
   {
-    id: 'tpl-combat',
-    type: 'COMBAT_FITNESS_WAIVER',
+    id: 'tpl-ppe',
+    type: 'PLANT_PPE_PLEDGE',
     version: 1,
-    title: '격투기/스파링 및 고강도 트레이닝 동의서',
+    title: '개인보호구(PPE) 착용 및 관리 서약서',
     bodyText:
-      '본인은 복싱, MMA 등 격투 운동 및 고강도 훈련 중 발생할 수 있는 신체적 접촉과 부상 가능성을 충분히 설명 들었으며, 지도자의 통제 하에 성실히 안전 장비를 착용하고 임할 것을 서약합니다.',
+      '본인은 공정별 필수 보호구를 올바르게 착용·점검하며, 손상·분실 시 즉시 교체 요청할 것을 서약합니다.',
     mandatoryClauses: [
-      { id: 'c1', text: '보호대 및 안전 장비 필수 착용 동의' },
-      { id: 'c2', text: '지도자 중단 지시 즉각 복종 동의' },
-      { id: 'c3', text: '자가 신체 한계 내 훈련 수행 동의' },
+      { id: 'c1', text: '공정별 필수 PPE 목록 확인' },
+      { id: 'c2', text: '착용 상태 점검 후 작업 개시' },
+      { id: 'c3', text: '손상·분실 시 즉시 보고' },
     ],
     effectiveFrom: '2025-01-01',
     isActive: true,
   },
   {
-    id: 'tpl-tattoo',
-    type: 'TATTOO_CONSENT',
+    id: 'tpl-hotwork',
+    type: 'PLANT_HOT_WORK_PLEDGE',
     version: 1,
-    title: '타투·미용 시술 동의서 및 관리 서약서',
+    title: '화기·고소·밀폐 등 위험작업 안전 서약서',
     bodyText:
-      '본인은 시술 과정과 사후 관리 요령에 대해 충분한 설명을 들었으며, 본인의 피부 상태 및 알레르기 유무를 사실대로 고지하였음을 확인합니다.',
+      '본인은 화기·고소·밀폐공간 등 위험작업 전 허가·측정·감시 절차를 준수하며, 허가 범위 외 작업을 하지 않을 것을 서약합니다.',
     mandatoryClauses: [
-      { id: 'c1', text: '만 19세 이상 성인 신분 확인' },
-      { id: 'c2', text: '켈로이드/피부 알레르기 질환 유무 고지 확인' },
-      { id: 'c3', text: '시술 후 음주/사우나 금지 등 사후 관리 준수' },
+      { id: 'c1', text: '작업허가(또는 동등 절차) 확인' },
+      { id: 'c2', text: '가스농도·화재감시 등 사전 점검' },
+      { id: 'c3', text: '허가 범위 외 작업 금지' },
     ],
     effectiveFrom: '2025-01-01',
     isActive: true,
@@ -134,7 +134,7 @@ export const SafetyConsentManagementView: React.FC = () => {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">안전 동의서 & 서약서 보관함</h1>
           <p className="text-xs text-slate-500 mt-1">
-            체육관, 클라이밍, 타투, 맞춤 시술의 전자 서명 및 법적 분쟁 방어용 불변 감사 로그를 관리합니다.
+            사업장 TBM·PPE·위험작업 서약의 전자 서명과 법적 증빙용 감사 로그를 관리합니다.
           </p>
         </div>
 

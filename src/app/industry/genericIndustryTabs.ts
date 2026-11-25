@@ -110,7 +110,6 @@ export const TAB_REQUIRED_CAPABILITIES: Record<string, readonly string[]> = {
   'electronic-lab-notebooks': ['electronic_lab_notebook'],
   'lab-notebook-signatures': ['electronic_lab_notebook'],
   'vehicle-mileage-logs': ['vehicle_mileage_log'],
-  'safety-work-permits': ['safety_work_permit'],
 };
 
 /**
@@ -635,13 +634,6 @@ export const TAB_METADATA: Record<string, TabMetadataItem> = {
     description: '업무용 차량 주행거리, 주유비, 하이패스 통행료 정산 및 운행일지 대장',
     tier: 'tier1_ready',
     primaryCapability: 'vehicle_mileage_log',
-  },
-  'safety-work-permits': {
-    tab: 'safety-work-permits',
-    label: '안전작업허가서 (PTW)',
-    description: '화기·밀폐·고소·정전 위험 작업 사전 안전 허가 및 가스 농도 측정 승인 대장',
-    tier: 'tier1_ready',
-    primaryCapability: 'safety_work_permit',
   },
   capabilities: {
     tab: 'capabilities',

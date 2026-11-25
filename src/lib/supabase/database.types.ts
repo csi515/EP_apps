@@ -7260,6 +7260,40 @@ export interface Database {
         };
         Returns: Database['core']['Tables']['training_acknowledgments']['Row'];
       };
+      submit_risk_assessment_for_review: {
+        Args: { p_assessment_id: string; p_reviewer_id: string };
+        Returns: undefined;
+      };
+      approve_risk_assessment_step: {
+        Args: {
+          p_assessment_id: string;
+          p_step_order: number;
+          p_comment?: string | null;
+          p_signature?: string | null;
+          p_next_assignee_id?: string | null;
+        };
+        Returns: undefined;
+      };
+      reject_risk_assessment_step: {
+        Args: {
+          p_assessment_id: string;
+          p_step_order: number;
+          p_reject_reason: string;
+        };
+        Returns: undefined;
+      };
+      revise_risk_assessment: {
+        Args: {
+          p_assessment_id: string;
+          p_revision_type: string;
+          p_revision_reason: string;
+        };
+        Returns: undefined;
+      };
+      complete_risk_assessment_repledge: {
+        Args: { p_repledge_id: string; p_signature: string };
+        Returns: undefined;
+      };
       replace_training_assignees: {
         Args: {
           p_organization_id: string;

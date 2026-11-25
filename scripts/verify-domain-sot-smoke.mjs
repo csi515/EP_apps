@@ -233,10 +233,200 @@ if (!Array.isArray(invList.body) || invList.body.length < 1) {
   fail('inventory select empty', invList.body);
 }
 
+// ---------------------------------------------------------------------------
+// SOP·위험성평가: 초안 → 검토 → 승인 → 개정 → 재서약
+// ---------------------------------------------------------------------------
+const userId = login.body.user?.id;
+if (!userId) fail('login user id missing', login.body.user);
+
+// 단일 JWT로 전 구간 검증: 검토·승인 담당을 로그인 사용자로 둔다.
+const reviewerId = userId;
+const approverId = userId;
+
+const sopDocNo = `SOP-SMK-${Date.now().toString().slice(-6)}`;
+const sopInsert = await pgrst('/risk_assessments', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    department_id: null,
+    document_no: sopDocNo,
+    title: 'domain-smoke-sop',
+    process_name: 'domain-smoke-sop',
+    current_version: 1,
+    status: 'DRAFT',
+    created_by: userId,
+    snapshot_payload: {
+      steps: [
+        {
+          id: 'step-smoke-1',
+          stepNumber: 1,
+          actionTitle: '스모크 작업',
+          hazardDesc: '스모크 위험',
+          hazardCategory: '기타',
+          initialFreq: 2,
+          initialSev: 2,
+          initialScore: 4,
+          initialLevel: 'low',
+          sopControlMeasure: '보호구 착용',
+          requiredPPE: ['안전모'],
+          residualFreq: 1,
+          residualSev: 1,
+          residualScore: 1,
+          residualLevel: 'low',
+          assignee: 'smoke',
+          actionDeadline: '상시',
+          isImplemented: true,
+        },
+      ],
+      prohibitedActions: ['보호구 미착용 금지'],
+      deptCode: 'SMK',
+      deptName: '스모크',
+      intendedReviewerId: reviewerId,
+      intendedApproverId: approverId,
+      rejectionHistory: [],
+    },
+  }),
+});
+assertOk('sop risk draft insert', sopInsert, [200, 201]);
+const assessmentId = Array.isArray(sopInsert.body)
+  ? sopInsert.body[0]?.id
+  : sopInsert.body?.id;
+if (!assessmentId) fail('sop draft missing id', sopInsert.body);
+
+const sopSubmit = await pgrst('/rpc/submit_risk_assessment_for_review', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_reviewer_id: reviewerId,
+  }),
+});
+assertOk('sop submit for review rpc', sopSubmit, [200, 204]);
+
+const sopApproveReview = await pgrst('/rpc/approve_risk_assessment_step', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_step_order: 2,
+    p_comment: 'domain-smoke review ok',
+    p_signature: 'data:image/png;base64,smoke-review',
+    p_next_assignee_id: approverId,
+  }),
+});
+assertOk('sop approve review step rpc', sopApproveReview, [200, 204]);
+
+const sopApproveFinal = await pgrst('/rpc/approve_risk_assessment_step', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_step_order: 3,
+    p_comment: 'domain-smoke final ok',
+    p_signature: 'data:image/png;base64,smoke-approve',
+    p_next_assignee_id: null,
+  }),
+});
+assertOk('sop approve final step rpc', sopApproveFinal, [200, 204]);
+
+const sopApproved = await pgrst(
+  `/risk_assessments?id=eq.${assessmentId}&select=id,status,current_version`,
+  token
+);
+assertOk('sop approved status select', sopApproved, [200]);
+const approvedRow = Array.isArray(sopApproved.body) ? sopApproved.body[0] : null;
+if (!approvedRow || approvedRow.status !== 'APPROVED') {
+  fail('sop expected APPROVED', sopApproved.body);
+}
+
+const pendingV1 = await pgrst(
+  `/risk_assessment_worker_repledges?assessment_id=eq.${assessmentId}&worker_user_id=eq.${userId}&required_version=eq.1&pledged_at=is.null&select=id`,
+  token
+);
+assertOk('sop pending repledge v1 select', pendingV1, [200]);
+const repledgeV1Id = Array.isArray(pendingV1.body) ? pendingV1.body[0]?.id : null;
+if (!repledgeV1Id) fail('sop pending repledge v1 missing', pendingV1.body);
+const sopRepledgeV1 = await pgrst('/rpc/complete_risk_assessment_repledge', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_repledge_id: repledgeV1Id,
+    p_signature: 'data:image/png;base64,smoke-repledge-v1',
+  }),
+});
+assertOk('sop complete repledge v1 rpc', sopRepledgeV1, [200, 204]);
+
+const sopRevise = await pgrst('/rpc/revise_risk_assessment', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_revision_type: 'PERIODIC',
+    p_revision_reason: 'domain-smoke periodic revise',
+  }),
+});
+assertOk('sop revise rpc', sopRevise, [200, 204]);
+
+const sopDraftAgain = await pgrst(
+  `/risk_assessments?id=eq.${assessmentId}&select=id,status,current_version`,
+  token
+);
+assertOk('sop revised draft select', sopDraftAgain, [200]);
+const revisedRow = Array.isArray(sopDraftAgain.body) ? sopDraftAgain.body[0] : null;
+if (!revisedRow || revisedRow.status !== 'DRAFT' || revisedRow.current_version < 2) {
+  fail('sop expected DRAFT v2+', sopDraftAgain.body);
+}
+
+// 재승인 → 재서약 시드 (부서 없음이면 전사 멤버)
+const sopResubmit = await pgrst('/rpc/submit_risk_assessment_for_review', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_reviewer_id: reviewerId,
+  }),
+});
+assertOk('sop resubmit after revise rpc', sopResubmit, [200, 204]);
+
+const sopReApproveReview = await pgrst('/rpc/approve_risk_assessment_step', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_step_order: 2,
+    p_comment: 'domain-smoke re-review',
+    p_signature: 'data:image/png;base64,smoke-review-2',
+    p_next_assignee_id: approverId,
+  }),
+});
+assertOk('sop re-approve review rpc', sopReApproveReview, [200, 204]);
+
+const sopReApproveFinal = await pgrst('/rpc/approve_risk_assessment_step', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_assessment_id: assessmentId,
+    p_step_order: 3,
+    p_comment: 'domain-smoke re-final',
+    p_signature: 'data:image/png;base64,smoke-approve-2',
+    p_next_assignee_id: null,
+  }),
+});
+assertOk('sop re-approve final rpc', sopReApproveFinal, [200, 204]);
+
+const pendingV2 = await pgrst(
+  `/risk_assessment_worker_repledges?assessment_id=eq.${assessmentId}&worker_user_id=eq.${userId}&required_version=eq.2&pledged_at=is.null&select=id,required_version`,
+  token
+);
+assertOk('sop pending repledge v2 select', pendingV2, [200]);
+const repledgeV2Id = Array.isArray(pendingV2.body) ? pendingV2.body[0]?.id : null;
+if (!repledgeV2Id) fail('sop pending repledge v2 missing', pendingV2.body);
+
+const sopRepledgeV2 = await pgrst('/rpc/complete_risk_assessment_repledge', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_repledge_id: repledgeV2Id,
+    p_signature: 'data:image/png;base64,smoke-repledge-v2',
+  }),
+});
+assertOk('sop complete repledge v2 rpc', sopRepledgeV2, [200, 204]);
+
 await auth('/logout', {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}` },
 });
 
-console.info('domain SoT smoke passed (auth+postgrest required)');
+console.info('domain SoT smoke passed (auth+postgrest+sop lifecycle)');
 process.exit(0);
