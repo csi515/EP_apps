@@ -14,6 +14,7 @@ import {
   listOperatingDatesInMonth,
   listOperatingDatesInRange,
   listWritableSlotsForDay,
+  mealCutoffAt,
   mealStatusLabel,
   monthRange,
   resolveMealCellForKitchen,
@@ -189,5 +190,28 @@ assert.ok(grid.length % 7 === 0);
 const satCell = grid.find((d) => d.date === '2026-10-17');
 assert.ok(satCell);
 assert.equal(satCell!.isClosed, true);
+
+// 컷오프·미제공 끼니 fail-closed
+const lunchCutoff = mealCutoffAt('2026-10-15', DEFAULT_MEAL_SURVEY_SETTINGS.lunchCutoffTime, false);
+assert.equal(
+  isMealSlotWritable(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-15', 'lunch', lunchCutoff),
+  false,
+  'at cutoff boundary not writable'
+);
+assert.equal(
+  isMealSlotWritable(DEFAULT_MEAL_SURVEY_SETTINGS, '2026-10-15', 'breakfast', beforeCutoff),
+  false,
+  'breakfast not offered'
+);
+assert.deepEqual(
+  listWritableSlotsForDay(
+    { ...DEFAULT_MEAL_SURVEY_SETTINGS, offerLunch: true },
+    '2026-10-15',
+    ['lunch'],
+    lunchCutoff
+  ),
+  [],
+  'after cutoff no writable slots'
+);
 
 console.log('mealSurveyEngine.test.ts: ok');

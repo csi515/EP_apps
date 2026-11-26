@@ -13,7 +13,7 @@ function isExplicitEnvFlag(raw: string | undefined): boolean {
   return v === '1' || v === 'true' || v === 'yes' || v === 'on';
 }
 
-/** 오프라인·스토리보드용 카페/학원 데모 카탈로그 — 명시 env에서만 허용 */
+/** 오프라인·스토리보드용 카페/학원 데모 카탈로그 — `VITE_INVENTORY_DEMO_CATALOG=1` 등 명시 env에서만 허용 */
 export function isInventoryDemoCatalogExplicitlyEnabled(): boolean {
   return isExplicitEnvFlag(import.meta.env?.VITE_INVENTORY_DEMO_CATALOG as string | undefined);
 }
@@ -23,6 +23,15 @@ export function shouldSeedInventoryDemoCatalog(disableDemoCatalogFallback?: bool
   if (disableDemoCatalogFallback) return false;
   if (isInventoryServerDataPathActive()) return false;
   return isInventoryDemoCatalogExplicitlyEnabled();
+}
+
+/**
+ * 품목·로트 localStorage 미러·복원 허용 여부.
+ * Corp/Supabase 서버 경로에서는 PostgREST가 SoT이므로 항상 false (쓰기·레거시 마이그레이션 포함).
+ */
+export function isInventoryOfflinePersistenceEnabled(): boolean {
+  if (isInventoryServerDataPathActive()) return false;
+  return true;
 }
 
 export type InventoryListQueryState = {

@@ -126,6 +126,47 @@ function run() {
   assert.equal(canActivateShuttleRegistration(45, 45, false), false);
   assert.equal(canActivateShuttleRegistration(45, 45, true), true);
   assert.equal(canActivateShuttleRegistration(0, 0, false), false);
+  assert.equal(canActivateShuttleRegistration(-1, 10, false), false, 'negative count fail-closed');
+  assert.equal(canActivateShuttleRegistration(3, Number.NaN, false), false);
+  assert.equal(canActivateShuttleRegistration(3, 1.5, false), false, 'non-integer capacity');
+
+  assert.equal(canManageShuttle({ role: 'admin', permissions: {} }), true);
+  assert.equal(
+    canManageShuttle({ role: 'staff', permissions: { 'shuttle:dispatch:operate': true } }),
+    true,
+  );
+
+  const oneStop = validateStopsSequence([
+    { stop_order: 1, stop_name: '단일', pickup_time: '07:00' },
+  ]);
+  assert.equal(oneStop.isValid, false);
+
+  const inactiveOnly: ShuttleRegistration[] = [
+    {
+      id: 'x',
+      member_id: 'm9',
+      route_id: 'r1',
+      pickup_stop_id: 's1',
+      dropoff_stop_id: 's2',
+      is_active: false,
+    },
+  ];
+  const inactiveReport = aggregateStopHeadcounts(inactiveOnly, stops);
+  assert.equal(inactiveReport[0].pickupCount, 0);
+  assert.equal(inactiveReport[0].onboardAfter, 0);
+
+  const noRoute: ShuttleRegistration[] = [
+    {
+      id: 'y',
+      member_id: 'm8',
+      route_id: null,
+      pickup_stop_id: 's1',
+      dropoff_stop_id: 's2',
+      is_active: true,
+    },
+  ];
+  const noRouteReport = aggregateStopHeadcounts(noRoute, stops);
+  assert.equal(noRouteReport[0].pickupCount, 0);
 
   console.log('shuttleRosterEngine.test.ts: ok');
 }

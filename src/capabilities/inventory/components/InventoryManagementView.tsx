@@ -42,6 +42,7 @@ import {
   shouldTrustInventoryServerItems,
   shouldTrustInventoryServerLots,
   isInventoryServerDataPathActive,
+  isInventoryOfflinePersistenceEnabled,
 } from '../domain/inventoryLocalDemo';
 import { mapInventoryItemFromApi, mapStockLotFromApi } from '../domain/inventoryItemMapper';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
@@ -51,7 +52,8 @@ const STORAGE_KEY_LOTS = 'ep_inventory_lots';
 const LEGACY_STORAGE_KEY_ITEMS = 'moa_inventory_items';
 const LEGACY_STORAGE_KEY_LOTS = 'moa_inventory_lots';
 
-function readLocalInventoryJson(key: string, legacyKey: string): string | null {
+function readLocalInventoryJson(key: string, legacyKey: string, allowLocalRead: boolean): string | null {
+  if (!allowLocalRead) return null;
   try {
     const scoped = getTenantStorageKey(key);
     const saved = localStorage.getItem(scoped);
@@ -196,6 +198,7 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
 }) => {
   const allowDemoCatalogSeed = shouldSeedInventoryDemoCatalog(disableDemoCatalogFallback);
   const serverDataPath = isInventoryServerDataPathActive();
+  const offlinePersistence = isInventoryOfflinePersistenceEnabled();
 
   const [activeTab, setActiveTab] = useState<'items' | 'lots' | 'audit'>('items');
   const [searchTerm, setSearchTerm] = useState('');
@@ -237,16 +240,22 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
 
   // 로컬 폴백 상태
   const [localItems, setLocalItems] = useState<(InventoryItem & { location?: WarehouseLocation })[]>(() => {
+    if (!offlinePersistence) {
+      return allowDemoCatalogSeed ? DEFAULT_INVENTORY_ITEMS : [];
+    }
     try {
-      const saved = readLocalInventoryJson(STORAGE_KEY_ITEMS, LEGACY_STORAGE_KEY_ITEMS);
+      const saved = readLocalInventoryJson(STORAGE_KEY_ITEMS, LEGACY_STORAGE_KEY_ITEMS, true);
       if (saved) return JSON.parse(saved);
     } catch {}
     return allowDemoCatalogSeed ? DEFAULT_INVENTORY_ITEMS : [];
   });
 
   const [localLots, setLocalLots] = useState<(StockLotItem & { location?: WarehouseLocation })[]>(() => {
+    if (!offlinePersistence) {
+      return allowDemoCatalogSeed ? DEFAULT_LOTS : [];
+    }
     try {
-      const saved = readLocalInventoryJson(STORAGE_KEY_LOTS, LEGACY_STORAGE_KEY_LOTS);
+      const saved = readLocalInventoryJson(STORAGE_KEY_LOTS, LEGACY_STORAGE_KEY_LOTS, true);
       if (saved) return JSON.parse(saved);
     } catch {}
     return allowDemoCatalogSeed ? DEFAULT_LOTS : [];
@@ -274,23 +283,21 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
 
   const saveLocalItems = (next: (InventoryItem & { location?: WarehouseLocation })[]) => {
     setLocalItems(next);
-    if (!trustServerItems) {
-      try {
-        localStorage.setItem(storageKeyItems, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
+    if (!offlinePersistence || trustServerItems) return;
+    try {
+      localStorage.setItem(storageKeyItems, JSON.stringify(next));
+    } catch {
+      /* ignore */
     }
   };
 
   const saveLots = (next: (StockLotItem & { location?: WarehouseLocation })[]) => {
     setLocalLots(next);
-    if (!trustServerLots) {
-      try {
-        localStorage.setItem(storageKeyLots, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
+    if (!offlinePersistence || trustServerLots) return;
+    try {
+      localStorage.setItem(storageKeyLots, JSON.stringify(next));
+    } catch {
+      /* ignore */
     }
   };
 

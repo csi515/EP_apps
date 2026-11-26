@@ -2,8 +2,8 @@
  * 업종 무관 Resource Capability.
  * 카탈로그만 다룬다. 예약은 resourceReservationCapability.
  */
-import { windowsFromResourceHours } from '@/capabilities/scheduling/availability/windows';
-import { capacityCapability } from '@/capabilities/scheduling/capacity';
+import { windowsFromResourceHours } from '@/core/schedules/resourceHoursWindows';
+import { resourceCapacitySnapshot } from '@/core/resources/resourceCapacitySnapshot';
 import {
   getResourceById,
   listBookableResources,
@@ -29,7 +29,7 @@ export const resourceCapability = {
   availabilityWindows: windowsFromResourceHours,
   canReserve: canReserveResource,
   isSlotAllowed: isResourceSlotAllowed,
-  capacitySnapshot: capacityCapability.resourceSnapshot,
+  capacitySnapshot: resourceCapacitySnapshot,
 } as const;
 
 export type ResourceCapability = typeof resourceCapability;

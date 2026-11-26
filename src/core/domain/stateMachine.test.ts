@@ -3,7 +3,7 @@
  * 실행: npm run test:reservation-machine
  */
 import assert from 'node:assert/strict';
-import { IllegalStateTransitionError } from './stateMachine';
+import { allowedCommands, IllegalStateTransitionError } from './stateMachine';
 import {
   applyReservationCommand,
   canApplyReservationCommand,
@@ -31,6 +31,18 @@ function run() {
     () => applyReservationCommand('cancelled', 'cancel'),
     (err: unknown) => err instanceof IllegalStateTransitionError
   );
+  assert.throws(
+    () => applyReservationCommand('cancelled', 'confirm'),
+    (err: unknown) => err instanceof IllegalStateTransitionError
+  );
+  assert.equal(canApplyReservationCommand('requested', 'confirm'), true);
+  assert.equal(canApplyReservationCommand('requested', 'cancel'), true);
+  assert.equal(canApplyReservationCommand('confirmed', 'cancel'), true);
+  assert.equal(canApplyReservationCommand('confirmed', 'confirm'), false);
+
+  assert.deepEqual(allowedCommands(RESERVATION_MACHINE, 'requested'), ['confirm', 'cancel']);
+  assert.deepEqual(allowedCommands(RESERVATION_MACHINE, 'confirmed'), ['cancel']);
+  assert.deepEqual(allowedCommands(RESERVATION_MACHINE, 'cancelled'), []);
 
   console.log('stateMachine.test.ts: ok');
 }

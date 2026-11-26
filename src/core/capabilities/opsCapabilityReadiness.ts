@@ -1,6 +1,11 @@
 /**
  * 현장 Ops 11개 Capability의 persistence / opsReadiness 단일 스냅샷.
  * 프리셋 readinessLevel과 별개로, Ops OS 완비 게이트를 측정한다.
+ *
+ * `OPS_CAPABILITY_IDS`는 현장 Ops 번들(출석·예약·락커 등) 스냅샷이며,
+ * `PLANT_REQUIRED_CAPABILITY_IDS`(`personal_plant_ops.requiredCapabilities`)와
+ * 목록이 다르다. plant 필수 cap 목록이 재정의되기 전까지 불일치는 의도적이다.
+ * R5 `ops_verified` 승급 시 두 목록 정렬·게이트 연동은 후속 작업이다.
  */
 
 export type OpsPersistence = 'supabase' | 'local' | 'hybrid';
@@ -21,6 +26,27 @@ export const OPS_CAPABILITY_IDS = [
 ] as const;
 
 export type OpsCapabilityId = (typeof OPS_CAPABILITY_IDS)[number];
+
+/** `personal_plant_ops.requiredCapabilities`와 동기 유지 (런처·메뉴 필수 cap). R5 게이트 예비 상수. */
+export const PLANT_REQUIRED_CAPABILITY_IDS = [
+  'approval_workflow',
+  'inventory',
+  'booking',
+  'whistleblower_grievance',
+  'mbo',
+  'research_project',
+  'sop_risk_assessment',
+  'supply_restock',
+] as const;
+
+export type PlantRequiredCapabilityId = (typeof PLANT_REQUIRED_CAPABILITY_IDS)[number];
+
+const OPS_CAPABILITY_ID_SET = new Set<string>(OPS_CAPABILITY_IDS);
+
+/** plant 필수 cap 중 Ops 11종 스냅샷에 포함된 id (현재 교집합). */
+export function plantRequiredInOpsSnapshot(): PlantRequiredCapabilityId[] {
+  return PLANT_REQUIRED_CAPABILITY_IDS.filter((id) => OPS_CAPABILITY_ID_SET.has(id));
+}
 
 export interface OpsCapabilityMeta {
   persistence: OpsPersistence;

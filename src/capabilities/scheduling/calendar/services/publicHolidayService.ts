@@ -1,3 +1,7 @@
+/**
+ * 연도별 공휴일 조회. Plant/Corp 배포에서 SoT는 Edge `get-public-holidays`(Supabase) 응답.
+ * `localStorage`·인메모리 캐시는 재조회 비용 절감용이며 근무·결재의 영속 SoT가 아니다.
+ */
 import { getCoreClient, isSupabaseConfigured } from '@/lib/supabase';
 import { getFallbackPublicHolidays } from '../fallbackHolidays';
 import type { PublicHolidayItem } from '../types';

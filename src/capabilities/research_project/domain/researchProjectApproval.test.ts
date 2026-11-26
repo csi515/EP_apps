@@ -67,4 +67,25 @@ console.log('[test:research-project-approval] running...');
   assert.equal(gateDecisionFromApprovalStatus('pending'), null);
 }
 
+{
+  const created = createResearchProject({
+    organizationId: 'org-1',
+    title: '결재 불법 전이',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    budgetPlanned: 500_000,
+    members: [{ memberId: 'u1', memberName: '김', role: 'lead' }],
+    gateTitles: ['1차', '2차'],
+  });
+  const project = activateDraftProject(created.project!).project;
+
+  const marked = markGateSubmittedForApproval(project, project.gates[0]!.id, 'approval-2');
+  assert.equal(
+    canSubmitGateToApprovalWorkflow(marked.project!.gates[0]!, true).allowed,
+    false,
+  );
+  assert.equal(shouldSyncGateFromApproval(marked.project!.gates[0]!, 'rejected'), true);
+  assert.equal(gateDecisionFromApprovalStatus('canceled'), null);
+}
+
 console.log('[test:research-project-approval] ok');

@@ -1,4 +1,4 @@
-import { windowsFromResourceHours, isOutsideResourceHours } from '@/capabilities/scheduling/availability/windows';
+import { windowsFromResourceHours, isOutsideResourceHours } from '@/core/schedules/resourceHoursWindows';
 import { RESOURCE_KINDS } from './types';
 import type { Resource } from './types';
 

@@ -1,3 +1,5 @@
+/** R3 제품 성숙도: SOP·위험성평가 초안 UI 스모크. 로컬 스택 healthy 시만 초안 생성까지 수행. */
+// npm run test:e2e:maturity-smoke
 import { test, expect } from '@playwright/test';
 import { loginAsOwner } from './helpers';
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useTransition } from 'react';
 import { useOptionalOrganization } from '../organizations/OrganizationProvider';
-import { getCoreClient } from '../../lib/supabase';
+import { getCoreClient, isSupabaseConfigured } from '../../lib/supabase';
+import { isCorpDomainEnabled } from '../auth/localAuth/isCorpDomain';
 import {
   listGenericEntityRecords,
   saveGenericEntityRecord,
@@ -13,6 +14,11 @@ export interface UseGenericEntityRecordsOptions<T> {
   defaultRecords?: T[];
   recordKeyExtractor?: (item: T) => string | undefined;
   idExtractor?: (item: T) => string | undefined;
+}
+
+/** Corp/Supabase 경로 — `core.generic_entity_records`가 SoT, 인메모리·localStorage 데모 시드 비활성 */
+function isGenericEntityServerDataPathActive(): boolean {
+  return isCorpDomainEnabled() || isSupabaseConfigured();
 }
 
 export interface UseGenericEntityRecordsResult<T> {
@@ -48,8 +54,9 @@ export function useGenericEntityRecords<T extends Record<string, any>>(
         supabaseClient,
       });
 
-      if (items.length === 0 && defaultRecords.length > 0) {
-        // 기본 레코드가 제공된 경우 초기 데이터로 변환
+      const allowDemoDefaults = !isGenericEntityServerDataPathActive();
+      if (items.length === 0 && defaultRecords.length > 0 && allowDemoDefaults) {
+        // 오프라인·스토리보드: 기본 레코드가 제공된 경우 초기 데이터로 변환 (서버 경로에서는 fail-closed 빈 목록)
         const convertedDefaults: GenericEntityRecord<T>[] = defaultRecords.map((d, idx) => ({
           id: idExtractor ? idExtractor(d) : (d as any).id || `default_${idx}`,
           organizationId,
@@ -66,8 +73,8 @@ export function useGenericEntityRecords<T extends Record<string, any>>(
         });
       }
     } catch {
-      // 에러 시 기본 레코드 유지
-      if (defaultRecords.length > 0) {
+      const allowDemoDefaults = !isGenericEntityServerDataPathActive();
+      if (defaultRecords.length > 0 && allowDemoDefaults) {
         const fallbackDefaults: GenericEntityRecord<T>[] = defaultRecords.map((d, idx) => ({
           id: idExtractor ? idExtractor(d) : (d as any).id || `fallback_${idx}`,
           organizationId,

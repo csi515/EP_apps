@@ -125,6 +125,8 @@ async function testDataProviderGuard() {
       "anonymous_grievances",
       "resource_types",
       "patents",
+      "hazardous_substances",
+      "chemical_usage_logs",
     ]
   );
 

@@ -190,7 +190,15 @@ export function canActivateShuttleRegistration(
   alreadyActiveOnRoute: boolean,
 ): boolean {
   if (alreadyActiveOnRoute) return true;
-  if (!Number.isFinite(activeCount) || !Number.isFinite(capacity) || capacity <= 0) return false;
+  if (
+    !Number.isFinite(activeCount) ||
+    !Number.isFinite(capacity) ||
+    activeCount < 0 ||
+    !Number.isInteger(capacity) ||
+    capacity <= 0
+  ) {
+    return false;
+  }
   return activeCount < capacity;
 }
 

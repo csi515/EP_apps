@@ -262,34 +262,7 @@ export function isOutsideStaffHours(params: {
   });
 }
 
-export function isOutsideResourceHours(params: {
-  resourceId?: string;
-  startsAt: string;
-  endsAt: string;
-  windows?: AvailabilityResourceWindow[];
-}): boolean {
-  return isOutsideActorWindows({
-    actorId: params.resourceId,
-    startsAt: params.startsAt,
-    endsAt: params.endsAt,
-    windows: (params.windows ?? []).map((window) => ({
-      actorId: window.resourceId,
-      days: window.days ?? [...AVAILABILITY_WEEKDAY_LABELS],
-      startTime: window.startTime,
-      endTime: window.endTime,
-    })),
-  });
-}
-
-export function windowsFromResourceHours(resource: {
-  id: string;
-  open_time: string;
-  close_time: string;
-}): AvailabilityResourceWindow {
-  return {
-    resourceId: resource.id,
-    days: [...AVAILABILITY_WEEKDAY_LABELS],
-    startTime: toHm(resource.open_time),
-    endTime: toHm(resource.close_time),
-  };
-}
+export {
+  isOutsideResourceHours,
+  windowsFromResourceHours,
+} from '@/core/schedules/resourceHoursWindows';

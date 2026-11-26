@@ -309,6 +309,78 @@ function run() {
     assert.equal(GATE_STATUS_LABELS.rejected, '반려');
   }
 
+  // 11. 생명주기·게이트 상태 fail-closed (불법 전이 차단)
+  {
+    const created = createResearchProject({
+      organizationId: 'org-1',
+      title: 'fail-closed',
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      budgetPlanned: 1_000_000,
+      members: [{ memberId: 'u1', memberName: '김', role: 'lead' }],
+      gateTitles: ['1차', '2차'],
+    });
+    const active = activateDraftProject(created.project!).project;
+    const suspendOk = setResearchProjectLifecycleStatus(active, 'suspended');
+    assert.ok(suspendOk.error === undefined);
+    const suspended = suspendOk.project;
+    const canceledOk = setResearchProjectLifecycleStatus(suspended, 'canceled');
+    assert.ok(canceledOk.error === undefined);
+
+    const revived = setResearchProjectLifecycleStatus(canceledOk.project, 'active');
+    assert.ok(revived.error);
+
+    const lifecycleBase = activateDraftProject(
+      createResearchProject({
+        organizationId: 'org-1',
+        title: 'completed lock',
+        startDate: '2026-01-01',
+        endDate: '2026-12-31',
+        budgetPlanned: 1_000_000,
+        members: [{ memberId: 'u1', memberName: '김', role: 'lead' }],
+        gateTitles: ['1차', '2차'],
+      }).project!,
+    ).project;
+    const afterG1 = decideGate(lifecycleBase, 1, { status: 'approved', decidedByName: '심의' });
+    const completed = decideGate(afterG1.project, 2, {
+      status: 'approved',
+      decidedByName: '심의',
+    }).project;
+    assert.equal(completed.status, 'completed');
+    assert.ok(setResearchProjectLifecycleStatus(completed, 'active').error);
+    assert.ok(setResearchProjectLifecycleStatus(completed, 'suspended').error);
+
+    const draftOnly = createResearchProject({
+      organizationId: 'org-1',
+      title: 'draft suspend block',
+      startDate: '2026-01-01',
+      endDate: '2026-06-30',
+      budgetPlanned: 100,
+      members: [{ memberId: 'u1', memberName: '김', role: 'lead' }],
+    }).project!;
+    assert.ok(setResearchProjectLifecycleStatus(draftOnly, 'suspended').error);
+
+    const inApproval = markGateSubmittedForApproval(active, active.gates[0]!.id, 'apr-1');
+    const bypass = decideGate(inApproval.project, 1, {
+      status: 'approved',
+      decidedByName: '우회',
+    });
+    assert.ok(bypass.error?.includes('결재'));
+    const synced = decideGate(
+      inApproval.project,
+      1,
+      { status: 'approved', decidedByName: '결재함', decidedAt: '2026-02-01T00:00:00.000Z' },
+      { fromApprovalSync: true },
+    );
+    assert.equal(synced.error, undefined);
+
+    const doubleSubmit = markGateSubmittedForApproval(inApproval.project, active.gates[0]!.id, 'apr-2');
+    assert.ok(doubleSubmit.error?.includes('결재'));
+
+    const reopenBlocked = reopenRejectedGate(active, 1);
+    assert.ok(reopenBlocked.error?.includes('반려'));
+  }
+
   console.log('[test:research-project-engine] ok');
 }
 

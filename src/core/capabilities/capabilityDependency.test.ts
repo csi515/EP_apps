@@ -4,7 +4,7 @@ import {
   collectRequiredPrerequisites,
   collectDependentDependents,
 } from './capabilityDependency';
-import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import type { PresetCapabilityId as CapabilityId } from '../presets/types';
 
 function run() {
   // 1. 단독 켜기 (선행 의존성이 없는 기능)

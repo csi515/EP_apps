@@ -20,7 +20,7 @@ import {
   getActiveToolSetIdsFromCapabilities,
   type OperationToolSetId,
 } from './operationBundles';
-import type { CapabilityId } from '@/capabilities/_shared/capabilityTypes';
+import type { PresetCapabilityId as CapabilityId } from './types';
 
 console.log('[test:operation-bundles] starting test suite...');
 

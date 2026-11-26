@@ -6,9 +6,10 @@ import {
   HAZARDOUS_SUBSTANCE_REAGENT_RESOURCE,
 } from '../persistence';
 
-/** Supabase row shape — 마이그레이션 추가 시 스키마와 맞출 것. */
+/** `core.hazardous_substances` row (038_hazardous_substance_msds.sql). */
 export type HazardousSubstanceRow = {
   id: string;
+  organization_id?: string;
   name: string;
   formula?: string | null;
   cas_number?: string | null;
@@ -22,7 +23,46 @@ export type HazardousSubstanceRow = {
   msds_pdf_url?: string | null;
   is_regulated_precursor?: boolean | null;
   expiration_date?: string | null;
+  notes?: string | null;
+  is_active?: boolean | null;
 };
+
+export type HazardousSubstanceReagentFormValues = {
+  name: string;
+  formula?: string;
+  casNumber: string;
+  hazardClasses: HazardClass[];
+  ghsPictograms?: GhsPictogram[];
+  storageCabinetId?: string;
+  storageCabinetName: string;
+  currentStock: number;
+  minSafeStock: number;
+  unit: string;
+  msdsPdfUrl?: string | null;
+  isRegulatedPrecursor?: boolean;
+  expirationDate?: string | null;
+};
+
+export function mapReagentFormToHazardousSubstanceRowValues(
+  form: HazardousSubstanceReagentFormValues,
+): Record<string, unknown> {
+  return {
+    name: form.name.trim(),
+    formula: form.formula?.trim() || null,
+    cas_number: form.casNumber.trim(),
+    hazard_classes: form.hazardClasses.length ? form.hazardClasses : (['general'] as HazardClass[]),
+    ghs_pictograms: form.ghsPictograms ?? [],
+    storage_cabinet_id: form.storageCabinetId?.trim() || null,
+    storage_cabinet_name: form.storageCabinetName.trim(),
+    current_stock: form.currentStock,
+    min_safe_stock: form.minSafeStock,
+    unit: form.unit.trim() || 'mL',
+    msds_pdf_url: form.msdsPdfUrl?.trim() || null,
+    is_regulated_precursor: form.isRegulatedPrecursor ?? false,
+    expiration_date: form.expirationDate || null,
+    is_active: true,
+  };
+}
 
 export function mapHazardousSubstanceRowToReagent(row: HazardousSubstanceRow): ChemicalReagent {
   return {

@@ -1,5 +1,13 @@
+/**
+ * 레시피/BOM UI.
+ * SoT: `core.generic_entity_records` (entity_type `recipe_bom`) via `useGenericEntityRecords`.
+ * `DEFAULT_RECIPES`·로컬 폴백은 Supabase/Corp 미구성·오프라인 데모 전용 — 현장 서버 경로에서는 빈 DB면 빈 목록.
+ * 기본 런처 비표시 정책: `EP_OPS_CHECKLIST` 숨김 Capability 표 참고.
+ */
 import React, { useState, useMemo } from 'react';
 import { useGenericEntityRecords } from '@/core/storage/useGenericEntityRecords';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { isCorpDomainEnabled } from '@/core/auth/localAuth/isCorpDomain';
 import {
   UtensilsCrossed,
   Layers,
@@ -122,7 +130,12 @@ const DEFAULT_RECIPES: RecipeItem[] = [
   },
 ];
 
+function isRecipeBomServerDataPathActive(): boolean {
+  return isCorpDomainEnabled() || isSupabaseConfigured();
+}
+
 export const RecipeBomManagementView: React.FC = () => {
+  const serverDataPath = isRecipeBomServerDataPathActive();
   const { records: recipes, isLoading } = useGenericEntityRecords<RecipeItem>({
     entityType: 'recipe_bom',
     defaultRecords: DEFAULT_RECIPES,
@@ -130,7 +143,11 @@ export const RecipeBomManagementView: React.FC = () => {
     recordKeyExtractor: (r) => r.menuCode,
   });
 
-  const [selectedRecipeId, setSelectedRecipeId] = useState<string>(DEFAULT_RECIPES[0].id);
+  const demoRecipes = serverDataPath ? [] : DEFAULT_RECIPES;
+  const activeRecipes = recipes.length > 0 ? recipes : demoRecipes;
+  const [selectedRecipeId, setSelectedRecipeId] = useState<string>(
+    () => activeRecipes[0]?.id ?? ''
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [simulatedQuantity, setSimulatedQuantity] = useState<number>(10);
   const [targetMarginRatio, setTargetMarginRatio] = useState<number>(75);
@@ -145,11 +162,16 @@ export const RecipeBomManagementView: React.FC = () => {
     'ing-7': 300, // 페스토 300g
   });
 
-  const selectedRecipe = recipes.find((r) => r.id === selectedRecipeId) || recipes[0] || DEFAULT_RECIPES[0];
-  const selectedCost = useMemo(() => calculateMenuCost(selectedRecipe), [selectedRecipe]);
+  const selectedRecipe =
+    activeRecipes.find((r) => r.id === selectedRecipeId) || activeRecipes[0] || undefined;
+  const selectedCost = useMemo(
+    () => (selectedRecipe ? calculateMenuCost(selectedRecipe) : null),
+    [selectedRecipe]
+  );
 
   // 원자재 단가 변동 시뮬레이션
   const priceSimulation = useMemo(() => {
+    if (!selectedRecipe) return null;
     return recalculateRecipeCostWithUpdatedIngredientPrice(
       selectedRecipe,
       updatedPrices,
@@ -159,12 +181,15 @@ export const RecipeBomManagementView: React.FC = () => {
 
   // BOM 자동 소모 및 재고 부족 검증
   const bomDeduction = useMemo(() => {
+    if (!selectedRecipe) {
+      return { hasShortage: false, items: [] as { inventoryItemId: string; remainingStock: number }[] };
+    }
     return executeBomStockDeduction({
       orders: [{ recipeId: selectedRecipe.id, quantity: simulatedQuantity }],
-      recipes: recipes.length > 0 ? recipes : DEFAULT_RECIPES,
+      recipes: activeRecipes,
       stockLevels,
     });
-  }, [selectedRecipe, simulatedQuantity, recipes, stockLevels]);
+  }, [selectedRecipe, simulatedQuantity, activeRecipes, stockLevels]);
 
   const handlePriceChange = (itemId: string, newPrice: number) => {
     setUpdatedPrices((prev) => ({
@@ -190,21 +215,24 @@ export const RecipeBomManagementView: React.FC = () => {
       }
       return next;
     });
-    showToast(
-      `[BOM 자동 소모] ${selectedRecipe.menuName} ${simulatedQuantity}건 원자재 재고가 일괄 차감되었습니다.`,
-      'success'
-    );
+    if (selectedRecipe) {
+      showToast(
+        `[BOM 자동 소모] ${selectedRecipe.menuName} ${simulatedQuantity}건 원자재 재고가 일괄 차감되었습니다.`,
+        'success'
+      );
+    }
   };
 
   const simulationResult = useMemo(() => {
+    if (!selectedRecipe) return null;
     return calculateBatchConsumption(
       [{ recipeId: selectedRecipe.id, quantity: simulatedQuantity }],
-      recipes.length > 0 ? recipes : DEFAULT_RECIPES
+      activeRecipes
     );
-  }, [selectedRecipe, simulatedQuantity, recipes]);
+  }, [selectedRecipe, simulatedQuantity, activeRecipes]);
 
   const overallAnalysis = useMemo(() => {
-    const listToAnalyze = recipes.length > 0 ? recipes : DEFAULT_RECIPES;
+    const listToAnalyze = activeRecipes;
     const analyses = listToAnalyze.map((r) => calculateMenuCost(r));
     const totalCost = analyses.reduce((acc, a) => acc + a.totalCostPrice, 0);
     const totalSales = analyses.reduce((acc, a) => acc + a.sellingPrice, 0);
@@ -214,16 +242,28 @@ export const RecipeBomManagementView: React.FC = () => {
       menuCount: listToAnalyze.length,
       averageMarginRatio: avgMargin,
     };
-  }, [recipes]);
+  }, [activeRecipes]);
 
   const filteredRecipes = useMemo(() => {
-    const sourceList = recipes.length > 0 ? recipes : DEFAULT_RECIPES;
-    if (!searchQuery.trim()) return sourceList;
+    if (!searchQuery.trim()) return activeRecipes;
     const q = searchQuery.toLowerCase();
-    return sourceList.filter(
+    return activeRecipes.filter(
       (r) => r.menuName.toLowerCase().includes(q) || r.menuCode.toLowerCase().includes(q)
     );
-  }, [recipes, searchQuery]);
+  }, [activeRecipes, searchQuery]);
+
+  if (!isLoading && activeRecipes.length === 0) {
+    return (
+      <WorkPageFrame width="hub">
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-600">
+          <p className="font-medium text-slate-900">등록된 레시피가 없습니다.</p>
+          <p className="text-sm mt-2 text-slate-500">
+            서버 경로에서는 <code className="text-xs">generic_entity_records</code>에 저장된 BOM만 표시됩니다.
+          </p>
+        </div>
+      </WorkPageFrame>
+    );
+  }
 
   return (
     <WorkPageFrame width="hub">

@@ -1,0 +1,11 @@
+{
+  "description": "capabilities 영역 localStorage / VITE_*DEMO* / VITE_*OFFLINE* 사용 파일 스냅샷. 신규 경로는 영속화 정책 검토 후 allowlist 갱신.",
+  "paths": [
+    "src/capabilities/inventory/components/InventoryManagementView.tsx",
+    "src/capabilities/inventory/domain/inventoryLocalDemo.ts",
+    "src/capabilities/mbo/ui/MboFrappeGanttChart.tsx",
+    "src/capabilities/scheduling/calendar/services/publicHolidayService.ts",
+    "src/capabilities/task_pipeline/domain/taskPipelineLocalPersistence.ts",
+    "src/capabilities/task_pipeline/ui/TaskPipelineKanbanView.tsx"
+  ]
+}

@@ -2,7 +2,7 @@
  * Capacity Capability. 실행: npm run test:capacity
  */
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getSlotCapacityInfo } from '@/core/schedules/bookingCapacity';
@@ -18,20 +18,6 @@ function readSrc(rel: string): string {
   return readFileSync(join(root, rel), 'utf8');
 }
 
-function walkTs(dir: string, acc: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
-    const full = join(dir, name);
-    const st = statSync(full);
-    if (st.isDirectory()) {
-      walkTs(full, acc);
-      continue;
-    }
-    if ((name.endsWith('.ts') || name.endsWith('.tsx')) && !name.endsWith('.test.ts')) {
-      acc.push(full);
-    }
-  }
-  return acc;
-}
 
 function booking(
   partial: Partial<Booking> & Pick<Booking, 'id' | 'startsAt' | 'status'>
@@ -175,16 +161,21 @@ function run() {
   assert.equal(canAccept(resourceSnap), true);
 
   const bookingCap = readSrc('src/capabilities/scheduling/capacity/bookingCapacity.ts');
-  assert.match(bookingCap, /computeCapacitySnapshot/);
-  assert.match(bookingCap, /maxCapacity/);
+  const bookingCapCore = readSrc('src/core/schedules/bookingCapacity.ts');
+  assert.match(bookingCap, /@\/core\/schedules\/bookingCapacity/);
+  assert.match(bookingCapCore, /computeCapacitySnapshot/);
+  assert.match(bookingCapCore, /maxCapacity/);
   assert.doesNotMatch(bookingCap, /bath|sauna|piano|gym/i);
+  assert.doesNotMatch(bookingCapCore, /@\/capabilities\//);
 
-  const bookingCapShim = readSrc('src/core/schedules/bookingCapacity.ts');
-  assert.match(bookingCapShim, /@deprecated 신규 코드는/);
-  assert.match(bookingCapShim, /@\/capabilities\/scheduling/);
-
-  const coreCapacity = walkTs(join(root, 'src/core/capacity'))
-    .map((file) => readFileSync(file, 'utf8'))
+  const coreCapacity = [
+    'src/core/schedules/capacityMath.ts',
+    'src/core/schedules/capacityTypes.ts',
+    'src/core/schedules/bookingCapacity.ts',
+    'src/core/resources/resourceCapacitySnapshot.ts',
+    'src/core/resources/resourceOccupancy.ts',
+  ]
+    .map((rel) => readSrc(rel))
     .join('\n');
   assert.doesNotMatch(coreCapacity, /sauna_jjimjilbang/);
   assert.doesNotMatch(coreCapacity, /from '@\/modules\//);
@@ -194,7 +185,7 @@ function run() {
   assert.match(pilatesValidate, /getSlotCapacityInfo/);
 
   const reservationSvc = readSrc('src/core/schedules/services/reservationService.ts');
-  assert.match(reservationSvc, /capacityCapability/);
+  assert.match(reservationSvc, /reservationCapacitySnapshot/);
   assert.match(reservationSvc, /request_reservation/);
   assert.match(reservationSvc, /confirm_reservation/);
 

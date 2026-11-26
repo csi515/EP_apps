@@ -57,7 +57,7 @@ npm run test:e2e                  # 파일럿 UI 여정
 
 | Capability | 숨김 이유 | 활성화 방법 |
 |------------|-----------|-------------|
-| `recipe_bom` | 레시피/BOM은 소규모 현장 기본 런처 대상 아님 | 설정 → 메뉴 표시 관리에서 표시 / `hidden_capabilities`에서 제거 |
+| `recipe_bom` | 레시피/BOM은 소규모 현장 기본 런처 대상 아님. 영속 SoT는 `core.generic_entity_records` (`entity_type=recipe_bom`); 서버 경로에서 빈 DB는 빈 목록(fail-closed), UI 데모 시드·localStorage 폴백은 오프라인 전용 | 설정 → 메뉴 표시 관리에서 표시 / `hidden_capabilities`에서 제거 |
 | `rental_equipment` | 장비 대여는 선택 업무(공용자원·예약 중심 배포) | 동일 |
 | `safety_consent` | 안전 서약은 SOP·교육 흐름에 묶인 선택 모듈 | 동일 |
 | `facility_incident_report` | 시설·안전 사고 보고는 제품 번들에 포함하되 CAPA 전체 연계 전까지 런처 기본 비노출 | 동일. DB `facility_incident_reports`·탭 `facility-incidents`는 capability 활성 시 사용 |
@@ -67,6 +67,30 @@ npm run test:e2e                  # 파일럿 UI 여정
 
 ## 유해화학·MSDS 영속화 (W0/W3)
 
-- [ ] `038_hazardous_substance_msds.sql` 적용 후 `core.hazardous_substances`·`chemical_usage_logs` 확인
-- [ ] 앱 연동은 후속: `HAZARDOUS_SUBSTANCE_REAGENT_PERSISTENCE_ENABLED`·`TENANT_SCOPED_RESOURCES` 등록 (현재 fail-closed)
+- [ ] `038_hazardous_substance_msds.sql` 적용 후 `core.hazardous_substances`·`chemical_usage_logs` 확인 (운영 DB — 로컬/스테이징에서 선검증)
+- [x] 앱: `HAZARDOUS_SUBSTANCE_REAGENT_PERSISTENCE_ENABLED=true` · `hazardous_substances`·`chemical_usage_logs` `TENANT_SCOPED_RESOURCES` 등록
 - [ ] 쓰기 권한: org 구성원 조회·수불 등록, 시약 마스터·수정·삭제는 `safety:manage` (`core.can_manage_hazardous_substances`)
+
+## 통합 리팩토링 웨이브 게이트 (R0–R5)
+
+maturity·architecture 로드맵 통과 기준. R0 계약은 `npm run test:business-invariants`에 포함된다.
+
+| 웨이브 | 게이트 | 확인 |
+|--------|--------|------|
+| **R0** | 아키텍처·영속 계약 등록 | [x] `test:core-capability-boundary` · `test:dual-persistence-inventory` · `test:refine-resource-alignment` CI green |
+| **R1** | Corp SoT · MSDS 영속 | [ ] PostgREST 도메인 스모크 · [x] 앱 MSDS `TENANT_SCOPED_RESOURCES` 등록 · [ ] `038` 대상 env 마이그레이션·쓰기 권한 검증 |
+| **R2** | Core→Capability import = 0 | [x] `core-capability-boundary-allowlist.json` 비움 · `test:architecture` 위반 0 |
+| **R3** | 제품 성숙도 | [~] 숨김 정책·런처 게이트(`companyAppLauncherGate`) 유지 — 필수 capability `basic_ui` 전면 검증은 진행 중 |
+| **R4** | 횡단 품질 | [ ] RLS·권한 불변 · 이중 영속 신규 경로 0 · Refine 리소스 정렬 — [x] `test:business-invariants:catalog` (`test:approval-engine` order 정수화) |
+| **R5** | `readinessLevel` / `ops_verified` | [ ] `opsCapabilityReadiness` 필수 cap `ops_verified` · 파일럿 수용 (`EP_PILOT_ACCEPTANCE.md`) |
+
+### R5 컷오버 전제 (PREPARATION — `readinessLevel` 승급 보류)
+
+`personal_plant_ops.readinessLevel`을 `ops_verified`로 올리기 전에 아래가 모두 충족되어야 한다.
+
+- [ ] `038_hazardous_substance_msds.sql` 대상 환경(스테이징·운영) 적용
+- [ ] `npm run test:domain-smoke` green (PostgREST·Corp SoT)
+- [x] Core→Capability import 위반 0 — R2 (`test:core-capability-boundary` · allowlist 비움)
+- [ ] `dual-persistence` allowlist 축소·신규 이중 영속 경로 0 (`test:dual-persistence-inventory`)
+
+`OPS_CAPABILITY_IDS` ≠ `requiredCapabilities`(`PLANT_REQUIRED_CAPABILITY_IDS`) 불일치는 plant 필수 cap 목록 재정의 전까지 의도적이다. 상세: `src/core/capabilities/opsCapabilityReadiness.ts`.
