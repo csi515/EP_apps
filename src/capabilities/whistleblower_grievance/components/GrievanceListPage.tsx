@@ -361,6 +361,9 @@ export const GrievanceListPage: React.FC<GrievanceListPageProps> = ({ mode = 'mi
           setFeedbackText('');
           refetch();
         },
+        onError: (err) => {
+          showErrorToast(err?.message || '조치 회신 등록 실패');
+        },
       }
     );
   };

@@ -40,6 +40,7 @@ import { resolveActiveCapabilityIds } from '@/domain/permissionVisibility';
 import { MemberRoleAssignModal } from '@/pages/members/MemberRoleAssignModal';
 import { MemberRoleRevokeConfirmModal } from '@/pages/members/MemberRoleRevokeConfirmModal';
 import { MemberProvisionModal } from '@/pages/members/MemberProvisionModal';
+import { MemberPasswordResetModal } from '@/pages/members/MemberPasswordResetModal';
 import { useOrgMembersDirectory } from '@/pages/members/useOrgMembersDirectory';
 import { StaffAccessMemberSheet } from '@/pages/workspace/staffAccess/StaffAccessMemberSheet';
 import { StaffAccessAppHomeView } from '@/pages/workspace/staffAccess/StaffAccessAppHomeView';
@@ -96,6 +97,7 @@ export function MemberList(): React.JSX.Element {
   const [assignReason, setAssignReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [revokeTarget, setRevokeTarget] = useState<DynamicMemberRow | null>(null);
+  const [passwordResetTarget, setPasswordResetTarget] = useState<DynamicMemberRow | null>(null);
 
   useEffect(() => {
     if (!orgId || !canViewRoleAudit) {
@@ -387,6 +389,19 @@ export function MemberList(): React.JSX.Element {
                                       </span>
                                     ) : (
                                       <div className="flex items-center justify-end gap-2">
+                                        {canManage ? (
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setPasswordResetTarget(member)}
+                                            data-testid="member-password-reset-open"
+                                            aria-label={`${memberDisplayLabel(member)} 비밀번호 재설정`}
+                                          >
+                                            <KeyRound className="mr-1 h-3.5 w-3.5" />
+                                            비밀번호
+                                          </Button>
+                                        ) : null}
                                         <Button
                                           type="button"
                                           size="sm"
@@ -663,6 +678,19 @@ export function MemberList(): React.JSX.Element {
         submitting={submitting}
         onClose={() => setRevokeTarget(null)}
         onConfirm={() => void handleRevokeRole()}
+      />
+
+      <MemberPasswordResetModal
+        member={passwordResetTarget}
+        organizationId={orgId}
+        onClose={() => setPasswordResetTarget(null)}
+        onReset={() => {
+          setSuccessMessage(
+            passwordResetTarget
+              ? `${memberDisplayLabel(passwordResetTarget)} 님의 임시 비밀번호가 설정되었습니다.`
+              : '임시 비밀번호가 설정되었습니다.'
+          );
+        }}
       />
     </WorkPageFrame>
   );

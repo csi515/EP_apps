@@ -44,9 +44,29 @@
 
 ```bash
 npm run test:local-auth-staging   # Auth
-npm run db:migrate:domain         # 037 포함 (소유권 이슈 시 postgres URL)
+npm run db:migrate:domain         # 038 포함 (소유권 이슈 시 postgres URL)
 npm run test:sop-risk-lifecycle-pg # SOP 초안→승인→개정→재서약 (PG 직접, PostgREST 불필요)
 npm run test:domain-smoke         # PostgREST + 결재/MBO/재고/SOP수명주기
 npx playwright test tests/e2e/sop-risk-smoke.spec.ts  # SOP 초안 UI (스택 healthy 시)
 npm run test:e2e                  # 파일럿 UI 여정
 ```
+
+## 숨김 Capability 정책 (`personal_plant_ops`)
+
+프리셋 `capabilities[]`에 포함되지만, 초기 `defaultSettings.hidden_capabilities`로 **런처·사이드바에서 기본 비표시**하는 선택 기능입니다. 조직이 명시적으로 켜기 전까지 단순해진 홈 화면을 유지합니다.
+
+| Capability | 숨김 이유 | 활성화 방법 |
+|------------|-----------|-------------|
+| `recipe_bom` | 레시피/BOM은 소규모 현장 기본 런처 대상 아님 | 설정 → 메뉴 표시 관리에서 표시 / `hidden_capabilities`에서 제거 |
+| `rental_equipment` | 장비 대여는 선택 업무(공용자원·예약 중심 배포) | 동일 |
+| `safety_consent` | 안전 서약은 SOP·교육 흐름에 묶인 선택 모듈 | 동일 |
+| `facility_incident_report` | 시설·안전 사고 보고는 제품 번들에 포함하되 CAPA 전체 연계 전까지 런처 기본 비노출 | 동일. DB `facility_incident_reports`·탭 `facility-incidents`는 capability 활성 시 사용 |
+| `seat_room` | 좌석·룸 배정/예약 UX가 W2에서 등록·목록 수준만 제공되어 런처 기본 비노출 (`booking`은 필수 cap으로 유지) | 동일. `seat_rooms`·탭 `seat-rooms`는 capability 활성 시 사용 |
+
+`requiredCapabilities`에 있는 기능은 숨길 수 없습니다. 런처 타일 게이트는 `companyAppLauncherGate.test.ts`에서 검증합니다.
+
+## 유해화학·MSDS 영속화 (W0/W3)
+
+- [ ] `038_hazardous_substance_msds.sql` 적용 후 `core.hazardous_substances`·`chemical_usage_logs` 확인
+- [ ] 앱 연동은 후속: `HAZARDOUS_SUBSTANCE_REAGENT_PERSISTENCE_ENABLED`·`TENANT_SCOPED_RESOURCES` 등록 (현재 fail-closed)
+- [ ] 쓰기 권한: org 구성원 조회·수불 등록, 시약 마스터·수정·삭제는 `safety:manage` (`core.can_manage_hazardous_substances`)

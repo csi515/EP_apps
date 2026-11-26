@@ -99,6 +99,31 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:sop-numbering-audit', group: 'capability', kind: 'unit', ci: 'always', order: 650 },
   { script: 'test:sop-department-filter', group: 'capability', kind: 'unit', ci: 'always', order: 651 },
   { script: 'test:facility-incident', group: 'capability', kind: 'unit', ci: 'always', order: 652 },
+  {
+    script: 'test:hazardous-substance-persistence',
+    group: 'capability',
+    kind: 'contract',
+    ci: 'always',
+    order: 653,
+    note: 'hazardous MSDS UI must not ship demo reagent arrays',
+  },
+  {
+    script: 'test:task-pipeline-resource',
+    group: 'capability',
+    kind: 'contract',
+    ci: 'always',
+    order: 654,
+    note: 'task_orders Refine resource aligns with DB and Kanban',
+  },
+  {
+    script: 'test:inventory-local-demo',
+    group: 'persistence',
+    kind: 'contract',
+    ci: 'suite',
+    order: 655,
+    note: 'inventory demo catalog gated behind explicit env',
+  },
+  { script: 'test:approval-engine', group: 'capability', kind: 'unit', ci: 'always', order: 42.8 },
   { script: 'test:approval-line', group: 'capability', kind: 'unit', ci: 'always', order: 43 },
   { script: 'test:mbo-engine', group: 'capability', kind: 'unit', ci: 'always', order: 44 },
   { script: 'test:mbo-plan-approval', group: 'capability', kind: 'unit', ci: 'always', order: 45 },
@@ -129,6 +154,30 @@ export const BUSINESS_INVARIANT_TESTS = [
   { script: 'test:mbo-two-tier-lock', group: 'capability', kind: 'unit', ci: 'always', order: 64 },
   { script: 'test:mbo-goal-hierarchy', group: 'capability', kind: 'unit', ci: 'always', order: 641 },
   { script: 'test:mbo-org-aligned', group: 'capability', kind: 'unit', ci: 'always', order: 642 },
+  {
+    script: 'test:grievance-engine',
+    group: 'capability',
+    kind: 'unit',
+    ci: 'always',
+    order: 656,
+    note: 'whistleblower grievance PIN, sanitize, status transitions',
+  },
+  {
+    script: 'test:required-ops-lifecycle',
+    group: 'capability',
+    kind: 'invariant',
+    ci: 'always',
+    order: 657,
+    note: 'W1 approval/inventory/supply/grievance domain lifecycle smoke',
+  },
+  {
+    script: 'test:supply-restock',
+    group: 'capability',
+    kind: 'invariant',
+    ci: 'always',
+    order: 658,
+    note: 'safety stock restock, PR qty gate, procurement status transitions',
+  },
 ];
 
 /** 메타/그룹 러너 — inventory 후보가 아님 */
@@ -160,6 +209,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:mobile-lifecycle': 'mobile lifecycle (removed — desktop-only)',
   'test:domain-smoke': 'domain SoT smoke — env/manual',
   'test:sop-risk-lifecycle-pg': 'sop risk draft→approve→revise→repledge PG smoke — env/manual',
+  'test:required-ops-lifecycle-pg': 'W1 approval/inventory/supply/grievance PG smoke — env/manual',
   'test:local-auth-passwords': 'local auth password hashing unit — suite/manual',
   'test:local-auth-roles': 'local auth roles verify — env/manual',
   'test:local-auth-permissions': 'local auth permission profiles — env/manual',
@@ -287,6 +337,7 @@ export const INVENTORY_OUT_OF_SCOPE = {
   'test:work-page-frame': 'WorkPageFrame hub/form width tokens and sample page contract',
   'test:published-company-apps': 'launcher published apps route/capability/error-surface contracts',
   'test:approval-engine': 'approval workflow sequential multi-step approval state machine unit',
+  'test:grievance-engine': 'whistleblower grievance PIN, blind token, anonymous sanitize and status machine unit',
   'test:approval-line': 'approval workflow chosen reviewer/approver line unit',
   'test:quality-inspection': 'quality inspection tolerance judgment and statistical process capability unit',
   'test:change-management': '4M engineering change order readiness evaluation and risk assessment unit',
@@ -383,6 +434,7 @@ export const INVENTORY_CANDIDATES = {
   'test:student-crud': 'students(refine student crud data provider contract). ci-cd static integration에 있음',
   'test:logout-protection': 'auth(conditional logout protection with offline pending mutation guard). ci-cd static integration에 있음',
   'test:settings-storage': 'persistence/settings(multi-vertical settings deep merge). candidate',
+  'test:hazardous-substance-engine': 'hazardous substance MSDS domain engine unit',
 };
 
 export function loadPackageScripts() {

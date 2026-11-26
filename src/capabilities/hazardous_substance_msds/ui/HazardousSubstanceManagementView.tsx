@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlaskConical,
   AlertTriangle,
   ShieldAlert,
-  Plus,
-  Search,
   CheckCircle2,
   XCircle,
   FileText,
@@ -14,250 +12,219 @@ import {
   HAZARD_CLASS_LABELS,
   checkStorageCompatibility,
   calculateReagentStockStatus,
-  validateCasNumber,
   type ChemicalReagent,
   type HazardClass,
 } from '../domain/hazardousSubstanceEngine';
-import { showToast } from '@/shared/feedback/uiFeedback';
+import { useHazardousSubstanceReagents } from '../hooks/useHazardousSubstanceReagents';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import { SearchField } from '@/shared/components/ui/SearchField';
+import { EmptyState } from '@/shared/components/ui/EmptyState';
+import { InlineBusy } from '@/shared/components/ui/Skeleton';
+import { Modal } from '@/shared/components/ui/Modal';
+import { Button } from '@/shared/components/ui/Button';
+import { FORM_CONTROL_CLASS } from '@/shared/components/ui/FormField';
 
-const INITIAL_REAGENTS: ChemicalReagent[] = [
-  {
-    id: 'chem-1',
-    name: '황산 (Sulfuric Acid 98%)',
-    formula: 'H2SO4',
-    casNumber: '7664-93-9',
-    hazardClasses: ['acid'],
-    ghsPictograms: ['GHS05_CORROSION', 'GHS06_SKULL'],
-    storageCabinetId: 'cab-acid',
-    storageCabinetName: '내화 산성 시약장 A-01',
-    currentStock: 2500,
-    minSafeStock: 1000,
-    unit: 'mL',
-    msdsPdfUrl: 'https://example.com/msds/sulfuric-acid.pdf',
-    isRegulatedPrecursor: true,
-  },
-  {
-    id: 'chem-2',
-    name: '수산화나트륨 (Sodium Hydroxide)',
-    formula: 'NaOH',
-    casNumber: '1310-73-2',
-    hazardClasses: ['base'],
-    ghsPictograms: ['GHS05_CORROSION'],
-    storageCabinetId: 'cab-base',
-    storageCabinetName: '염기성 전용 시약장 B-01',
-    currentStock: 300,
-    minSafeStock: 500,
-    unit: 'g',
-    msdsPdfUrl: 'https://example.com/msds/naoh.pdf',
-    isRegulatedPrecursor: false,
-  },
-  {
-    id: 'chem-3',
-    name: '아세톤 (Acetone)',
-    formula: 'CH3COCH3',
-    casNumber: '67-64-1',
-    hazardClasses: ['flammable', 'organic_solvent'],
-    ghsPictograms: ['GHS02_FLAME', 'GHS07_EXCLAMATION'],
-    storageCabinetId: 'cab-flam',
-    storageCabinetName: '방폭 인화성 캐비닛 F-01',
-    currentStock: 18000,
-    minSafeStock: 4000,
-    unit: 'mL',
-    msdsPdfUrl: 'https://example.com/msds/acetone.pdf',
-    isRegulatedPrecursor: true,
-  },
-];
+const HAZARDOUS_SUBSTANCE_COPY = {
+  persistenceBannerTitle: '서버 저장 미연동',
+  persistenceBannerBody:
+    '시약·MSDS 대장은 아직 데이터베이스에 연결되지 않았습니다. 목록은 비어 있으며 등록·수정은 스키마 마이그레이션 후 이용할 수 있습니다.',
+  emptyTitle: '등록된 시약이 없습니다',
+  emptyDescription: '데이터 연동 후 조직별 시약·MSDS 목록이 이곳에 표시됩니다.',
+  loadError: '시약 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+};
 
 export const HazardousSubstanceManagementView: React.FC = () => {
-  const [reagents, setReagents] = useState<ChemicalReagent[]>(INITIAL_REAGENTS);
+  const { reagents, persistenceEnabled, isLoading, isError, refetch } = useHazardousSubstanceReagents();
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedReagent, setSelectedReagent] = useState<ChemicalReagent | null>(INITIAL_REAGENTS[0]);
+  const [selectedReagent, setSelectedReagent] = useState<ChemicalReagent | null>(null);
 
-  // 호환성 검사기 모달
   const [checkOpen, setCheckOpen] = useState(false);
-  const [compAId, setCompAId] = useState(INITIAL_REAGENTS[0].id);
-  const [compBId, setCompBId] = useState(INITIAL_REAGENTS[1].id);
+  const [compAId, setCompAId] = useState('');
+  const [compBId, setCompBId] = useState('');
+  const [compAHazard, setCompAHazard] = useState<HazardClass>('acid');
+  const [compBHazard, setCompBHazard] = useState<HazardClass>('base');
 
-  // 신규 시약 등록 모달
-  const [createOpen, setCreateOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newCas, setNewCas] = useState('');
-  const [newCabinet, setNewCabinet] = useState('');
-  const [newStock, setNewStock] = useState(1000);
-  const [newUnit, setNewUnit] = useState('mL');
-  const [newHazard, setNewHazard] = useState<HazardClass>('acid');
+  useEffect(() => {
+    if (reagents.length === 0) {
+      setSelectedReagent(null);
+      return;
+    }
+    setSelectedReagent((prev) => {
+      if (prev && reagents.some((r) => r.id === prev.id)) {
+        return prev;
+      }
+      return reagents[0];
+    });
+  }, [reagents]);
 
-  const filteredReagents = reagents.filter(
-    (r) =>
-      r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.casNumber.includes(searchTerm) ||
-      r.storageCabinetName.includes(searchTerm)
+  useEffect(() => {
+    if (reagents.length >= 2) {
+      setCompAId(reagents[0].id);
+      setCompBId(reagents[1].id);
+    }
+  }, [reagents]);
+
+  const filteredReagents = useMemo(
+    () =>
+      reagents.filter(
+        (r) =>
+          r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.casNumber.includes(searchTerm) ||
+          r.storageCabinetName.includes(searchTerm),
+      ),
+    [reagents, searchTerm],
   );
 
-  const WRITES_DISABLED = true; // INITIAL_REAGENTS 인메모리 목업 — 서버 미연동
+  const useInventoryCompatibility = reagents.length >= 2;
 
-  const handleCreateReagent = () => {
-    if (WRITES_DISABLED) {
-      showToast('데모 데이터(인메모리)에서는 시약 등록을 저장할 수 없습니다.', 'warning');
-      return;
+  const compatibilityInputA = useMemo(() => {
+    if (useInventoryCompatibility) {
+      const r = reagents.find((item) => item.id === compAId) ?? reagents[0];
+      return { name: r.name, hazardClasses: r.hazardClasses };
     }
-    if (!newName.trim()) {
-      showToast('시약명을 입력해주세요.', 'warning');
-      return;
+    return { name: HAZARD_CLASS_LABELS[compAHazard], hazardClasses: [compAHazard] as HazardClass[] };
+  }, [useInventoryCompatibility, reagents, compAId, compAHazard]);
+
+  const compatibilityInputB = useMemo(() => {
+    if (useInventoryCompatibility) {
+      const r = reagents.find((item) => item.id === compBId) ?? reagents[1];
+      return { name: r.name, hazardClasses: r.hazardClasses };
     }
-    const casVal = validateCasNumber(newCas);
-    if (!casVal.isValid) {
-      showToast(casVal.error || 'CAS 등록번호를 확인해주세요.', 'error');
-      return;
-    }
+    return { name: HAZARD_CLASS_LABELS[compBHazard], hazardClasses: [compBHazard] as HazardClass[] };
+  }, [useInventoryCompatibility, reagents, compBId, compBHazard]);
 
-    const created: ChemicalReagent = {
-      id: `chem-${Date.now()}`,
-      name: newName,
-      casNumber: newCas,
-      hazardClasses: [newHazard],
-      ghsPictograms: newHazard === 'acid' || newHazard === 'base' ? ['GHS05_CORROSION'] : ['GHS02_FLAME'],
-      storageCabinetId: `cab-${Date.now()}`,
-      storageCabinetName: newCabinet || '기본 시약장',
-      currentStock: Number(newStock) || 0,
-      minSafeStock: Math.floor((Number(newStock) || 0) * 0.3),
-      unit: newUnit,
-    };
-
-    setReagents([created, ...reagents]);
-    setSelectedReagent(created);
-    setCreateOpen(false);
-    setNewName('');
-    setNewCas('');
-    setNewCabinet('');
-    showToast('새 화학 시약이 등록되었습니다.', 'success');
-  };
-
-  const reagentA = reagents.find((r) => r.id === compAId) ?? reagents[0];
-  const reagentB = reagents.find((r) => r.id === compBId) ?? reagents[1];
-  const compResult = reagentA && reagentB ? checkStorageCompatibility(reagentA, reagentB) : null;
+  const compResult = checkStorageCompatibility(compatibilityInputA, compatibilityInputB);
 
   return (
     <WorkPageFrame width="hub">
-      <div
-        role="status"
-        className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950"
-      >
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-        <div>
-          <p className="font-bold">데모·인메모리 데이터입니다</p>
-          <p className="mt-0.5 text-amber-900/80">
-            화면에 표시되는 시약 목록은 INITIAL_REAGENTS 목업이며 DB에 저장되지 않습니다. 시약 등록 등 쓰기 작업은 비활성화되어 있습니다.
-          </p>
+      {!persistenceEnabled && (
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-950"
+        >
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+          <div>
+            <p className="font-bold">{HAZARDOUS_SUBSTANCE_COPY.persistenceBannerTitle}</p>
+            <p className="mt-0.5 text-amber-900/80">{HAZARDOUS_SUBSTANCE_COPY.persistenceBannerBody}</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 상단 헤더 */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <FlaskConical className="h-6 w-6 text-amber-600" />
+            <FlaskConical className="h-6 w-6 text-amber-600" aria-hidden />
             <h1 className="text-xl font-bold text-slate-900">유해화학물질 및 시약 MSDS 대장</h1>
           </div>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500">
+          <p className="mt-1 text-xs text-slate-500 sm:text-sm">
             화학물질 성상별 격리 보관, CAS 등록번호 검증, GHS 경고표지 및 위험물 안전재고 관리
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setCheckOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-sm"
-          >
-            <ShieldAlert className="h-4 w-4 text-rose-500" /> 혼합보관 호환성 검사
-          </button>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            disabled={WRITES_DISABLED}
-            title={WRITES_DISABLED ? '인메모리 목업에서는 등록할 수 없습니다' : undefined}
-            className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white hover:bg-amber-700 shadow-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" /> 시약 등록
-          </button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setCheckOpen(true)}
+          className="gap-1.5"
+        >
+          <ShieldAlert className="h-4 w-4 text-rose-500" aria-hidden />
+          혼합보관 호환성 검사
+        </Button>
       </div>
 
-      {/* 검색 & 목록 레이아웃 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 좌측: 시약 목록 */}
-        <div className="lg:col-span-1 space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="시약명, CAS 번호, 보관장소 검색..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs"
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-3 lg:col-span-1">
+          <SearchField
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="시약명, CAS 번호, 보관장소 검색..."
+          />
+
+          {isLoading ? (
+            <InlineBusy label="시약 목록 불러오는 중" />
+          ) : isError ? (
+            <EmptyState
+              title={HAZARDOUS_SUBSTANCE_COPY.loadError}
+              action={{
+                label: '다시 시도',
+                onClick: () => {
+                  void refetch();
+                },
+              }}
             />
-          </div>
+          ) : filteredReagents.length === 0 ? (
+            <EmptyState
+              icon={<FlaskConical className="h-8 w-8 text-slate-300" aria-hidden />}
+              title={HAZARDOUS_SUBSTANCE_COPY.emptyTitle}
+              description={HAZARDOUS_SUBSTANCE_COPY.emptyDescription}
+            />
+          ) : (
+            <div className="max-h-[600px] space-y-2 overflow-y-auto">
+              {filteredReagents.map((r) => {
+                const stockStatus = calculateReagentStockStatus(r.currentStock, r.minSafeStock);
+                const isSelected = selectedReagent?.id === r.id;
 
-          <div className="space-y-2 max-h-[600px] overflow-y-auto">
-            {filteredReagents.map((r) => {
-              const stockStatus = calculateReagentStockStatus(r.currentStock, r.minSafeStock);
-              const isSelected = selectedReagent?.id === r.id;
-
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => setSelectedReagent(r)}
-                  className={`w-full text-left rounded-xl p-3 border transition-all ${
-                    isSelected
-                      ? 'border-amber-500 bg-amber-50/40 shadow-sm'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-sm font-semibold text-slate-900">{r.name}</div>
-                      <div className="text-xs font-mono text-slate-500 mt-0.5">CAS: {r.casNumber}</div>
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setSelectedReagent(r)}
+                    className={`w-full rounded-xl border p-3 text-left transition-all ${
+                      isSelected
+                        ? 'border-amber-500 bg-amber-50/40 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">{r.name}</div>
+                        <div className="mt-0.5 font-mono text-xs text-slate-500">CAS: {r.casNumber}</div>
+                      </div>
+                      {stockStatus === 'critical' && (
+                        <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
+                          재고 소진
+                        </span>
+                      )}
+                      {stockStatus === 'warning' && (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                          재고 부족
+                        </span>
+                      )}
                     </div>
-                    {stockStatus === 'critical' && (
-                      <span className="rounded bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-700">
-                        재고 소진
+                    <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
+                      <span className="max-w-[150px] truncate">{r.storageCabinetName}</span>
+                      <span className="font-semibold text-slate-800">
+                        {r.currentStock.toLocaleString()} {r.unit}
                       </span>
-                    )}
-                    {stockStatus === 'warning' && (
-                      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
-                        재고 부족
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-slate-600">
-                    <span className="truncate max-w-[150px]">{r.storageCabinetName}</span>
-                    <span className="font-semibold text-slate-800">
-                      {r.currentStock.toLocaleString()} {r.unit}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* 우측: 시약 상세 및 MSDS 안전 카드 */}
         <div className="lg:col-span-2">
           {selectedReagent ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-5">
+            <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5">
               <div className="flex items-start justify-between border-b border-slate-100 pb-4">
                 <div>
                   <h2 className="text-lg font-bold text-slate-900">{selectedReagent.name}</h2>
-                  <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500">
-                    <span>CAS 번호: <strong className="font-mono text-slate-700">{selectedReagent.casNumber}</strong></span>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                    <span>
+                      CAS 번호:{' '}
+                      <strong className="font-mono text-slate-700">{selectedReagent.casNumber}</strong>
+                    </span>
                     {selectedReagent.formula && (
-                      <span>화학식: <strong className="font-mono text-slate-700">{selectedReagent.formula}</strong></span>
+                      <span>
+                        화학식:{' '}
+                        <strong className="font-mono text-slate-700">{selectedReagent.formula}</strong>
+                      </span>
                     )}
                     {selectedReagent.isRegulatedPrecursor && (
-                      <span className="rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700">
-                        ⚠️ 규제 원료물질 (전구체)
+                      <span className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[11px] font-semibold text-rose-700">
+                        규제 원료물질 (전구체)
                       </span>
                     )}
                   </div>
@@ -269,30 +236,32 @@ export const HazardousSubstanceManagementView: React.FC = () => {
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100"
                   >
-                    <FileText className="h-3.5 w-3.5 text-indigo-600" /> MSDS 열람
+                    <FileText className="h-3.5 w-3.5 text-indigo-600" aria-hidden />
+                    MSDS 열람
                   </a>
                 )}
               </div>
 
-              {/* 보관 및 위험성 분류 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
-                  <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <Boxes className="h-4 w-4 text-slate-500" /> 보관 장소 및 캐비닛
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                    <Boxes className="h-4 w-4 text-slate-500" aria-hidden />
+                    보관 장소 및 캐비닛
                   </div>
                   <div className="mt-2 text-sm font-medium text-slate-900">
                     {selectedReagent.storageCabinetName}
                   </div>
                 </div>
-                <div className="rounded-lg bg-slate-50 p-3 border border-slate-100">
-                  <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" /> 위험물 성상 분류
+                <div className="rounded-lg border border-slate-100 bg-slate-50 p-3">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" aria-hidden />
+                    위험물 성상 분류
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {selectedReagent.hazardClasses.map((h) => (
                       <span
                         key={h}
-                        className="rounded bg-amber-100/70 text-amber-900 px-2 py-0.5 text-xs font-medium"
+                        className="rounded bg-amber-100/70 px-2 py-0.5 text-xs font-medium text-amber-900"
                       >
                         {HAZARD_CLASS_LABELS[h] || h}
                       </span>
@@ -301,7 +270,6 @@ export const HazardousSubstanceManagementView: React.FC = () => {
                 </div>
               </div>
 
-              {/* 재고 현황 */}
               <div className="rounded-lg border border-slate-100 bg-slate-50 p-4">
                 <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                   <span>현재 재고 수준</span>
@@ -319,115 +287,48 @@ export const HazardousSubstanceManagementView: React.FC = () => {
             </div>
           ) : (
             <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-400">
-              시약을 선택해주세요.
+              {reagents.length === 0 ? '표시할 시약이 없습니다.' : '시약을 선택해주세요.'}
             </div>
           )}
         </div>
       </div>
 
-      {/* 혼합보관 호환성 검사기 모달 */}
-      {checkOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl space-y-4">
-            <div className="flex items-center gap-2 text-lg font-bold text-slate-900">
-              <ShieldAlert className="h-5 w-5 text-rose-600" />
-              혼합보관 호환성 매트릭스 검사기
-            </div>
-            <p className="text-xs text-slate-500">
-              두 시약을 동일 캐비닛에 보관할 수 있는지 화학적 반응성(산·염기, 산화제·가연물)을 판정합니다.
-            </p>
+      <Modal
+        isOpen={checkOpen}
+        onClose={() => setCheckOpen(false)}
+        title="혼합보관 호환성 매트릭스 검사기"
+        maxWidth="md"
+      >
+        <p className="text-xs text-slate-500">
+          {useInventoryCompatibility
+            ? '등록된 시약 두 종을 선택해 동일 캐비닛 보관 가능 여부를 판정합니다.'
+            : '위험물 성상(산·염기, 산화제·가연물 등)을 선택해 보관 호환성을 판정합니다. 인벤토리 연동 후에는 실제 시약 목록으로 검사할 수 있습니다.'}
+        </p>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">시약 1</label>
-                <select
-                  value={compAId}
-                  onChange={(e) => setCompAId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 p-2 text-xs"
-                >
-                  {reagents.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">시약 2</label>
-                <select
-                  value={compBId}
-                  onChange={(e) => setCompBId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 p-2 text-xs"
-                >
-                  {reagents.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {compResult && (
-              <div
-                className={`rounded-xl p-4 border text-xs leading-relaxed ${
-                  compResult.isCompatible
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                    : 'border-rose-200 bg-rose-50 text-rose-800'
-                }`}
-              >
-                <div className="flex items-center gap-2 font-bold text-sm mb-1">
-                  {compResult.isCompatible ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600" /> 혼합 보관 가능
-                    </>
-                  ) : (
-                    <>
-                      <XCircle className="h-4 w-4 text-rose-600" /> 혼합 보관 금지
-                    </>
-                  )}
-                </div>
-                {compResult.hazardReason || '상호 반응 위험이 없어 동일 시약장 보관이 허용됩니다.'}
-              </div>
-            )}
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setCheckOpen(false)}
-                className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-medium text-white hover:bg-slate-700"
-              >
-                닫기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 신규 시약 등록 모달 — 인메모리 목업에서는 비활성 */}
-      {createOpen && !WRITES_DISABLED && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl space-y-3">
-            <h2 className="text-lg font-bold text-slate-900">신규 화학 시약 등록</h2>
-            <div className="space-y-2">
-              <input
-                type="text"
-                placeholder="시약 명칭 (예: 질산 68%, 에탄올)"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 p-2 text-xs"
-              />
-              <input
-                type="text"
-                placeholder="CAS 등록번호 (예: 67-64-1)"
-                value={newCas}
-                onChange={(e) => setNewCas(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 p-2 text-xs"
-              />
+        <div className="grid grid-cols-2 gap-3 pt-3">
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="compat-a">
+              시약 1
+            </label>
+            {useInventoryCompatibility ? (
               <select
-                value={newHazard}
-                onChange={(e) => setNewHazard(e.target.value as HazardClass)}
-                className="w-full rounded-lg border border-slate-200 p-2 text-xs"
+                id="compat-a"
+                value={compAId}
+                onChange={(e) => setCompAId(e.target.value)}
+                className={FORM_CONTROL_CLASS}
+              >
+                {reagents.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                id="compat-a"
+                value={compAHazard}
+                onChange={(e) => setCompAHazard(e.target.value as HazardClass)}
+                className={FORM_CONTROL_CLASS}
               >
                 {Object.entries(HAZARD_CLASS_LABELS).map(([k, label]) => (
                   <option key={k} value={k}>
@@ -435,52 +336,71 @@ export const HazardousSubstanceManagementView: React.FC = () => {
                   </option>
                 ))}
               </select>
-              <input
-                type="text"
-                placeholder="보관 시약장 명칭 (예: 내화시약장 A-02)"
-                value={newCabinet}
-                onChange={(e) => setNewCabinet(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 p-2 text-xs"
-              />
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  placeholder="초기 재고량"
-                  value={newStock}
-                  onChange={(e) => setNewStock(Number(e.target.value))}
-                  className="rounded-lg border border-slate-200 p-2 text-xs"
-                />
-                <select
-                  value={newUnit}
-                  onChange={(e) => setNewUnit(e.target.value)}
-                  className="rounded-lg border border-slate-200 p-2 text-xs"
-                >
-                  <option value="mL">mL</option>
-                  <option value="L">L</option>
-                  <option value="g">g</option>
-                  <option value="kg">kg</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setCreateOpen(false)}
-                className="rounded-lg px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700"
+            )}
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-slate-700" htmlFor="compat-b">
+              시약 2
+            </label>
+            {useInventoryCompatibility ? (
+              <select
+                id="compat-b"
+                value={compBId}
+                onChange={(e) => setCompBId(e.target.value)}
+                className={FORM_CONTROL_CLASS}
               >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateReagent}
-                className="rounded-lg bg-amber-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                {reagents.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <select
+                id="compat-b"
+                value={compBHazard}
+                onChange={(e) => setCompBHazard(e.target.value as HazardClass)}
+                className={FORM_CONTROL_CLASS}
               >
-                등록
-              </button>
-            </div>
+                {Object.entries(HAZARD_CLASS_LABELS).map(([k, label]) => (
+                  <option key={k} value={k}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         </div>
-      )}
+
+        <div
+          className={`mt-4 rounded-xl border p-4 text-xs leading-relaxed ${
+            compResult.isCompatible
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-rose-200 bg-rose-50 text-rose-800'
+          }`}
+        >
+          <div className="mb-1 flex items-center gap-2 text-sm font-bold">
+            {compResult.isCompatible ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden />
+                혼합 보관 가능
+              </>
+            ) : (
+              <>
+                <XCircle className="h-4 w-4 text-rose-600" aria-hidden />
+                혼합 보관 금지
+              </>
+            )}
+          </div>
+          {compResult.hazardReason || '상호 반응 위험이 없어 동일 시약장 보관이 허용됩니다.'}
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button type="button" variant="secondary" size="sm" onClick={() => setCheckOpen(false)}>
+            닫기
+          </Button>
+        </div>
+      </Modal>
     </WorkPageFrame>
   );
 };

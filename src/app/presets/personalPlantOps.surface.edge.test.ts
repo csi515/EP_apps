@@ -48,6 +48,24 @@ for (const cap of [
   assert.ok(required.has(cap), `required must include ${cap}`);
 }
 
+assert.ok(caps.has('facility_incident_report'), 'facility_incident_report in product bundle');
+assert.equal(required.has('facility_incident_report'), false, 'incident report is optional');
+assert.ok(caps.has('seat_room'), 'seat_room in product bundle');
+assert.equal(required.has('seat_room'), false, 'seat_room is optional');
+const defaultHidden = (preset!.defaultSettings as { hidden_capabilities?: string[] })
+  ?.hidden_capabilities;
+assert.deepEqual(
+  defaultHidden?.slice().sort(),
+  [
+    'facility_incident_report',
+    'recipe_bom',
+    'rental_equipment',
+    'safety_consent',
+    'seat_room',
+  ].sort(),
+  'default hidden_capabilities snapshot',
+);
+
 const enabled = [...caps];
 // TAB_REQUIRED_CAPABILITIES에 등록된 학원 탭은 차단
 assert.equal(isTabAllowedForCapabilities('attendance', enabled), false);

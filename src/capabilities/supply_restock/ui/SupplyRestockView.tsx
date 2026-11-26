@@ -6,6 +6,7 @@ import {
   groupRestockItemsByVendor,
   assemblePurchaseOrder,
   evaluateOptimalVendorQuote,
+  validateRestockQuantities,
   type RestockItem,
   type GeneratedPurchaseOrder,
   type VendorQuoteItem,
@@ -105,6 +106,17 @@ export const SupplyRestockView: React.FC = () => {
   const handleCreateItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!itemName || !vendorName) return;
+
+    const qtyCheck = validateRestockQuantities({
+      currentQuantity: Number(currentQty),
+      safetyThreshold: Number(safetyThreshold),
+      optimalOrderQuantity: Number(orderQty),
+      unitCost: Number(unitCost),
+    });
+    if (!qtyCheck.valid) {
+      showToast(qtyCheck.error, 'error');
+      return;
+    }
 
     createItem(
       {

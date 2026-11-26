@@ -9,7 +9,6 @@ import { isAppointmentIndustry } from '@/core/industry/industryUi';
 import { readLocal, writeLocal } from '../localStorageEngine';
 import { STORAGE_KEYS, type StorageKey } from '../storageKeys';
 import {
-  consultationRowToApp,
   customerRowToParent,
   customerRowToStudent,
   isParentCustomer,
@@ -61,7 +60,6 @@ function writeEpPlantEmptyCaches(
     [STORAGE_KEYS.EXPENSES, []],
     [STORAGE_KEYS.INCOME_ENTRIES, []],
     [STORAGE_KEYS.TEACHER_PAYROLL_SETTLEMENTS, []],
-    [STORAGE_KEYS.CONSULTATIONS, []],
     [STORAGE_KEYS.NOTIFICATIONS, []],
     [STORAGE_KEYS.ATTENDANCE_SESSIONS, []],
     [STORAGE_KEYS.CUSTOMER_PINS, []],
@@ -145,7 +143,6 @@ export async function hydrateCoreEntities(
     expensesResult,
     incomeResult,
     payrollSettlementsResult,
-    consultationsResult,
     notificationsResult,
     attendanceSessionsResult,
     parentLinksResult,
@@ -165,7 +162,6 @@ export async function hydrateCoreEntities(
     client.from('expenses').select('*').eq('organization_id', organizationId),
     client.from('income_entries').select('*').eq('organization_id', organizationId),
     client.from('teacher_payroll_settlements').select('*').eq('organization_id', organizationId),
-    client.from('consultations').select('*').eq('organization_id', organizationId),
     client.from('notifications').select('*').eq('organization_id', organizationId),
     client.from('attendance_sessions').select('*').eq('organization_id', organizationId),
     client.from('parent_student_links').select('*').eq('organization_id', organizationId),
@@ -185,7 +181,6 @@ export async function hydrateCoreEntities(
       expenses: expensesResult.error,
       income: incomeResult.error,
       payrollSettlements: payrollSettlementsResult.error,
-      consultations: consultationsResult.error,
       notifications: notificationsResult.error,
       attendanceSessions: attendanceSessionsResult.error,
       parentLinks: parentLinksResult.error,
@@ -245,16 +240,6 @@ export async function hydrateCoreEntities(
     transactionRowToTuitionPayment(row, invoiceLookup)
   );
 
-  const studentMap = new Map(students.map((s) => [s.id, s.name]));
-  const teacherMap = new Map(teachers.map((t) => [t.id, t.name]));
-  const consultations = (consultationsResult.data || []).map((row) =>
-    consultationRowToApp(
-      row,
-      studentMap.get(row.customer_id) || '',
-      row.staff_id ? teacherMap.get(row.staff_id) || '' : ''
-    )
-  );
-
   const notifications = (notificationsResult.data || []).map(notificationRowToApp);
   const attendanceSessions = (attendanceSessionsResult.data || []).map(coreRowToSession);
   const customerPins = pinRowsFromCustomers(
@@ -286,7 +271,6 @@ export async function hydrateCoreEntities(
       STORAGE_KEYS.TEACHER_PAYROLL_SETTLEMENTS,
       (payrollSettlementsResult.data || []).map(coreRowToSettlement),
     ],
-    [STORAGE_KEYS.CONSULTATIONS, consultations],
     [STORAGE_KEYS.NOTIFICATIONS, notifications],
     [STORAGE_KEYS.ATTENDANCE_SESSIONS, attendanceSessions],
     [STORAGE_KEYS.CUSTOMER_PINS, customerPins],

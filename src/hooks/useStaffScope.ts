@@ -6,7 +6,6 @@ import type { Booking } from '@/core/types/schedule';
 import type {
   AcademyEvent,
   ClassItem,
-  Consultation,
   LessonRecord,
   MakeupItem,
   Student,
@@ -73,7 +72,6 @@ export interface StaffScopeState {
   scopeMembersForPilates: (members: Student[], bookings: Booking[]) => Student[];
   scopeByStudentIds: <T extends { studentId: string }>(items: T[], students: Student[]) => T[];
   scopeLessons: (lessons: LessonRecord[], students?: Student[]) => LessonRecord[];
-  scopeConsultations: (consultations: Consultation[]) => Consultation[];
   scopeMakeupItems: (items: MakeupItem[], students: Student[]) => MakeupItem[];
   scopeRecitalEvents: (events: AcademyEvent[], students: Student[]) => AcademyEvent[];
   getMyStudentIds: (students: Student[]) => Set<string>;
@@ -196,15 +194,6 @@ export function useStaffScope(): StaffScopeState {
     [isScoped, staffId, getMyStudentIds]
   );
 
-  const scopeConsultations = useMemo(
-    () =>
-      (consultations: Consultation[]): Consultation[] => {
-        if (!isScoped) return consultations;
-        return consultations.filter((c) => c.counselorId === staffId);
-      },
-    [isScoped, staffId]
-  );
-
   const scopeMakeupItems = useMemo(
     () =>
       (items: MakeupItem[], students: Student[]): MakeupItem[] => {
@@ -240,7 +229,6 @@ export function useStaffScope(): StaffScopeState {
     scopeMembersForPilates,
     scopeByStudentIds,
     scopeLessons,
-    scopeConsultations,
     scopeMakeupItems,
     scopeRecitalEvents,
     getMyStudentIds,

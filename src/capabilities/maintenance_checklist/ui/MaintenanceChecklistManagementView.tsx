@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
+import { useCreate, useList, useUpdate } from '@refinedev/core';
 import {
   ClipboardList,
   Plus,
@@ -24,6 +25,18 @@ import {
   type ChecklistItem,
   type CapaTicketDraft,
 } from '../domain/maintenanceChecklistEngine';
+import {
+  assessMaintenanceCapaIncidentPersist,
+  buildCapaIncidentLinkUpdateValues,
+  FACILITY_INCIDENT_REPORT_RESOURCE,
+  findExistingMaintenanceCapaIncident,
+  mapCapaTicketDraftToFacilityIncidentCreateValues,
+  type FacilityIncidentReportRowRef,
+} from '../domain/maintenanceCapaIncidentLinkage';
+import { MAINTENANCE_CAPA_UI_COPY } from './maintenanceCapaUiCopy';
+import { useBusinessRule } from '@/app/presets/presetBusinessRules';
+import { useOrganization } from '@/core/organizations/OrganizationProvider';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 type MaintenanceRow = {
@@ -50,11 +63,27 @@ function rowToItem(row: MaintenanceRow): ChecklistItem {
 }
 
 export const MaintenanceChecklistManagementView: React.FC = () => {
-  const { rows, loading: isLoading, create, update, reload: refetch } = useOpsTable<MaintenanceRow>('maintenance_checklists');
+  const { rows, loading: isLoading, create, update, reload: refetch, organizationId: opsOrgId } =
+    useOpsTable<MaintenanceRow>('maintenance_checklists');
+  const { currentOrganization } = useOrganization();
+  const organizationId = currentOrganization?.id ?? opsOrgId ?? null;
+  const incidentCapaLinkageEnabled = useBusinessRule('incident_capa_linkage', false);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
   const [isHaccpPrintOpen, setIsHaccpPrintOpen] = useState(false);
   const [selectedCapaTicket, setSelectedCapaTicket] = useState<CapaTicketDraft | null>(null);
+  const [isCapaPersisting, setIsCapaPersisting] = useState(false);
+
+  const { mutate: createIncidentReport } = useCreate();
+  const { mutate: updateIncidentReport } = useUpdate();
+  const { query: incidentQuery } = useList<FacilityIncidentReportRowRef & Record<string, unknown>>({
+    resource: FACILITY_INCIDENT_REPORT_RESOURCE,
+    pagination: { pageSize: 50 },
+    queryOptions: {
+      enabled: Boolean(selectedCapaTicket && organizationId && incidentCapaLinkageEnabled && isSupabaseConfigured()),
+    },
+  });
 
   const items: ChecklistItem[] = useMemo(() => rows.map(rowToItem), [rows]);
 
@@ -115,7 +144,16 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
     return items.filter((i) => i.title.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [items, searchTerm]);
 
-  // CAPA 긴급 정비 티켓 발행 처리
+  const capaPersistAssessment = useMemo(
+    () =>
+      assessMaintenanceCapaIncidentPersist({
+        organizationId,
+        incidentCapaLinkageEnabled,
+        supabaseConfigured: isSupabaseConfigured(),
+      }),
+    [organizationId, incidentCapaLinkageEnabled],
+  );
+
   const handleTriggerCapa = (item: ChecklistItem) => {
     const ticket = generateCapaTicketFromInspectionFail(
       {
@@ -129,8 +167,74 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
       '시설 관리자'
     );
     setSelectedCapaTicket(ticket);
-    showToast(`[${ticket.ticketNumber}] 시정조치(CAPA) 긴급 티켓이 발행되었습니다.`, 'warning');
+    showToast(MAINTENANCE_CAPA_UI_COPY.draftReady, 'warning');
   };
+
+  const handleConfirmCapaPersist = useCallback(() => {
+    if (!selectedCapaTicket) {
+      showToast(MAINTENANCE_CAPA_UI_COPY.missingDraft, 'error');
+      return;
+    }
+    if (!capaPersistAssessment.ok) {
+      showToast(MAINTENANCE_CAPA_UI_COPY[capaPersistAssessment.reason], 'error');
+      return;
+    }
+
+    const draft = selectedCapaTicket;
+    const incidentRows = (incidentQuery?.data?.data ?? []) as FacilityIncidentReportRowRef[];
+    const existing = findExistingMaintenanceCapaIncident(incidentRows, draft.checklistItemId);
+
+    setIsCapaPersisting(true);
+
+    const onSettled = () => {
+      setIsCapaPersisting(false);
+    };
+
+    const onSuccess = (mode: 'create' | 'link') => {
+      setSelectedCapaTicket(null);
+      void incidentQuery?.refetch?.();
+      showToast(
+        mode === 'link'
+          ? MAINTENANCE_CAPA_UI_COPY.persistSuccessLink
+          : MAINTENANCE_CAPA_UI_COPY.persistSuccessCreate,
+        'success',
+      );
+    };
+
+    if (existing) {
+      updateIncidentReport(
+        {
+          resource: FACILITY_INCIDENT_REPORT_RESOURCE,
+          id: existing.id,
+          values: buildCapaIncidentLinkUpdateValues(draft, existing.metadata),
+        },
+        {
+          onSuccess: () => onSuccess('link'),
+          onError: () => showToast(MAINTENANCE_CAPA_UI_COPY.persistFailed, 'error'),
+          onSettled,
+        },
+      );
+      return;
+    }
+
+    createIncidentReport(
+      {
+        resource: FACILITY_INCIDENT_REPORT_RESOURCE,
+        values: mapCapaTicketDraftToFacilityIncidentCreateValues(draft),
+      },
+      {
+        onSuccess: () => onSuccess('create'),
+        onError: () => showToast(MAINTENANCE_CAPA_UI_COPY.persistFailed, 'error'),
+        onSettled,
+      },
+    );
+  }, [
+    selectedCapaTicket,
+    capaPersistAssessment,
+    incidentQuery,
+    createIncidentReport,
+    updateIncidentReport,
+  ]);
 
   return (
     <WorkPageFrame width="hub">
@@ -393,13 +497,22 @@ export const MaintenanceChecklistManagementView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => setSelectedCapaTicket(null)}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl"
+                disabled={isCapaPersisting}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 text-xs font-bold rounded-xl"
               >
-                확인 및 관제 등록 완료
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCapaPersist}
+                disabled={isCapaPersisting || !capaPersistAssessment.ok}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold rounded-xl"
+              >
+                {isCapaPersisting ? MAINTENANCE_CAPA_UI_COPY.confirming : MAINTENANCE_CAPA_UI_COPY.confirmRegister}
               </button>
             </div>
           </div>

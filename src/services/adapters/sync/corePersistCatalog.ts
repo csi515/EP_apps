@@ -2,13 +2,11 @@
 import type {
   AppNotification,
   ClassItem,
-  Consultation,
 } from '../../../types';
 import { readLocal, writeLocal } from '../localStorageEngine';
 import { STORAGE_KEYS } from '../storageKeys';
 import {
   classToServiceRow,
-  consultationToRow,
   notificationToRow,
   bookingToScheduleRow,
   serviceOfferingToRow,
@@ -147,45 +145,6 @@ export async function persistSchedules(
     cache.get(STORAGE_KEYS.PRACTICE_ROOM_BOOKINGS) ||
       readLocal(STORAGE_KEYS.PRACTICE_ROOM_BOOKINGS, [])
   );
-  return ok;
-}
-
-export async function persistConsultations(
-  client: CoreClient,
-  orgId: string,
-  cache: SyncCache,
-  isAborted: PersistAbortGuard
-): Promise<boolean> {
-  if (isAborted()) return false;
-  const consultations = requireCacheList<Consultation>(
-    cache,
-    STORAGE_KEYS.CONSULTATIONS,
-    'consultations'
-  );
-  if (!consultations) return false;
-
-  const ok = await syncTable(
-    client,
-    'consultations',
-    orgId,
-    consultations.map((c) => c.id),
-    () =>
-      runRowUpserts(
-        consultations,
-        isAborted,
-        (cst) => client.from('consultations').upsert(consultationToRow(cst, orgId)),
-        (error) => console.error('Failed to upsert consultation:', error)
-      ),
-    {
-      cachePresent: true,
-      context: 'consultations',
-      isAborted,
-      tombstoneKeys: [STORAGE_KEYS.CONSULTATIONS],
-    }
-  );
-
-  if (isAborted()) return false;
-  writeLocal(STORAGE_KEYS.CONSULTATIONS, consultations);
   return ok;
 }
 

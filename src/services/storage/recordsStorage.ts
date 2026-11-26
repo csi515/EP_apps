@@ -1,53 +1,10 @@
-import type { Consultation, LessonRecord, PracticeRecord, Student } from '../../types';
+import type { LessonRecord, PracticeRecord, Student } from '../../types';
 import { STORAGE_KEYS } from '../adapters';
 import { deleteById, generateEntityId, getItem, setItem, type StorageApi } from './helpers';
 
-/** 상담·연습·레슨 기록 CRUD */
-export function createRecordsStorage(api: StorageApi) {
+/** 연습·레슨 기록 CRUD */
+export function createRecordsStorage(_api: StorageApi) {
   return {
-    getConsultations(): Consultation[] {
-      const list = getItem<Consultation[]>(STORAGE_KEYS.CONSULTATIONS, []);
-      const students = (api.getStudents as () => Student[])();
-      const studentMap = new Map(students.map((student) => [student.id, student]));
-      return list.map((consultation) => {
-        const student = studentMap.get(consultation.studentId);
-        if (!student?.parentName) return consultation;
-        return { ...consultation, parentName: student.parentName };
-      });
-    },
-
-    saveConsultation(
-      consultation: Omit<Consultation, 'id' | 'createdAt'> & { id?: string }
-    ): Consultation {
-      const list = getItem<Consultation[]>(STORAGE_KEYS.CONSULTATIONS, []);
-      const now = new Date().toISOString();
-      let saved: Consultation;
-
-      if (consultation.id) {
-        const idx = list.findIndex((entry) => entry.id === consultation.id);
-        if (idx >= 0) {
-          saved = { ...list[idx], ...consultation, id: consultation.id };
-          list[idx] = saved;
-        } else {
-          saved = { ...consultation, id: consultation.id, createdAt: now };
-          list.unshift(saved);
-        }
-      } else {
-        saved = { ...consultation, id: generateEntityId('cst'), createdAt: now };
-        list.unshift(saved);
-      }
-
-      setItem(STORAGE_KEYS.CONSULTATIONS, list);
-      return saved;
-    },
-
-    deleteConsultation(id: string): boolean {
-      const list = getItem<Consultation[]>(STORAGE_KEYS.CONSULTATIONS, []);
-      if (!deleteById(list, id)) return false;
-      setItem(STORAGE_KEYS.CONSULTATIONS, list);
-      return true;
-    },
-
     getPracticeRecords(): PracticeRecord[] {
       return getItem<PracticeRecord[]>(STORAGE_KEYS.PRACTICE_RECORDS, []);
     },

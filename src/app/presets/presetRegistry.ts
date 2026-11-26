@@ -229,6 +229,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     capabilities: [
       'approval_workflow',
       'sop_risk_assessment',
+      'facility_incident_report',
       'safety_consent',
       'maintenance_checklist',
       'inventory',
@@ -262,6 +263,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
     ] as const,
     optionalCapabilities: [
       'safety_consent',
+      'facility_incident_report',
       'maintenance_checklist',
       'recipe_bom',
       'rental_equipment',
@@ -345,6 +347,7 @@ export const INDUSTRY_PRESETS: Record<string, IndustryPresetDefinition> = {
         'rental_equipment',
         'safety_consent',
         'facility_incident_report',
+        'seat_room',
       ],
     },
     businessRules: {

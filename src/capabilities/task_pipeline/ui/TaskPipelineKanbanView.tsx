@@ -31,6 +31,11 @@ import {
   type TaskOrder,
 } from '../domain/taskPipelineEngine';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
+import {
+  isTaskPipelineOfflinePersistenceEnabled,
+  isTaskPipelineServerDataPathActive,
+  shouldTrustTaskPipelineServerOrders,
+} from '../domain/taskPipelineLocalPersistence';
 
 const STORAGE_KEY_PIPELINES = 'moa_task_pipeline_orders';
 
@@ -54,6 +59,9 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
   title = '작업 파이프라인 (칸반 보드)',
   subtitle = '자동차 정비, 공방 맞춤제작, 세탁·수선, 설비 수리 등 전사 작업 공정을 실시간 추적합니다.',
 }) => {
+  const serverDataPath = isTaskPipelineServerDataPathActive();
+  const offlinePersistence = isTaskPipelineOfflinePersistenceEnabled();
+
   const [localOrders, setLocalOrders] = useState<TaskOrder[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
@@ -63,17 +71,43 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
   const { query } = useList<any>({
     resource: 'task_orders',
     pagination: { mode: 'off' },
+    queryOptions: { enabled: serverDataPath },
   });
 
   const refineRows = query?.data?.data;
-  const isLoading = query?.isLoading;
+  const trustServerOrders = shouldTrustTaskPipelineServerOrders(query);
+  const ordersLoading = Boolean(serverDataPath && query?.isLoading);
   const refetch = query?.refetch ?? (() => {});
 
   const { mutate: mutateCreate } = useCreate();
   const { mutate: mutateUpdate } = useUpdate();
 
-  // 로컬은 오프라인 작성분만 보관. 빈 테넌트에 샘플 수리 주문을 심지 않는다.
+  const mapRowToOrder = (row: any): TaskOrder => ({
+    id: row.id,
+    orderNumber: row.order_number || row.id,
+    orderType: row.order_type,
+    title: row.title,
+    customerId: row.customer_id,
+    customerName: row.customer_name || '고객',
+    customerPhone: row.customer_phone,
+    targetItemName: row.target_item_name,
+    currentStage: row.current_stage as PipelineStage,
+    stageEnteredAt: row.stage_entered_at || row.created_at,
+    slaHours: row.sla_hours || 24,
+    laborFee: row.labor_fee,
+    partsCost: row.parts_cost,
+    totalAmount: row.total_amount,
+    diagnosis: row.diagnosis,
+    holdReason: row.hold_reason,
+    details: row.details,
+  });
+
+  // 오프라인 스냅샷은 VITE_TASK_PIPELINE_OFFLINE=1 일 때만 복원한다.
   useEffect(() => {
+    if (!offlinePersistence) {
+      setLocalOrders([]);
+      return;
+    }
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {
@@ -84,37 +118,21 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
     } catch {
       setLocalOrders([]);
     }
-  }, [storageKey]);
+  }, [storageKey, offlinePersistence]);
 
-  // Refine 서버 데이터 우선. 로딩 중이거나 서버 행이 있으면 로컬 샘플로 채우지 않음.
   const orders: TaskOrder[] = useMemo(() => {
-    if (refineRows && refineRows.length > 0) {
-      return refineRows.map((row: any) => ({
-        id: row.id,
-        orderNumber: row.order_number || row.id,
-        orderType: row.order_type,
-        title: row.title,
-        customerId: row.customer_id,
-        customerName: row.customer_name || '고객',
-        customerPhone: row.customer_phone,
-        targetItemName: row.target_item_name,
-        currentStage: row.current_stage as PipelineStage,
-        stageEnteredAt: row.stage_entered_at || row.created_at,
-        slaHours: row.sla_hours || 24,
-        laborFee: row.labor_fee,
-        partsCost: row.parts_cost,
-        totalAmount: row.total_amount,
-        diagnosis: row.diagnosis,
-        holdReason: row.hold_reason,
-        details: row.details,
-      }));
+    if (trustServerOrders) {
+      return (refineRows ?? []).map((row: any) => mapRowToOrder(row));
     }
-    if (isLoading) return [];
+    if (serverDataPath && ordersLoading) {
+      return [];
+    }
     return localOrders;
-  }, [refineRows, localOrders, isLoading]);
+  }, [trustServerOrders, refineRows, localOrders, serverDataPath, ordersLoading]);
 
   const saveLocalOrders = (next: TaskOrder[]) => {
     setLocalOrders(next);
+    if (!offlinePersistence || trustServerOrders) return;
     try {
       localStorage.setItem(storageKey, JSON.stringify(next));
     } catch {
@@ -129,8 +147,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
       return;
     }
 
-    // 서버 업데이트 시도
-    if (refineRows && refineRows.length > 0) {
+    if (serverDataPath) {
       mutateUpdate(
         {
           resource: 'task_orders',
@@ -146,18 +163,16 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
             showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
           },
           onError: () => {
-            // 폴백: 로컬 상태 업데이트
-            const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
-            saveLocalOrders(next);
-            showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 로컬 이동했습니다.`, 'info');
+            showToast('단계 이동 저장에 실패했습니다. 서버 연결을 확인해주세요.', 'error');
           },
         }
       );
-    } else {
-      const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
-      saveLocalOrders(next);
-      showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
+      return;
     }
+
+    const next = orders.map((o) => (o.id === order.id ? res.updatedOrder : o));
+    saveLocalOrders(next);
+    showToast(`'${order.orderNumber}' 작업이 [${targetStage}] 단계로 이동했습니다.`, 'success');
   };
 
   const [viewMode, setViewMode] = useState<'kanban' | 'gantt'>('kanban');
@@ -333,7 +348,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
         </div>
       </div>
 
-      {!isLoading && orders.length === 0 ? (
+      {!ordersLoading && orders.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-600">
           등록된 작업이 없습니다. 「새 작업 등록」으로 첫 공정 주문을 추가하세요.
         </div>
@@ -621,7 +636,7 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
           defaultOrderType={defaultOrderType}
           onClose={() => setIsNewModalOpen(false)}
           onCreated={(newOrder) => {
-            if (refineRows) {
+            if (serverDataPath) {
               mutateCreate(
                 {
                   resource: 'task_orders',
@@ -641,17 +656,15 @@ export const TaskPipelineKanbanView: React.FC<TaskPipelineKanbanViewProps> = ({
                     showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
                   },
                   onError: () => {
-                    saveLocalOrders([newOrder, ...orders]);
-                    setIsNewModalOpen(false);
-                    showToast(`신규 작업 '${newOrder.orderNumber}'이 로컬 저장되었습니다.`, 'info');
+                    showToast('작업 접수 저장에 실패했습니다. 서버 연결을 확인해주세요.', 'error');
                   },
                 }
               );
-            } else {
-              saveLocalOrders([newOrder, ...orders]);
-              setIsNewModalOpen(false);
-              showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
+              return;
             }
+            saveLocalOrders([newOrder, ...orders]);
+            setIsNewModalOpen(false);
+            showToast(`신규 작업 '${newOrder.orderNumber}'이 접수되었습니다.`, 'success');
           }}
         />
       )}

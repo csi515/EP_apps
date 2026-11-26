@@ -9,6 +9,8 @@ import {
   syncPurchaseOrderToInventoryReceipt,
   evaluateStockPreRelease,
   checkDepartmentBudgetCeiling,
+  validateRequisitionItemInput,
+  transitionPurchaseRequisitionStatus,
   type ItemProcurementHistory,
   type StockInventoryItem,
   type BiddingVendorQuote,
@@ -138,6 +140,34 @@ function run() {
     // 감사 기록(auditTrail) 확인
     assert.equal(pr1.auditTrail.length, 1);
     assert.equal(pr1.auditTrail[0].action, 'SUBMIT_PR');
+
+    const badQty = createPurchaseRequisition({
+      department: '생산1팀',
+      requesterName: '홍길동',
+      targetDeliveryDate: '2026-10-25',
+      justification: '수량 검증 테스트용 구매 사유입니다.',
+      items: [
+        {
+          sku: 'BOLT-M8-100',
+          itemName: '고장력 육각볼트 M8',
+          quantity: -10,
+          unit: 'EA',
+          estimatedUnitPrice: 500,
+        },
+      ],
+    });
+    assert.equal(badQty.pr, null);
+    assert.ok(badQty.error?.includes('구매 수량은 0보다 커야 합니다'));
+
+    assert.equal(
+      validateRequisitionItemInput({
+        sku: '',
+        itemName: '',
+        quantity: 1,
+        estimatedUnitPrice: 100,
+      }).valid,
+      false
+    );
   }
 
   // 3. 2단계: 사내 창고 재고 중복 확인 & 구매부서 검수 (Vetting)
@@ -222,6 +252,50 @@ function run() {
     assert.equal(approvedPr.vettedBy, '이구매');
     assert.equal(approvedPr.auditTrail.length, 2);
     assert.equal(approvedPr.auditTrail[1].action, 'APPROVE_PR');
+
+    assert.throws(
+      () => vetPurchaseRequisition(rejectedPr, 'approve', { name: '이구매' }),
+      /검수 불가 상태/
+    );
+  }
+
+  // 3-4) PR 상태 전이 (vetted_approved → contract_packaged → po_issued)
+  {
+    const prDraft = createPurchaseRequisition({
+      department: '총무팀',
+      requesterName: '김총무',
+      targetDeliveryDate: '2026-11-01',
+      justification: '사무 소모품 정기 보충 구매 요청입니다.',
+      items: [
+        {
+          sku: 'PEN-01',
+          itemName: '볼펜',
+          quantity: 50,
+          unit: 'EA',
+          estimatedUnitPrice: 500,
+        },
+      ],
+      sequenceNumber: 99,
+    }).pr!;
+
+    const vetted = vetPurchaseRequisition(prDraft, 'approve', { name: '구매팀' });
+    assert.equal(vetted.status, 'vetted_approved');
+
+    const badJump = transitionPurchaseRequisitionStatus(vetted, 'po_issued');
+    assert.equal(badJump.ok, false);
+
+    const packaged = transitionPurchaseRequisitionStatus(vetted, 'contract_packaged', {
+      actor: '구매팀',
+    });
+    assert.equal(packaged.ok, true);
+    assert.equal(packaged.pr.status, 'contract_packaged');
+
+    const poIssued = transitionPurchaseRequisitionStatus(packaged.pr, 'po_issued', {
+      actor: '구매팀',
+    });
+    assert.equal(poIssued.ok, true);
+    assert.equal(poIssued.pr.status, 'po_issued');
+    assert.equal(poIssued.pr.auditTrail.length, 4);
   }
 
   // 4. 3단계: 다품목 묶음 패키지 및 계약 방식 결정 (경쟁 입찰 vs 수의 계약)

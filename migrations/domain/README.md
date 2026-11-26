@@ -23,6 +23,8 @@ npm run db:migrate:domain          # soft skip (임베디드/개발 폴백)
 | 030–031 | training_ack 테이블·초기 RLS(030), can_manage + RLS 강화 + acknowledge/replace RPC(031) |
 | 032–034 | supply_restock manage RLS(032), resources can_manage+예약 RPC SoT(033), research read/write/gate RLS(034) |
 | 035–036 | sop safety:manage 위임(035), mbo goals:write 쓰기 RLS(036) |
+| 037 | SOP·위험성평가 자식 RLS + WORM + 결재/개정/재서약 RPC |
+| 038 | 유해화학 MSDS `hazardous_substances`·`chemical_usage_logs` + safety:manage RLS (앱 플래그 미전환) |
 
 032+ 적용 후 PostgREST 스키마 캐시 리로드: `NOTIFY pgrst, 'reload schema';` (또는 postgrest 재시작).
 로컬 테이블 소유자가 `postgres`이면 `postgresql://postgres:…` 로 적용한다.

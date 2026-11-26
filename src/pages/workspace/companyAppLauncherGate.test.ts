@@ -9,6 +9,22 @@ import { resolveEnabledCaps, tileAllowed } from './CompanyAppLauncherDashboard';
 const plant = INDUSTRY_PRESETS.personal_plant_ops;
 assert.ok(plant);
 
+const presetCaps = plant.capabilities as readonly string[];
+const defaultHidden = (plant.defaultSettings as { hidden_capabilities?: string[] })?.hidden_capabilities ?? [];
+assert.ok(presetCaps.includes('facility_incident_report'), 'incident cap in product bundle');
+assert.ok(presetCaps.includes('seat_room'), 'seat_room in product bundle');
+assert.deepEqual(
+  defaultHidden.slice().sort(),
+  [
+    'facility_incident_report',
+    'recipe_bom',
+    'rental_equipment',
+    'safety_consent',
+    'seat_room',
+  ].sort(),
+  'default hidden_capabilities snapshot',
+);
+
 const enabled = resolveEnabledCaps(
   'personal_plant_ops',
   [],
@@ -26,6 +42,7 @@ assert.ok(!enabled.includes('recipe_bom'), 'default hidden BOM');
 assert.ok(enabled.includes('supply_restock'), 'supply_restock now visible by default');
 assert.ok(enabled.includes('sop_risk_assessment'), 'SOP required');
 assert.ok(!enabled.includes('facility_incident_report'), 'incident app hidden');
+assert.ok(!enabled.includes('seat_room'), 'seat_room default hidden');
 assert.ok(enabled.includes('task_pipeline'));
 assert.ok(enabled.includes('maintenance_checklist'));
 assert.ok(enabled.includes('equipment_lifecycle'));

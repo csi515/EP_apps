@@ -4,6 +4,9 @@ import {
   detectRestockNeeded,
   groupRestockItemsByVendor,
   assemblePurchaseOrder,
+  validateRestockQuantities,
+  evaluateRestockRecommendation,
+  listPurchaseRequisitionEligibleItems,
   type RestockItem,
 } from './supplyRestockEngine';
 
@@ -98,6 +101,78 @@ console.log('✓ 3. 발주서 자동 조립 및 메시지 텍스트 생성 통�
   assert.equal(optimal.quotedAmount, 250000);
 }
 console.log('✓ 4. 복수 견적 비교 최적 견적 선정 통과');
+
+// 5. 수량 검증 — 음수·0 발주수량 차단
+{
+  const badQty = validateRestockQuantities({
+    currentQuantity: -1,
+    safetyThreshold: 5,
+    optimalOrderQuantity: 10,
+    unitCost: 100,
+  });
+  assert.equal(badQty.valid, false);
+
+  const badOrder = validateRestockQuantities({
+    currentQuantity: 2,
+    safetyThreshold: 5,
+    optimalOrderQuantity: 0,
+    unitCost: 100,
+  });
+  assert.equal(badOrder.valid, false);
+  assert.ok(badOrder.error?.includes('권장 발주 수량'));
+}
+console.log('✓ 5. 수량 유효성 검증 통과');
+
+// 6. 안전재고 경계(=) 및 PR 적격 판정
+{
+  const atThreshold: RestockItem = {
+    ...mockItems[0],
+    currentQuantity: 5,
+    safetyThreshold: 5,
+  };
+  const rec = evaluateRestockRecommendation(atThreshold);
+  assert.equal(rec.isBelowSafetyStock, true);
+  assert.equal(rec.isPurchaseRequisitionEligible, true);
+  assert.equal(rec.shortageQuantity, 0);
+
+  const sufficient = evaluateRestockRecommendation(mockItems[2]);
+  assert.equal(sufficient.isBelowSafetyStock, false);
+  assert.equal(sufficient.isPurchaseRequisitionEligible, false);
+
+  const eligible = listPurchaseRequisitionEligibleItems(mockItems);
+  assert.equal(eligible.length, 2);
+}
+console.log('✓ 6. 안전재고 미달 PR 적격 판정 통과');
+
+// 7. 무효 수량 품목은 detectRestockNeeded에서 제외
+{
+  const withInvalid: RestockItem[] = [
+    ...mockItems,
+    {
+      id: 'bad',
+      itemName: '무효 수량',
+      category: 'x',
+      currentQuantity: 0,
+      safetyThreshold: 5,
+      optimalOrderQuantity: -3,
+      unit: 'EA',
+      unitCost: 100,
+      vendorName: '업체',
+    },
+  ];
+  const needed = detectRestockNeeded(withInvalid);
+  assert.equal(needed.length, 2);
+}
+console.log('✓ 7. 무효 수량 품목 감지 제외 통과');
+
+// 8. 안전재고 충족 품목 발주서 조립 차단
+{
+  assert.throws(
+    () => assemblePurchaseOrder('대한오피스', [mockItems[2]], 'EP_apps', 9),
+    /안전재고 충족/
+  );
+}
+console.log('✓ 8. 발주서 fail-closed 조립 통과');
 
 console.log('[test:supply-restock] ALL TESTS PASSED! (100%)');
 

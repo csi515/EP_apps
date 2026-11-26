@@ -117,7 +117,7 @@ async function run() {
   const catalogSource = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'corePersistCatalog.ts'), 'utf8');
   const persistFn = catalogSource.slice(
     catalogSource.indexOf('export async function persistSchedules'),
-    catalogSource.indexOf('export async function persistConsultations')
+    catalogSource.indexOf('export async function persistNotifications')
   );
   assert.equal(persistFn.includes('syncTable'), false);
   assert.equal(persistFn.includes('upsertThenDiffDelete'), false);

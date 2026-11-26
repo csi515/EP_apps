@@ -149,3 +149,45 @@ export function canAuthorMutateGrievance(params: {
   if (!record.author_user_id || record.author_user_id !== viewerUserId) return false;
   return record.status === 'SUBMITTED';
 }
+
+const GRIEVANCE_STATUS_TRANSITIONS: Record<GrievanceStatus, readonly GrievanceStatus[]> = {
+  SUBMITTED: ['UNDER_INVESTIGATION', 'DISMISSED'],
+  UNDER_INVESTIGATION: ['RESOLVED', 'DISMISSED'],
+  RESOLVED: [],
+  DISMISSED: [],
+};
+
+/** 담당자 처리 상태 전이 (접수→조사→종결/기각) */
+export function transitionGrievanceStatus(
+  record: AnonymousGrievanceRecord,
+  nextStatus: GrievanceStatus,
+  feedback?: string
+): { ok: true; record: AnonymousGrievanceRecord } | { ok: false; error: string } {
+  const allowed = GRIEVANCE_STATUS_TRANSITIONS[record.status] ?? [];
+  if (!allowed.includes(nextStatus)) {
+    return {
+      ok: false,
+      error: `${record.status}에서 ${nextStatus}(으)로 전이할 수 없습니다.`,
+    };
+  }
+  if (
+    (nextStatus === 'RESOLVED' || nextStatus === 'DISMISSED') &&
+    !(feedback ?? '').trim()
+  ) {
+    return { ok: false, error: '종결·기각 시 조사 피드백이 필요합니다.' };
+  }
+  const now = new Date().toISOString();
+  return {
+    ok: true,
+    record: {
+      ...record,
+      status: nextStatus,
+      investigation_feedback:
+        feedback !== undefined ? feedback.trim() : record.investigation_feedback,
+      resolved_at:
+        nextStatus === 'RESOLVED' || nextStatus === 'DISMISSED'
+          ? now
+          : record.resolved_at,
+    },
+  };
+}

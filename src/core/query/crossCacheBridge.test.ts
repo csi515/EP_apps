@@ -36,7 +36,6 @@ async function runCrossCacheBridgeTests() {
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['instructors'], STORAGE_KEYS.TEACHERS);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['classes'], STORAGE_KEYS.CLASSES);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['attendance'], STORAGE_KEYS.ATTENDANCE);
-  assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['consultations'], STORAGE_KEYS.CONSULTATIONS);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['billing_invoices'], STORAGE_KEYS.INVOICES);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['inventory_items'], STORAGE_KEYS.TEXTBOOKS);
   assert.equal(RESOURCE_TO_STORAGE_KEY_MAP['seat_rooms'], STORAGE_KEYS.PRACTICE_ROOM_BOOKINGS);

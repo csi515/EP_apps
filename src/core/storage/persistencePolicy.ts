@@ -81,7 +81,6 @@ export const LEGACY_STORAGE_KEY_POLICIES = {
   core_expenses: 'server-with-local-cache',
   core_teacher_payroll_settlements: 'server-with-local-cache',
   core_income_entries: 'server-with-local-cache',
-  ep_app_consultations: 'server-with-local-cache',
   ep_app_practice_records: 'server-with-local-cache',
   ep_app_lesson_records: 'server-with-local-cache',
   ep_app_textbooks: 'server-with-local-cache',

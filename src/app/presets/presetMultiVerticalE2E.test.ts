@@ -216,13 +216,13 @@ assert.ok(autoRepairPreset, 'Auto repair preset must exist');
 // 6.1 Resource Assembly & Refine Provisioning
 const arAssembled = assemblePreset('auto_repair');
 const arAssembledNames = new Set(arAssembled.resources.map((r) => r.name));
-assert.ok(arAssembledNames.has('task_pipelines'));
+assert.ok(arAssembledNames.has('task_orders'));
 assert.ok(arAssembledNames.has('inventory_items'));
 assert.ok(arAssembledNames.has('billing_invoices'));
 
 const arRefineRes = provisionIndustryResources({ industry: 'auto_repair', i18n: dummyI18n });
 const arRefineNames = new Set(arRefineRes.map((r) => r.name));
-assert.ok(arRefineNames.has('task_pipelines'));
+assert.ok(arRefineNames.has('task_orders'));
 assert.ok(arRefineNames.has('inventory_items'));
 assert.ok(arRefineNames.has('billing_invoices'));
 

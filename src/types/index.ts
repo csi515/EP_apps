@@ -374,9 +374,6 @@ export interface MakeupScheduleInput {
 /** @deprecated 신규 코드는 `@/capabilities/resources` */
 export type { PracticeRoomBooking, PracticeRoomBookingStatus } from '@/capabilities/resources/types';
 
-/** @deprecated 신규 코드는 `@/capabilities/consultation` */
-export type { Consultation, ConsultationType } from '@/capabilities/consultation/types';
-
 export interface PracticeRecord {
   id: string;
   studentId: string;

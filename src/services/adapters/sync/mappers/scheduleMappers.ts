@@ -2,7 +2,6 @@ import type {
   AppNotification,
   AttendanceRecord,
   ClassItem,
-  Consultation,
   Parent,
   PracticeRoomBooking,
   Student,

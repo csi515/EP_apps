@@ -226,6 +226,8 @@ export async function localChangePassword(
       new_password: newPassword,
     }),
   });
+  const session = await localGetSession();
+  notifyLocalAuthListeners(session);
 }
 
 export function localOnAuthStateChange(

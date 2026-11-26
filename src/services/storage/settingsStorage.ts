@@ -212,7 +212,6 @@ export function createSettingsStorage(api: StorageApi) {
         invoices: getItem(STORAGE_KEYS.INVOICES, []),
         expenses: getItem(STORAGE_KEYS.EXPENSES, []),
         incomeEntries: getItem(STORAGE_KEYS.INCOME_ENTRIES, []),
-        consultations: (api.getConsultations as () => unknown[])(),
         practiceRecords: (api.getPracticeRecords as () => unknown[])(),
         lessonRecords: (api.getLessonRecords as () => unknown[])(),
         textbooks: getItem(STORAGE_KEYS.TEXTBOOKS, []),
@@ -249,7 +248,6 @@ export function createSettingsStorage(api: StorageApi) {
         if (data.invoices) setItem(STORAGE_KEYS.INVOICES, data.invoices);
         if (data.expenses) setItem(STORAGE_KEYS.EXPENSES, data.expenses);
         if (data.incomeEntries) setItem(STORAGE_KEYS.INCOME_ENTRIES, data.incomeEntries);
-        if (data.consultations) setItem(STORAGE_KEYS.CONSULTATIONS, data.consultations);
         if (data.practiceRecords) setItem(STORAGE_KEYS.PRACTICE_RECORDS, data.practiceRecords);
         if (data.lessonRecords) setItem(STORAGE_KEYS.LESSON_RECORDS, data.lessonRecords);
         if (data.textbooks) setItem(STORAGE_KEYS.TEXTBOOKS, data.textbooks);

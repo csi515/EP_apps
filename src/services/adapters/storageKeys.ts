@@ -32,6 +32,7 @@ export const STORAGE_KEYS = {
   /** 강사 정산 확정 기록 (core.teacher_payroll_settlements 동기화) */
   TEACHER_PAYROLL_SETTLEMENTS: 'core_teacher_payroll_settlements',
   INCOME_ENTRIES: 'core_income_entries',
+  /** @deprecated 학원 상담일지 레거시 — EP_apps sync 대상 아님, 로컬 키 마이그레이션만 */
   CONSULTATIONS: 'ep_app_consultations',
   PRACTICE_RECORDS: 'ep_app_practice_records',
   LESSON_RECORDS: 'ep_app_lesson_records',
@@ -192,7 +193,6 @@ export const CORE_SYNC_KEYS: ReadonlySet<StorageKey> = new Set([
   STORAGE_KEYS.CLASSES,
   STORAGE_KEYS.INVOICES,
   STORAGE_KEYS.TUITION_PAYMENTS,
-  STORAGE_KEYS.CONSULTATIONS,
   STORAGE_KEYS.NOTIFICATIONS,
   STORAGE_KEYS.SCHEDULES,
   STORAGE_KEYS.SERVICE_OFFERINGS,

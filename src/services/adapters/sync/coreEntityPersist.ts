@@ -10,7 +10,6 @@ import {
 } from './corePersistPeople';
 import {
   persistAttendanceSessions,
-  persistConsultations,
   persistNotifications,
   persistSchedules,
   persistServices,
@@ -70,9 +69,6 @@ export async function persistCoreEntity(
       break;
     case STORAGE_KEYS.TEACHER_PAYROLL_SETTLEMENTS:
       ok = await persistTeacherPayrollSettlements(client, organizationId, cache, isAborted);
-      break;
-    case STORAGE_KEYS.CONSULTATIONS:
-      ok = await persistConsultations(client, organizationId, cache, isAborted);
       break;
     case STORAGE_KEYS.NOTIFICATIONS:
       ok = await persistNotifications(client, organizationId, cache, isAborted);

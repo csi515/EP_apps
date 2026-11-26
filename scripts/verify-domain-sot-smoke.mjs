@@ -108,6 +108,57 @@ const approval = await pgrst('/approval_requests', token, {
 });
 assertOk('approval insert', approval, [200, 201]);
 
+const approvalPending = await pgrst('/approval_requests', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    title: `domain-smoke-approval-pending-${Date.now().toString().slice(-6)}`,
+    requester_name: 'smoke',
+    status: 'pending',
+    content: {},
+  }),
+});
+assertOk('approval pending insert', approvalPending, [200, 201]);
+const approvalPendingId = Array.isArray(approvalPending.body)
+  ? approvalPending.body[0]?.id
+  : approvalPending.body?.id;
+if (!approvalPendingId) fail('approval pending id missing', approvalPending.body);
+
+const approvalApprove = await pgrst('/rpc/process_approval_step_atomic', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_request_id: approvalPendingId,
+    p_action: 'approve',
+    p_comment: 'domain-smoke approve',
+  }),
+});
+assertOk('approval approve rpc', approvalApprove, [200, 201]);
+
+const approvalRejectSeed = await pgrst('/approval_requests', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    title: `domain-smoke-approval-reject-${Date.now().toString().slice(-6)}`,
+    requester_name: 'smoke',
+    status: 'pending',
+    content: {},
+  }),
+});
+assertOk('approval reject seed', approvalRejectSeed, [200, 201]);
+const approvalRejectId = Array.isArray(approvalRejectSeed.body)
+  ? approvalRejectSeed.body[0]?.id
+  : approvalRejectSeed.body?.id;
+if (!approvalRejectId) fail('approval reject id missing', approvalRejectSeed.body);
+const approvalReject = await pgrst('/rpc/process_approval_step_atomic', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    p_request_id: approvalRejectId,
+    p_action: 'reject',
+    p_comment: 'domain-smoke reject',
+  }),
+});
+assertOk('approval reject rpc', approvalReject, [200, 201]);
+
 const today = new Date().toISOString().slice(0, 10);
 const periodYm = today.slice(0, 7);
 const mbo = await pgrst('/mbo_objectives', token, {
@@ -211,27 +262,121 @@ if (confidentialId) {
   assertOk('mbo confidential evaluation select (owner/admin JWT)', confList, [200]);
 }
 
+const invName = `domain-smoke-item-${Date.now().toString().slice(-6)}`;
 const inv = await pgrst('/inventory_items', token, {
   method: 'POST',
   body: JSON.stringify({
     organization_id: orgId,
-    name: 'domain-smoke-item',
-    quantity: 1,
+    name: invName,
+    quantity: 10,
+    sku: `SMK-${Date.now().toString().slice(-6)}`,
   }),
 });
 assertOk('inventory insert', inv, [200, 201]);
+const invId = Array.isArray(inv.body) ? inv.body[0]?.id : inv.body?.id;
+if (!invId) fail('inventory id missing', inv.body);
 
-const gr = await pgrst('/anonymous_grievances?select=id&limit=1', token);
-assertOk('grievances list', gr, [200]);
+const invPatch = await pgrst(`/inventory_items?id=eq.${invId}`, token, {
+  method: 'PATCH',
+  body: JSON.stringify({ quantity: 7 }),
+});
+assertOk('inventory outbound patch', invPatch, [200, 204]);
 
 const invList = await pgrst(
-  `/inventory_items?organization_id=eq.${orgId}&name=eq.domain-smoke-item&select=id,name`,
+  `/inventory_items?id=eq.${invId}&select=id,name,quantity`,
   token
 );
 assertOk('inventory select', invList, [200]);
 if (!Array.isArray(invList.body) || invList.body.length < 1) {
   fail('inventory select empty', invList.body);
 }
+if (Number(invList.body[0]?.quantity) !== 7) {
+  fail('inventory quantity mismatch', invList.body[0]);
+}
+
+const restockName = `domain-smoke-restock-${Date.now().toString().slice(-6)}`;
+const restock = await pgrst('/supply_restock_items', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    item_name: restockName,
+    category: 'smoke',
+    current_quantity: 1,
+    safety_threshold: 5,
+    optimal_order_quantity: 10,
+    unit: 'ea',
+    unit_cost: 1000,
+    vendor_name: 'smoke-vendor',
+    status: 'low',
+  }),
+});
+assertOk('supply restock insert', restock, [200, 201]);
+const restockId = Array.isArray(restock.body) ? restock.body[0]?.id : restock.body?.id;
+const poNumber = `PO-SMK-${Date.now().toString().slice(-6)}`;
+const po = await pgrst('/purchase_orders', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    po_number: poNumber,
+    vendor_name: 'smoke-vendor',
+    order_items: [
+      {
+        itemId: restockId,
+        itemName: restockName,
+        orderQuantity: 10,
+        unit: 'ea',
+        unitCost: 1000,
+        subtotal: 10000,
+      },
+    ],
+    total_amount: 10000,
+    status: 'draft',
+    memo: 'domain-smoke',
+  }),
+});
+assertOk('purchase order insert', po, [200, 201]);
+const poId = Array.isArray(po.body) ? po.body[0]?.id : po.body?.id;
+if (!poId) fail('purchase order id missing', po.body);
+const poSent = await pgrst(`/purchase_orders?id=eq.${poId}`, token, {
+  method: 'PATCH',
+  body: JSON.stringify({ status: 'sent', sent_at: new Date().toISOString() }),
+});
+assertOk('purchase order sent', poSent, [200, 204]);
+
+const gr = await pgrst('/anonymous_grievances?select=id&limit=1', token);
+assertOk('grievances list', gr, [200]);
+
+const grTicket = `G-SMK-${Date.now().toString().slice(-6)}`;
+const grInsert = await pgrst('/anonymous_grievances', token, {
+  method: 'POST',
+  body: JSON.stringify({
+    organization_id: orgId,
+    visibility: 'named',
+    ticket_code: grTicket,
+    category: 'GENERAL_GRIEVANCE',
+    subject_title: 'domain-smoke grievance',
+    incident_content: 'domain smoke grievance content with enough length.',
+    status: 'SUBMITTED',
+    author_user_id: login.body.user?.id ?? null,
+  }),
+});
+assertOk('grievance insert', grInsert, [200, 201]);
+const grId = Array.isArray(grInsert.body) ? grInsert.body[0]?.id : grInsert.body?.id;
+if (!grId) fail('grievance id missing', grInsert.body);
+const grInvestigate = await pgrst(`/anonymous_grievances?id=eq.${grId}`, token, {
+  method: 'PATCH',
+  body: JSON.stringify({ status: 'UNDER_INVESTIGATION' }),
+});
+assertOk('grievance investigate', grInvestigate, [200, 204]);
+const grResolve = await pgrst(`/anonymous_grievances?id=eq.${grId}`, token, {
+  method: 'PATCH',
+  body: JSON.stringify({
+    status: 'RESOLVED',
+    investigation_feedback: 'domain-smoke resolved',
+    resolved_at: new Date().toISOString(),
+  }),
+});
+assertOk('grievance resolve', grResolve, [200, 204]);
 
 // ---------------------------------------------------------------------------
 // SOP·위험성평가: 초안 → 검토 → 승인 → 개정 → 재서약

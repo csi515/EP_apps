@@ -4,7 +4,7 @@ export const taskPipelineResources: CapabilityResourceDefinition = {
   capabilityId: 'task_pipeline',
   resources: [
     {
-      name: 'task_pipelines',
+      name: 'task_orders',
       list: '/pipelines',
       create: '/pipelines/new',
       show: '/pipelines/:id',

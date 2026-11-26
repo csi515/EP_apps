@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useList, useCreate, useUpdate } from '@refinedev/core';
 import {
   Package,
@@ -37,6 +37,13 @@ import {
   type StockAuditSlip,
   type ExpiryAlertStatus,
 } from '../domain/inventoryEngine';
+import {
+  shouldSeedInventoryDemoCatalog,
+  shouldTrustInventoryServerItems,
+  shouldTrustInventoryServerLots,
+  isInventoryServerDataPathActive,
+} from '../domain/inventoryLocalDemo';
+import { mapInventoryItemFromApi, mapStockLotFromApi } from '../domain/inventoryItemMapper';
 import { WorkPageFrame } from '@/shared/components/ui/WorkPageFrame';
 
 const STORAGE_KEY_ITEMS = 'ep_inventory_items';
@@ -69,7 +76,11 @@ export interface InventoryManagementViewProps {
   itemTypeLabel?: string;
   skuColumnLabel?: string;
   showItemTypeFilter?: boolean;
-  /** true면 카페·학원 데모 품목 시드를 사용하지 않음 (현장 워크스페이스) */
+  /**
+   * true면 데모 카탈로그 시드 금지 (현장 워크스페이스).
+   * Supabase/사내 PG 경로가 켜져 있으면 env 없이도 데모는 비활성화된다.
+   * 오프라인 스토리보드 데모는 `VITE_INVENTORY_DEMO_CATALOG=1` 필요.
+   */
   disableDemoCatalogFallback?: boolean;
 }
 
@@ -183,6 +194,9 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
   showItemTypeFilter = true,
   disableDemoCatalogFallback = false,
 }) => {
+  const allowDemoCatalogSeed = shouldSeedInventoryDemoCatalog(disableDemoCatalogFallback);
+  const serverDataPath = isInventoryServerDataPathActive();
+
   const [activeTab, setActiveTab] = useState<'items' | 'lots' | 'audit'>('items');
   const [searchTerm, setSearchTerm] = useState('');
   const [itemTypeFilter, setItemTypeFilter] = useState<string>(defaultItemType || 'ALL');
@@ -198,13 +212,28 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
   const { query: itemsQuery } = useList<any>({
     resource: 'inventory_items',
     pagination: { mode: 'off' },
+    queryOptions: { enabled: serverDataPath },
   });
 
-  const refineItems = itemsQuery?.data?.data as (InventoryItem & { location?: WarehouseLocation })[] | undefined;
-  const refetchItems = itemsQuery?.refetch ?? (() => {});
+  const { query: lotsQuery } = useList<any>({
+    resource: 'stock_lots',
+    pagination: { mode: 'off' },
+    queryOptions: { enabled: serverDataPath },
+  });
 
-  const { mutate: mutateCreateItem } = useCreate();
+  const refineItems = itemsQuery?.data?.data as unknown[] | undefined;
+  const refineLots = lotsQuery?.data?.data as unknown[] | undefined;
+  const refetchItems = itemsQuery?.refetch ?? (() => {});
+  const refetchLots = lotsQuery?.refetch ?? (() => {});
+
+  const trustServerItems = shouldTrustInventoryServerItems(itemsQuery);
+  const trustServerLots = shouldTrustInventoryServerLots(lotsQuery);
+  const itemsLoading = Boolean(serverDataPath && itemsQuery?.isLoading);
+  const lotsLoading = Boolean(serverDataPath && lotsQuery?.isLoading);
+
+  const { mutate: mutateCreateLot } = useCreate();
   const { mutate: mutateUpdateItem } = useUpdate();
+  const { mutate: mutateUpdateLot } = useUpdate();
 
   // 로컬 폴백 상태
   const [localItems, setLocalItems] = useState<(InventoryItem & { location?: WarehouseLocation })[]>(() => {
@@ -212,39 +241,99 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
       const saved = readLocalInventoryJson(STORAGE_KEY_ITEMS, LEGACY_STORAGE_KEY_ITEMS);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return disableDemoCatalogFallback ? [] : DEFAULT_INVENTORY_ITEMS;
+    return allowDemoCatalogSeed ? DEFAULT_INVENTORY_ITEMS : [];
   });
 
-  const [lots, setLots] = useState<(StockLotItem & { location?: WarehouseLocation })[]>(() => {
+  const [localLots, setLocalLots] = useState<(StockLotItem & { location?: WarehouseLocation })[]>(() => {
     try {
       const saved = readLocalInventoryJson(STORAGE_KEY_LOTS, LEGACY_STORAGE_KEY_LOTS);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return disableDemoCatalogFallback ? [] : DEFAULT_LOTS;
+    return allowDemoCatalogSeed ? DEFAULT_LOTS : [];
   });
 
-  const items = useMemo(() => {
-    if (refineItems && refineItems.length > 0) return refineItems;
+  const items: (InventoryItem & { location?: WarehouseLocation })[] = useMemo(() => {
+    if (trustServerItems) {
+      return (refineItems ?? []).map((row) => mapInventoryItemFromApi(row));
+    }
+    if (serverDataPath && itemsLoading) {
+      return [];
+    }
     return localItems;
-  }, [refineItems, localItems]);
+  }, [trustServerItems, refineItems, localItems, serverDataPath, itemsLoading]);
+
+  const lots = useMemo(() => {
+    if (trustServerLots) {
+      return (refineLots ?? []).map((row) => mapStockLotFromApi(row));
+    }
+    if (serverDataPath && lotsLoading) {
+      return [];
+    }
+    return localLots;
+  }, [trustServerLots, refineLots, localLots, serverDataPath, lotsLoading]);
 
   const saveLocalItems = (next: (InventoryItem & { location?: WarehouseLocation })[]) => {
     setLocalItems(next);
-    try {
-      localStorage.setItem(storageKeyItems, JSON.stringify(next));
-    } catch {}
+    if (!trustServerItems) {
+      try {
+        localStorage.setItem(storageKeyItems, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    }
   };
 
   const saveLots = (next: (StockLotItem & { location?: WarehouseLocation })[]) => {
-    setLots(next);
-    try {
-      localStorage.setItem(storageKeyLots, JSON.stringify(next));
-    } catch {}
+    setLocalLots(next);
+    if (!trustServerLots) {
+      try {
+        localStorage.setItem(storageKeyLots, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  const persistItemStock = (itemId: string, nextStock: number) => {
+    if (trustServerItems) {
+      mutateUpdateItem(
+        {
+          resource: 'inventory_items',
+          id: itemId,
+          values: { quantity: nextStock },
+        },
+        { onSuccess: () => void refetchItems() }
+      );
+      return;
+    }
+    const nextItems = localItems.map((it) => (it.id === itemId ? { ...it, currentStock: nextStock } : it));
+    saveLocalItems(nextItems);
+  };
+
+  const persistLotQuantities = (updates: { id: string; quantity: number }[]) => {
+    if (trustServerLots) {
+      updates.forEach((u) => {
+        mutateUpdateLot(
+          {
+            resource: 'stock_lots',
+            id: u.id,
+            values: { quantity: u.quantity },
+          },
+          { onSuccess: () => void refetchLots() }
+        );
+      });
+      return;
+    }
+    const byId = new Map(updates.map((u) => [u.id, u.quantity]));
+    const nextLots = localLots.map((l) =>
+      byId.has(l.id) ? { ...l, quantity: byId.get(l.id) ?? l.quantity } : l
+    );
+    saveLots(nextLots);
   };
 
   // 실사 대사표 데이터 상태
   const [auditQuantities, setAuditQuantities] = useState<Record<string, number>>(() => {
-    if (disableDemoCatalogFallback) return {};
+    if (!allowDemoCatalogSeed) return {};
     const init: Record<string, number> = {};
     DEFAULT_INVENTORY_ITEMS.forEach((it) => {
       init[it.id] = it.currentStock;
@@ -749,28 +838,21 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
             setSelectedItemForFefo(null);
           }}
           onDeducted={(allocatedLots, totalDeducted) => {
-            // 로트 수량 차감
             const lotAllocMap = new Map<string, number>();
             allocatedLots.forEach((al) => lotAllocMap.set(al.lotNumber, al.allocatedQuantity));
 
-            const nextLots = lots.map((l) => {
-              if (l.itemId === selectedItemForFefo.id && lotAllocMap.has(l.lotNumber)) {
-                return {
-                  ...l,
-                  quantity: l.quantity - (lotAllocMap.get(l.lotNumber) || 0),
-                };
-              }
-              return l;
-            });
-            saveLots(nextLots);
+            const lotUpdates = lots
+              .filter((l) => l.itemId === selectedItemForFefo.id && lotAllocMap.has(l.lotNumber))
+              .map((l) => ({
+                id: l.id,
+                quantity: l.quantity - (lotAllocMap.get(l.lotNumber) || 0),
+              }));
+            persistLotQuantities(lotUpdates);
 
-            // 품목 총 재고 차감
-            const nextItems = items.map((it) =>
-              it.id === selectedItemForFefo.id
-                ? { ...it, currentStock: it.currentStock - totalDeducted }
-                : it
+            persistItemStock(
+              selectedItemForFefo.id,
+              selectedItemForFefo.currentStock - totalDeducted
             );
-            saveLocalItems(nextItems);
             showToast(`[${selectedItemForFefo.name}] ${totalDeducted}개 FEFO 선입선출 출고 완료`, 'success');
             setIsStockOutFefoModalOpen(false);
             setSelectedItemForFefo(null);
@@ -784,11 +866,24 @@ export const InventoryManagementView: React.FC<InventoryManagementViewProps> = (
           items={items}
           onClose={() => setIsStockInModalOpen(false)}
           onCreated={(newLot, targetItem, inQty) => {
-            saveLots([newLot, ...lots]);
-            const nextItems = items.map((it) =>
-              it.id === targetItem.id ? { ...it, currentStock: it.currentStock + inQty } : it
-            );
-            saveLocalItems(nextItems);
+            if (trustServerLots) {
+              mutateCreateLot(
+                {
+                  resource: 'stock_lots',
+                  values: {
+                    product_id: targetItem.id,
+                    lot_number: newLot.lotNumber,
+                    expiry_date: newLot.expiryDate,
+                    quantity: inQty,
+                    location_name: newLot.locationName ?? null,
+                  },
+                },
+                { onSuccess: () => void refetchLots() }
+              );
+            } else {
+              saveLots([newLot, ...lots]);
+            }
+            persistItemStock(targetItem.id, targetItem.currentStock + inQty);
             showToast(`[${targetItem.name}] 로트 '${newLot.lotNumber}' ${inQty}개 입고 완료`, 'success');
             setIsStockInModalOpen(false);
           }}

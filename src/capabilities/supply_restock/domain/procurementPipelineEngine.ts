@@ -161,6 +161,70 @@ export interface ContractPurchaseOrder {
 /**
  * 1. 품목번호(SKU)나 품목명으로 과거 구매 이력 조회 (자동완성용)
  */
+export function validateRequisitionItemInput(item: {
+  sku?: string;
+  itemName?: string;
+  quantity: number;
+  estimatedUnitPrice: number;
+}): { valid: true } | { valid: false; error: string } {
+  if (!item.itemName?.trim() && !item.sku?.trim()) {
+    return { valid: false, error: '품목명 또는 SKU를 입력해야 합니다.' };
+  }
+  if (!Number.isFinite(item.quantity) || item.quantity <= 0) {
+    return { valid: false, error: '구매 수량은 0보다 커야 합니다.' };
+  }
+  if (!Number.isFinite(item.estimatedUnitPrice) || item.estimatedUnitPrice < 0) {
+    return { valid: false, error: '예상 단가는 0 이상의 유효한 숫자여야 합니다.' };
+  }
+  return { valid: true };
+}
+
+const REQUISITION_STATUS_TRANSITIONS: Record<RequisitionStatus, readonly RequisitionStatus[]> = {
+  draft: ['submitted'],
+  submitted: ['vetted_approved', 'rejected'],
+  vetted_approved: ['contract_packaged'],
+  rejected: [],
+  contract_packaged: ['po_issued'],
+  po_issued: [],
+};
+
+/** PR 상태 전이 (검수·패키징·PO 발행 단계) */
+export function transitionPurchaseRequisitionStatus(
+  pr: PurchaseRequisition,
+  nextStatus: RequisitionStatus,
+  options?: { reason?: string; actor?: string; role?: string }
+): { ok: true; pr: PurchaseRequisition } | { ok: false; error: string } {
+  const allowed = REQUISITION_STATUS_TRANSITIONS[pr.status] ?? [];
+  if (!allowed.includes(nextStatus)) {
+    return {
+      ok: false,
+      error: `${pr.status}에서 ${nextStatus}(으)로 전이할 수 없습니다.`,
+    };
+  }
+  if (nextStatus === 'rejected' && !(options?.reason ?? '').trim()) {
+    return { ok: false, error: '반려 시 사유가 필요합니다.' };
+  }
+
+  const nowIso = new Date().toISOString();
+  const auditEntry: AuditTrailEntry = {
+    timestamp: nowIso,
+    actor: options?.actor ?? 'system',
+    role: options?.role ?? '구매 워크플로',
+    action: `STATUS_${nextStatus.toUpperCase()}`,
+    comment: options?.reason?.trim(),
+  };
+
+  return {
+    ok: true,
+    pr: {
+      ...pr,
+      status: nextStatus,
+      ...(nextStatus === 'rejected' ? { rejectionReason: options!.reason!.trim() } : {}),
+      auditTrail: [...pr.auditTrail, auditEntry],
+    },
+  };
+}
+
 export function lookupItemProcurementHistory(
   query: string,
   history: ItemProcurementHistory[]
@@ -200,6 +264,13 @@ export function createPurchaseRequisition(params: {
   }
   if (!params.items || params.items.length === 0) {
     return { pr: null, error: '최소 1개 이상의 구매 요청 품목이 필요합니다.' };
+  }
+
+  for (let i = 0; i < params.items.length; i++) {
+    const line = validateRequisitionItemInput(params.items[i]);
+    if (!line.valid) {
+      return { pr: null, error: `품목 ${i + 1}: ${line.error}` };
+    }
   }
 
   const seq = params.sequenceNumber ?? Math.floor(100 + Math.random() * 900);
@@ -439,6 +510,11 @@ export function vetPurchaseRequisition(
   vetter: { name: string; department?: string },
   reason?: string
 ): PurchaseRequisition {
+  const vettable: RequisitionStatus[] = ['draft', 'submitted'];
+  if (!vettable.includes(pr.status)) {
+    throw new Error(`검수 불가 상태입니다 (현재: ${pr.status}).`);
+  }
+
   const nowIso = new Date().toISOString();
 
   if (action === 'reject') {
